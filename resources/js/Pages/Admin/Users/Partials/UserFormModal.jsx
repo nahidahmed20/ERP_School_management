@@ -1,0 +1,129 @@
+import { useForm } from '@inertiajs/react';
+import Icon from '@/Components/Icons';
+
+export default function UserFormModal({ item, roles, onClose }) {
+  const isEditing = !!item;
+
+  const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm({
+    name: isEditing ? item.name : '',
+    email: isEditing ? item.email : '',
+    password: '', // Edit করার সময় পাসওয়ার্ড ফাঁকা থাকবে
+    roles: isEditing ? item.roles.map((r) => r.name) : [],
+  });
+
+  const submit = (e) => {
+    e.preventDefault();
+    clearErrors();
+    const options = {
+      onSuccess: () => { reset(); onClose(); },
+    };
+
+    if (isEditing) {
+      put(route('admin.users.update', item.id), options);
+    } else {
+      post(route('admin.users.store'), options);
+    }
+  };
+
+  const toggleRole = (roleName) => {
+    if (data.roles.includes(roleName)) {
+      setData('roles', data.roles.filter((r) => r !== roleName));
+    } else {
+      setData('roles', [...data.roles, roleName]);
+    }
+  };
+
+  return (
+    <div className="mm-modal-overlay" onClick={onClose}>
+      <div className="mm-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '650px' }}>
+        <div className="mm-modal-head">
+          <h3>{isEditing ? 'Edit User' : 'Create New User'}</h3>
+          <button className="icon-btn" onClick={onClose}>
+            <Icon name="close" />
+          </button>
+        </div>
+
+        <form onSubmit={submit} className="mm-form">
+          <div className="mm-form-grid">
+            <label>
+              <span>Full Name</span>
+              <input
+                type="text"
+                value={data.name}
+                onChange={(e) => setData('name', e.target.value)}
+                placeholder="e.g. John Doe"
+                autoFocus
+              />
+              {errors.name && <em>{errors.name}</em>}
+            </label>
+
+            <label>
+              <span>Email Address</span>
+              <input
+                type="email"
+                value={data.email}
+                onChange={(e) => setData('email', e.target.value)}
+                placeholder="e.g. john@example.com"
+              />
+              {errors.email && <em>{errors.email}</em>}
+            </label>
+
+            <label style={{ gridColumn: '1 / -1' }}>
+              <span>Password {isEditing && <small style={{ color: '#6b7280', fontWeight: 'normal' }}>(Leave blank to keep current password)</small>}</span>
+              <input
+                type="password"
+                value={data.password}
+                onChange={(e) => setData('password', e.target.value)}
+                placeholder={isEditing ? '••••••••' : 'Enter password'}
+              />
+              {errors.password && <em>{errors.password}</em>}
+            </label>
+          </div>
+
+          <div style={{ padding: '0 20px 20px 20px' }}>
+            <div style={{ marginBottom: '12px' }}>
+              <span style={{ fontWeight: '600', fontSize: '14px', color: '#374151' }}>Assign Roles</span>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+              gap: '12px',
+              border: '1px solid #e5e7eb',
+              padding: '16px',
+              borderRadius: '6px',
+              backgroundColor: '#f9fafb'
+            }}>
+              {roles.map((role) => {
+                // ফর্ম থেকে Super Admin অ্যাসাইন করা বন্ধ করতে চাইলে নিচের condition কাজে লাগবে,
+                // আপাতত এটা ভিজিবল রাখা হয়েছে যেন অন্য ইউজারকে Super Admin বানানো যায়।
+                if(role.name === 'Super Admin' && !isEditing) return null;
+
+                return (
+                  <label key={role.id} className="mm-checkbox" style={{ margin: 0 }}>
+                    <input
+                      type="checkbox"
+                      checked={data.roles.includes(role.name)}
+                      onChange={() => toggleRole(role.name)}
+                    />
+                    <span style={{ paddingLeft: '8px' }}>{role.name}</span>
+                  </label>
+                )
+              })}
+            </div>
+            {errors.roles && <em style={{ color: 'red', fontSize: '12px', marginTop: '5px', display: 'block' }}>{errors.roles}</em>}
+          </div>
+
+          <div className="mm-modal-foot">
+            <button type="button" className="btn btn-outline" onClick={onClose} disabled={processing}>
+              Cancel
+            </button>
+            <button type="submit" className="btn" disabled={processing}>
+              {processing ? 'Saving...' : (isEditing ? 'Update User' : 'Create User')}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
