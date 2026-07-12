@@ -53,7 +53,9 @@ export default function Index({ files, folders, filters }) {
     >
       <Head title="File Manager" />
 
-      {flash?.success && <div className="mm-toast">{flash.success}</div>}
+      {flash?.success && (
+        <div className="mm-toast">{flash.success}</div>
+      )}
 
       <div className="card mm-card">
         <div className="mm-filters">

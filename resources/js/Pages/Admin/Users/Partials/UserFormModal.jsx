@@ -95,8 +95,6 @@ export default function UserFormModal({ item, roles, onClose }) {
               backgroundColor: '#f9fafb'
             }}>
               {roles.map((role) => {
-                // ফর্ম থেকে Super Admin অ্যাসাইন করা বন্ধ করতে চাইলে নিচের condition কাজে লাগবে,
-                // আপাতত এটা ভিজিবল রাখা হয়েছে যেন অন্য ইউজারকে Super Admin বানানো যায়।
                 if(role.name === 'Super Admin' && !isEditing) return null;
 
                 return (

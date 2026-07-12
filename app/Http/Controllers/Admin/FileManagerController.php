@@ -7,13 +7,15 @@ use App\Models\FileManagerFile;
 use App\Models\FileManagerFolder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class FileManagerController extends Controller
 {
     public function index(Request $request)
     {
-        $query = FileManagerFile::with('folder:id,name', 'uploader:id,name');
+        $query = FileManagerFile::with(['folder:id,name', 'uploader:id,name']);
 
         if ($search = $request->get('search')) {
             $query->where(function ($q) use ($search) {
@@ -27,20 +29,33 @@ class FileManagerController extends Controller
         }
 
         if ($type = $request->get('type')) {
-            $query->where('mime_type', 'like', "{$type}%");
+            // Document/Image/Video টাইপ ফিল্টার করার জন্য
+            $query->where('mime_type', 'like', "%{$type}%");
         }
 
         $query->latest();
 
         $perPage = $request->get('per_page', 10);
-        $files = $perPage === 'all'
-            ? $query->get()
-            : $query->paginate((int) $perPage)->withQueryString();
+
+        if ($perPage === 'all') {
+            $files = $query->get();
+            $paginatedFiles = [
+                'data' => $this->formatFiles($files),
+                'links' => [],
+                'meta' => ['total' => $files->count()]
+            ];
+        } else {
+            $files = $query->paginate((int) $perPage)->withQueryString();
+
+            // Pagination-এর কালেকশন ফ্রন্টএন্ডের জন্য ম্যাপ/ফরম্যাট করা
+            $files->getCollection()->transform(function ($file) {
+                return $this->formatFile($file);
+            });
+            $paginatedFiles = $files;
+        }
 
         return Inertia::render('Admin/Files/Index', [
-            'files' => $perPage === 'all'
-                ? ['data' => $files, 'links' => [], 'meta' => ['total' => $files->count()]]
-                : $files,
+            'files' => $paginatedFiles,
             'folders' => FileManagerFolder::select('id', 'name', 'parent_id')->orderBy('name')->get(),
             'filters' => $request->only(['search', 'folder_id', 'type', 'per_page']),
         ]);
@@ -49,25 +64,30 @@ class FileManagerController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|max:20480', // 20MB
+            'file' => 'required|file|max:20480', // 20MB Limit
             'folder_id' => 'nullable|exists:file_manager_folders,id',
         ]);
 
-        $uploaded = $request->file('file');
-        $stored = $uploaded->store('file-manager', 'public');
+        try {
+            $uploaded = $request->file('file');
+            $stored = $uploaded->store('file-manager', 'public');
 
-        FileManagerFile::create([
-            'folder_id' => $request->get('folder_id'),
-            'name' => Str::random(10) . '_' . $uploaded->getClientOriginalName(),
-            'original_name' => $uploaded->getClientOriginalName(),
-            'path' => $stored,
-            'disk' => 'public',
-            'mime_type' => $uploaded->getClientMimeType(),
-            'size' => $uploaded->getSize(),
-            'uploaded_by' => $request->user()?->id,
-        ]);
+            FileManagerFile::create([
+                'folder_id' => $request->get('folder_id'),
+                'name' => Str::random(10) . '_' . $uploaded->getClientOriginalName(),
+                'original_name' => $uploaded->getClientOriginalName(),
+                'path' => $stored,
+                'disk' => 'public',
+                'mime_type' => $uploaded->getClientMimeType(),
+                'size' => $uploaded->getSize(),
+                'uploaded_by' => $request->user()?->id,
+            ]);
 
-        return back()->with('success', 'ফাইল সফলভাবে আপলোড করা হয়েছে।');
+            return back()->with('success', 'ফাইল সফলভাবে আপলোড করা হয়েছে।');
+        } catch (\Exception $e) {
+            Log::error('File Upload Error: ' . $e->getMessage());
+            return back()->withErrors(['file' => 'ফাইল আপলোড করতে সমস্যা হয়েছে!']);
+        }
     }
 
     public function storeFolder(Request $request)
@@ -76,18 +96,65 @@ class FileManagerController extends Controller
             'name' => 'required|string|max:255',
             'parent_id' => 'nullable|exists:file_manager_folders,id',
         ]);
-        $data['created_by'] = $request->user()?->id;
 
-        FileManagerFolder::create($data);
+        try {
+            $data['created_by'] = $request->user()?->id;
+            FileManagerFolder::create($data);
 
-        return back()->with('success', 'নতুন Folder তৈরি করা হয়েছে।');
+            return back()->with('success', 'নতুন ফোল্ডার তৈরি করা হয়েছে।');
+        } catch (\Exception $e) {
+            Log::error('Folder Create Error: ' . $e->getMessage());
+            return back()->withErrors(['name' => 'ফোল্ডার তৈরি করতে সমস্যা হয়েছে!']);
+        }
     }
 
     public function destroy(FileManagerFile $file)
     {
-        \Storage::disk($file->disk)->delete($file->path);
-        $file->delete();
+        try {
+            // Storage থেকে ফাইলটি মুছে ফেলার আগে নিশ্চিত হওয়া যে ফাইলটি আছে
+            if (Storage::disk($file->disk)->exists($file->path)) {
+                Storage::disk($file->disk)->delete($file->path);
+            }
 
-        return back()->with('success', 'ফাইল মুছে ফেলা হয়েছে।');
+            $file->delete();
+
+            return back()->with('success', 'ফাইল মুছে ফেলা হয়েছে।');
+        } catch (\Exception $e) {
+            Log::error('File Delete Error: ' . $e->getMessage());
+            return back()->withErrors(['error' => 'ফাইল মুছতে সমস্যা হয়েছে!']);
+        }
+    }
+
+    // --- Helper Methods ---
+
+    private function formatFiles($files)
+    {
+        return $files->map(function ($file) {
+            return $this->formatFile($file);
+        });
+    }
+
+    private function formatFile($file)
+    {
+        return [
+            'id' => $file->id,
+            'original_name' => $file->original_name,
+            'mime_type' => $file->mime_type,
+            'size' => $file->size,
+            'human_size' => $this->bytesToHuman($file->size), // ফ্রন্টএন্ডের জন্য সুন্দর সাইজ
+            'url' => Storage::disk($file->disk)->url($file->path), // ফ্রন্টএন্ডে ডাউনলোডের জন্য URL
+            'created_at' => $file->created_at->format('d M, Y h:i A'), // সুন্দর ডেট ফরম্যাট
+            'folder' => $file->folder,
+            'uploader' => $file->uploader,
+        ];
+    }
+
+    private function bytesToHuman($bytes)
+    {
+        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        for ($i = 0; $bytes > 1024; $i++) {
+            $bytes /= 1024;
+        }
+        return round($bytes, 2) . ' ' . $units[$i];
     }
 }
