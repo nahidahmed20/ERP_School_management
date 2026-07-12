@@ -2,28 +2,24 @@ import { useState } from 'react';
 import { Head, router, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
-import MenuItemFormModal from './Partials/MenuItemFormModal';
-import ViewModal from './Partials/ViewModal';
+import CampusFormModal from './Partials/CampusFormModal';
 import ConfirmDeleteModal from './Partials/ConfirmDeleteModal';
 import Pagination from '@/Components/Pagination';
 
-export default function Index({ items, groups, parents, filters }) {
+export default function Index({ campuses, filters }) {
   const { flash } = usePage().props;
 
   const [search, setSearch] = useState(filters.search ?? '');
-  const [groupId, setGroupId] = useState(filters.group_id ?? '');
-  const [type, setType] = useState(filters.type ?? '');
   const [status, setStatus] = useState(filters.status ?? '');
   const [perPage, setPerPage] = useState(filters.per_page ?? '10');
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
-  const [viewingItem, setViewingItem] = useState(null);
   const [deletingItem, setDeletingItem] = useState(null);
 
   function applyFilters(overrides = {}) {
-    router.get(route('admin.menu.index'), {
-      search, group_id: groupId, type, status, per_page: perPage, ...overrides,
+    router.get(route('admin.school'), {
+      search, status, per_page: perPage, ...overrides,
     }, { preserveState: true, replace: true });
   }
 
@@ -38,7 +34,7 @@ export default function Index({ items, groups, parents, filters }) {
   }
 
   function confirmDelete() {
-    router.delete(route('admin.menu.destroy', deletingItem.id), {
+    router.delete(route('admin.school.destroy', deletingItem.id), {
       onSuccess: () => setDeletingItem(null),
     });
   }
@@ -49,51 +45,32 @@ export default function Index({ items, groups, parents, filters }) {
         <div className="page-head">
           <div>
             <span className="eyebrow">Settings &amp; Registry</span>
-            <h1>Menu Manager</h1>
-            <p className="desc">Sidebar navigation-এর সব group, item ও submenu এখান থেকে নিয়ন্ত্রণ করুন।</p>
+            <h1>School &amp; Branches</h1>
+            <p className="desc">প্রতিষ্ঠানের সকল Campus/Branch এখান থেকে নিয়ন্ত্রণ করুন।</p>
           </div>
           <div className="mm-head-actions">
-            <a href={route('admin.menu.export.excel')} className="btn btn-ghost">
-              <Icon name="excel" /> Excel
-            </a>
-            <a href={route('admin.menu.export.pdf')} className="btn btn-ghost">
-              <Icon name="pdf" /> PDF
-            </a>
             <button className="btn" onClick={openCreate}>
-              <Icon name="plus" /> Add Menu Item
+              <Icon name="plus" /> Add Campus
             </button>
           </div>
         </div>
       }
     >
-      <Head title="Menu Manager" />
+      <Head title="School & Branches" />
 
-      {flash?.success && (
-        <div className="mm-toast">{flash.success}</div>
-      )}
+      {flash?.success && <div className="mm-toast">{flash.success}</div>}
 
       <div className="card mm-card">
         <div className="mm-filters">
           <div className="search">
             <Icon name="search" />
             <input
-              placeholder="Search by label, key, or route..."
+              placeholder="Search by name, code, or email..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
             />
           </div>
-
-          <select value={groupId} onChange={(e) => { setGroupId(e.target.value); applyFilters({ group_id: e.target.value }); }}>
-            <option value="">All Groups</option>
-            {groups.map((g) => <option key={g.id} value={g.id}>{g.label}</option>)}
-          </select>
-
-          <select value={type} onChange={(e) => { setType(e.target.value); applyFilters({ type: e.target.value }); }}>
-            <option value="">All Types</option>
-            <option value="parent">Parent Item</option>
-            <option value="child">Submenu Item</option>
-          </select>
 
           <select value={status} onChange={(e) => { setStatus(e.target.value); applyFilters({ status: e.target.value }); }}>
             <option value="">All Status</option>
@@ -105,9 +82,6 @@ export default function Index({ items, groups, parents, filters }) {
             <option value="10">10 / page</option>
             <option value="20">20 / page</option>
             <option value="50">50 / page</option>
-            <option value="100">100 / page</option>
-            <option value="500">500 / page</option>
-            <option value="1000">1000 / page</option>
             <option value="all">Show All</option>
           </select>
 
@@ -118,34 +92,34 @@ export default function Index({ items, groups, parents, filters }) {
           <table className="mm-table">
             <thead>
               <tr>
-                <th>Label</th>
-                <th>Group</th>
-                <th>Parent</th>
-                <th>Key</th>
-                <th>Route</th>
-                <th>Order</th>
+                <th>Name</th>
+                <th>Code</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th>Established</th>
+                <th>Main?</th>
                 <th>Status</th>
                 <th className="mm-actions-col">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {items.data.length === 0 && (
-                <tr><td colSpan={8} className="mm-empty">কোনো menu item পাওয়া যায়নি।</td></tr>
+              {campuses.data.length === 0 && (
+                <tr><td colSpan={8} className="mm-empty">কোনো Campus পাওয়া যায়নি।</td></tr>
               )}
-              {items.data.map((item) => (
+              {campuses.data.map((item) => (
                 <tr key={item.id}>
                   <td>
                     <div className="mm-label-cell">
-                      {item.icon && <Icon name={item.icon} className="mm-row-icon" />}
-                      <span>{item.label}</span>
-                      {!item.parent_id && <span className="mm-tag mm-tag-parent">Parent</span>}
+                      <Icon name="building" className="mm-row-icon" />
+                      <span>{item.name}</span>
+                      {item.is_main && <span className="mm-tag mm-tag-parent">Main</span>}
                     </div>
                   </td>
-                  <td>{item.group}</td>
-                  <td>{item.parent ?? '—'}</td>
-                  <td><code>{item.key}</code></td>
-                  <td>{item.route_name ?? '—'}</td>
-                  <td>{item.order}</td>
+                  <td><code>{item.code}</code></td>
+                  <td>{item.phone ?? '—'}</td>
+                  <td>{item.email ?? '—'}</td>
+                  <td>{item.established_year ?? '—'}</td>
+                  <td>{item.is_main ? 'Yes' : 'No'}</td>
                   <td>
                     <span className={`mm-status ${item.is_active ? 'is-active' : 'is-inactive'}`}>
                       {item.is_active ? 'Active' : 'Inactive'}
@@ -153,9 +127,6 @@ export default function Index({ items, groups, parents, filters }) {
                   </td>
                   <td>
                     <div className="mm-row-actions">
-                      <button className="icon-btn" title="View" onClick={() => setViewingItem(item)}>
-                        <Icon name="eye" />
-                      </button>
                       <button className="icon-btn" title="Edit" onClick={() => openEdit(item)}>
                         <Icon name="edit" />
                       </button>
@@ -170,20 +141,11 @@ export default function Index({ items, groups, parents, filters }) {
           </table>
         </div>
 
-        <Pagination meta={items} />
+        <Pagination meta={campuses} />
       </div>
 
       {formOpen && (
-        <MenuItemFormModal
-          item={editingItem}
-          groups={groups}
-          parents={parents}
-          onClose={() => setFormOpen(false)}
-        />
-      )}
-
-      {viewingItem && (
-        <ViewModal item={viewingItem} onClose={() => setViewingItem(null)} />
+        <CampusFormModal item={editingItem} onClose={() => setFormOpen(false)} />
       )}
 
       {deletingItem && (

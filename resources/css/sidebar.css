@@ -409,3 +409,50 @@ h1,h2,h3{
 .cs-icon svg{width:28px;height:28px;color:var(--forest);}
 .cs-card h2{font-size:19px;}
 .cs-card p{color:var(--muted);font-size:13.5px;max-width:400px;}
+
+.mm-diag-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.mm-diag-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.mm-diag-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.6;
+}
+
+.mm-diag-value {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.mm-diag-value.is-inactive {
+  color: #c0392b;
+}
+
+.mm-value-cell {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mm-tag-level-info { background: #e8f4fd; color: #1a73e8; }
+.mm-tag-level-warning { background: #fff4e0; color: #b8860b; }
+.mm-tag-level-error { background: #fde8e8; color: #c0392b; }
+.mm-tag-level-critical { background: #2c0b0e; color: #ff6b6b; }
+

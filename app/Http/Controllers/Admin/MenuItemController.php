@@ -23,8 +23,8 @@ class MenuItemController extends Controller
         if ($search = $request->string('search')->toString()) {
             $query->where(function ($q) use ($search) {
                 $q->where('label', 'like', "%{$search}%")
-                  ->orWhere('key', 'like', "%{$search}%")
-                  ->orWhere('route_name', 'like', "%{$search}%");
+                ->orWhere('key', 'like', "%{$search}%")
+                ->orWhere('route_name', 'like', "%{$search}%");
             });
         }
 
@@ -42,9 +42,22 @@ class MenuItemController extends Controller
             $query->where('is_active', $request->input('status') === 'active');
         }
 
+        // --- per_page handling ---
+        $allowedPerPage = ['10', '20', '50', '100', '500', '1000'];
+        $perPageInput   = (string) $request->input('per_page', '10');
+
+        if ($perPageInput === 'all') {
+            $total    = (clone $query)->count();
+            $perPage  = max($total, 1); // avoid paginate(0) error when table is empty
+        } else {
+            $perPage = in_array($perPageInput, $allowedPerPage, true)
+                ? (int) $perPageInput
+                : 10;
+        }
+
         $items = $query->orderBy('menu_group_id')
                         ->orderBy('order')
-                        ->paginate(10)
+                        ->paginate($perPage)
                         ->withQueryString()
                         ->through(fn ($item) => [
                             'id'          => $item->id,
@@ -65,7 +78,7 @@ class MenuItemController extends Controller
             'items'      => $items,
             'groups'     => MenuGroup::orderBy('order')->get(['id', 'label']),
             'parents'    => MenuItem::whereNull('parent_id')->get(['id', 'label', 'menu_group_id']),
-            'filters'    => $request->only('search', 'group_id', 'type', 'status'),
+            'filters'    => $request->only('search', 'group_id', 'type', 'status', 'per_page'),
         ]);
     }
 

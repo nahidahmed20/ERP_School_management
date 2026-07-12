@@ -10,15 +10,12 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\DynamicPageController;
+use App\Http\Controllers\Admin\AcademicSessionController;
+use App\Http\Controllers\Admin\CampusController;
+use App\Http\Controllers\Admin\FileManagerController;
+use App\Http\Controllers\Admin\GeneralSettingController;
+use App\Http\Controllers\Admin\SystemRegistryController;
 
-Route::get('/test-role', function () {
-    $user = auth()->user();
-    return response()->json([
-        'user_name' => $user->name,
-        'roles' => $user->getRoleNames(), // ইউজারের কী কী রোল আছে তা দেখাবে
-        'is_super_admin' => $user->hasRole('Super Admin') // true বা false দেখাবে
-    ]);
-});
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -46,6 +43,14 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
     Route::resource('users', UserController::class);
     Route::resource('roles', RoleController::class);
     Route::resource('permissions', PermissionController::class);
+
+    Route::resource('school', CampusController::class);
+    Route::resource('sessions', AcademicSessionController::class);
+    Route::resource('general', GeneralSettingController::class);
+    Route::resource('files', FileManagerController::class);
+    Route::post('files/folder', [FileManagerController::class, 'storeFolder'])->name('files.folder.store');
+    Route::resource('registry', SystemRegistryController::class);
+    Route::post('registry/clear', [SystemRegistryController::class, 'clear'])->name('registry.clear');
 });
 
 
