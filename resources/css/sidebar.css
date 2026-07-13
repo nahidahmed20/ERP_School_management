@@ -371,7 +371,7 @@ h1,h2,h3{
 
 /* ===== Modal ===== */
 .mm-modal-overlay{
-  position:fixed;inset:0;background:rgba(15,43,33,.55);backdrop-filter:blur(4px);
+  position:fixed;inset:0;background:rgba(15,43,33,.55);
   display:flex;align-items:center;justify-content:center;z-index:100;padding:20px;
   animation:fadeIn .18s ease;
 }
