@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Head, router, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
 import CampusFormModal from './Partials/CampusFormModal';
-import ConfirmDeleteModal from './Partials/ConfirmDeleteModal';
+import CampusViewModal from './Partials/CampusViewModal';
+import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 import Pagination from '@/Components/Pagination';
+import Swal from 'sweetalert2';
 
 export default function Index({ campuses, filters }) {
   const { flash } = usePage().props;
@@ -15,10 +17,26 @@ export default function Index({ campuses, filters }) {
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [viewingItem, setViewingItem] = useState(null);
   const [deletingItem, setDeletingItem] = useState(null);
 
+  useEffect(() => {
+    if (flash?.success) {
+      Swal.fire({
+        toast: true, position: 'top-end', icon: 'success', title: flash.success,
+        showConfirmButton: false, timer: 3000, timerProgressBar: true,
+      });
+    }
+    if (flash?.error) {
+      Swal.fire({
+        toast: true, position: 'top-end', icon: 'error', title: flash.error,
+        showConfirmButton: false, timer: 4000, timerProgressBar: true,
+      });
+    }
+  }, [flash]);
+
   function applyFilters(overrides = {}) {
-    router.get(route('admin.school'), {
+    router.get(route('admin.campuses.index'), {
       search, status, per_page: perPage, ...overrides,
     }, { preserveState: true, replace: true });
   }
@@ -34,7 +52,7 @@ export default function Index({ campuses, filters }) {
   }
 
   function confirmDelete() {
-    router.delete(route('admin.school.destroy', deletingItem.id), {
+    router.delete(route('admin.campuses.destroy', deletingItem.id), {
       onSuccess: () => setDeletingItem(null),
     });
   }
@@ -58,10 +76,14 @@ export default function Index({ campuses, filters }) {
     >
       <Head title="School & Branches" />
 
-      {flash?.success && <div className="mm-toast">{flash.success}</div>}
-
       <div className="card mm-card">
         <div className="mm-filters">
+            <select value={perPage} onChange={(e) => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}>
+            <option value="10">10 / page</option>
+            <option value="20">20 / page</option>
+            <option value="50">50 / page</option>
+            <option value="all">Show All</option>
+          </select>
           <div className="search">
             <Icon name="search" />
             <input
@@ -78,12 +100,7 @@ export default function Index({ campuses, filters }) {
             <option value="inactive">Inactive</option>
           </select>
 
-          <select value={perPage} onChange={(e) => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}>
-            <option value="10">10 / page</option>
-            <option value="20">20 / page</option>
-            <option value="50">50 / page</option>
-            <option value="all">Show All</option>
-          </select>
+
 
           <button className="btn btn-outline" onClick={() => applyFilters()}>Filter</button>
         </div>
@@ -95,16 +112,14 @@ export default function Index({ campuses, filters }) {
                 <th>Name</th>
                 <th>Code</th>
                 <th>Phone</th>
-                <th>Email</th>
                 <th>Established</th>
-                <th>Main?</th>
                 <th>Status</th>
                 <th className="mm-actions-col">Actions</th>
               </tr>
             </thead>
             <tbody>
               {campuses.data.length === 0 && (
-                <tr><td colSpan={8} className="mm-empty">কোনো Campus পাওয়া যায়নি।</td></tr>
+                <tr><td colSpan={6} className="mm-empty">কোনো Campus পাওয়া যায়নি।</td></tr>
               )}
               {campuses.data.map((item) => (
                 <tr key={item.id}>
@@ -117,9 +132,7 @@ export default function Index({ campuses, filters }) {
                   </td>
                   <td><code>{item.code}</code></td>
                   <td>{item.phone ?? '—'}</td>
-                  <td>{item.email ?? '—'}</td>
                   <td>{item.established_year ?? '—'}</td>
-                  <td>{item.is_main ? 'Yes' : 'No'}</td>
                   <td>
                     <span className={`mm-status ${item.is_active ? 'is-active' : 'is-inactive'}`}>
                       {item.is_active ? 'Active' : 'Inactive'}
@@ -127,6 +140,9 @@ export default function Index({ campuses, filters }) {
                   </td>
                   <td>
                     <div className="mm-row-actions">
+                      <button className="icon-btn" title="View" onClick={() => setViewingItem(item)}>
+                        <Icon name="eye" />
+                      </button>
                       <button className="icon-btn" title="Edit" onClick={() => openEdit(item)}>
                         <Icon name="edit" />
                       </button>
@@ -144,17 +160,21 @@ export default function Index({ campuses, filters }) {
         <Pagination meta={campuses} />
       </div>
 
+      {/* Modals */}
       {formOpen && (
         <CampusFormModal item={editingItem} onClose={() => setFormOpen(false)} />
       )}
 
-      {deletingItem && (
-        <ConfirmDeleteModal
-          item={deletingItem}
-          onCancel={() => setDeletingItem(null)}
-          onConfirm={confirmDelete}
-        />
+      {viewingItem && (
+        <CampusViewModal item={viewingItem} onClose={() => setViewingItem(null)} />
       )}
+      {deletingItem && (
+              <ConfirmDeleteModal
+                item={deletingItem}
+                onCancel={() => setDeletingItem(null)}
+                onConfirm={confirmDelete}
+              />
+            )}
     </AuthenticatedLayout>
   );
 }

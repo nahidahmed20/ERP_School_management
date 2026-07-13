@@ -30,73 +30,77 @@ export default function SettingFormModal({ item, groups, onClose }) {
   }
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-head">
-          <h2>{isEdit ? 'Edit Setting' : 'Add Setting'}</h2>
-          <button className="icon-btn" onClick={onClose}><Icon name="close" /></button>
+    <div className="mm-modal-overlay" onClick={onClose}>
+      <div className="mm-modal mm-modal-lg" onClick={(e) => e.stopPropagation()}>
+        <div className="mm-modal-head">
+          <h3>{isEdit ? 'Edit Setting' : 'Add Setting'}</h3>
+          <button className="icon-btn" onClick={onClose}>
+            <Icon name="close" />
+          </button>
         </div>
 
-        <form onSubmit={submit} className="modal-form">
-          <div className="form-grid-2">
-            <div className="form-row">
-              <label>Group</label>
+        <form onSubmit={submit} className="mm-form">
+          <div className="mm-form-grid">
+
+            <label>
+              Group
               <input list="setting-groups" value={data.group} onChange={(e) => setData('group', e.target.value)} />
               <datalist id="setting-groups">
                 {groups.map((g) => <option key={g} value={g} />)}
               </datalist>
-            </div>
-            <div className="form-row">
-              <label>Type</label>
+            </label>
+
+            <label>
+              Type
               <select value={data.type} onChange={(e) => setData('type', e.target.value)}>
                 {TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
               </select>
-            </div>
-          </div>
+            </label>
 
-          <div className="form-row">
-            <label>Key</label>
-            <input value={data.key} onChange={(e) => setData('key', e.target.value)} disabled={isEdit} />
-            {errors.key && <span className="field-error">{errors.key}</span>}
-          </div>
+            <label>
+              Key
+              <input value={data.key} onChange={(e) => setData('key', e.target.value)} disabled={isEdit} />
+              {errors.key && <em>{errors.key}</em>}
+            </label>
 
-          <div className="form-row">
-            <label>Label</label>
-            <input value={data.label} onChange={(e) => setData('label', e.target.value)} />
-            {errors.label && <span className="field-error">{errors.label}</span>}
-          </div>
+            <label>
+              Label
+              <input value={data.label} onChange={(e) => setData('label', e.target.value)} />
+              {errors.label && <em>{errors.label}</em>}
+            </label>
 
-          <div className="form-row">
-            <label>Value</label>
-            {data.type === 'boolean' ? (
-              <select value={data.value} onChange={(e) => setData('value', e.target.value)}>
-                <option value="1">True</option>
-                <option value="0">False</option>
-              </select>
-            ) : data.type === 'textarea' || data.type === 'json' ? (
-              <textarea value={data.value} onChange={(e) => setData('value', e.target.value)} />
-            ) : (
-              <input value={data.value} onChange={(e) => setData('value', e.target.value)} />
-            )}
-          </div>
+            <label style={{ gridColumn: (data.type === 'textarea' || data.type === 'json') ? '1 / -1' : 'auto' }}>
+              Value
+              {data.type === 'boolean' ? (
+                <select value={data.value} onChange={(e) => setData('value', e.target.value)}>
+                  <option value="1">True</option>
+                  <option value="0">False</option>
+                </select>
+              ) : data.type === 'textarea' || data.type === 'json' ? (
+                <textarea rows="4" value={data.value} onChange={(e) => setData('value', e.target.value)} />
+              ) : (
+                <input value={data.value} onChange={(e) => setData('value', e.target.value)} />
+              )}
+            </label>
 
-          <div className="form-row">
-            <label>Description</label>
-            <textarea value={data.description} onChange={(e) => setData('description', e.target.value)} />
-          </div>
+            <label style={{ gridColumn: '1 / -1' }}>
+              Description
+              <textarea rows="2" value={data.description} onChange={(e) => setData('description', e.target.value)} />
+            </label>
 
-          <div className="form-grid-2">
-            <div className="form-row">
-              <label>Order</label>
+            <label>
+              Order
               <input type="number" value={data.order} onChange={(e) => setData('order', e.target.value)} />
-            </div>
-            <label className="checkbox-row">
+            </label>
+
+            <label className="mm-checkbox">
               <input type="checkbox" checked={data.is_active} onChange={(e) => setData('is_active', e.target.checked)} />
               Active
             </label>
+
           </div>
 
-          <div className="modal-actions">
+          <div className="mm-modal-foot">
             <button type="button" className="btn btn-outline" onClick={onClose}>Cancel</button>
             <button type="submit" className="btn" disabled={processing}>
               {isEdit ? 'Update' : 'Save'}

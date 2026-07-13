@@ -20,7 +20,7 @@ class FileManagerController extends Controller
         if ($search = $request->get('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('original_name', 'like', "%{$search}%");
+                ->orWhere('original_name', 'like', "%{$search}%");
             });
         }
 
@@ -29,7 +29,6 @@ class FileManagerController extends Controller
         }
 
         if ($type = $request->get('type')) {
-            // Document/Image/Video টাইপ ফিল্টার করার জন্য
             $query->where('mime_type', 'like', "%{$type}%");
         }
 
@@ -39,15 +38,21 @@ class FileManagerController extends Controller
 
         if ($perPage === 'all') {
             $files = $query->get();
+            $formatted = $this->formatFiles($files);
+
             $paginatedFiles = [
-                'data' => $this->formatFiles($files),
+                'data' => $formatted,
+                'current_page' => 1,
+                'last_page' => 1,
+                'per_page' => $files->count(),
+                'total' => $files->count(),
+                'from' => $files->count() > 0 ? 1 : null,
+                'to' => $files->count(),
                 'links' => [],
-                'meta' => ['total' => $files->count()]
             ];
         } else {
             $files = $query->paginate((int) $perPage)->withQueryString();
 
-            // Pagination-এর কালেকশন ফ্রন্টএন্ডের জন্য ম্যাপ/ফরম্যাট করা
             $files->getCollection()->transform(function ($file) {
                 return $this->formatFile($file);
             });
@@ -83,12 +88,13 @@ class FileManagerController extends Controller
                 'uploaded_by' => $request->user()?->id,
             ]);
 
-            return back()->with('success', 'ফাইল সফলভাবে আপলোড করা হয়েছে।');
+            return redirect()->back()->with('success', 'ফাইল সফলভাবে আপলোড করা হয়েছে।');
         } catch (\Exception $e) {
             Log::error('File Upload Error: ' . $e->getMessage());
-            return back()->withErrors(['file' => 'ফাইল আপলোড করতে সমস্যা হয়েছে!']);
+            return redirect()->back()->with('error', 'ফাইল আপলোড করতে সমস্যা হয়েছে!');
         }
     }
+
 
     public function storeFolder(Request $request)
     {
@@ -111,7 +117,6 @@ class FileManagerController extends Controller
     public function destroy(FileManagerFile $file)
     {
         try {
-            // Storage থেকে ফাইলটি মুছে ফেলার আগে নিশ্চিত হওয়া যে ফাইলটি আছে
             if (Storage::disk($file->disk)->exists($file->path)) {
                 Storage::disk($file->disk)->delete($file->path);
             }
@@ -141,9 +146,9 @@ class FileManagerController extends Controller
             'original_name' => $file->original_name,
             'mime_type' => $file->mime_type,
             'size' => $file->size,
-            'human_size' => $this->bytesToHuman($file->size), // ফ্রন্টএন্ডের জন্য সুন্দর সাইজ
-            'url' => Storage::disk($file->disk)->url($file->path), // ফ্রন্টএন্ডে ডাউনলোডের জন্য URL
-            'created_at' => $file->created_at->format('d M, Y h:i A'), // সুন্দর ডেট ফরম্যাট
+            'human_size' => $this->bytesToHuman($file->size),
+            'url' => Storage::disk($file->disk)->url($file->path),
+            'created_at' => $file->created_at->format('d M, Y h:i A'),
             'folder' => $file->folder,
             'uploader' => $file->uploader,
         ];

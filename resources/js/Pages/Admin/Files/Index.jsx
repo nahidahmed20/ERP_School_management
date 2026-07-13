@@ -1,14 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Head, router, usePage } from '@inertiajs/react';
+import Swal from 'sweetalert2';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
 import UploadFormModal from './Partials/UploadFormModal';
 import FolderFormModal from './Partials/FolderFormModal';
-import ConfirmDeleteModal from './Partials/ConfirmDeleteModal';
+import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 import Pagination from '@/Components/Pagination';
 
 export default function Index({ files, folders, filters }) {
-  const { flash } = usePage().props;
+  const { flash, errors } = usePage().props;
 
   const [search, setSearch] = useState(filters.search ?? '');
   const [folderId, setFolderId] = useState(filters.folder_id ?? '');
@@ -20,7 +21,7 @@ export default function Index({ files, folders, filters }) {
   const [deletingItem, setDeletingItem] = useState(null);
 
   function applyFilters(overrides = {}) {
-    router.get(route('admin.files'), {
+    router.get(route('admin.files.index'), {
       search, folder_id: folderId, type, per_page: perPage, ...overrides,
     }, { preserveState: true, replace: true });
   }
@@ -28,6 +29,62 @@ export default function Index({ files, folders, filters }) {
   function confirmDelete() {
     router.delete(route('admin.files.destroy', deletingItem.id), {
       onSuccess: () => setDeletingItem(null),
+    });
+  }
+
+    useEffect(() => {
+    if (flash?.success) {
+        Swal.fire({
+        icon: 'success',
+        title: 'সফল হয়েছে!',
+        text: flash.success,
+        confirmButtonColor: '#1B4332',
+        timer: 3000,
+        timerProgressBar: true,
+        });
+    }
+
+    if (flash?.error) {
+        Swal.fire({
+        icon: 'error',
+        title: 'সমস্যা হয়েছে!',
+        text: flash.error,
+        confirmButtonColor: '#d33',
+        });
+    }
+
+    if (errors && Object.keys(errors).length > 0) {
+        const firstError = Object.values(errors)[0];
+        Swal.fire({
+        icon: 'error',
+        title: 'ভ্যালিডেশন এরর!',
+        text: firstError,
+        confirmButtonColor: '#d33',
+        });
+    }
+    }, [flash, errors]);
+
+  function viewFile(item) {
+    const isImage = item.mime_type?.startsWith('image');
+
+    Swal.fire({
+      title: item.original_name,
+      html: `
+        ${isImage
+          ? `<img src="${item.url}" style="max-width:100%; max-height:280px; border-radius:10px; margin-bottom:14px; object-fit:contain;" />`
+          : ''}
+        <div style="text-align:left; font-size:13.5px; line-height:1.9; font-family:'Inter',sans-serif;">
+          <b>Type:</b> ${item.mime_type ?? '—'}<br/>
+          <b>Size:</b> ${item.human_size ?? item.size}<br/>
+          <b>Folder:</b> ${item.folder?.name ?? '—'}<br/>
+          <b>Uploaded By:</b> ${item.uploader?.name ?? '—'}<br/>
+          <b>Uploaded At:</b> ${item.created_at}<br/>
+          <b>URL:</b> <a href="${item.url}" target="_blank" rel="noreferrer" style="color:#1B4332; word-break:break-all;">${item.url}</a>
+        </div>
+      `,
+      confirmButtonText: 'Close',
+      confirmButtonColor: '#1B4332',
+      width: 480,
     });
   }
 
@@ -52,10 +109,6 @@ export default function Index({ files, folders, filters }) {
       }
     >
       <Head title="File Manager" />
-
-      {flash?.success && (
-        <div className="mm-toast">{flash.success}</div>
-      )}
 
       <div className="card mm-card">
         <div className="mm-filters">
@@ -123,6 +176,9 @@ export default function Index({ files, folders, filters }) {
                   <td>{item.created_at}</td>
                   <td>
                     <div className="mm-row-actions">
+                      <button className="icon-btn" title="View" onClick={() => viewFile(item)}>
+                        <Icon name="eye" />
+                      </button>
                       <a className="icon-btn" title="Download" href={item.url} target="_blank" rel="noreferrer">
                         <Icon name="download" />
                       </a>

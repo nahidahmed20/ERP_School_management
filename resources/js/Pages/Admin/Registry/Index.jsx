@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Head, router, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
-import ConfirmDeleteModal from './Partials/ConfirmDeleteModal';
+import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 import Pagination from '@/Components/Pagination';
 
 const DIAG_LABELS = {
@@ -77,6 +77,12 @@ export default function Index({ logs, filters, diagnostics }) {
 
       <div className="card mm-card">
         <div className="mm-filters">
+        <select value={perPage} onChange={(e) => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}>
+            <option value="10">10 / page</option>
+            <option value="20">20 / page</option>
+            <option value="50">50 / page</option>
+            <option value="all">Show All</option>
+        </select>
           <div className="search">
             <Icon name="search" />
             <input
@@ -93,13 +99,6 @@ export default function Index({ logs, filters, diagnostics }) {
             <option value="warning">Warning</option>
             <option value="error">Error</option>
             <option value="critical">Critical</option>
-          </select>
-
-          <select value={perPage} onChange={(e) => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}>
-            <option value="10">10 / page</option>
-            <option value="20">20 / page</option>
-            <option value="50">50 / page</option>
-            <option value="all">Show All</option>
           </select>
 
           <button className="btn btn-outline" onClick={() => applyFilters()}>Filter</button>

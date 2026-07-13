@@ -20,4 +20,9 @@ class Campus extends Model
     {
         return $this->hasMany(AcademicSession::class);
     }
+
+    public function branches()
+    {
+        return $this->hasMany(Branch::class);
+    }
 }

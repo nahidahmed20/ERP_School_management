@@ -22,72 +22,81 @@ export default function CampusFormModal({ item, onClose }) {
       onSuccess: () => { reset(); onClose(); },
     };
     if (isEdit) {
-      put(route('admin.school.update', item.id), options);
+      put(route('admin.campuses.update', item.id), options);
     } else {
-      post(route('admin.school'), options);
+      post(route('admin.campuses.store'), options);
     }
   }
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-head">
-          <h2>{isEdit ? 'Edit Campus' : 'Add Campus'}</h2>
-          <button className="icon-btn" onClick={onClose}><Icon name="close" /></button>
+    <div className="mm-modal-overlay" onClick={onClose}>
+      <div className="mm-modal mm-modal-lg" onClick={(e) => e.stopPropagation()}>
+        <div className="mm-modal-head">
+          <h3>{isEdit ? 'Edit Campus' : 'Add Campus'}</h3>
+          <button className="icon-btn" onClick={onClose}>
+            <Icon name="close" />
+          </button>
         </div>
 
-        <form onSubmit={submit} className="modal-form">
-          <div className="form-row">
-            <label>Name</label>
-            <input value={data.name} onChange={(e) => setData('name', e.target.value)} />
-            {errors.name && <span className="field-error">{errors.name}</span>}
-          </div>
+        <form onSubmit={submit} className="mm-form">
+          <div className="mm-form-grid">
 
-          <div className="form-row">
-            <label>Code</label>
-            <input value={data.code} onChange={(e) => setData('code', e.target.value)} />
-            {errors.code && <span className="field-error">{errors.code}</span>}
-          </div>
+            <label>
+              Name
+              <input value={data.name} onChange={(e) => setData('name', e.target.value)} />
+              {errors.name && <em>{errors.name}</em>}
+            </label>
 
-          <div className="form-grid-2">
-            <div className="form-row">
-              <label>Phone</label>
+            <label>
+              Code
+              <input value={data.code} onChange={(e) => setData('code', e.target.value)} />
+              {errors.code && <em>{errors.code}</em>}
+            </label>
+
+            <label>
+              Phone
               <input value={data.phone} onChange={(e) => setData('phone', e.target.value)} />
-            </div>
-            <div className="form-row">
-              <label>Email</label>
-              <input value={data.email} onChange={(e) => setData('email', e.target.value)} />
-            </div>
-          </div>
+              {errors.phone && <em>{errors.phone}</em>}
+            </label>
 
-          <div className="form-row">
-            <label>Address</label>
-            <textarea value={data.address} onChange={(e) => setData('address', e.target.value)} />
-          </div>
+            <label>
+              Email
+              <input type="email" value={data.email} onChange={(e) => setData('email', e.target.value)} />
+              {errors.email && <em>{errors.email}</em>}
+            </label>
 
-          <div className="form-grid-2">
-            <div className="form-row">
-              <label>Established Year</label>
+            {/* Address field spans both columns */}
+            <label style={{ gridColumn: '1 / -1' }}>
+              Address
+              <textarea rows="2" value={data.address} onChange={(e) => setData('address', e.target.value)} />
+              {errors.address && <em>{errors.address}</em>}
+            </label>
+
+            <label>
+              Established Year
               <input type="number" value={data.established_year} onChange={(e) => setData('established_year', e.target.value)} />
-            </div>
-            <div className="form-row">
-              <label>Order</label>
-              <input type="number" value={data.order} onChange={(e) => setData('order', e.target.value)} />
-            </div>
-          </div>
+              {errors.established_year && <em>{errors.established_year}</em>}
+            </label>
 
-          <div className="form-grid-2">
-            <label className="checkbox-row">
+            <label>
+              Order
+              <input type="number" value={data.order} onChange={(e) => setData('order', e.target.value)} />
+              {errors.order && <em>{errors.order}</em>}
+            </label>
+
+            <label className="mm-checkbox">
               <input type="checkbox" checked={data.is_main} onChange={(e) => setData('is_main', e.target.checked)} />
               Main Campus
             </label>
-            <label className="checkbox-row">
+
+            <label className="mm-checkbox">
               <input type="checkbox" checked={data.is_active} onChange={(e) => setData('is_active', e.target.checked)} />
               Active
             </label>
+
           </div>
 
-          <div className="modal-actions">
+          <div className="mm-modal-foot mt-2">
             <button type="button" className="btn btn-outline" onClick={onClose}>Cancel</button>
             <button type="submit" className="btn" disabled={processing}>
               {isEdit ? 'Update' : 'Save'}

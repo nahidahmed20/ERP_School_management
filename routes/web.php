@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\CampusController;
 use App\Http\Controllers\Admin\FileManagerController;
 use App\Http\Controllers\Admin\GeneralSettingController;
 use App\Http\Controllers\Admin\SystemRegistryController;
+use App\Http\Controllers\Admin\BranchController;
 
 
 Route::get('/', function () {
@@ -44,7 +45,8 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
     Route::resource('roles', RoleController::class);
     Route::resource('permissions', PermissionController::class);
 
-    Route::resource('school', CampusController::class);
+    Route::resource('campuses', CampusController::class);
+    Route::resource('branches', BranchController::class);
     Route::resource('sessions', AcademicSessionController::class);
     Route::resource('general', GeneralSettingController::class);
     Route::resource('files', FileManagerController::class);

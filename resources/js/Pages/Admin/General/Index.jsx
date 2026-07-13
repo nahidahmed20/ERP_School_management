@@ -122,7 +122,7 @@ export default function Index({ settings, groups, filters }) {
                   <td>{item.group}</td>
                   <td><code>{item.key}</code></td>
                   <td>{item.type}</td>
-                  <td className="mm-value-cell">{item.value ?? '—'}</td>
+                  <td>{item.value ?? '—'}</td>
                   <td>
                     <span className={`mm-status ${item.is_active ? 'is-active' : 'is-inactive'}`}>
                       {item.is_active ? 'Active' : 'Inactive'}

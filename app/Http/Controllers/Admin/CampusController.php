@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Campus;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\DB; 
 
 class CampusController extends Controller
 {
@@ -43,7 +44,13 @@ class CampusController extends Controller
     public function store(Request $request)
     {
         $data = $this->validateData($request);
-        Campus::create($data);
+
+        DB::transaction(function () use ($data) {
+            $campus = Campus::create($data);
+            if ($campus->is_main) {
+                Campus::where('id', '!=', $campus->id)->update(['is_main' => false]);
+            }
+        });
 
         return back()->with('success', 'নতুন Campus সফলভাবে যোগ করা হয়েছে।');
     }
@@ -51,13 +58,23 @@ class CampusController extends Controller
     public function update(Request $request, Campus $campus)
     {
         $data = $this->validateData($request, $campus->id);
-        $campus->update($data);
+
+        DB::transaction(function () use ($data, $campus) {
+            $campus->update($data);
+            if ($campus->is_main) {
+                Campus::where('id', '!=', $campus->id)->update(['is_main' => false]);
+            }
+        });
 
         return back()->with('success', 'Campus তথ্য সফলভাবে আপডেট করা হয়েছে।');
     }
 
     public function destroy(Campus $campus)
     {
+        if ($campus->is_main) {
+            return back()->with('error', 'Main Campus মুছে ফেলা যাবে না। আগে অন্য কোনো ক্যাম্পাসকে Main হিসেবে সেট করুন।');
+        }
+
         $campus->delete();
 
         return back()->with('success', 'Campus মুছে ফেলা হয়েছে।');

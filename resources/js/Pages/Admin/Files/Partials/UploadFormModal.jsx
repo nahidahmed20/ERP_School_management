@@ -9,7 +9,7 @@ export default function UploadFormModal({ folders, onClose }) {
 
   const submit = (e) => {
     e.preventDefault();
-    post(route('admin.files'), {
+    post(route('admin.files.index'), {
       forceFormData: true,
       onSuccess: () => { reset(); onClose(); },
     });
