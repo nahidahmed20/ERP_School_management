@@ -1,7 +1,7 @@
 import { useForm, usePage } from '@inertiajs/react';
 import Icon from '@/Components/Icons';
 
-export default function HouseFormModal({ item, campuses, activeCampusId, onClose }) {
+export default function SubjectFormModal({ item, campuses, activeCampusId, onClose }) {
   const isEdit = !!item;
   const { auth } = usePage().props;
   const isSuperAdmin = auth?.user?.role === 'super_admin' || auth?.user?.roles?.some(r => r.name === 'Super Admin');
@@ -9,7 +9,8 @@ export default function HouseFormModal({ item, campuses, activeCampusId, onClose
   const { data, setData, post, put, processing, errors, reset } = useForm({
     campus_id: item?.campus_id ?? activeCampusId,
     name: item?.name ?? '',
-    color: item?.color ?? '#ff0000',
+    code: item?.code ?? '',
+    type: item?.type ?? 'Theory',
     description: item?.description ?? '',
     is_active: item?.is_active ?? true,
   });
@@ -20,17 +21,17 @@ export default function HouseFormModal({ item, campuses, activeCampusId, onClose
       onSuccess: () => { reset(); onClose(); },
     };
     if (isEdit) {
-      put(route('admin.houses.update', item.id), options);
+      put(route('admin.subjects.update', item.id), options);
     } else {
-      post(route('admin.houses.store'), options);
+      post(route('admin.subjects.store'), options);
     }
   }
 
   return (
     <div className="mm-modal-overlay" onClick={onClose}>
-      <div className="mm-modal mm-modal-lg" onClick={(e) => e.stopPropagation()}>
+      <div className="mm-modal mm-modal-sm" onClick={(e) => e.stopPropagation()}>
         <div className="mm-modal-head">
-          <h3>{isEdit ? 'Edit House' : 'Add House'}</h3>
+          <h3>{isEdit ? 'Edit Subject' : 'Add Subject'}</h3>
           <button className="icon-btn" onClick={onClose}>
             <Icon name="close" />
           </button>
@@ -55,39 +56,41 @@ export default function HouseFormModal({ item, campuses, activeCampusId, onClose
             </label>
 
             <label style={{ gridColumn: '1 / -1' }}>
-              <span>House Name</span>
+              <span>Subject Name</span>
               <input
                 value={data.name}
                 onChange={(e) => setData('name', e.target.value)}
                 autoFocus
-                placeholder="e.g. Red House, Blue House"
+                placeholder="e.g. English, Physics"
               />
               {errors.name && <em>{errors.name}</em>}
             </label>
 
-            <label style={{ gridColumn: '1 / -1' }}>
-              <span>House Color</span>
-              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                <input
-                  type="color"
-                  value={data.color}
-                  onChange={(e) => setData('color', e.target.value)}
-                  style={{ width: '40px', height: '40px', padding: '0', border: 'none', cursor: 'pointer' }}
-                />
-                <input
-                  type="text"
-                  value={data.color}
-                  onChange={(e) => setData('color', e.target.value)}
-                  placeholder="#HexCode"
-                  style={{ flex: 1 }}
-                />
-              </div>
+            {/* Code এবং Type পাশাপাশি দেখানোর জন্য */}
+            <label>
+              <span>Subject Code</span>
+              <input
+                value={data.code}
+                onChange={(e) => setData('code', e.target.value)}
+                placeholder="e.g. ENG-101"
+              />
+              {errors.code && <em>{errors.code}</em>}
+            </label>
+
+            <label>
+              <span>Subject Type</span>
+              <select value={data.type} onChange={(e) => setData('type', e.target.value)}>
+                <option value="Theory">Theory</option>
+                <option value="Practical">Practical</option>
+                <option value="Both">Both</option>
+              </select>
+              {errors.type && <em>{errors.type}</em>}
             </label>
 
             <label style={{ gridColumn: '1 / -1' }}>
               <span>Description</span>
               <textarea
-                rows="3"
+                rows="2"
                 value={data.description}
                 onChange={(e) => setData('description', e.target.value)}
               />

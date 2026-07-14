@@ -14,6 +14,11 @@ use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SystemRegistryController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\StudentCategoryController;
+use App\Http\Controllers\Admin\SchoolClassController;
+use App\Http\Controllers\Admin\SectionController;
+use App\Http\Controllers\Admin\SubjectController;
+use App\Http\Controllers\Admin\ClassroomController;
 use App\Http\Controllers\DynamicPageController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -60,6 +65,12 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
     Route::resource('departments', DepartmentController::class);
     Route::resource('designations', DesignationController::class);
     Route::resource('houses', HouseController::class);
+
+    Route::resource('student-categories', StudentCategoryController::class);
+    Route::resource('classes', SchoolClassController::class);
+    Route::resource('sections', SectionController::class);
+    Route::resource('subjects', SubjectController::class);
+    Route::resource('classrooms', ClassroomController::class);
 });
 
 

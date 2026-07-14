@@ -92,7 +92,7 @@ export default function MenuItemFormModal({ item, groups, parents, onClose }) {
             </label>
           </div>
 
-          <div className="mm-modal-foot">
+          <div className="mm-modal-foot mt-2">
             <button type="button" className="btn btn-outline" onClick={onClose}>Cancel</button>
             <button type="submit" className="btn" disabled={processing}>
               {isEdit ? 'Update' : 'Create'}

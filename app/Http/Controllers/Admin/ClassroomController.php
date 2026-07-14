@@ -1,0 +1,85 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\Classroom;
+use App\Models\Campus;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Illuminate\Validation\Rule;
+
+class ClassroomController extends Controller
+{
+    public function index(Request $request)
+    {
+        $query = Classroom::query();
+
+        if ($search = $request->get('search')) {
+            $query->where('room_number', 'like', "%{$search}%");
+        }
+
+        if ($request->filled('type')) {
+            $query->where('type', $request->get('type'));
+        }
+
+        if ($request->filled('status')) {
+            $query->where('is_active', $request->get('status') === 'active');
+        }
+
+        $query->orderBy('room_number', 'asc');
+
+        $perPage = $request->get('per_page', 10);
+        $classrooms = $perPage === 'all'
+            ? ['data' => $query->get(), 'links' => [], 'meta' => ['total' => $query->count()]]
+            : $query->paginate((int) $perPage)->withQueryString();
+
+        return Inertia::render('Admin/Classrooms/Index', [
+            'classrooms' => $classrooms,
+            'campuses' => Campus::select('id', 'name')->get(),
+            'filters' => $request->only(['search', 'type', 'status', 'per_page']),
+        ]);
+    }
+
+    public function store(Request $request)
+    {
+        $data = $this->validateData($request);
+        Classroom::create($data);
+
+        return back()->with('success', 'নতুন Classroom যোগ করা হয়েছে।');
+    }
+
+    public function update(Request $request, $id)
+    {
+        $classroom = Classroom::findOrFail($id);
+        $data = $this->validateData($request, $classroom->id);
+        $classroom->update($data);
+
+        return back()->with('success', 'Classroom আপডেট করা হয়েছে।');
+    }
+
+    public function destroy($id)
+    {
+        $classroom = Classroom::findOrFail($id);
+        $classroom->delete();
+
+        return back()->with('success', 'Classroom মুছে ফেলা হয়েছে।');
+    }
+
+    private function validateData(Request $request, $ignoreId = null): array
+    {
+        $campusId = $request->campus_id ?? config('app.active_campus_id');
+
+        return $request->validate([
+            'campus_id' => 'required|exists:campuses,id',
+            'room_number' => [
+                'required', 'string', 'max:100',
+                Rule::unique('classrooms', 'room_number')->where('campus_id', $campusId)->ignore($ignoreId)
+            ],
+            'capacity' => 'required|integer|min:1',
+            'type' => 'required|string',
+            'description' => 'nullable|string',
+            'is_active' => 'boolean',
+        ]);
+    }
+}
