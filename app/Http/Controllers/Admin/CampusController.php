@@ -94,4 +94,20 @@ class CampusController extends Controller
             'order' => 'nullable|integer',
         ]);
     }
+
+    public function switchCampus(Request $request)
+    {
+        $request->validate(['campus_id' => 'nullable|exists:campuses,id']);
+        
+        $user = auth()->user();
+        
+        if ($user->hasRole('Super Admin')) {
+            session()->put('active_campus_id', $request->campus_id);
+            session()->save(); 
+        } else {
+            abort(403, 'Unauthorized action.');
+        }
+
+        return back();
+    }
 }

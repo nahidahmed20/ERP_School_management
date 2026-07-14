@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Head, router, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
 import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 import Pagination from '@/Components/Pagination';
+import Swal from 'sweetalert2'; 
 
 const DIAG_LABELS = {
   php_version: 'PHP Version',
@@ -27,6 +28,21 @@ export default function Index({ logs, filters, diagnostics }) {
 
   const [deletingItem, setDeletingItem] = useState(null);
 
+  useEffect(() => {
+    if (flash?.success) {
+      Swal.fire({
+        toast: true, position: 'top-end', icon: 'success', title: flash.success,
+        showConfirmButton: false, timer: 3000, timerProgressBar: true,
+      });
+    }
+    if (flash?.error) {
+      Swal.fire({
+        toast: true, position: 'top-end', icon: 'error', title: flash.error,
+        showConfirmButton: false, timer: 4000, timerProgressBar: true,
+      });
+    }
+  }, [flash]);
+
   function applyFilters(overrides = {}) {
     router.get(route('admin.registry'), {
       search, level, per_page: perPage, ...overrides,
@@ -40,9 +56,20 @@ export default function Index({ logs, filters, diagnostics }) {
   }
 
   function clearAll() {
-    if (confirm('আপনি কি নিশ্চিত যে সব Log মুছে ফেলতে চান?')) {
-      router.post(route('admin.registry.clear'));
-    }
+    Swal.fire({
+      title: 'আপনি কি নিশ্চিত?',
+      text: "সব Log চিরতরে মুছে ফেলা হবে!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'হ্যাঁ, সব মুছুন!',
+      cancelButtonText: 'বাতিল'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        router.post(route('admin.registry.clear'));
+      }
+    });
   }
 
   return (
@@ -64,8 +91,6 @@ export default function Index({ logs, filters, diagnostics }) {
     >
       <Head title="System Registry & Diagnostics" />
 
-      {flash?.success && <div className="mm-toast">{flash.success}</div>}
-
       <div className="mm-diag-grid">
         {Object.entries(diagnostics).map(([key, value]) => (
           <div className="mm-diag-card" key={key}>
@@ -77,12 +102,12 @@ export default function Index({ logs, filters, diagnostics }) {
 
       <div className="card mm-card">
         <div className="mm-filters">
-        <select value={perPage} onChange={(e) => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}>
+          <select value={perPage} onChange={(e) => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}>
             <option value="10">10 / page</option>
             <option value="20">20 / page</option>
             <option value="50">50 / page</option>
             <option value="all">Show All</option>
-        </select>
+          </select>
           <div className="search">
             <Icon name="search" />
             <input

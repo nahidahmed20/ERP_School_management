@@ -2,10 +2,11 @@
 
 namespace App\Http\Middleware;
 
-use Illuminate\Http\Request;
-use Inertia\Middleware;
+use App\Models\Campus;
 use App\Services\NavigationService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -22,8 +23,17 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
 
             'auth' => [
-                'user' => $request->user(),
+                'user' => $request->user() ? clone $request->user()->load('campus') : null,
+                'active_campus_id' => config('app.active_campus_id'), 
             ],
+
+            'all_campuses' => function () use ($request) {
+                $user = $request->user();
+                if ($user && ($user->hasRole('Super Admin') || $user->role === 'Super Admin' || $user->role === 'super_admin')) {
+                    return Campus::select('id', 'name')->get();
+                }
+                return [];
+            },
 
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
@@ -81,6 +91,7 @@ class HandleInertiaRequests extends Middleware
                     return !empty($group['items']);
                 })->values()->all();
             },
+            
         ];
     }
 }

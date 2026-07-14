@@ -1,29 +1,35 @@
 import { useForm, usePage } from '@inertiajs/react';
 import Icon from '@/Components/Icons';
 
-export default function UploadFormModal({ folders, campuses, activeCampusId, onClose }) {
+export default function DepartmentFormModal({ item, campuses, activeCampusId, onClose }) {
+  const isEdit = !!item;
   const { auth } = usePage().props;
   const isSuperAdmin = auth?.user?.role === 'super_admin' || auth?.user?.roles?.some(r => r.name === 'Super Admin');
 
-  const { data, setData, post, processing, errors, reset } = useForm({
-    file: null,
-    folder_id: '',
-    campus_id: activeCampusId || '', 
+  const { data, setData, post, put, processing, errors, reset } = useForm({
+    campus_id: item?.campus_id ?? activeCampusId,
+    name: item?.name ?? '',
+    description: item?.description ?? '',
+    is_active: item?.is_active ?? true,
   });
 
-  const submit = (e) => {
+  function submit(e) {
     e.preventDefault();
-    post(route('admin.files.store'), { 
-      forceFormData: true,
+    const options = {
       onSuccess: () => { reset(); onClose(); },
-    });
-  };
+    };
+    if (isEdit) {
+      put(route('admin.departments.update', item.id), options);
+    } else {
+      post(route('admin.departments.store'), options);
+    }
+  }
 
   return (
     <div className="mm-modal-overlay" onClick={onClose}>
       <div className="mm-modal mm-modal-sm" onClick={(e) => e.stopPropagation()}>
         <div className="mm-modal-head">
-          <h3>Upload File</h3>
+          <h3>{isEdit ? 'Edit Department' : 'Add Department'}</h3>
           <button className="icon-btn" onClick={onClose}>
             <Icon name="close" />
           </button>
@@ -35,7 +41,7 @@ export default function UploadFormModal({ folders, campuses, activeCampusId, onC
             <label style={{ gridColumn: '1 / -1' }}>
               <span>Assign to Campus</span>
               <select 
-                value={data.campus_id} 
+                value={data.campus_id || ''} 
                 onChange={(e) => setData('campus_id', e.target.value)}
                 disabled={!isSuperAdmin}
               >
@@ -48,36 +54,42 @@ export default function UploadFormModal({ folders, campuses, activeCampusId, onC
             </label>
 
             <label style={{ gridColumn: '1 / -1' }}>
-              <span>Folder</span>
-              <select
-                value={data.folder_id}
-                onChange={(e) => setData('folder_id', e.target.value)}
-              >
-                <option value="">No Folder (Root)</option>
-                {folders.map((f) => (
-                  <option key={f.id} value={f.id}>{f.name}</option>
-                ))}
-              </select>
-              {errors.folder_id && <em>{errors.folder_id}</em>}
+              <span>Department Name</span>
+              <input 
+                value={data.name} 
+                onChange={(e) => setData('name', e.target.value)} 
+                autoFocus 
+                placeholder="e.g. Academic, HR, Accounts"
+              />
+              {errors.name && <em>{errors.name}</em>}
             </label>
 
             <label style={{ gridColumn: '1 / -1' }}>
-              <span>File</span>
-              <input
-                type="file"
-                onChange={(e) => setData('file', e.target.files[0])}
+              <span>Description</span>
+              <textarea 
+                rows="3" 
+                value={data.description} 
+                onChange={(e) => setData('description', e.target.value)} 
               />
-              {errors.file && <em>{errors.file}</em>}
+            </label>
+
+            <label className="mm-checkbox" style={{ gridColumn: '1 / -1' }}>
+              <input 
+                type="checkbox" 
+                checked={data.is_active} 
+                onChange={(e) => setData('is_active', e.target.checked)} 
+              />
+              Active
             </label>
 
           </div>
 
-          <div className="mm-modal-foot">
+          <div className="mm-modal-foot mt-2">
             <button type="button" className="btn btn-outline" onClick={onClose} disabled={processing}>
               Cancel
             </button>
             <button type="submit" className="btn" disabled={processing}>
-              {processing ? 'Uploading...' : 'Upload'}
+              {processing ? 'Saving...' : (isEdit ? 'Update' : 'Save')}
             </button>
           </div>
         </form>

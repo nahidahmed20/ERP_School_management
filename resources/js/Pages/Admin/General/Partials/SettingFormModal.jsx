@@ -1,12 +1,15 @@
-import { useForm } from '@inertiajs/react';
+import { useForm, usePage } from '@inertiajs/react';
 import Icon from '@/Components/Icons';
 
 const TYPES = ['text', 'textarea', 'number', 'boolean', 'image', 'select', 'json'];
 
-export default function SettingFormModal({ item, groups, onClose }) {
+export default function SettingFormModal({ item, groups, campuses, activeCampusId, onClose }) {
   const isEdit = !!item;
+  const { auth } = usePage().props;
+  const isSuperAdmin = auth?.user?.role === 'super_admin' || auth?.user?.roles?.some(r => r.name === 'Super Admin');
 
   const { data, setData, post, put, processing, errors, reset } = useForm({
+    campus_id: item?.campus_id ?? activeCampusId, // ডিফল্টভাবে বর্তমান ক্যাম্পাস
     group: item?.group ?? (groups[0] ?? 'general'),
     key: item?.key ?? '',
     value: item?.value ?? '',
@@ -25,7 +28,7 @@ export default function SettingFormModal({ item, groups, onClose }) {
     if (isEdit) {
       put(route('admin.general.update', item.id), options);
     } else {
-      post(route('admin.general'), options);
+      post(route('admin.general.store'), options); // রাউট নেম চেক করে নিবেন (.store আছে কি না)
     }
   }
 
@@ -41,6 +44,22 @@ export default function SettingFormModal({ item, groups, onClose }) {
 
         <form onSubmit={submit} className="mm-form">
           <div className="mm-form-grid">
+
+            {/* --- Campus Selection --- */}
+            <label style={{ gridColumn: '1 / -1' }}>
+              Assign to Campus
+              <select 
+                value={data.campus_id || ''} 
+                onChange={(e) => setData('campus_id', e.target.value)}
+                disabled={!isSuperAdmin} // লোকাল এডমিন ক্যাম্পাস চেঞ্জ করতে পারবে না
+              >
+                <option value="" disabled>Select Campus</option>
+                {campuses?.map(campus => (
+                  <option key={campus.id} value={campus.id}>{campus.name}</option>
+                ))}
+              </select>
+              {errors.campus_id && <em>{errors.campus_id}</em>}
+            </label>
 
             <label>
               Group
@@ -100,10 +119,10 @@ export default function SettingFormModal({ item, groups, onClose }) {
 
           </div>
 
-          <div className="mm-modal-foot">
+          <div className="mm-modal-foot mt-2">
             <button type="button" className="btn btn-outline" onClick={onClose}>Cancel</button>
             <button type="submit" className="btn" disabled={processing}>
-              {isEdit ? 'Update' : 'Save'}
+              {processing ? 'Saving...' : (isEdit ? 'Update' : 'Save')}
             </button>
           </div>
         </form>

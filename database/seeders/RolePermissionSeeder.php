@@ -39,6 +39,7 @@ class RolePermissionSeeder extends Seeder
             [
                 'name' => 'Super Admin',
                 'password' => Hash::make('11111111'),
+                'campus_id' => 1,
             ]
         );
 
@@ -49,6 +50,7 @@ class RolePermissionSeeder extends Seeder
             [
                 'name' => 'Teacher',
                 'password' => Hash::make('password'),
+                'campus_id' => 1,
             ]
         );
         $teacherUser->assignRole($teacherRole);

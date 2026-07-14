@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\FileManagerFile;
 use App\Models\FileManagerFolder;
+use App\Models\Campus; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
@@ -62,6 +63,7 @@ class FileManagerController extends Controller
         return Inertia::render('Admin/Files/Index', [
             'files' => $paginatedFiles,
             'folders' => FileManagerFolder::select('id', 'name', 'parent_id')->orderBy('name')->get(),
+            'campuses' => Campus::select('id', 'name')->get(), 
             'filters' => $request->only(['search', 'folder_id', 'type', 'per_page']),
         ]);
     }
@@ -69,8 +71,9 @@ class FileManagerController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|max:20480', // 20MB Limit
+            'file' => 'required|file|max:20480', 
             'folder_id' => 'nullable|exists:file_manager_folders,id',
+            'campus_id' => 'required|exists:campuses,id', 
         ]);
 
         try {
@@ -79,6 +82,7 @@ class FileManagerController extends Controller
 
             FileManagerFile::create([
                 'folder_id' => $request->get('folder_id'),
+                'campus_id' => $request->get('campus_id'), // Campus ID সেভ
                 'name' => Str::random(10) . '_' . $uploaded->getClientOriginalName(),
                 'original_name' => $uploaded->getClientOriginalName(),
                 'path' => $stored,
@@ -91,16 +95,16 @@ class FileManagerController extends Controller
             return redirect()->back()->with('success', 'ফাইল সফলভাবে আপলোড করা হয়েছে।');
         } catch (\Exception $e) {
             Log::error('File Upload Error: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'ফাইল আপলোড করতে সমস্যা হয়েছে!');
+            return redirect()->back()->with('error', 'ফাইল আপলোড করতে সমস্যা হয়েছে!');
         }
     }
-
 
     public function storeFolder(Request $request)
     {
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'parent_id' => 'nullable|exists:file_manager_folders,id',
+            'campus_id' => 'required|exists:campuses,id',
         ]);
 
         try {
@@ -110,7 +114,7 @@ class FileManagerController extends Controller
             return back()->with('success', 'নতুন ফোল্ডার তৈরি করা হয়েছে।');
         } catch (\Exception $e) {
             Log::error('Folder Create Error: ' . $e->getMessage());
-            return back()->withErrors(['name' => 'ফোল্ডার তৈরি করতে সমস্যা হয়েছে!']);
+            return back()->withErrors(['name' => 'ফোল্ডার তৈরি করতে সমস্যা হয়েছে!']);
         }
     }
 
@@ -126,7 +130,7 @@ class FileManagerController extends Controller
             return back()->with('success', 'ফাইল মুছে ফেলা হয়েছে।');
         } catch (\Exception $e) {
             Log::error('File Delete Error: ' . $e->getMessage());
-            return back()->withErrors(['error' => 'ফাইল মুছতে সমস্যা হয়েছে!']);
+            return back()->withErrors(['error' => 'ফাইল মুছতে সমস্যা হয়েছে!']);
         }
     }
 

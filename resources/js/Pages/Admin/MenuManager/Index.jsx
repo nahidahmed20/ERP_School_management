@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Head, router, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
 import MenuItemFormModal from './Partials/MenuItemFormModal';
 import ViewModal from './Partials/ViewModal';
-import ConfirmDeleteModal from './Partials/ConfirmDeleteModal';
+import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 import Pagination from '@/Components/Pagination';
+import Swal from 'sweetalert2'; 
 
 export default function Index({ items, groups, parents, filters }) {
   const { flash } = usePage().props;
@@ -20,6 +21,31 @@ export default function Index({ items, groups, parents, filters }) {
   const [editingItem, setEditingItem] = useState(null);
   const [viewingItem, setViewingItem] = useState(null);
   const [deletingItem, setDeletingItem] = useState(null);
+
+  useEffect(() => {
+    if (flash?.success) {
+      Swal.fire({
+        toast: true, 
+        position: 'top-end', 
+        icon: 'success', 
+        title: flash.success,
+        showConfirmButton: false, 
+        timer: 3000, 
+        timerProgressBar: true,
+      });
+    }
+    if (flash?.error) {
+      Swal.fire({
+        toast: true, 
+        position: 'top-end', 
+        icon: 'error', 
+        title: flash.error,
+        showConfirmButton: false, 
+        timer: 4000, 
+        timerProgressBar: true,
+      });
+    }
+  }, [flash]);
 
   function applyFilters(overrides = {}) {
     router.get(route('admin.menu.index'), {
@@ -68,12 +94,17 @@ export default function Index({ items, groups, parents, filters }) {
     >
       <Head title="Menu Manager" />
 
-      {flash?.success && (
-        <div className="mm-toast">{flash.success}</div>
-      )}
-
       <div className="card mm-card">
         <div className="mm-filters">
+          <select value={perPage} onChange={(e) => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}>
+            <option value="10">10 / page</option>
+            <option value="20">20 / page</option>
+            <option value="50">50 / page</option>
+            <option value="100">100 / page</option>
+            <option value="500">500 / page</option>
+            <option value="1000">1000 / page</option>
+            <option value="all">Show All</option>
+          </select>
           <div className="search">
             <Icon name="search" />
             <input
@@ -100,17 +131,7 @@ export default function Index({ items, groups, parents, filters }) {
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
           </select>
-
-          <select value={perPage} onChange={(e) => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}>
-            <option value="10">10 / page</option>
-            <option value="20">20 / page</option>
-            <option value="50">50 / page</option>
-            <option value="100">100 / page</option>
-            <option value="500">500 / page</option>
-            <option value="1000">1000 / page</option>
-            <option value="all">Show All</option>
-          </select>
-
+          
           <button className="btn btn-outline" onClick={() => applyFilters()}>Filter</button>
         </div>
 

@@ -1,16 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Head, router, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
-import SessionFormModal from './Partials/SessionFormModal';
-import ConfirmDeleteModal from './Partials/ConfirmDeleteModal';
 import Pagination from '@/Components/Pagination';
+import DesignationFormModal from './Partials/DesignationFormModal';
+import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
+import Swal from 'sweetalert2';
 
-export default function Index({ sessions, campuses, filters }) {
-  const { flash } = usePage().props;
+export default function Index({ designations, campuses, filters }) {
+  const { flash, auth } = usePage().props;
 
   const [search, setSearch] = useState(filters.search ?? '');
-  const [campusId, setCampusId] = useState(filters.campus_id ?? '');
   const [status, setStatus] = useState(filters.status ?? '');
   const [perPage, setPerPage] = useState(filters.per_page ?? '10');
 
@@ -18,26 +18,19 @@ export default function Index({ sessions, campuses, filters }) {
   const [editingItem, setEditingItem] = useState(null);
   const [deletingItem, setDeletingItem] = useState(null);
 
+  useEffect(() => {
+    if (flash?.success) {
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: flash.success, showConfirmButton: false, timer: 3000, timerProgressBar: true });
+    }
+    if (flash?.error) {
+      Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: flash.error, showConfirmButton: false, timer: 4000, timerProgressBar: true });
+    }
+  }, [flash]);
+
   function applyFilters(overrides = {}) {
-    router.get(route('admin.sessions'), {
-      search, campus_id: campusId, status, per_page: perPage, ...overrides,
+    router.get(route('admin.designations.index'), {
+      search, status, per_page: perPage, ...overrides,
     }, { preserveState: true, replace: true });
-  }
-
-  function openCreate() {
-    setEditingItem(null);
-    setFormOpen(true);
-  }
-
-  function openEdit(item) {
-    setEditingItem(item);
-    setFormOpen(true);
-  }
-
-  function confirmDelete() {
-    router.delete(route('admin.sessions.destroy', deletingItem.id), {
-      onSuccess: () => setDeletingItem(null),
-    });
   }
 
   return (
@@ -45,44 +38,36 @@ export default function Index({ sessions, campuses, filters }) {
       header={
         <div className="page-head">
           <div>
-            <span className="eyebrow">Settings &amp; Registry</span>
-            <h1>Academic Sessions</h1>
-            <p className="desc">শিক্ষাবর্ষ / সেশন তৈরি ও ব্যবস্থাপনা করুন।</p>
+            <span className="eyebrow">HR & Admin</span>
+            <h1>Designations</h1>
+            <p className="desc">স্টাফ ও শিক্ষকদের জন্য ডিপার্টমেন্ট পরিচালনা করুন।</p>
           </div>
           <div className="mm-head-actions">
-            <button className="btn" onClick={openCreate}>
-              <Icon name="plus" /> Add Session
+            <button className="btn" onClick={() => { setEditingItem(null); setFormOpen(true); }}>
+              <Icon name="plus" /> Add Department
             </button>
           </div>
         </div>
       }
     >
-      <Head title="Academic Sessions" />
-
-      {flash?.success && <div className="mm-toast">{flash.success}</div>}
+      <Head title="Designations" />
 
       <div className="card mm-card">
-        <div className="mm-filters">
-          <select value={perPage} onChange={(e) => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}>
+        <div className="mm-filters" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <select value={perPage} onChange={(e) => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}>
             <option value="10">10 / page</option>
             <option value="20">20 / page</option>
-            <option value="50">50 / page</option>
             <option value="all">Show All</option>
           </select>
           <div className="search">
             <Icon name="search" />
             <input
-              placeholder="Search by session name..."
+              placeholder="Search by name..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
             />
           </div>
-
-          <select value={campusId} onChange={(e) => { setCampusId(e.target.value); applyFilters({ campus_id: e.target.value }); }}>
-            <option value="">All Campuses</option>
-            {campuses.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
 
           <select value={status} onChange={(e) => { setStatus(e.target.value); applyFilters({ status: e.target.value }); }}>
             <option value="">All Status</option>
@@ -97,32 +82,25 @@ export default function Index({ sessions, campuses, filters }) {
           <table className="mm-table">
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Campus</th>
-                <th>Start</th>
-                <th>End</th>
-                <th>Current?</th>
+                <th>Department Name</th>
+                <th>Description</th>
                 <th>Status</th>
                 <th className="mm-actions-col">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {sessions.data.length === 0 && (
-                <tr><td colSpan={7} className="mm-empty">কোনো Academic Session পাওয়া যায়নি।</td></tr>
+              {designations.data.length === 0 && (
+                <tr><td colSpan={4} className="mm-empty">কোনো ডিপার্টমেন্ট পাওয়া যায়নি।</td></tr>
               )}
-              {sessions.data.map((item) => (
+              {designations.data.map((item) => (
                 <tr key={item.id}>
                   <td>
                     <div className="mm-label-cell">
-                      <Icon name="calendar" className="mm-row-icon" />
+                      <Icon name="folder" className="mm-row-icon" />
                       <span>{item.name}</span>
-                      {item.is_current && <span className="mm-tag mm-tag-parent">Current</span>}
                     </div>
                   </td>
-                  <td>{item.campus?.name ?? 'All Campuses'}</td>
-                  <td>{item.start_date}</td>
-                  <td>{item.end_date}</td>
-                  <td>{item.is_current ? 'Yes' : 'No'}</td>
+                  <td>{item.description ?? '—'}</td>
                   <td>
                     <span className={`mm-status ${item.is_active ? 'is-active' : 'is-inactive'}`}>
                       {item.is_active ? 'Active' : 'Inactive'}
@@ -130,7 +108,7 @@ export default function Index({ sessions, campuses, filters }) {
                   </td>
                   <td>
                     <div className="mm-row-actions">
-                      <button className="icon-btn" title="Edit" onClick={() => openEdit(item)}>
+                      <button className="icon-btn" title="Edit" onClick={() => { setEditingItem(item); setFormOpen(true); }}>
                         <Icon name="edit" />
                       </button>
                       <button className="icon-btn icon-btn-danger" title="Delete" onClick={() => setDeletingItem(item)}>
@@ -144,18 +122,27 @@ export default function Index({ sessions, campuses, filters }) {
           </table>
         </div>
 
-        <Pagination meta={sessions} />
+        <Pagination meta={designations} />
       </div>
 
       {formOpen && (
-        <SessionFormModal item={editingItem} campuses={campuses} onClose={() => setFormOpen(false)} />
+        <DesignationFormModal 
+          item={editingItem} 
+          campuses={campuses}
+          activeCampusId={auth?.active_campus_id}
+          onClose={() => setFormOpen(false)} 
+        />
       )}
 
       {deletingItem && (
         <ConfirmDeleteModal
           item={deletingItem}
           onCancel={() => setDeletingItem(null)}
-          onConfirm={confirmDelete}
+          onConfirm={() => {
+            router.delete(route('admin.designations.destroy', deletingItem.id), {
+              onSuccess: () => setDeletingItem(null),
+            });
+          }}
         />
       )}
     </AuthenticatedLayout>

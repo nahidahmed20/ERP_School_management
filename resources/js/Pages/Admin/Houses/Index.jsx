@@ -2,16 +2,15 @@ import { useState, useEffect } from 'react';
 import { Head, router, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
-import SettingFormModal from './Partials/SettingFormModal';
-import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 import Pagination from '@/Components/Pagination';
-import Swal from 'sweetalert2'; 
+import HouseFormModal from './Partials/HouseFormModal';
+import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
+import Swal from 'sweetalert2';
 
-export default function Index({ settings, groups, campuses, filters }) {
+export default function Index({ houses, campuses, filters }) {
   const { flash, auth } = usePage().props;
 
   const [search, setSearch] = useState(filters.search ?? '');
-  const [group, setGroup] = useState(filters.group ?? '');
   const [status, setStatus] = useState(filters.status ?? '');
   const [perPage, setPerPage] = useState(filters.per_page ?? '10');
 
@@ -19,7 +18,6 @@ export default function Index({ settings, groups, campuses, filters }) {
   const [editingItem, setEditingItem] = useState(null);
   const [deletingItem, setDeletingItem] = useState(null);
 
-  // --- SweetAlert2 Toast Message ---
   useEffect(() => {
     if (flash?.success) {
       Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: flash.success, showConfirmButton: false, timer: 3000, timerProgressBar: true });
@@ -30,25 +28,9 @@ export default function Index({ settings, groups, campuses, filters }) {
   }, [flash]);
 
   function applyFilters(overrides = {}) {
-    router.get(route('admin.general.index'), { 
-      search, group, status, per_page: perPage, ...overrides,
+    router.get(route('admin.houses.index'), {
+      search, status, per_page: perPage, ...overrides,
     }, { preserveState: true, replace: true });
-  }
-
-  function openCreate() {
-    setEditingItem(null);
-    setFormOpen(true);
-  }
-
-  function openEdit(item) {
-    setEditingItem(item);
-    setFormOpen(true);
-  }
-
-  function confirmDelete() {
-    router.delete(route('admin.general.destroy', deletingItem.id), {
-      onSuccess: () => setDeletingItem(null),
-    });
   }
 
   return (
@@ -56,48 +38,36 @@ export default function Index({ settings, groups, campuses, filters }) {
       header={
         <div className="page-head">
           <div>
-            <span className="eyebrow">Settings &amp; Registry</span>
-            <h1>General Settings</h1>
-            <p className="desc">সিস্টেমের key-value ভিত্তিক configuration এখান থেকে নিয়ন্ত্রণ করুন।</p>
+            <span className="eyebrow">Academic Foundation</span>
+            <h1>Houses</h1>
+            <p className="desc">স্কুলের স্পোর্টস বা এক্সট্রা কারিকুলার হাউজ পরিচালনা করুন।</p>
           </div>
           <div className="mm-head-actions">
-            <button className="btn" onClick={openCreate}>
-              <Icon name="plus" /> Add Setting
+            <button className="btn" onClick={() => { setEditingItem(null); setFormOpen(true); }}>
+              <Icon name="plus" /> Add House
             </button>
           </div>
         </div>
       }
     >
-      <Head title="General Settings" />
+      <Head title="Houses" />
 
       <div className="card mm-card">
         <div className="mm-filters" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           <div className="search">
             <Icon name="search" />
             <input
-              placeholder="Search by label or key..."
+              placeholder="Search by name..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
             />
           </div>
 
-          <select value={group} onChange={(e) => { setGroup(e.target.value); applyFilters({ group: e.target.value }); }}>
-            <option value="">All Groups</option>
-            {groups.map((g) => <option key={g} value={g}>{g}</option>)}
-          </select>
-
           <select value={status} onChange={(e) => { setStatus(e.target.value); applyFilters({ status: e.target.value }); }}>
             <option value="">All Status</option>
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
-          </select>
-
-          <select value={perPage} onChange={(e) => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}>
-            <option value="10">10 / page</option>
-            <option value="20">20 / page</option>
-            <option value="50">50 / page</option>
-            <option value="all">Show All</option>
           </select>
 
           <button className="btn btn-outline" onClick={() => applyFilters()}>Filter</button>
@@ -107,31 +77,28 @@ export default function Index({ settings, groups, campuses, filters }) {
           <table className="mm-table">
             <thead>
               <tr>
-                <th>Label</th>
-                <th>Group</th>
-                <th>Key</th>
-                <th>Type</th>
-                <th>Value</th>
+                <th>House Name</th>
+                <th>Description</th>
                 <th>Status</th>
                 <th className="mm-actions-col">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {settings.data.length === 0 && (
-                <tr><td colSpan={7} className="mm-empty">কোনো Setting পাওয়া যায়নি।</td></tr>
+              {houses.data.length === 0 && (
+                <tr><td colSpan={4} className="mm-empty">কোনো House পাওয়া যায়নি।</td></tr>
               )}
-              {settings.data.map((item) => (
+              {houses.data.map((item) => (
                 <tr key={item.id}>
                   <td>
-                    <div className="mm-label-cell">
-                      <Icon name="settings" className="mm-row-icon" />
-                      <span>{item.label}</span>
+                    <div className="mm-label-cell" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      {/* কালার দেখানোর জন্য একটি ছোট বৃত্ত */}
+                      {item.color && (
+                        <span style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: item.color, display: 'inline-block' }}></span>
+                      )}
+                      <span style={{ fontWeight: 500 }}>{item.name}</span>
                     </div>
                   </td>
-                  <td>{item.group}</td>
-                  <td><code>{item.key}</code></td>
-                  <td>{item.type}</td>
-                  <td>{item.value ? (item.value.length > 30 ? item.value.substring(0, 30) + '...' : item.value) : '—'}</td>
+                  <td>{item.description ?? '—'}</td>
                   <td>
                     <span className={`mm-status ${item.is_active ? 'is-active' : 'is-inactive'}`}>
                       {item.is_active ? 'Active' : 'Inactive'}
@@ -139,7 +106,7 @@ export default function Index({ settings, groups, campuses, filters }) {
                   </td>
                   <td>
                     <div className="mm-row-actions">
-                      <button className="icon-btn" title="Edit" onClick={() => openEdit(item)}>
+                      <button className="icon-btn" title="Edit" onClick={() => { setEditingItem(item); setFormOpen(true); }}>
                         <Icon name="edit" />
                       </button>
                       <button className="icon-btn icon-btn-danger" title="Delete" onClick={() => setDeletingItem(item)}>
@@ -153,15 +120,14 @@ export default function Index({ settings, groups, campuses, filters }) {
           </table>
         </div>
 
-        <Pagination meta={settings} />
+        <Pagination meta={houses} />
       </div>
 
       {formOpen && (
-        <SettingFormModal 
+        <HouseFormModal 
           item={editingItem} 
-          groups={groups} 
-          campuses={campuses} 
-          activeCampusId={auth.active_campus_id}
+          campuses={campuses}
+          activeCampusId={auth?.active_campus_id}
           onClose={() => setFormOpen(false)} 
         />
       )}
@@ -170,7 +136,11 @@ export default function Index({ settings, groups, campuses, filters }) {
         <ConfirmDeleteModal
           item={deletingItem}
           onCancel={() => setDeletingItem(null)}
-          onConfirm={confirmDelete}
+          onConfirm={() => {
+            router.delete(route('admin.houses.destroy', deletingItem.id), {
+              onSuccess: () => setDeletingItem(null),
+            });
+          }}
         />
       )}
     </AuthenticatedLayout>

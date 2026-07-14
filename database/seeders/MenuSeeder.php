@@ -30,7 +30,7 @@ class MenuSeeder extends Seeder
                     ['key' => 'students.documents', 'label' => 'Student Documents', 'route' => 'admin.students.documents'],
                     ['key' => 'students.promotions', 'label' => 'Promotions', 'route' => 'admin.students.promotions'],
                     ['key' => 'students.categories', 'label' => 'Student Categories', 'route' => 'admin.students.categories'],
-                    ['key' => 'students.houses', 'label' => 'Houses', 'route' => 'admin.students.houses'],
+                    ['key' => 'admin.houses.index', 'label' => 'Houses', 'route' => 'admin.houses.index'],
                 ]],
                 ['key' => 'classes', 'label' => 'Classes & Subjects', 'icon' => 'book', 'count' => 4, 'children' => [
                     ['key' => 'classes.list', 'label' => 'Classes', 'route' => 'admin.classes.index'],
@@ -53,11 +53,11 @@ class MenuSeeder extends Seeder
 
             ['label' => 'People', 'items' => [
                 ['key' => 'staff', 'label' => 'Staff & HR', 'icon' => 'users', 'count' => 5, 'children' => [
-                    ['key' => 'staff.directory', 'label' => 'Staff Directory', 'route' => 'admin.staff.index'],
-                    ['key' => 'staff.departments', 'label' => 'Departments', 'route' => 'admin.staff.departments'],
-                    ['key' => 'staff.designations', 'label' => 'Designations', 'route' => 'admin.staff.designations'],
-                    ['key' => 'staff.leave', 'label' => 'Leave Management', 'route' => 'admin.staff.leave'],
-                    ['key' => 'staff.payroll', 'label' => 'Payroll', 'route' => 'admin.staff.payroll'],
+                    ['key' => 'admin.directories.index', 'label' => 'Staff Directory', 'route' => 'admin.directories.index'],
+                    ['key' => 'admin.departments.index', 'label' => 'Departments', 'route' => 'admin.departments.index'],
+                    ['key' => 'admin.designations.index', 'label' => 'Designations', 'route' => 'admin.designations.index'],
+                    ['key' => 'admin.leaves.index', 'label' => 'Leave Management', 'route' => 'admin.leaves.index'],
+                    ['key' => 'admin.payrolls.index', 'label' => 'Payroll', 'route' => 'admin.payrolls.index'],
                 ]],
                 ['key' => 'recruitment', 'label' => 'Recruitment', 'icon' => 'briefcase', 'count' => 4, 'children' => [
                     ['key' => 'recruitment.jobs', 'label' => 'Job Posts', 'route' => 'admin.recruitment.jobs'],

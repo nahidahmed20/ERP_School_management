@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Campus;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use Inertia\Inertia;
@@ -12,22 +13,49 @@ use Illuminate\Validation\Rules\Password;
 
 class UserController extends Controller
 {
+
     public function index(Request $request)
     {
-        $query = User::with('roles');
+        $query = User::withoutGlobalScope('campus')->with('roles');
 
-        if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%')
-                  ->orWhere('email', 'like', '%' . $request->search . '%');
+        $activeCampusId = config('app.active_campus_id');
+
+        if ($activeCampusId) {
+            $query->where(function($q) use ($activeCampusId) {
+                $q->where('campus_id', $activeCampusId);
+                
+                if (auth()->user()->hasRole('Super Admin')) {
+                    $q->orWhereNull('campus_id'); 
+                }
+            });
         }
 
-        $users = $query->paginate(10)->withQueryString();
-        $roles = Role::all();
+        if ($request->filled('search')) {
+            $query->where(function($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                ->orWhere('email', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        $perPage = $request->get('per_page', 10);
+        if ($perPage === 'all') {
+            $users = $query->paginate($query->count() > 0 ? $query->count() : 10)->withQueryString();
+        } else {
+            $users = $query->paginate((int) $perPage)->withQueryString();
+        }
+
+        $rolesQuery = Role::query();
+        if (!auth()->user()->hasRole('Super Admin')) {
+            $rolesQuery->where('name', '!=', 'Super Admin');
+        }
+        $roles = $rolesQuery->get();
+        $campuses = Campus::select('id', 'name')->get();
 
         return Inertia::render('Admin/Users/Index', [
             'users' => $users,
             'roles' => $roles,
-            'filters' => $request->only(['search']),
+            'campuses' => $campuses,
+            'filters' => $request->only(['search', 'per_page']),
         ]);
     }
 
@@ -37,13 +65,14 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => ['required', Password::defaults()],
-            'roles' => 'array'
+            'campus_id' => 'required|exists:campuses,id' // Campus Selection
         ]);
 
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
+            'campus_id' => config('app.active_campus_id'),
         ]);
 
         if (isset($validated['roles'])) {
@@ -55,7 +84,6 @@ class UserController extends Controller
 
     public function update(Request $request, User $user)
     {
-        // Protect Super Admin
         if ($user->hasRole('Super Admin')) {
             return back()->with('error', 'Super Admin cannot be modified.');
         }
@@ -64,12 +92,14 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'roles' => 'array',
+            'campus_id' => 'required|exists:campuses,id', // Campus Update
             'password' => ['nullable', Password::defaults()]
         ]);
 
         $user->update([
             'name' => $validated['name'],
             'email' => $validated['email'],
+            'campus_id' => $validated['campus_id'],
             'password' => $validated['password'] ? Hash::make($validated['password']) : $user->password,
         ]);
 

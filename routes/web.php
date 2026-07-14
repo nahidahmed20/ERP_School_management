@@ -1,21 +1,24 @@
 <?php
 
+use App\Http\Controllers\Admin\AcademicSessionController;
+use App\Http\Controllers\Admin\BranchController;
+use App\Http\Controllers\Admin\CampusController;
+use App\Http\Controllers\Admin\DepartmentController;
+use App\Http\Controllers\Admin\DesignationController;
+use App\Http\Controllers\Admin\FileManagerController;
+use App\Http\Controllers\Admin\GeneralSettingController;
+use App\Http\Controllers\Admin\HouseController;
+use App\Http\Controllers\Admin\MenuGroupController;
+use App\Http\Controllers\Admin\MenuItemController;
+use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\SystemRegistryController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\DynamicPageController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use App\Http\Controllers\Admin\MenuItemController;
-use App\Http\Controllers\Admin\MenuGroupController;
-use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Admin\RoleController;
-use App\Http\Controllers\Admin\PermissionController;
-use App\Http\Controllers\DynamicPageController;
-use App\Http\Controllers\Admin\AcademicSessionController;
-use App\Http\Controllers\Admin\CampusController;
-use App\Http\Controllers\Admin\FileManagerController;
-use App\Http\Controllers\Admin\GeneralSettingController;
-use App\Http\Controllers\Admin\SystemRegistryController;
-use App\Http\Controllers\Admin\BranchController;
 
 
 Route::get('/', function () {
@@ -45,14 +48,18 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
     Route::resource('roles', RoleController::class);
     Route::resource('permissions', PermissionController::class);
 
+    Route::post('/switch-campus', [CampusController::class, 'switchCampus'])->name('campus.switch');
     Route::resource('campuses', CampusController::class);
-    Route::resource('branches', BranchController::class);
     Route::resource('sessions', AcademicSessionController::class);
     Route::resource('general', GeneralSettingController::class);
     Route::resource('files', FileManagerController::class);
     Route::post('files/folder', [FileManagerController::class, 'storeFolder'])->name('files.folder.store');
     Route::resource('registry', SystemRegistryController::class);
     Route::post('registry/clear', [SystemRegistryController::class, 'clear'])->name('registry.clear');
+
+    Route::resource('departments', DepartmentController::class);
+    Route::resource('designations', DesignationController::class);
+    Route::resource('houses', HouseController::class);
 });
 
 

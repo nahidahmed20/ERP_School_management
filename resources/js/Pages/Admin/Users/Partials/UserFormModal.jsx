@@ -1,14 +1,18 @@
-import { useForm } from '@inertiajs/react';
+import { useForm, usePage } from '@inertiajs/react';
 import Icon from '@/Components/Icons';
 
-export default function UserFormModal({ item, roles, onClose }) {
+export default function UserFormModal({ item, roles, campuses, activeCampusId, onClose }) {
   const isEditing = !!item;
+  const { auth } = usePage().props;
+  const isSuperAdmin = auth?.user?.role === 'super_admin' || auth?.user?.roles?.some(r => r.name === 'Super Admin');
 
   const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm({
     name: isEditing ? item.name : '',
     email: isEditing ? item.email : '',
-    password: '', // Edit করার সময় পাসওয়ার্ড ফাঁকা থাকবে
+    password: '', 
     roles: isEditing ? item.roles.map((r) => r.name) : [],
+    // নতুন ইউজার হলে ডিফল্টভাবে অ্যাক্টিভ ক্যাম্পাস, এডিট হলে তার বর্তমান ক্যাম্পাস
+    campus_id: isEditing ? item.campus_id : activeCampusId, 
   });
 
   const submit = (e) => {
@@ -68,7 +72,23 @@ export default function UserFormModal({ item, roles, onClose }) {
               {errors.email && <em>{errors.email}</em>}
             </label>
 
-            <label style={{ gridColumn: '1 / -1' }}>
+            {/* --- Campus Selection --- */}
+            <label>
+              <span>Assign to Campus</span>
+              <select 
+                value={data.campus_id || ''} 
+                onChange={(e) => setData('campus_id', e.target.value)}
+                disabled={!isSuperAdmin} // লোকাল এডমিন ক্যাম্পাস চেঞ্জ করতে পারবে না
+              >
+                <option value="" disabled>Select Campus</option>
+                {campuses.map(campus => (
+                  <option key={campus.id} value={campus.id}>{campus.name}</option>
+                ))}
+              </select>
+              {errors.campus_id && <em>{errors.campus_id}</em>}
+            </label>
+
+            <label>
               <span>Password {isEditing && <small style={{ color: '#6b7280', fontWeight: 'normal' }}>(Leave blank to keep current password)</small>}</span>
               <input
                 type="password"

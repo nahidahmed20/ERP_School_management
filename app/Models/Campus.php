@@ -21,8 +21,8 @@ class Campus extends Model
         return $this->hasMany(AcademicSession::class);
     }
 
-    public function branches()
+    public function campus()
     {
-        return $this->hasMany(Branch::class);
+        return $this->belongsTo(Campus::class, 'campus_id');
     }
 }

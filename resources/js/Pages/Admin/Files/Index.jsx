@@ -8,8 +8,8 @@ import FolderFormModal from './Partials/FolderFormModal';
 import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 import Pagination from '@/Components/Pagination';
 
-export default function Index({ files, folders, filters }) {
-  const { flash, errors } = usePage().props;
+export default function Index({ files, folders, campuses, filters }) {
+  const { flash, errors, auth } = usePage().props;
 
   const [search, setSearch] = useState(filters.search ?? '');
   const [folderId, setFolderId] = useState(filters.folder_id ?? '');
@@ -197,11 +197,21 @@ export default function Index({ files, folders, filters }) {
       </div>
 
       {uploadOpen && (
-        <UploadFormModal folders={folders} onClose={() => setUploadOpen(false)} />
+        <UploadFormModal 
+          folders={folders} 
+          campuses={campuses}
+          activeCampusId={auth?.active_campus_id}
+          onClose={() => setUploadOpen(false)} 
+        />
       )}
 
       {folderFormOpen && (
-        <FolderFormModal folders={folders} onClose={() => setFolderFormOpen(false)} />
+        <FolderFormModal 
+          folders={folders} 
+          campuses={campuses}
+          activeCampusId={auth?.active_campus_id}
+          onClose={() => setFolderFormOpen(false)} 
+        />
       )}
 
       {deletingItem && (

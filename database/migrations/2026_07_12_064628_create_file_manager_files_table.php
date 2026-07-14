@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('file_manager_files', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('folder_id')->nullable();
+            $table->unsignedBigInteger('campus_id')->nullable();
             $table->string('name');
             $table->string('original_name');
             $table->string('path');
