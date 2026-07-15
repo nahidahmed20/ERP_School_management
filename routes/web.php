@@ -3,8 +3,12 @@
 use App\Http\Controllers\Admin\AcademicSessionController;
 use App\Http\Controllers\Admin\BranchController;
 use App\Http\Controllers\Admin\CampusController;
+use App\Http\Controllers\Admin\ClassroomController;
+use App\Http\Controllers\Admin\Communication\EventController;
 use App\Http\Controllers\Admin\DepartmentController;
 use App\Http\Controllers\Admin\DesignationController;
+use App\Http\Controllers\Admin\Exam\ExamController;
+use App\Http\Controllers\Admin\Exam\ExamScheduleController;
 use App\Http\Controllers\Admin\FileManagerController;
 use App\Http\Controllers\Admin\GeneralSettingController;
 use App\Http\Controllers\Admin\HouseController;
@@ -12,13 +16,14 @@ use App\Http\Controllers\Admin\MenuGroupController;
 use App\Http\Controllers\Admin\MenuItemController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
-use App\Http\Controllers\Admin\SystemRegistryController;
-use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Admin\StudentCategoryController;
 use App\Http\Controllers\Admin\SchoolClassController;
 use App\Http\Controllers\Admin\SectionController;
+use App\Http\Controllers\Admin\StudentCategoryController;
+use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\SubjectController;
-use App\Http\Controllers\Admin\ClassroomController;
+use App\Http\Controllers\Admin\SystemRegistryController;
+use App\Http\Controllers\Admin\TimeTableController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\DynamicPageController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -67,10 +72,22 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
     Route::resource('houses', HouseController::class);
 
     Route::resource('student-categories', StudentCategoryController::class);
+    Route::post('classes/{id}/assign-sections', [SchoolClassController::class, 'assignSections'])->name('classes.assign-sections');
+    Route::post('classes/{id}/assign-subjects', [SchoolClassController::class, 'assignSubjects'])->name('classes.assign-subjects');
     Route::resource('classes', SchoolClassController::class);
     Route::resource('sections', SectionController::class);
     Route::resource('subjects', SubjectController::class);
     Route::resource('classrooms', ClassroomController::class);
+    Route::resource('time-tables', TimeTableController::class);
+    Route::post('time-tables/bulk-update', [TimeTableController::class, 'bulkUpdate'])->name('time-tables.bulk-update');
+
+    Route::resource('communication-calendars', EventController::class);
+    Route::resource('exams', ExamController::class);
+    Route::resource('exam-schedules', ExamScheduleController::class);
+    Route::post('exams/schedule/bulk-update', [ExamScheduleController::class, 'bulkUpdate'])->name('admin.exams.schedule.bulk-update');
+
+    Route::resource('students', StudentController::class);
+
 });
 
 

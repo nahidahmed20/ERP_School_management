@@ -5,21 +5,6 @@ import Icon from './Icons';
 export default function Sidebar({ mobileOpen = false }) {
   const { url, props } = usePage();
   const navigation = props.navigation ?? [];
-  const [openKeys, setOpenKeys] = useState(() => new Set());
-
-  useEffect(() => {
-    const next = new Set(openKeys);
-    navigation.forEach(group => {
-
-      group.items.forEach(item => {
-        if (item.children?.some(child => isActive(child.route))) {
-          next.add(item.key);
-        }
-      });
-    });
-    setOpenKeys(next);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [url, navigation]);
 
   function isActive(routeName) {
     if (!routeName) return false;
@@ -28,7 +13,39 @@ export default function Sidebar({ mobileOpen = false }) {
     } catch {
       return url.startsWith('/' + routeName.replaceAll('.', '/'));
     }
-}
+  }
+
+  const [openKeys, setOpenKeys] = useState(() => {
+    const initialKeys = new Set();
+    navigation.forEach(group => {
+      group.items.forEach(item => {
+        if (item.children?.some(child => isActive(child.route))) {
+          initialKeys.add(item.key);
+        }
+      });
+    });
+    return initialKeys;
+  });
+
+  useEffect(() => {
+    setOpenKeys(prev => {
+      const next = new Set(prev);
+      let hasChanges = false;
+      
+      navigation.forEach(group => {
+        group.items.forEach(item => {
+          if (item.children?.some(child => isActive(child.route))) {
+            if (!next.has(item.key)) {
+              next.add(item.key);
+              hasChanges = true;
+            }
+          }
+        });
+      });
+      return hasChanges ? next : prev; 
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [url, navigation]);
 
   function toggle(key) {
     setOpenKeys(prev => {
@@ -44,7 +61,7 @@ export default function Sidebar({ mobileOpen = false }) {
     } catch {
       return '/' + routeName.replaceAll('.', '/');
     }
-}
+  }
 
   if (!navigation.length) {
     return (

@@ -19,12 +19,12 @@ class MenuSeeder extends Seeder
 
         $nav = [
             ['label' => 'Overview', 'items' => [
-                ['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'grid', 'route' => 'admin.dashboard'],
+                ['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'grid', 'route' => 'dashboard'],
             ]],
 
             ['label' => 'Academics', 'items' => [
                 ['key' => 'students', 'label' => 'Students', 'icon' => 'cap', 'count' => 7, 'children' => [
-                    ['key' => 'students.list', 'label' => 'Student List', 'route' => 'admin.students.index'],
+                    ['key' => 'admin.students.index', 'label' => 'Student List', 'route' => 'admin.students.index'],
                     ['key' => 'students.admissions', 'label' => 'Admissions', 'route' => 'admin.students.admissions'],
                     ['key' => 'students.parents', 'label' => 'Parents & Guardians', 'route' => 'admin.students.parents'],
                     ['key' => 'students.documents', 'label' => 'Student Documents', 'route' => 'admin.students.documents'],
@@ -37,9 +37,7 @@ class MenuSeeder extends Seeder
                     ['key' => 'admin.sections.index', 'label' => 'Sections', 'route' => 'admin.sections.index'],
                     ['key' => 'admin.subjects.index', 'label' => 'Subjects', 'route' => 'admin.subjects.index'],
                     ['key' => 'admin.classrooms.index', 'label' => 'Classroom', 'route' => 'admin.classrooms.index'],
-                    ['key' => 'admin.class-subjects.index', 'label' => 'Class Subject', 'route' => 'admin.class-subjects.index'],
-                    ['key' => 'admin.class-sections.index', 'label' => 'Class Section', 'route' => 'admin.class-sections.index'],
-                    ['key' => 'admin.timetable', 'label' => 'Class Timetable', 'route' => 'admin.timetable'],
+                    ['key' => 'admin.time-tables.index', 'label' => 'Class Timetable', 'route' => 'admin.time-tables.index'],
                 ]],
                 ['key' => 'attendance', 'label' => 'Attendance', 'icon' => 'calendar', 'count' => 3, 'children' => [
                     ['key' => 'attendance.students', 'label' => 'Student Attendance', 'route' => 'admin.attendance.students'],
@@ -47,7 +45,8 @@ class MenuSeeder extends Seeder
                     ['key' => 'attendance.sync', 'label' => 'Biometric Sync Logs', 'route' => 'admin.attendance.sync'],
                 ]],
                 ['key' => 'exams', 'label' => 'Exams & Marks', 'icon' => 'pencil', 'count' => 4, 'children' => [
-                    ['key' => 'exams.schedule', 'label' => 'Exam Schedule', 'route' => 'admin.exams.schedule'],
+                    ['key' => 'admin.exams.index', 'label' => 'Exam ', 'route' => 'admin.exams.index'],
+                    ['key' => 'admin.exam-schedules.index', 'label' => 'Exam Schedule', 'route' => 'admin.exam-schedules.index'],
                     ['key' => 'exams.marks', 'label' => 'Marks Entry', 'route' => 'admin.exams.marks'],
                     ['key' => 'exams.reportcards', 'label' => 'Report Cards', 'route' => 'admin.exams.reportcards'],
                     ['key' => 'exams.questionbanks', 'label' => 'Question Banks', 'route' => 'admin.exams.questionbanks'],
@@ -145,7 +144,7 @@ class MenuSeeder extends Seeder
                 ['key' => 'communication', 'label' => 'Chat, CMS & Alerts', 'icon' => 'chat', 'count' => 4, 'children' => [
                     ['key' => 'communication.chat', 'label' => 'Chat', 'route' => 'admin.communication.chat'],
                     ['key' => 'communication.notifications', 'label' => 'Notifications', 'route' => 'admin.communication.notifications'],
-                    ['key' => 'communication.calendar', 'label' => 'Calendar & Events', 'route' => 'admin.communication.calendar'],
+                    ['key' => 'admin.communication-calendars.index', 'label' => 'Calendar & Events', 'route' => 'admin.communication-calendars.index'],
                     ['key' => 'communication.cms', 'label' => 'Website CMS', 'route' => 'admin.communication.cms'],
                 ]],
             ]],

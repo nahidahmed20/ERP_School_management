@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Head, router, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
 import SessionFormModal from './Partials/SessionFormModal';
-import ConfirmDeleteModal from './Partials/ConfirmDeleteModal';
+import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 import Pagination from '@/Components/Pagination';
+import Swal from 'sweetalert2'; 
 
 export default function Index({ sessions, campuses, filters }) {
   const { flash } = usePage().props;
@@ -17,6 +18,16 @@ export default function Index({ sessions, campuses, filters }) {
   const [formOpen, setFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [deletingItem, setDeletingItem] = useState(null);
+
+  // --- SweetAlert2 Toast Message ---
+  useEffect(() => {
+    if (flash?.success) {
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: flash.success, showConfirmButton: false, timer: 3000, timerProgressBar: true });
+    }
+    if (flash?.error) {
+      Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: flash.error, showConfirmButton: false, timer: 4000, timerProgressBar: true });
+    }
+  }, [flash]);
 
   function applyFilters(overrides = {}) {
     router.get(route('admin.sessions'), {
@@ -59,8 +70,7 @@ export default function Index({ sessions, campuses, filters }) {
     >
       <Head title="Academic Sessions" />
 
-      {flash?.success && <div className="mm-toast">{flash.success}</div>}
-
+      {}
       <div className="card mm-card">
         <div className="mm-filters">
           <select value={perPage} onChange={(e) => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}>
@@ -147,6 +157,7 @@ export default function Index({ sessions, campuses, filters }) {
         <Pagination meta={sessions} />
       </div>
 
+      {}
       {formOpen && (
         <SessionFormModal item={editingItem} campuses={campuses} onClose={() => setFormOpen(false)} />
       )}

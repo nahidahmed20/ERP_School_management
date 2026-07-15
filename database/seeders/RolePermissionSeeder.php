@@ -2,12 +2,13 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
+use App\Models\Campus;
 use App\Models\User;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class RolePermissionSeeder extends Seeder
 {
@@ -28,6 +29,20 @@ class RolePermissionSeeder extends Seeder
         foreach ($permissions as $permission) {
             Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
         }
+
+        $mainCampus = Campus::firstOrCreate(
+            ['code' => 'MAIN'],
+            [
+                'name' => 'Main Campus',
+                'phone' => '01700000000',
+                'email' => 'info@school.com',
+                'address' => 'Dhaka, Bangladesh',
+                'established_year' => 2025,
+                'is_main' => true,
+                'is_active' => true,
+                'order' => 1,
+            ]
+        );
 
         $superAdminRole = Role::firstOrCreate(['name' => 'Super Admin', 'guard_name' => 'web']);
 
@@ -50,7 +65,7 @@ class RolePermissionSeeder extends Seeder
             [
                 'name' => 'Teacher',
                 'password' => Hash::make('password'),
-                'campus_id' => 1,
+                'campus_id' => $mainCampus->id,
             ]
         );
         $teacherUser->assignRole($teacherRole);
