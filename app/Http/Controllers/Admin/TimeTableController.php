@@ -54,7 +54,7 @@ class TimeTableController extends Controller
             'section_id' => 'required|exists:sections,id',
             'day_of_week' => 'required|string|in:Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday',
             'periods' => 'required|array|min:1',
-            'periods.*.subject_id' => 'required|exists:subjects,id|distinct', 
+            'periods.*.subject_id' => 'required|exists:subjects,id|distinct',
             'periods.*.classroom_id' => 'nullable|exists:classrooms,id',
             'periods.*.start_time' => 'required|date_format:H:i',
             'periods.*.end_time' => 'required|date_format:H:i|after:periods.*.start_time',
@@ -104,7 +104,7 @@ class TimeTableController extends Controller
             'class_id' => 'required|exists:school_classes,id',
             'section_id' => 'required|exists:sections,id',
             'day_of_week' => 'required|string|in:Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday',
-            'periods' => 'nullable|array', 
+            'periods' => 'nullable|array',
             'periods.*.subject_id' => 'required_with:periods|exists:subjects,id|distinct',
             'periods.*.start_time' => 'required_with:periods|date_format:H:i',
             'periods.*.end_time' => 'required_with:periods|date_format:H:i|after:periods.*.start_time',
@@ -163,7 +163,7 @@ class TimeTableController extends Controller
     {
         $timeTable = TimeTable::findOrFail($id);
         $timeTable->delete();
-        
+
         return back()->with('success', 'রুটিন থেকে পিরিয়ডটি মুছে ফেলা হয়েছে।');
     }
 }

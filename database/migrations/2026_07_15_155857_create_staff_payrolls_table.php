@@ -14,17 +14,16 @@ return new class extends Migration
         Schema::create('staff_payrolls', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('staff_id');
-            $table->string('month'); 
-            $table->integer('year'); 
+            $table->string('salary_month');
             $table->decimal('basic_salary', 10, 2);
-            $table->decimal('allowances', 10, 2)->default(0); 
-            $table->decimal('deductions', 10, 2)->default(0); 
-            $table->decimal('net_salary', 10, 2); 
-            $table->enum('status', ['generated', 'paid'])->default('generated');
+            $table->decimal('allowance', 10, 2)->default(0.00);
+            $table->decimal('deduction', 10, 2)->default(0.00); 
+            $table->decimal('net_salary', 10, 2);
+            $table->string('payment_method')->nullable();
             $table->date('payment_date')->nullable();
-            $table->string('payment_method')->nullable(); 
+            $table->enum('status', ['paid', 'unpaid', 'pending'])->default('unpaid');
+            $table->text('note')->nullable();
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 

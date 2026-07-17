@@ -19,8 +19,9 @@ return new class extends Migration
             $table->date('end_date');
             $table->integer('total_days');
             $table->text('reason');
+            $table->string('attachment')->nullable();
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
-            $table->unsignedBigInteger('approved_by')->nullable(); 
+            $table->unsignedBigInteger('approved_by')->nullable();
             $table->text('admin_remark')->nullable();
             $table->timestamps();
             $table->softDeletes();

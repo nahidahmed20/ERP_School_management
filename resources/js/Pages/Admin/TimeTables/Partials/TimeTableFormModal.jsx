@@ -6,14 +6,13 @@ export default function TimeTableFormModal({ editingConfig, classes, classrooms,
   const isSuperAdmin = auth?.user?.role === 'super_admin' || auth?.user?.roles?.some(r => r.name === 'Super Admin');
   const isEdit = editingConfig?.isEdit;
 
-  // এডিটের সময় ডাটাবেসের পিরিয়ডগুলোকে ইনপুট ফরম্যাটে সাজানো
-  const initialPeriods = isEdit && editingConfig.periods.length > 0 
+  const initialPeriods = isEdit && editingConfig.periods.length > 0
     ? editingConfig.periods.map(p => ({
         subject_id: p.subject_id,
         classroom_id: p.classroom_id || '',
         start_time: p.start_time.substring(0, 5),
         end_time: p.end_time.substring(0, 5)
-      })) 
+      }))
     : [{ subject_id: '', classroom_id: '', start_time: '', end_time: '' }];
 
   const { data, setData, post, processing, errors, reset } = useForm({
@@ -40,7 +39,7 @@ export default function TimeTableFormModal({ editingConfig, classes, classrooms,
   function submit(e) {
     e.preventDefault();
     const options = { onSuccess: () => { reset(); onClose(); } };
-    
+
     // নতুন Bulk Update রাউটে ডাটা পাঠানো হচ্ছে
     if (isEdit) {
       post(route('admin.time-tables.bulk-update'), options);
@@ -75,14 +74,14 @@ export default function TimeTableFormModal({ editingConfig, classes, classrooms,
           {/* গ্লোবাল সেটিংস (Class, Section, Day) */}
           <div style={styles.card}>
             <div style={styles.grid}>
-              
+
               <div>
                 <label style={styles.label}>Class <span style={{ color: '#ef4444' }}>*</span></label>
-                <select 
-                  style={{ ...styles.select, ...(isEdit ? styles.selectDisabled : {}) }} 
-                  value={data.class_id} 
-                  onChange={(e) => setData({ ...data, class_id: e.target.value, section_id: '' })} 
-                  required 
+                <select
+                  style={{ ...styles.select, ...(isEdit ? styles.selectDisabled : {}) }}
+                  value={data.class_id}
+                  onChange={(e) => setData({ ...data, class_id: e.target.value, section_id: '' })}
+                  required
                   disabled={isEdit}
                 >
                   <option value="" disabled>Select Class</option>
@@ -93,11 +92,11 @@ export default function TimeTableFormModal({ editingConfig, classes, classrooms,
 
               <div>
                 <label style={styles.label}>Section <span style={{ color: '#ef4444' }}>*</span></label>
-                <select 
-                  style={{ ...styles.select, ...((!data.class_id || isEdit) ? styles.selectDisabled : {}) }} 
-                  value={data.section_id} 
-                  onChange={(e) => setData('section_id', e.target.value)} 
-                  required 
+                <select
+                  style={{ ...styles.select, ...((!data.class_id || isEdit) ? styles.selectDisabled : {}) }}
+                  value={data.section_id}
+                  onChange={(e) => setData('section_id', e.target.value)}
+                  required
                   disabled={!data.class_id || isEdit}
                 >
                   <option value="" disabled>Select Section</option>
@@ -108,11 +107,11 @@ export default function TimeTableFormModal({ editingConfig, classes, classrooms,
 
               <div>
                 <label style={styles.label}>Day of the Week <span style={{ color: '#ef4444' }}>*</span></label>
-                <select 
-                  style={{ ...styles.select, ...(isEdit ? styles.selectDisabled : {}) }} 
-                  value={data.day_of_week} 
-                  onChange={(e) => setData('day_of_week', e.target.value)} 
-                  required 
+                <select
+                  style={{ ...styles.select, ...(isEdit ? styles.selectDisabled : {}) }}
+                  value={data.day_of_week}
+                  onChange={(e) => setData('day_of_week', e.target.value)}
+                  required
                   disabled={isEdit}
                 >
                   {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(d => (
@@ -143,7 +142,7 @@ export default function TimeTableFormModal({ editingConfig, classes, classrooms,
             {/* পিরিয়ড কার্ডস */}
             {data.periods.map((period, index) => (
               <div key={index} style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1.5fr 1.5fr auto', gap: '15px', alignItems: 'end', background: '#fff', padding: '15px', border: '1px solid #e2e8f0', borderRadius: '8px', marginBottom: '12px', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}>
-                
+
                 <div>
                   <label style={styles.label}>Subject</label>
                   <select style={{ ...styles.select, padding: '8px 12px', fontSize: '13px' }} value={period.subject_id} onChange={(e) => handlePeriodChange(index, 'subject_id', e.target.value)} required>

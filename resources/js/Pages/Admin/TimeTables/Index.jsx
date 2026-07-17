@@ -18,7 +18,7 @@ export default function Index({ timeTables, campuses, classes, classrooms, filte
   const [deletingItem, setDeletingItem] = useState(null);
 
   const selectedClassForFilter = classes.find(c => c.id == classId);
-  const isFilterApplied = classId && sectionId; 
+  const isFilterApplied = classId && sectionId;
 
   useEffect(() => {
     if (flash?.success) Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: flash.success, showConfirmButton: false, timer: 3000, timerProgressBar: true });
@@ -105,7 +105,7 @@ export default function Index({ timeTables, campuses, classes, classrooms, filte
             {daysOfWeek.map(d => <option key={d} value={d}>{d}</option>)}
           </select>
           <button className="btn btn-outline" onClick={() => applyFilters()}>Search Routine</button>
-          
+
           {!isFilterApplied && (
             <span style={{ fontSize: '12px', color: '#ef4444', marginLeft: '10px' }}>
               * পুরো দিনের রুটিন একসাথে এডিট করতে Class এবং Section সিলেক্ট করে Search করুন।
@@ -129,7 +129,7 @@ export default function Index({ timeTables, campuses, classes, classrooms, filte
             return (
               <div key={d} className="card mm-card" style={{ padding: '0', overflow: 'hidden' }}>
                 <div style={{ background: '#f8fafc', padding: '12px 20px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  
+
                   <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                     <h3 style={{ margin: 0, fontSize: '16px', color: '#334155', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <Icon name="calendar" style={{ width: '18px', color: '#64748b' }} /> {d}
@@ -137,7 +137,7 @@ export default function Index({ timeTables, campuses, classes, classrooms, filte
                   </div>
 
                   {isFilterApplied && (
-                    <button 
+                    <button
                       onClick={() => handleEditDay(d, dayPeriods)}
                       style={{ background: '#fff', border: '1px solid #cbd5e1', padding: '5px 12px', borderRadius: '6px', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', color: '#475569', fontWeight: 500 }}
                     >
@@ -145,24 +145,24 @@ export default function Index({ timeTables, campuses, classes, classrooms, filte
                     </button>
                   )}
                 </div>
-                
+
                 <div style={{ padding: '20px', display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
                   {dayPeriods.map((period, index) => {
                     const colors = getSubjectColor(period.subject?.name || 'Subject');
                     return (
-                      <div key={period.id} style={{ 
-                        flex: '1 1 200px', 
-                        maxWidth: '280px', 
-                        background: colors.bg, 
-                        border: `1px solid ${colors.border}`, 
-                        borderRadius: '8px', 
+                      <div key={period.id} style={{
+                        flex: '1 1 200px',
+                        maxWidth: '280px',
+                        background: colors.bg,
+                        border: `1px solid ${colors.border}`,
+                        borderRadius: '8px',
                         padding: '15px',
-                        position: 'relative' 
+                        position: 'relative'
                       }}>
-                        
+
                         <div style={{ position: 'absolute', top: '10px', right: '10px' }}>
-                          <button 
-                            onClick={() => setDeletingItem(period)} 
+                          <button
+                            onClick={() => setDeletingItem(period)}
                             style={{ background: '#fff', border: `1px solid ${colors.border}`, color: '#ef4444', borderRadius: '4px', cursor: 'pointer', padding: '4px', display: 'flex' }}
                             title="Delete this period"
                           >
@@ -172,7 +172,7 @@ export default function Index({ timeTables, campuses, classes, classrooms, filte
 
                         <div style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', marginBottom: '5px' }}>PERIOD {index + 1}</div>
                         <h4 style={{ margin: '0 0 10px 0', color: colors.text, fontSize: '16px', fontWeight: 700 }}>{period.subject?.name}</h4>
-                        
+
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '13px', color: '#475569' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Icon name="clock" style={{ width: '14px', opacity: 0.7 }} /><span>{formatTime(period.start_time)} - {formatTime(period.end_time)}</span></div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Icon name="users" style={{ width: '14px', opacity: 0.7 }} /><span>{period.school_class?.name} (Sec: {period.section?.name})</span></div>
@@ -189,7 +189,7 @@ export default function Index({ timeTables, campuses, classes, classrooms, filte
       </div>
 
       {formOpen && <TimeTableFormModal editingConfig={editingConfig} classes={classes} classrooms={classrooms} campuses={campuses} activeCampusId={auth?.active_campus_id} onClose={() => setFormOpen(false)} />}
-      
+
       {deletingItem && <ConfirmDeleteModal item={deletingItem} onCancel={() => setDeletingItem(null)} onConfirm={() => { router.delete(route('admin.time-tables.destroy', deletingItem.id), { onSuccess: () => setDeletingItem(null) }); }} />}
     </AuthenticatedLayout>
   );

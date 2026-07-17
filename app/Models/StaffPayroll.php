@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class StaffPayroll extends Model
 {
-    use SoftDeletes;
 
     protected $guarded=['id'];
 

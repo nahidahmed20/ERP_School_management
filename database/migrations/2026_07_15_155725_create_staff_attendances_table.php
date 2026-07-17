@@ -20,7 +20,6 @@ return new class extends Migration
             $table->time('out_time')->nullable();
             $table->string('note')->nullable();
             $table->timestamps();
-            $table->unique(['staff_id', 'date']); 
         });
     }
 

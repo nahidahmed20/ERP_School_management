@@ -9,36 +9,36 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
+    public function up()
     {
         Schema::create('staff', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id')->nullable(); 
+            $table->unsignedBigInteger('user_id')->nullable();
             $table->unsignedBigInteger('department_id');
             $table->unsignedBigInteger('designation_id');
-            
-            $table->string('staff_id_no')->unique(); 
+            $table->string('staff_id_no')->unique();
             $table->string('first_name');
             $table->string('last_name')->nullable();
+            $table->string('father_name')->nullable();
+            $table->string('mother_name')->nullable();
             $table->enum('gender', ['male', 'female', 'other']);
             $table->date('date_of_birth');
             $table->date('joining_date');
-            
             $table->string('phone')->unique();
+            $table->string('emergency_phone')->nullable();
             $table->string('email')->nullable()->unique();
-            $table->string('emergency_contact')->nullable();
-            
             $table->string('marital_status')->nullable();
             $table->string('blood_group')->nullable();
-            
+            $table->string('photo')->nullable();
             $table->text('present_address');
             $table->text('permanent_address');
-            $table->string('photo')->nullable();
-            
-            $table->decimal('basic_salary', 10, 2)->default(0); 
+            $table->string('qualification')->nullable();
+            $table->string('experience')->nullable();
+            $table->decimal('basic_salary', 10, 2)->default(0.00);
             $table->boolean('is_active')->default(true);
             $table->timestamps();
             $table->softDeletes();
+
         });
     }
 

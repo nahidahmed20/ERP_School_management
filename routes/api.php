@@ -11,3 +11,8 @@ Route::get('/user', function (Request $request) {
 
 
 Route::middleware('auth:sanctum')->get('/navigation', [NavigationController::class, 'index']);
+
+Route::post('/attendance-push', function (Request $request) {
+    // $request->all();
+    return response()->json(['status' => 'success']);
+});

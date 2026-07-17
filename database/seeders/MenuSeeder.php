@@ -54,12 +54,14 @@ class MenuSeeder extends Seeder
             ]],
 
             ['label' => 'People', 'items' => [
-                ['key' => 'staff', 'label' => 'Staff & HR', 'icon' => 'users', 'count' => 5, 'children' => [
-                    ['key' => 'admin.directories.index', 'label' => 'Staff Directory', 'route' => 'admin.directories.index'],
+                ['key' => 'staff', 'label' => 'Staff & HR', 'icon' => 'users', 'count' => 7, 'children' => [
+                    ['key' => 'admin.staff.index', 'label' => 'Staff Directory', 'route' => 'admin.staff.index'],
+                    ['key' => 'admin.staff-attendance.index', 'label' => 'Daily Attendance', 'route' => 'admin.staff-attendance.index'],
+                    ['key' => 'admin.staff-leaves.index', 'label' => 'Leave Applications', 'route' => 'admin.staff-leaves.index'],
+                    ['key' => 'admin.staff-payrolls.index', 'label' => 'Payroll Management', 'route' => 'admin.staff-payrolls.index'],
                     ['key' => 'admin.departments.index', 'label' => 'Departments', 'route' => 'admin.departments.index'],
                     ['key' => 'admin.designations.index', 'label' => 'Designations', 'route' => 'admin.designations.index'],
-                    ['key' => 'admin.leaves.index', 'label' => 'Leave Management', 'route' => 'admin.leaves.index'],
-                    ['key' => 'admin.payrolls.index', 'label' => 'Payroll', 'route' => 'admin.payrolls.index'],
+                    ['key' => 'admin.leave-types.index', 'label' => 'Leave Types', 'route' => 'admin.leave-types.index'],
                 ]],
                 ['key' => 'recruitment', 'label' => 'Recruitment', 'icon' => 'briefcase', 'count' => 4, 'children' => [
                     ['key' => 'recruitment.jobs', 'label' => 'Job Posts', 'route' => 'admin.recruitment.jobs'],
@@ -154,6 +156,7 @@ class MenuSeeder extends Seeder
                     ['key' => 'reports.saved', 'label' => 'Saved Reports', 'route' => 'admin.reports.saved'],
                     ['key' => 'reports.widgets', 'label' => 'Dashboard Widgets', 'route' => 'admin.reports.widgets'],
                     ['key' => 'reports.analytics', 'label' => 'Usage Analytics', 'route' => 'admin.reports.analytics'],
+                    ['key' => 'admin.attendance-report.index', 'label' => 'Staff Attendance', 'route' => 'admin.attendance-report.index'],
                 ]],
                 ['key' => 'workflow', 'label' => 'Workflow & Forms', 'icon' => 'workflow', 'count' => 3, 'children' => [
                     ['key' => 'workflow.builder', 'label' => 'Form Builder', 'route' => 'admin.workflow.builder'],

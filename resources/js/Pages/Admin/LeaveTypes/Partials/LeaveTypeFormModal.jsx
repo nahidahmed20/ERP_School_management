@@ -1,15 +1,12 @@
-import { useForm, usePage } from '@inertiajs/react';
+import { useForm } from '@inertiajs/react';
 import Icon from '@/Components/Icons';
 
-export default function DesignationFormModal({ item, campuses, activeCampusId, onClose }) {
+export default function LeaveTypeFormModal({ item, onClose }) {
   const isEdit = !!item;
-  const { auth } = usePage().props;
-  const isSuperAdmin = auth?.user?.role === 'super_admin' || auth?.user?.roles?.some(r => r.name === 'Super Admin');
 
   const { data, setData, post, put, processing, errors, reset } = useForm({
-    campus_id: item?.campus_id ?? activeCampusId,
     name: item?.name ?? '',
-    description: item?.description ?? '',
+    days_allowed: item?.days_allowed ?? 0,
     is_active: item?.is_active ?? true,
   });
 
@@ -19,9 +16,9 @@ export default function DesignationFormModal({ item, campuses, activeCampusId, o
       onSuccess: () => { reset(); onClose(); },
     };
     if (isEdit) {
-      put(route('admin.designations.update', item.id), options);
+      put(route('admin.leave-types.update', item.id), options);
     } else {
-      post(route('admin.designations.store'), options);
+      post(route('admin.leave-types.store'), options);
     }
   }
 
@@ -29,8 +26,7 @@ export default function DesignationFormModal({ item, campuses, activeCampusId, o
     <div className="mm-modal-overlay" onClick={onClose}>
       <div className="mm-modal mm-modal-sm" onClick={(e) => e.stopPropagation()}>
         <div className="mm-modal-head">
-          {/* Title changed to Designation */}
-          <h3>{isEdit ? 'Edit Designation' : 'Add Designation'}</h3>
+          <h3>{isEdit ? 'Edit Leave Type' : 'Add Leave Type'}</h3>
           <button className="icon-btn" onClick={onClose}>
             <Icon name="close" />
           </button>
@@ -40,39 +36,28 @@ export default function DesignationFormModal({ item, campuses, activeCampusId, o
           <div className="mm-form-grid">
 
             <label style={{ gridColumn: '1 / -1' }}>
-              <span>Assign to Campus</span>
-              <select
-                value={data.campus_id || ''}
-                onChange={(e) => setData('campus_id', e.target.value)}
-                disabled={!isSuperAdmin}
-              >
-                <option value="" disabled>Select Campus</option>
-                {campuses?.map(campus => (
-                  <option key={campus.id} value={campus.id}>{campus.name}</option>
-                ))}
-              </select>
-              {errors.campus_id && <em>{errors.campus_id}</em>}
-            </label>
-
-            <label style={{ gridColumn: '1 / -1' }}>
-              {/* Label changed to Designation */}
-              <span>Designation Name</span>
+              <span>Leave Type Name <span style={{color: 'red'}}>*</span></span>
               <input
                 value={data.name}
                 onChange={(e) => setData('name', e.target.value)}
                 autoFocus
-                placeholder="e.g. Principal, Lecturer, HR Manager"
+                required
+                placeholder="e.g. Sick Leave, Casual Leave"
               />
               {errors.name && <em>{errors.name}</em>}
             </label>
 
             <label style={{ gridColumn: '1 / -1' }}>
-              <span>Description</span>
-              <textarea
-                rows="3"
-                value={data.description}
-                onChange={(e) => setData('description', e.target.value)}
+              <span>Days Allowed (Per Year) <span style={{color: 'red'}}>*</span></span>
+              <input
+                type="number"
+                min="0"
+                required
+                value={data.days_allowed}
+                onChange={(e) => setData('days_allowed', e.target.value)}
+                placeholder="e.g. 15"
               />
+              {errors.days_allowed && <em>{errors.days_allowed}</em>}
             </label>
 
             <label className="mm-checkbox" style={{ gridColumn: '1 / -1' }}>

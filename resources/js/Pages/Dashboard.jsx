@@ -2,7 +2,6 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 
 export default function Dashboard() {
-    // ডেমো ডেটা
     const stats = [
         { title: 'Total Students', value: '2,845', trend: '+4.5%', bgColor: 'bg-blue-500' },
         { title: 'Total Staff & Teachers', value: '142', trend: '0%', bgColor: 'bg-purple-500' },
@@ -32,7 +31,6 @@ export default function Dashboard() {
         { title: 'Parents-Teacher Meeting', date: '10 Feb, 2024', type: 'Event' },
     ];
 
-    // টাকার সিম্বল ফিক্স করার জন্য কাস্টম কম্পোনেন্ট
     const TakaSymbol = () => (
         <span style={{ fontFamily: 'Arial, sans-serif', fontStyle: 'normal' }}>৳</span>
     );

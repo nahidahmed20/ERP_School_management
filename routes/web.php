@@ -24,6 +24,12 @@ use App\Http\Controllers\Admin\SubjectController;
 use App\Http\Controllers\Admin\SystemRegistryController;
 use App\Http\Controllers\Admin\TimeTableController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\LeaveTypeController;
+use App\Http\Controllers\Admin\StaffController;
+use App\Http\Controllers\Admin\StaffAttendanceController;
+use App\Http\Controllers\Admin\StaffLeaveController;
+use App\Http\Controllers\Admin\StaffPayrollController;
+use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\DynamicPageController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -88,6 +94,15 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
 
     Route::resource('students', StudentController::class);
 
+    Route::resource('leave-types',LeaveTypeController::class);
+    Route::resource('staff', StaffController::class);
+    Route::get('staff-attendance', [StaffAttendanceController::class, 'index'])->name('staff-attendance.index');
+    Route::post('staff-attendance', [StaffAttendanceController::class, 'store'])->name('staff-attendance.store');
+    Route::resource('staff-leaves', StaffLeaveController::class);
+    Route::resource('staff-payrolls', StaffPayrollController::class);
+
+    Route::get('/attendance-report', [ReportController::class, 'index'])->name('attendance-report.index');
+    Route::post('/attendance-report', [ReportController::class, 'generate'])->name('attendance-report.generate');
 });
 
 

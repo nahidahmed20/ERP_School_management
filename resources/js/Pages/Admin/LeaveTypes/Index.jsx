@@ -3,12 +3,12 @@ import { Head, router, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
 import Pagination from '@/Components/Pagination';
-import DesignationFormModal from './Partials/DesignationFormModal';
+import LeaveTypeFormModal from './Partials/LeaveTypeFormModal';
 import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 import Swal from 'sweetalert2';
 
-export default function Index({ designations, campuses, filters }) {
-  const { flash, auth } = usePage().props;
+export default function Index({ leaveTypes, filters }) {
+  const { flash } = usePage().props;
 
   const [search, setSearch] = useState(filters.search ?? '');
   const [status, setStatus] = useState(filters.status ?? '');
@@ -28,7 +28,7 @@ export default function Index({ designations, campuses, filters }) {
   }, [flash]);
 
   function applyFilters(overrides = {}) {
-    router.get(route('admin.designations.index'), {
+    router.get(route('admin.leave-types.index'), {
       search, status, per_page: perPage, ...overrides,
     }, { preserveState: true, replace: true });
   }
@@ -39,20 +39,18 @@ export default function Index({ designations, campuses, filters }) {
         <div className="page-head">
           <div>
             <span className="eyebrow">HR & Admin</span>
-            <h1>Designations</h1>
-            {/* Description text updated */}
-            <p className="desc">স্টাফ ও শিক্ষকদের জন্য পদবি (Designation) পরিচালনা করুন।</p>
+            <h1>Leave Types</h1>
+            <p className="desc">স্টাফদের বাৎসরিক ছুটির ধরন ও সংখ্যা নির্ধারণ করুন।</p>
           </div>
           <div className="mm-head-actions">
-            {/* Button text updated */}
             <button className="btn" onClick={() => { setEditingItem(null); setFormOpen(true); }}>
-              <Icon name="plus" /> Add Designation
+              <Icon name="plus" /> Add Leave Type
             </button>
           </div>
         </div>
       }
     >
-      <Head title="Designations" />
+      <Head title="Leave Types" />
 
       <div className="card mm-card">
         <div className="mm-filters" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
@@ -84,30 +82,25 @@ export default function Index({ designations, campuses, filters }) {
           <table className="mm-table">
             <thead>
               <tr>
-                {/* Table Header updated */}
-                <th>Designation Name</th>
-                <th>Description</th>
+                <th>Leave Type Name</th>
+                <th>Days Allowed / Year</th>
                 <th>Status</th>
                 <th className="mm-actions-col">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {designations.data.length === 0 && (
-                <tr>
-                  {/* Empty state text updated */}
-                  <td colSpan={4} className="mm-empty">কোনো পদবি (Designation) পাওয়া যায়নি।</td>
-                </tr>
+              {leaveTypes.data.length === 0 && (
+                <tr><td colSpan={4} className="mm-empty">কোনো ছুটির ধরন পাওয়া যায়নি।</td></tr>
               )}
-              {designations.data.map((item) => (
+              {leaveTypes.data.map((item) => (
                 <tr key={item.id}>
                   <td>
                     <div className="mm-label-cell">
-                      {/* You can change the icon to something like 'user-tag' or 'badge' if available */}
                       <Icon name="folder" className="mm-row-icon" />
                       <span>{item.name}</span>
                     </div>
                   </td>
-                  <td>{item.description ?? '—'}</td>
+                  <td><strong>{item.days_allowed}</strong> Days</td>
                   <td>
                     <span className={`mm-status ${item.is_active ? 'is-active' : 'is-inactive'}`}>
                       {item.is_active ? 'Active' : 'Inactive'}
@@ -129,14 +122,12 @@ export default function Index({ designations, campuses, filters }) {
           </table>
         </div>
 
-        <Pagination meta={designations} />
+        <Pagination meta={leaveTypes} />
       </div>
 
       {formOpen && (
-        <DesignationFormModal
+        <LeaveTypeFormModal
           item={editingItem}
-          campuses={campuses}
-          activeCampusId={auth?.active_campus_id}
           onClose={() => setFormOpen(false)}
         />
       )}
@@ -146,7 +137,7 @@ export default function Index({ designations, campuses, filters }) {
           item={deletingItem}
           onCancel={() => setDeletingItem(null)}
           onConfirm={() => {
-            router.delete(route('admin.designations.destroy', deletingItem.id), {
+            router.delete(route('admin.leave-types.destroy', deletingItem.id), {
               onSuccess: () => setDeletingItem(null),
             });
           }}
