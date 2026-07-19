@@ -123,7 +123,6 @@ export default function TimeTableFormModal({ editingConfig, classes, classrooms,
             </div>
           </div>
 
-          {/* ডাইনামিক পিরিয়ড লিস্ট */}
           <div style={{ maxHeight: '450px', overflowY: 'auto', paddingRight: '8px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
               <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '600', color: '#334155' }}>Class Periods</h4>
@@ -132,14 +131,19 @@ export default function TimeTableFormModal({ editingConfig, classes, classrooms,
               </button>
             </div>
 
-            {/* সব পিরিয়ড ডিলিট ওয়ার্নিং মেসেজ */}
+            {errors.conflict && (
+              <div style={{ padding: '12px', color: '#b91c1c', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', fontSize: '14px', fontWeight: '500', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Icon name="alert-circle" style={{ width: '18px' }} /> {/* আইকনটি আপনার কাছে থাকলে দিন, নাহলে শুধু টেক্সট রাখুন */}
+                {errors.conflict}
+              </div>
+            )}
+
             {data.periods.length === 0 && (
               <div style={{ padding: '16px', textAlign: 'center', color: '#b91c1c', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', fontSize: '14px', fontWeight: '500', marginBottom: '15px' }}>
                 সব পিরিয়ড ডিলিট করে দেওয়া হয়েছে। Save করলে এই দিনের রুটিন ফাঁকা হয়ে যাবে।
               </div>
             )}
 
-            {/* পিরিয়ড কার্ডস */}
             {data.periods.map((period, index) => (
               <div key={index} style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1.5fr 1.5fr auto', gap: '15px', alignItems: 'end', background: '#fff', padding: '15px', border: '1px solid #e2e8f0', borderRadius: '8px', marginBottom: '12px', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}>
 

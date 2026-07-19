@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\TimeTable;
-use App\Models\SchoolClass;
-use App\Models\Classroom;
 use App\Models\Campus;
+use App\Models\Classroom;
+use App\Models\SchoolClass;
+use App\Models\TimeTable;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class TimeTableController extends Controller
@@ -45,7 +47,6 @@ class TimeTableController extends Controller
         ]);
     }
 
-    // ২. নতুন রুটিন সেভ করা (Bulk Add)
     public function store(Request $request)
     {
         $request->validate([
@@ -58,30 +59,50 @@ class TimeTableController extends Controller
             'periods.*.classroom_id' => 'nullable|exists:classrooms,id',
             'periods.*.start_time' => 'required|date_format:H:i',
             'periods.*.end_time' => 'required|date_format:H:i|after:periods.*.start_time',
-        ], [
-            'periods.*.subject_id.distinct' => 'একই দিনে একটি সাবজেক্ট একাধিকবার দেওয়া যাবে না!',
-            'periods.*.end_time.after' => 'End time অবশ্যই Start time এর পরে হতে হবে।',
         ]);
 
         $campusId = $request->campus_id ?? config('app.active_campus_id');
+        $periods = $request->periods ?? [];
 
-        foreach ($request->periods as $period) {
-            if (!empty($period['classroom_id'])) {
-                $clash = TimeTable::with(['schoolClass', 'classroom'])
-                    ->where('day_of_week', $request->day_of_week)
-                    ->where('classroom_id', $period['classroom_id'])
-                    ->where(function($q) use ($period) {
-                        $q->where('start_time', '<', $period['end_time'])
-                          ->where('end_time', '>', $period['start_time']);
-                    })->first();
+        for ($i = 0; $i < count($periods); $i++) {
+            for ($j = $i + 1; $j < count($periods); $j++) {
+                $p1Start = Carbon::parse($periods[$i]['start_time'])->format('H:i:s');
+                $p1End = Carbon::parse($periods[$i]['end_time'])->format('H:i:s');
+                $p2Start = Carbon::parse($periods[$j]['start_time'])->format('H:i:s');
+                $p2End = Carbon::parse($periods[$j]['end_time'])->format('H:i:s');
 
-                if ($clash) {
-                    return back()->with('error', 'রুম ' . $clash->classroom->room_number . ' এই সময়ে ' . $clash->schoolClass->name . ' এর জন্য বুক করা আছে!');
+                if ($p1Start < $p2End && $p1End > $p2Start) {
+                    throw ValidationException::withMessages([
+                        'conflict' => "ফর্মের পিরিয়ড " . ($i + 1) . " এবং " . ($j + 1) . " এর সময় ওভারল্যাপ করছে!"
+                    ]);
                 }
             }
         }
 
-        foreach ($request->periods as $period) {
+        foreach ($periods as $period) {
+            if (!empty($period['classroom_id'])) {
+                $start = Carbon::parse($period['start_time'])->format('H:i:s');
+                $end = Carbon::parse($period['end_time'])->format('H:i:s');
+
+                $clash = TimeTable::with(['schoolClass', 'section', 'classroom'])
+                    ->where('campus_id', $campusId)
+                    ->where('day_of_week', $request->day_of_week)
+                    ->where('classroom_id', $period['classroom_id'])
+                    ->where(function($q) use ($start, $end) {
+                        $q->where('start_time', '<', $end)
+                          ->where('end_time', '>', $start);
+                    })->first();
+
+                if ($clash) {
+                    $clashTime = Carbon::parse($clash->start_time)->format('h:i A') . ' - ' . Carbon::parse($clash->end_time)->format('h:i A');
+                    throw ValidationException::withMessages([
+                        'conflict' => "রুম {$clash->classroom->room_number} এই সময়ে ({$clashTime}) {$clash->schoolClass->name} (Sec: {$clash->section->name}) এর জন্য বুক করা আছে!"
+                    ]);
+                }
+            }
+        }
+
+        foreach ($periods as $period) {
             TimeTable::create([
                 'campus_id' => $campusId,
                 'class_id' => $request->class_id,
@@ -94,7 +115,7 @@ class TimeTableController extends Controller
             ]);
         }
 
-        return back()->with('success', 'পুরো দিনের রুটিন সফলভাবে সেভ করা হয়েছে।');
+        return back()->with('success', 'রুটিন সফলভাবে সেভ করা হয়েছে।');
     }
 
     public function bulkUpdate(Request $request)
@@ -113,24 +134,47 @@ class TimeTableController extends Controller
         ]);
 
         $campusId = $request->campus_id ?? config('app.active_campus_id');
+        $periods = $request->periods ?? [];
 
-        if (!empty($request->periods)) {
-            foreach ($request->periods as $period) {
+        for ($i = 0; $i < count($periods); $i++) {
+            for ($j = $i + 1; $j < count($periods); $j++) {
+                $p1Start = Carbon::parse($periods[$i]['start_time'])->format('H:i:s');
+                $p1End = Carbon::parse($periods[$i]['end_time'])->format('H:i:s');
+                $p2Start = Carbon::parse($periods[$j]['start_time'])->format('H:i:s');
+                $p2End = Carbon::parse($periods[$j]['end_time'])->format('H:i:s');
+
+                if ($p1Start < $p2End && $p1End > $p2Start) {
+                    throw ValidationException::withMessages([
+                        'conflict' => "ফর্মের পিরিয়ড " . ($i + 1) . " এবং " . ($j + 1) . " এর সময় ওভারল্যাপ করছে!"
+                    ]);
+                }
+            }
+        }
+
+        if (!empty($periods)) {
+            foreach ($periods as $period) {
                 if (!empty($period['classroom_id'])) {
-                    $clash = TimeTable::with(['schoolClass', 'classroom'])
+                    $start = Carbon::parse($period['start_time'])->format('H:i:s');
+                    $end = Carbon::parse($period['end_time'])->format('H:i:s');
+
+                    $clash = TimeTable::with(['schoolClass', 'section', 'classroom'])
+                        ->where('campus_id', $campusId)
                         ->where('day_of_week', $request->day_of_week)
                         ->where('classroom_id', $period['classroom_id'])
                         ->where(function($q) use ($request) {
                             $q->where('class_id', '!=', $request->class_id)
                               ->orWhere('section_id', '!=', $request->section_id);
                         })
-                        ->where(function($q) use ($period) {
-                            $q->where('start_time', '<', $period['end_time'])
-                              ->where('end_time', '>', $period['start_time']);
+                        ->where(function($q) use ($start, $end) {
+                            $q->where('start_time', '<', $end)
+                              ->where('end_time', '>', $start);
                         })->first();
 
                     if ($clash) {
-                        return back()->with('error', 'রুম ' . $clash->classroom->room_number . ' এই সময়ে ' . $clash->schoolClass->name . ' এর জন্য বুক করা আছে!');
+                        $clashTime = Carbon::parse($clash->start_time)->format('h:i A') . ' - ' . Carbon::parse($clash->end_time)->format('h:i A');
+                        throw ValidationException::withMessages([
+                            'conflict' => "রুম {$clash->classroom->room_number} এই সময়ে ({$clashTime}) {$clash->schoolClass->name} (Sec: {$clash->section->name}) এর জন্য বুক করা আছে!"
+                        ]);
                     }
                 }
             }
@@ -141,8 +185,8 @@ class TimeTableController extends Controller
             ->where('day_of_week', $request->day_of_week)
             ->delete();
 
-        if (!empty($request->periods)) {
-            foreach ($request->periods as $period) {
+        if (!empty($periods)) {
+            foreach ($periods as $period) {
                 TimeTable::create([
                     'campus_id' => $campusId,
                     'class_id' => $request->class_id,
@@ -156,7 +200,7 @@ class TimeTableController extends Controller
             }
         }
 
-        return back()->with('success', $request->day_of_week . ' এর রুটিন সফলভাবে আপডেট করা হয়েছে।');
+        return back()->with('success', $request->day_of_week . ' এর রুটিন সফলভাবে আপডেট করা হয়েছে।');
     }
 
     public function destroy($id)
