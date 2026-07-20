@@ -30,6 +30,14 @@ use App\Http\Controllers\Admin\StaffAttendanceController;
 use App\Http\Controllers\Admin\StaffLeaveController;
 use App\Http\Controllers\Admin\StaffPayrollController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\GuardianController;
+use App\Http\Controllers\Admin\PromotionController;
+use App\Http\Controllers\Admin\FeeGroupController;
+use App\Http\Controllers\Admin\FeeTypeController;
+use App\Http\Controllers\Admin\StudentFeeController;
+use App\Http\Controllers\Admin\PaymentController;
+use App\Http\Controllers\Admin\InvoiceController;
+use App\Http\Controllers\Admin\LedgerController;
 use App\Http\Controllers\DynamicPageController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -90,7 +98,16 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
     Route::resource('communication-calendars', EventController::class);
     Route::resource('exams', ExamController::class);
     Route::resource('exam-schedules', ExamScheduleController::class);
-    Route::post('exams/schedule/bulk-update', [ExamScheduleController::class, 'bulkUpdate'])->name('admin.exams.schedule.bulk-update');
+    Route::post('exams/schedule/bulk-update', [ExamScheduleController::class, 'bulkUpdate'])->name('exams.schedule.bulk-update');
+
+    Route::get('students/search-guardian', [StudentController::class, 'searchGuardian'])->name('students.search_guardian');
+    Route::get('students/parents', [GuardianController::class, 'index'])->name('students.parents');
+    Route::get('students/promotions', [PromotionController::class, 'index'])->name('students.promotions');
+    Route::post('students/promotions', [PromotionController::class, 'store'])->name('students.promotions.store');
+
+    Route::get('students/admissions', [StudentController::class, 'admissions'])->name('students.admissions');
+    Route::get('students/documents', [StudentController::class, 'documents'])->name('students.documents');
+    Route::get('students/discipline', [StudentController::class, 'discipline'])->name('students.discipline');
 
     Route::resource('students', StudentController::class);
 
@@ -103,6 +120,20 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
 
     Route::get('/attendance-report', [ReportController::class, 'index'])->name('attendance-report.index');
     Route::post('/attendance-report', [ReportController::class, 'generate'])->name('attendance-report.generate');
+
+    Route::resource('fees-groups', FeeGroupController::class);
+    Route::get('fees-groups/{feeGroup}/fees-types', [FeeTypeController::class, 'index'])->name('fees-types.index');
+    Route::post('fees-groups/{feeGroup}/fees-types', [FeeTypeController::class, 'store'])->name('fees-types.store');
+    Route::put('fees-types/{feeType}', [FeeTypeController::class, 'update'])->name('fees-types.update');
+    Route::delete('fees-types/{feeType}', [FeeTypeController::class, 'destroy'])->name('fees-types.destroy');
+
+    Route::resource('fees-studentfees', StudentFeeController::class);
+    Route::get('fees/payments', [PaymentController::class, 'index'])->name('fees.payments');
+    Route::post('fees/payments', [PaymentController::class, 'store'])->name('fees.payments.store');
+    Route::get('fees/invoices', [InvoiceController::class, 'index'])->name('fees.invoices');
+
+    Route::get('fees/ledger', [LedgerController::class, 'index'])->name('fees.ledger');
+    Route::post('fees/ledger/expenses', [LedgerController::class, 'storeExpense'])->name('fees.ledger.store');
 });
 
 

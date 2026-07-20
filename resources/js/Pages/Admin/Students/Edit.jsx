@@ -8,38 +8,38 @@ export default function Edit({ student, classes, campuses, categories, houses })
   const { flash } = usePage().props;
 
   const { data, setData, post, processing, errors } = useForm({
-    _method: 'PUT', 
-    campus_id: student.campus_id || '', 
+    _method: 'PUT',
+    campus_id: student.campus_id || '',
     category_id: student.category_id || '',
     house_id: student.house_id || '',
-    class_id: student.current_enrollment?.class_id || '', 
-    section_id: student.current_enrollment?.section_id || '', 
-    roll_no: student.current_enrollment?.roll_no || '', 
-    
-    first_name: student.first_name || '', 
-    last_name: student.last_name || '', 
-    date_of_birth: student.date_of_birth || '', 
+    class_id: student.current_enrollment?.class_id || '',
+    section_id: student.current_enrollment?.section_id || '',
+    roll_no: student.current_enrollment?.roll_no || '',
+
+    first_name: student.first_name || '',
+    last_name: student.last_name || '',
+    date_of_birth: student.date_of_birth || '',
     birth_certificate_no: student.birth_certificate_no || '',
     national_id: student.national_id || '',
-    gender: student.gender || '', 
-    blood_group: student.blood_group || '', 
-    religion: student.religion || '', 
+    gender: student.gender || '',
+    blood_group: student.blood_group || '',
+    religion: student.religion || '',
     mother_tongue: student.mother_tongue || 'Bangla',
-    nationality: student.nationality || 'Bangladeshi', 
-    phone: student.phone || '', 
-    email: student.email || '', 
+    nationality: student.nationality || 'Bangladeshi',
+    phone: student.phone || '',
+    email: student.email || '',
     medical_history: student.medical_history || '',
     previous_school_details: student.previous_school_details || '',
-    present_address: student.present_address || '', 
+    present_address: student.present_address || '',
     permanent_address: student.permanent_address || '',
-    
-    father_name: student.guardian?.father_name || '', 
-    father_phone: student.guardian?.father_phone || '', 
-    mother_name: student.guardian?.mother_name || '', 
-    mother_phone: student.guardian?.mother_phone || '', 
+
+    father_name: student.guardian?.father_name || '',
+    father_phone: student.guardian?.father_phone || '',
+    mother_name: student.guardian?.mother_name || '',
+    mother_phone: student.guardian?.mother_phone || '',
     guardian_email: student.guardian?.guardian_email || '',
-    
-    photo: null 
+
+    photo: null
   });
 
   const initialPhoto = student.photo ? `/storage/${student.photo}` : null;
@@ -77,7 +77,7 @@ export default function Edit({ student, classes, campuses, categories, houses })
   };
 
   return (
-    <AuthenticatedLayout 
+    <AuthenticatedLayout
       header={
         <div className="page-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' ,marginBottom: '0px'}}>
           <div>
@@ -91,11 +91,11 @@ export default function Edit({ student, classes, campuses, categories, houses })
       }
     >
       <Head title={`Edit Student - ${student.first_name}`} />
-      
+
       <div style={{ maxWidth: '1550px', margin: '0 auto', paddingBottom: '40px' }}>
-        
+
         <form onSubmit={submit}>
-          
+
           <div style={customStyles.card}>
             <h3 style={customStyles.sectionTitle}>
               <div style={{ background: '#e0e7ff', color: '#4f46e5', padding: '8px', borderRadius: '8px', display: 'flex' }}><Icon name="book" /></div>
@@ -160,21 +160,21 @@ export default function Edit({ student, classes, campuses, categories, houses })
 
             {/* Photo Upload Area */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '24px', marginBottom: '32px', background: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px dashed #cbd5e1' }}>
-              <div style={{ 
-                width: '100px', height: '100px', borderRadius: '50%', backgroundColor: '#fff', 
-                border: '2px dashed #94a3b8', display: 'flex', justifyContent: 'center', alignItems: 'center', 
-                overflow: 'hidden', position: 'relative', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' 
+              <div style={{
+                width: '100px', height: '100px', borderRadius: '50%', backgroundColor: '#fff',
+                border: '2px dashed #94a3b8', display: 'flex', justifyContent: 'center', alignItems: 'center',
+                overflow: 'hidden', position: 'relative', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
               }}>
                 {photoPreview ? (
                   <img src={photoPreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
                   <Icon name="camera" style={{ color: '#94a3b8', fontSize: '28px' }} />
                 )}
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  onChange={handlePhotoChange} 
-                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }} 
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoChange}
+                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
                   title="Click to update profile photo"
                 />
               </div>
@@ -258,13 +258,13 @@ export default function Edit({ student, classes, campuses, categories, houses })
                 <input style={customStyles.input} type="email" value={data.email} onChange={e => setData('email', e.target.value)} />
                 {errors.email && <span style={customStyles.error}>{errors.email}</span>}
               </div>
-              
+
               <div style={{ ...customStyles.formGroup, gridColumn: '1 / -1' }}>
                 <label style={customStyles.label}>Previous School Details (Transfer Info)</label>
                 <textarea style={{...customStyles.input, resize: 'vertical', minHeight: '60px'}} value={data.previous_school_details} onChange={e => setData('previous_school_details', e.target.value)} />
                 {errors.previous_school_details && <span style={customStyles.error}>{errors.previous_school_details}</span>}
               </div>
-              
+
               <div style={{ ...customStyles.formGroup, gridColumn: '1 / -1' }}>
                 <label style={customStyles.label}>Medical History & Allergies (If any)</label>
                 <textarea style={{...customStyles.input, resize: 'vertical', minHeight: '60px'}} value={data.medical_history} onChange={e => setData('medical_history', e.target.value)} />
@@ -290,6 +290,19 @@ export default function Edit({ student, classes, campuses, categories, houses })
               <div style={{ background: '#dcfce7', color: '#16a34a', padding: '8px', borderRadius: '8px', display: 'flex' }}><Icon name="users" /></div>
               3. Guardian / Parents Information
             </h3>
+            {student.guardian?.students && student.guardian.students.length > 1 && (
+              <div style={{ background: '#fffbeb', borderLeft: '4px solid #f59e0b', padding: '16px', borderRadius: '8px', marginBottom: '24px', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                <Icon name="warning" style={{ color: '#d97706', fontSize: '20px', marginTop: '2px' }} />
+                <div>
+                  <strong style={{ display: 'block', color: '#b45309', fontSize: '15px', marginBottom: '4px' }}>
+                    লক্ষ্য করুন (Shared Guardian Info)
+                  </strong>
+                  <span style={{ color: '#92400e', fontSize: '14px', lineHeight: '1.5' }}>
+                    এই গার্জিয়ানের আরও <b>{student.guardian.students.length - 1}</b> জন সন্তান এই স্কুলে অধ্যয়নরত আছে। এখান থেকে গার্জিয়ানের কোনো তথ্য (যেমন: মোবাইল নম্বর বা নাম) পরিবর্তন করলে তা অন্য ভাই-বোনদের প্রোফাইলেও অটোমেটিক আপডেট হয়ে যাবে।
+                  </span>
+                </div>
+              </div>
+            )}
             <div style={customStyles.grid}>
               <div style={customStyles.formGroup}>
                 <label style={customStyles.label}>Father's Name <span style={{color: '#ef4444'}}>*</span></label>
@@ -323,13 +336,13 @@ export default function Edit({ student, classes, campuses, categories, houses })
             <Link href={route('admin.students.index')} style={{ color: '#64748b', fontWeight: '600', textDecoration: 'none' }}>
               Cancel
             </Link>
-            <button 
-              type="submit" 
-              style={{ 
-                background: '#4f46e5', color: '#fff', padding: '14px 32px', fontSize: '16px', fontWeight: '700', 
-                border: 'none', borderRadius: '8px', cursor: processing ? 'not-allowed' : 'pointer', 
-                opacity: processing ? 0.7 : 1, transition: 'all 0.2s', boxShadow: '0 4px 6px -1px rgba(79, 70, 229, 0.4)' 
-              }} 
+            <button
+              type="submit"
+              style={{
+                background: '#4f46e5', color: '#fff', padding: '14px 32px', fontSize: '16px', fontWeight: '700',
+                border: 'none', borderRadius: '8px', cursor: processing ? 'not-allowed' : 'pointer',
+                opacity: processing ? 0.7 : 1, transition: 'all 0.2s', boxShadow: '0 4px 6px -1px rgba(79, 70, 229, 0.4)'
+              }}
               disabled={processing}
             >
               {processing ? 'Saving Changes...' : 'Save Changes'}

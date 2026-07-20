@@ -3,51 +3,87 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
 import Swal from 'sweetalert2';
 import { useEffect, useState } from 'react';
+import axios from 'axios';
 
 export default function Create({ classes, active_session, campuses, categories, houses }) {
   const { flash } = usePage().props;
 
   const { data, setData, post, processing, errors } = useForm({
-    campus_id: '', 
+    campus_id: '',
     category_id: '',
-    house_id: '', 
-    class_id: '', 
-    section_id: '', 
-    roll_no: '', 
+    house_id: '',
+    class_id: '',
+    section_id: '',
+    roll_no: '',
     admission_date: new Date().toISOString().split('T')[0],
-    
-    first_name: '', 
-    last_name: '', 
-    date_of_birth: '', 
+
+    first_name: '',
+    last_name: '',
+    date_of_birth: '',
     birth_certificate_no: '',
     national_id: '',
-    gender: '', 
-    blood_group: '', 
-    religion: '', 
+    gender: '',
+    blood_group: '',
+    religion: '',
     mother_tongue: 'Bangla',
-    nationality: 'Bangladeshi', 
-    phone: '', 
-    email: '', 
+    nationality: 'Bangladeshi',
+    phone: '',
+    email: '',
     medical_history: '',
     previous_school_details: '',
-    present_address: '', 
+    present_address: '',
     permanent_address: '',
-    
-    father_name: '', 
-    father_phone: '', 
-    mother_name: '', 
-    mother_phone: '', 
+
+    father_name: '',
+    father_phone: '',
+    mother_name: '',
+    mother_phone: '',
     guardian_email: '',
-    
-    create_student_user: true, 
+
+    create_student_user: true,
     create_parent_user: true,
-    photo: null 
+    photo: null,
+    guardian_id: null
   });
 
   const [photoPreview, setPhotoPreview] = useState(null);
 
   const selectedClass = classes?.find(c => c.id == data.class_id);
   const availableSections = selectedClass?.sections || [];
+
+  const [isSibling, setIsSibling] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searching, setSearching] = useState(false);
+
+  const handleSearchGuardian = async () => {
+    if (!searchQuery) return;
+    setSearching(true);
+    try {
+      const response = await axios.get(route('admin.students.search_guardian'), { params: { query: searchQuery } });
+
+      if (response.data.guardian) {
+        const g = response.data.guardian;
+        setData(data => ({
+          ...data,
+          guardian_id: g.id,
+          father_name: g.father_name || '',
+          father_phone: g.father_phone || '',
+          mother_name: g.mother_name || '',
+          mother_phone: g.mother_phone || '',
+          guardian_email: g.guardian_email || '',
+          present_address: g.address || data.present_address, 
+        }));
+        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Guardian found! Data Auto-filled.', showConfirmButton: false, timer: 3000 });
+      } else {
+        Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'No guardian or student found with this info.', showConfirmButton: false, timer: 3000 });
+      }
+    } catch (error) {
+      console.error(error);
+      Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Server Error!', showConfirmButton: false, timer: 3000 });
+    } finally {
+      setSearching(false);
+    }
+  };
 
   useEffect(() => {
     if (flash?.error) Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: flash.error, showConfirmButton: false, timer: 4000 });
@@ -79,7 +115,7 @@ export default function Create({ classes, active_session, campuses, categories, 
   };
 
   return (
-    <AuthenticatedLayout 
+    <AuthenticatedLayout
       header={
         <div className="page-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' ,marginBottom: '0px'}}>
           <div>
@@ -93,9 +129,9 @@ export default function Create({ classes, active_session, campuses, categories, 
       }
     >
       <Head title="New Admission | Student" />
-      
+
       <div style={{ maxWidth: '1550px', margin: '0 auto', paddingBottom: '40px' }}>
-        
+
         {!active_session && (
           <div style={{ background: '#fef2f2', borderLeft: '4px solid #ef4444', color: '#991b1b', padding: '16px 20px', borderRadius: '8px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
             <Icon name="warning" style={{ fontSize: '24px' }} />
@@ -107,20 +143,20 @@ export default function Create({ classes, active_session, campuses, categories, 
         )}
 
         <form onSubmit={submit}>
-          
+
           <div style={customStyles.card}>
             <h3 style={customStyles.sectionTitle}>
               <div style={{ background: '#e0e7ff', color: '#4f46e5', padding: '8px', borderRadius: '8px', display: 'flex' }}><Icon name="book" /></div>
               1. Academic Details
             </h3>
-            
+
             <div style={{ display: 'flex', gap: '20px', marginBottom: '24px', flexWrap: 'wrap' }}>
               <label style={customStyles.checkboxWrap}>
-                <input type="checkbox" checked={data.create_student_user} onChange={e => setData('create_student_user', e.target.checked)} style={{ width: '18px', height: '18px', accentColor: '#4f46e5' }} /> 
+                <input type="checkbox" checked={data.create_student_user} onChange={e => setData('create_student_user', e.target.checked)} style={{ width: '18px', height: '18px', accentColor: '#4f46e5' }} />
                 Create Portal Account for Student
               </label>
               <label style={customStyles.checkboxWrap}>
-                <input type="checkbox" checked={data.create_parent_user} onChange={e => setData('create_parent_user', e.target.checked)} style={{ width: '18px', height: '18px', accentColor: '#4f46e5' }} /> 
+                <input type="checkbox" checked={data.create_parent_user} onChange={e => setData('create_parent_user', e.target.checked)} style={{ width: '18px', height: '18px', accentColor: '#4f46e5' }} />
                 Create Portal Account for Parents
               </label>
             </div>
@@ -142,7 +178,7 @@ export default function Create({ classes, active_session, campuses, categories, 
                 </select>
                 {errors.category_id && <span style={customStyles.error}>{errors.category_id}</span>}
               </div>
-              
+
               <div style={customStyles.formGroup}>
                 <label style={customStyles.label}>House (Optional)</label>
                 <select style={customStyles.input} value={data.house_id} onChange={e => setData('house_id', e.target.value)}>
@@ -190,21 +226,21 @@ export default function Create({ classes, active_session, campuses, categories, 
 
             {/* Photo Upload Area */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '24px', marginBottom: '32px', background: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px dashed #cbd5e1' }}>
-              <div style={{ 
-                width: '100px', height: '100px', borderRadius: '50%', backgroundColor: '#fff', 
-                border: '2px dashed #94a3b8', display: 'flex', justifyContent: 'center', alignItems: 'center', 
-                overflow: 'hidden', position: 'relative', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' 
+              <div style={{
+                width: '100px', height: '100px', borderRadius: '50%', backgroundColor: '#fff',
+                border: '2px dashed #94a3b8', display: 'flex', justifyContent: 'center', alignItems: 'center',
+                overflow: 'hidden', position: 'relative', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
               }}>
                 {photoPreview ? (
                   <img src={photoPreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
                   <Icon name="camera" style={{ color: '#94a3b8', fontSize: '28px' }} />
                 )}
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  onChange={handlePhotoChange} 
-                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }} 
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoChange}
+                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
                   title="Click to upload profile photo"
                 />
               </div>
@@ -288,13 +324,13 @@ export default function Create({ classes, active_session, campuses, categories, 
                 <input style={customStyles.input} type="email" placeholder="student@example.com" value={data.email} onChange={e => setData('email', e.target.value)} />
                 {errors.email && <span style={customStyles.error}>{errors.email}</span>}
               </div>
-              
+
               <div style={{ ...customStyles.formGroup, gridColumn: '1 / -1' }}>
                 <label style={customStyles.label}>Previous School Details (Transfer Info)</label>
                 <textarea style={{...customStyles.input, resize: 'vertical', minHeight: '60px'}} placeholder="Name of previous school, TC Number, etc." value={data.previous_school_details} onChange={e => setData('previous_school_details', e.target.value)} />
                 {errors.previous_school_details && <span style={customStyles.error}>{errors.previous_school_details}</span>}
               </div>
-              
+
               <div style={{ ...customStyles.formGroup, gridColumn: '1 / -1' }}>
                 <label style={customStyles.label}>Medical History & Allergies (If any)</label>
                 <textarea style={{...customStyles.input, resize: 'vertical', minHeight: '60px'}} placeholder="Mention if the student has asthma, allergies to specific foods, etc." value={data.medical_history} onChange={e => setData('medical_history', e.target.value)} />
@@ -320,6 +356,41 @@ export default function Create({ classes, active_session, campuses, categories, 
               <div style={{ background: '#dcfce7', color: '#16a34a', padding: '8px', borderRadius: '8px', display: 'flex' }}><Icon name="users" /></div>
               3. Guardian / Parents Information
             </h3>
+
+
+            <div style={{ marginBottom: '24px', paddingBottom: '20px', borderBottom: '1px dashed #cbd5e1' }}>
+              <label style={{...customStyles.checkboxWrap, display: 'inline-flex', marginBottom: isSibling ? '16px' : '0'}}>
+                <input
+                  type="checkbox"
+                  checked={isSibling}
+                  onChange={e => setIsSibling(e.target.checked)}
+                  style={{ width: '18px', height: '18px', accentColor: '#16a34a' }}
+                />
+                Already have a sibling in this school? (আগে থেকে কোনো ভাই/বোন এই স্কুলে পড়ে?)
+              </label>
+
+              {isSibling && (
+                <div style={{ display: 'flex', gap: '10px', background: '#f8fafc', padding: '16px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+                  <input
+                    style={{...customStyles.input, flex: 1}}
+                    placeholder="Enter Sibling's Admission No OR Father's Phone"
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleSearchGuardian())}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleSearchGuardian}
+                    disabled={searching}
+                    style={{ background: '#1e293b', color: '#fff', padding: '10px 24px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '600' }}
+                  >
+                    {searching ? 'Searching...' : 'Search'}
+                  </button>
+                </div>
+              )}
+            </div>
+
+
             <div style={customStyles.grid}>
               <div style={customStyles.formGroup}>
                 <label style={customStyles.label}>Father's Name <span style={{color: '#ef4444'}}>*</span></label>
@@ -353,13 +424,13 @@ export default function Create({ classes, active_session, campuses, categories, 
             <Link href={route('admin.students.index')} style={{ color: '#64748b', fontWeight: '600', textDecoration: 'none' }}>
               Cancel
             </Link>
-            <button 
-              type="submit" 
-              style={{ 
-                background: '#4f46e5', color: '#fff', padding: '14px 32px', fontSize: '16px', fontWeight: '700', 
-                border: 'none', borderRadius: '8px', cursor: (processing || !active_session) ? 'not-allowed' : 'pointer', 
-                opacity: (processing || !active_session) ? 0.7 : 1, transition: 'all 0.2s', boxShadow: '0 4px 6px -1px rgba(79, 70, 229, 0.4)' 
-              }} 
+            <button
+              type="submit"
+              style={{
+                background: '#4f46e5', color: '#fff', padding: '14px 32px', fontSize: '16px', fontWeight: '700',
+                border: 'none', borderRadius: '8px', cursor: (processing || !active_session) ? 'not-allowed' : 'pointer',
+                opacity: (processing || !active_session) ? 0.7 : 1, transition: 'all 0.2s', boxShadow: '0 4px 6px -1px rgba(79, 70, 229, 0.4)'
+              }}
               disabled={processing || !active_session}
             >
               {processing ? 'Processing Registration...' : 'Confirm Admission'}

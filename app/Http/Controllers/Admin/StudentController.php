@@ -22,10 +22,10 @@ class StudentController extends Controller
 {
     public function index(Request $request)
     {
-        $perPage = $request->input('per_page', 10); 
+        $perPage = $request->input('per_page', 10);
         $search = $request->input('search');
 
-        $query = Student::with(['currentEnrollment.schoolClass', 'currentEnrollment.section', 'guardian', 'campus'])->latest();
+        $query = Student::with(['currentEnrollment.schoolClass', 'currentEnrollment.section', 'guardian.students', 'campus'])->latest();
 
         if ($request->filled('class_id')) {
             $query->whereHas('currentEnrollment', function($q) use ($request) {
@@ -50,8 +50,8 @@ class StudentController extends Controller
             });
         }
 
-        $students = ($perPage === 'all') 
-            ? $query->paginate($query->count())->withQueryString() 
+        $students = ($perPage === 'all')
+            ? $query->paginate($query->count())->withQueryString()
             : $query->paginate($perPage)->withQueryString();
 
         return Inertia::render('Admin/Students/Index', [
@@ -66,17 +66,33 @@ class StudentController extends Controller
         return Inertia::render('Admin/Students/Create', [
             'classes' => SchoolClass::with('sections')->where('is_active', true)->get(),
             'active_session' => AcademicSession::where('is_active', 1)->where('is_current', 1)->first(),
-            'campuses' => Campus::all(), 
-            'categories' => StudentCategory::all(), 
-            'houses' => House::all(), 
+            'campuses' => Campus::all(),
+            'categories' => StudentCategory::all(),
+            'houses' => House::all(),
         ]);
+    }
+
+    public function searchGuardian(Request $request)
+    {
+        $query = $request->input('query');
+
+        if (!$query) {
+            return response()->json(['guardian' => null]);
+        }
+        $guardian = Guardian::where('father_phone', $query)
+            ->orWhereHas('students', function($q) use ($query) {
+                $q->where('admission_no', $query);
+            })
+            ->first();
+
+        return response()->json(['guardian' => $guardian]);
     }
 
     public function store(Request $request)
     {
         $data = $request->validate($this->studentValidationRules());
         $activeSession = AcademicSession::where('is_active', 1)->where('is_current', 1)->first();
-        
+
         if (!$activeSession) {
             return back()->with('error', 'কোনো অ্যাক্টিভ শিক্ষাবর্ষ পাওয়া যায়নি! আগে একটি শিক্ষাবর্ষ চালু করুন।');
         }
@@ -84,35 +100,62 @@ class StudentController extends Controller
         DB::beginTransaction();
         try {
             $guardianUserId = null;
-            if ($request->create_parent_user) {
-                $parentEmail = $request->guardian_email ?? $request->father_phone . '@parent.school.com';
-                
-                $guardianUser = User::firstOrCreate(
-                    ['email' => $parentEmail],
+            $guardianId = null;
+
+            if ($request->filled('guardian_id')) {
+                $guardianId = $request->guardian_id;
+                $guardian = Guardian::find($guardianId);
+
+                if ($guardian && $request->create_parent_user && !$guardian->user_id) {
+                    $parentEmail = $request->guardian_email ?? $request->father_phone . '@parent.school.com';
+                    $guardianUser = User::firstOrCreate(
+                        ['email' => $parentEmail],
+                        [
+                            'name' => $request->father_name,
+                            'password' => Hash::make($request->father_phone),
+                            'campus_id' => $request->campus_id,
+                        ]
+                    );
+
+                    if (!$guardianUser->hasRole('parent')) {
+                        $guardianUser->assignRole('parent');
+                    }
+                    $guardian->update(['user_id' => $guardianUser->id]);
+                }
+            }
+            else {
+                if ($request->create_parent_user) {
+                    $parentEmail = $request->guardian_email ?? $request->father_phone . '@parent.school.com';
+
+                    $guardianUser = User::firstOrCreate(
+                        ['email' => $parentEmail],
+                        [
+                            'name' => $request->father_name,
+                            'password' => Hash::make($request->father_phone),
+                            'campus_id'         => $request->campus_id,
+                        ]
+                    );
+
+                    if (!$guardianUser->hasRole('parent')) {
+                        $guardianUser->assignRole('parent');
+                    }
+                    $guardianUserId = $guardianUser->id;
+                }
+
+                $guardian = Guardian::firstOrCreate(
+                    ['father_phone' => $request->father_phone],
                     [
-                        'name' => $request->father_name,
-                        'password' => Hash::make($request->father_phone), 
-                        'campus_id'         => $request->campus_id,
+                        'user_id'       => $guardianUserId,
+                        'father_name'   => $request->father_name,
+                        'mother_name'   => $request->mother_name,
+                        'mother_phone'  => $request->mother_phone,
+                        'guardian_email'=> $request->guardian_email,
+                        'address'       => $request->present_address,
                     ]
                 );
-                
-                if (!$guardianUser->hasRole('parent')) {
-                    $guardianUser->assignRole('parent'); 
-                }
-                $guardianUserId = $guardianUser->id;
-            }
 
-            $guardian = Guardian::firstOrCreate(
-                ['father_phone' => $request->father_phone],
-                [
-                    'user_id'       => $guardianUserId,
-                    'father_name'   => $request->father_name,
-                    'mother_name'   => $request->mother_name,
-                    'mother_phone'  => $request->mother_phone,
-                    'guardian_email'=> $request->guardian_email,
-                    'address'       => $request->present_address, 
-                ]
-            );
+                $guardianId = $guardian->id;
+            }
 
             $lastStudent = Student::latest('id')->first();
             $admissionNo = 'STU-' . date('Y') . '-' . sprintf('%04d', $lastStudent ? $lastStudent->id + 1 : 1);
@@ -120,15 +163,15 @@ class StudentController extends Controller
             $studentUserId = null;
             if ($request->create_student_user) {
                 $studentEmail = $request->email ?? $admissionNo . '@student.school.com';
-                
+
                 $studentUser = User::create([
                     'name'       => $request->first_name . ' ' . $request->last_name,
                     'email'      => $studentEmail,
-                    'password'   => Hash::make($admissionNo), 
+                    'password'   => Hash::make($admissionNo),
                     'campus_id'  => $request->campus_id,
                 ]);
-                
-                $studentUser->assignRole('student'); 
+
+                $studentUser->assignRole('student');
                 $studentUserId = $studentUser->id;
             }
 
@@ -140,7 +183,7 @@ class StudentController extends Controller
             $student = Student::create([
                 'campus_id'         => $request->campus_id,
                 'user_id'           => $studentUserId,
-                'guardian_id'       => $guardian->id,
+                'guardian_id'       => $guardianId,
                 'category_id'       => $request->category_id,
                 'house_id'          => $request->house_id,
                 'admission_no'      => $admissionNo,
@@ -185,14 +228,14 @@ class StudentController extends Controller
 
     public function edit($id)
     {
-        $student = Student::with(['guardian', 'currentEnrollment'])->findOrFail($id);
+        $student = Student::with(['guardian.students', 'currentEnrollment'])->findOrFail($id);
 
         return Inertia::render('Admin/Students/Edit', [
             'student' => $student,
             'classes' => SchoolClass::with('sections')->where('is_active', true)->get(),
-            'campuses' => Campus::all(), 
-            'categories' => StudentCategory::all(), 
-            'houses' => House::all(), 
+            'campuses' => Campus::all(),
+            'categories' => StudentCategory::all(),
+            'houses' => House::all(),
         ]);
     }
 
@@ -217,7 +260,7 @@ class StudentController extends Controller
                     if ($guardianUser) {
                         $guardianUser->update([
                             'name' => $request->father_name,
-                            'email' => $request->guardian_email ?? $guardianUser->email, 
+                            'email' => $request->guardian_email ?? $guardianUser->email,
                         ]);
                     }
                 }
@@ -233,7 +276,7 @@ class StudentController extends Controller
                 }
             }
 
-            $photoPath = $student->photo; 
+            $photoPath = $student->photo;
             if ($request->hasFile('photo')) {
                 if ($student->photo && Storage::disk('public')->exists($student->photo)) {
                     Storage::disk('public')->delete($student->photo);
@@ -261,7 +304,7 @@ class StudentController extends Controller
                 'medical_history'   => $request->medical_history,
                 'present_address'   => $request->present_address,
                 'permanent_address' => $request->permanent_address,
-                'photo'             => $photoPath, 
+                'photo'             => $photoPath,
             ]);
 
             if ($student->currentEnrollment) {
@@ -293,7 +336,7 @@ class StudentController extends Controller
 
             $guardianId = $student->guardian_id;
 
-            $student->delete(); 
+            $student->delete();
 
             $otherSiblingsCount = Student::where('guardian_id', $guardianId)->count();
 
@@ -319,12 +362,12 @@ class StudentController extends Controller
     private function studentValidationRules(bool $isUpdate = false, $studentId = null): array
     {
         $rules = [
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048', 
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'campus_id'     => 'required|exists:campuses,id',
             'class_id'      => 'required|exists:school_classes,id',
             'section_id'    => 'required|exists:sections,id',
             'roll_no'       => 'nullable|string|max:50',
-            
+
             'category_id'   => 'nullable|integer',
             'house_id'      => 'nullable|integer',
             'birth_certificate_no' => 'nullable|string|max:100' . ($isUpdate ? "|unique:students,birth_certificate_no,{$studentId}" : '|unique:students,birth_certificate_no'),

@@ -84,10 +84,10 @@ function StudentViewModal({ student, onClose }) {
               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
             }}>
               {student.photo ? (
-                <img 
-                  src={`/storage/${student.photo}`} 
-                  alt={`${student.first_name}'s Photo`} 
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                <img
+                  src={`/storage/${student.photo}`}
+                  alt={`${student.first_name}'s Photo`}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
               ) : (
                 student.first_name ? student.first_name[0].toUpperCase() : 'S'
@@ -109,7 +109,7 @@ function StudentViewModal({ student, onClose }) {
 
           {/* Details Grid: Academic, Personal & Guardian */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '20px' }}>
-            
+
             {/* 1. Academic Information */}
             <div style={{ background: '#fff', border: '1px solid #e2e8f0', padding: '20px', borderRadius: '12px' }}>
               <h4 style={{ margin: '0 0 16px 0', fontSize: '15px', fontWeight: '700', color: '#4f46e5', borderBottom: '2px solid #e0e7ff', paddingBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -178,6 +178,36 @@ function StudentViewModal({ student, onClose }) {
             </div>
           </div>
 
+          <div style={{ background: '#fff', border: '1px solid #e2e8f0', padding: '20px', borderRadius: '12px', marginTop: '10px' }}>
+            <h4 style={{ margin: '0 0 16px 0', fontSize: '15px', fontWeight: '700', color: '#10b981', borderBottom: '2px solid #d1fae5', paddingBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Icon name="users" style={{ fontSize: '16px' }} /> Siblings Information (এই স্কুলে অধ্যয়নরত ভাই-বোন)
+            </h4>
+
+            {student.guardian?.students && student.guardian.students.filter(s => s.id !== student.id).length > 0 ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '12px' }}>
+                {student.guardian.students
+                  .filter(s => s.id !== student.id) 
+                  .map(sibling => (
+                  <div key={sibling.id} style={{ background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#e0e7ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5', fontWeight: 'bold' }}>
+                      {sibling.photo ? (
+                        <img src={`/storage/${sibling.photo}`} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                      ) : (
+                        sibling.first_name[0]
+                      )}
+                    </div>
+                    <div>
+                      <strong style={{ display: 'block', color: '#1e293b', fontSize: '14px' }}>{sibling.first_name} {sibling.last_name}</strong>
+                      <span style={{ fontSize: '12px', color: '#64748b' }}>Adm No: {sibling.admission_no}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <span style={{ color: '#94a3b8', fontSize: '14px', fontStyle: 'italic' }}>এই স্কুলে অন্য কোনো ভাই-বোন অধ্যয়নরত নেই।</span>
+            )}
+          </div>
+
         </div>
 
         {/* Modal Footer */}
@@ -195,7 +225,7 @@ export default function Index({ students, classes, filters }) {
   const [classId, setClassId] = useState(filters.class_id ?? '');
   const [sectionId, setSectionId] = useState(filters.section_id ?? '');
   const [perPage, setPerPage] = useState(filters.per_page ?? '10');
-  
+
   const [deletingItem, setDeletingItem] = useState(null);
   const [viewingItem, setViewingItem] = useState(null);
 
@@ -240,9 +270,9 @@ export default function Index({ students, classes, filters }) {
       student.guardian?.father_phone ?? ''
     ]);
 
-    const csvContent = "data:text/csv;charset=utf-8," 
+    const csvContent = "data:text/csv;charset=utf-8,"
       + [headers.join(','), ...rows.map(e => e.map(val => `"${val}"`).join(','))].join('\n');
-    
+
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -352,11 +382,11 @@ export default function Index({ students, classes, filters }) {
       {/* Filter Card marked with 'no-print' class */}
       <div className="card mm-card no-print" style={{ marginBottom: '20px', background: '#fff', padding: '20px', borderRadius: '12px' }}>
         <div className="mm-filters" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
-          
+
           {/* Per Page dropdown */}
-          <select 
-            value={perPage} 
-            onChange={e => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }} 
+          <select
+            value={perPage}
+            onChange={e => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}
             style={{ padding: '10px', borderRadius: '6px', border: '1px solid #ddd', minWidth: '110px', background: '#fff' }}
           >
             <option value="10">10 / Page</option>
@@ -381,9 +411,9 @@ export default function Index({ students, classes, filters }) {
           </div>
 
           {/* Class selector */}
-          <select 
-            value={classId} 
-            onChange={e => { setClassId(e.target.value); setSectionId(''); }} 
+          <select
+            value={classId}
+            onChange={e => { setClassId(e.target.value); setSectionId(''); }}
             style={{ padding: '10px', borderRadius: '6px', border: '1px solid #ddd', minWidth: '150px' }}
           >
             <option value="">All Classes</option>
@@ -391,10 +421,10 @@ export default function Index({ students, classes, filters }) {
           </select>
 
           {/* Section selector */}
-          <select 
-            value={sectionId} 
-            onChange={e => setSectionId(e.target.value)} 
-            disabled={!classId} 
+          <select
+            value={sectionId}
+            onChange={e => setSectionId(e.target.value)}
+            disabled={!classId}
             style={{ padding: '10px', borderRadius: '6px', border: '1px solid #ddd', minWidth: '150px' }}
           >
             <option value="">All Sections</option>
@@ -454,10 +484,10 @@ export default function Index({ students, classes, filters }) {
                  <td>{index+1}</td>
                   <td style={{ padding: '15px' }}><strong>{student.admission_no}</strong></td>
                   <td style={{ padding: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <img 
-                        src={student.photo ? `/storage/${student.photo}` : '/images/default-avatar.png'} 
-                        alt="Student" 
-                        style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} 
+                    <img
+                        src={student.photo ? `/storage/${student.photo}` : '/images/default-avatar.png'}
+                        alt="Student"
+                        style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
                     />
                     {student.first_name} {student.last_name || ''}
                 </td>
@@ -478,17 +508,17 @@ export default function Index({ students, classes, filters }) {
                   <td className="no-print" style={{ padding: '15px' }}>
                     <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
                       {/* View Details Button */}
-                      <button 
-                        onClick={() => setViewingItem(student)} 
-                        title="View Details" 
+                      <button
+                        onClick={() => setViewingItem(student)}
+                        title="View Details"
                         style={{ padding: '6px', color: '#4f46e5', background: '#f5f3ff', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                       >
                         <Icon name="eye" />
                       </button>
-                      
+
                       {/* Edit Button */}
-                      <Link 
-                        href={route('admin.students.edit', student.id)} 
+                      <Link
+                        href={route('admin.students.edit', student.id)}
                         title="Edit Student"
                         style={{ padding: '6px', color: '#3b82f6', background: '#eff6ff', borderRadius: '6px', display: 'flex', alignItems: 'center' }}
                       >
@@ -496,8 +526,8 @@ export default function Index({ students, classes, filters }) {
                       </Link>
 
                       {/* Delete Button */}
-                      <button 
-                        onClick={() => setDeletingItem(student)} 
+                      <button
+                        onClick={() => setDeletingItem(student)}
                         title="Delete Student"
                         style={{ padding: '6px', color: '#ef4444', background: '#fef2f2', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                       >
@@ -521,14 +551,14 @@ export default function Index({ students, classes, filters }) {
       )}
 
       {deletingItem && (
-        <ConfirmDeleteModal 
-          item={deletingItem} 
-          onCancel={() => setDeletingItem(null)} 
-          onConfirm={() => { 
-            router.delete(route('admin.students.destroy', deletingItem.id), { 
-              onSuccess: () => setDeletingItem(null) 
-            }); 
-          }} 
+        <ConfirmDeleteModal
+          item={deletingItem}
+          onCancel={() => setDeletingItem(null)}
+          onConfirm={() => {
+            router.delete(route('admin.students.destroy', deletingItem.id), {
+              onSuccess: () => setDeletingItem(null)
+            });
+          }}
         />
       )}
     </AuthenticatedLayout>

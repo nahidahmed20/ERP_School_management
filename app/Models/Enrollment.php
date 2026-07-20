@@ -15,7 +15,7 @@ class Enrollment extends Model
 
     public function academicSession()
     {
-        return $this->belongsTo(AcademicYear::class, 'academic_session_id'); 
+        return $this->belongsTo(AcademicYear::class, 'academic_session_id');
     }
 
     public function schoolClass()
@@ -27,4 +27,5 @@ class Enrollment extends Model
     {
         return $this->belongsTo(Section::class, 'section_id');
     }
+
 }
