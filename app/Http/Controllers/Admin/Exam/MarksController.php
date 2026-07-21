@@ -12,6 +12,7 @@ use App\Models\Student;
 use App\Models\Subject;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Carbon\Carbon; 
 
 class MarksController extends Controller
 {
@@ -64,15 +65,22 @@ class MarksController extends Controller
         ]);
 
         $schedule = ExamSchedule::where('exam_id', $request->exam_id)
-                        ->where('class_id', $request->class_id)
-                        ->where('subject_id', $request->subject_id)
-                        ->first();
+                                ->where('class_id', $request->class_id)
+                                ->where('subject_id', $request->subject_id)
+                                ->first();
 
         if (!$schedule) {
-            return back()->with('error', 'দুঃখিত! এই ক্লাসের এই বিষয়ের জন্য এখনো কোনো পরীক্ষার রুটিন বা শিডিউল তৈরি করা হয়নি। তাই মার্কস এন্ট্রি করা যাবে না।');
+            return back()->with('error', 'দুঃখিত! এই ক্লাসের এই বিষয়ের জন্য এখনো কোনো পরীক্ষার রুটিন বা শিডিউল তৈরি করা হয়নি। তাই মার্কস এন্ট্রি করা যাবে না।');
         }
 
-        $grades = Grade::all(); 
+        $examDate = Carbon::parse($schedule->exam_date)->startOfDay();
+        $today = Carbon::today();
+
+        if ($examDate->gt($today)) {
+            return back()->with('error', 'দুঃখিত! এই পরীক্ষাটি আগামী ' . $examDate->format('d M, Y') . ' তারিখে অনুষ্ঠিত হবে। পরীক্ষার তারিখের পূর্বে মার্কস এন্ট্রি করা যাবে না।');
+        }
+
+        $grades = Grade::all();
 
         foreach ($request->marks as $markData) {
             $marksObtained = $markData['marks_obtained'];
@@ -106,7 +114,7 @@ class MarksController extends Controller
             );
         }
 
-        return back()->with('success', 'মার্কস সফলভাবে সেভ করা হয়েছে!');
+        return back()->with('success', 'মার্কস সফলভাবে সেভ করা হয়েছে!');
     }
 
     public function destroy(Request $request)
@@ -128,9 +136,9 @@ class MarksController extends Controller
     {
         $examId = $request->exam_id;
         $classId = $request->class_id;
-        $sectionId = $request->section_id; 
+        $sectionId = $request->section_id;
         $studentId = $request->student_id;
-        
+
         $students = [];
         $reportCard = null;
 
@@ -145,7 +153,7 @@ class MarksController extends Controller
 
         if ($examId && $classId && $studentId) {
             $student = Student::with(['currentEnrollment.schoolClass', 'currentEnrollment.section'])->findOrFail($studentId);
-            
+
             $marks = ExamMark::where('exam_id', $examId)
                              ->where('school_class_id', $classId)
                              ->where('student_id', $studentId)
@@ -154,7 +162,7 @@ class MarksController extends Controller
 
             $totalMarksObtained = $marks->sum('marks_obtained');
             $totalSubjects = $marks->count();
-            
+
             $totalGradePoint = $marks->sum('grade_point');
             $gpa = $totalSubjects > 0 ? number_format($totalGradePoint / $totalSubjects, 2) : 0.00;
 

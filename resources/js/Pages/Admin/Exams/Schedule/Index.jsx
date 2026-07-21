@@ -16,12 +16,11 @@ export default function Index({ schedules, exams, classes, classrooms, filters }
   const [formOpen, setFormOpen] = useState(false);
   const [editingConfig, setEditingConfig] = useState(null);
   const [deletingItem, setDeletingItem] = useState(null);
-  const [showAddExam, setShowAddExam] = useState(false); // Add Exam Modal State
+  const [showAddExam, setShowAddExam] = useState(false);
 
   const selectedClassForFilter = classes.find(c => c.id == classId);
   const isFilterApplied = examId && classId && sectionId;
 
-  // Add Exam Form
   const examForm = useForm({ name: '', start_date: '', end_date: '' });
 
   useEffect(() => {
@@ -45,21 +44,31 @@ export default function Index({ schedules, exams, classes, classrooms, filters }
     setFormOpen(true);
   };
 
+  // Shared Form Input Classes
+  const selectClass = "block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm";
+  const inputClass = "block w-full mt-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm";
+
   return (
     <AuthenticatedLayout
       header={
-        <div className="page-head">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <span className="eyebrow">Exams & Marks</span>
-            <h1>Exam Schedule & Seating</h1>
-            <p className="desc">পরীক্ষার রুটিন এবং ক্লাসরুম (Seating Plan) তৈরি করুন।</p>
+            <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">Exams & Marks</span>
+            <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Exam Schedule & Seating</h1>
+            <p className="mt-1 text-sm text-gray-500">পরীক্ষার রুটিন এবং ক্লাসরুম (Seating Plan) তৈরি করুন।</p>
           </div>
-          <div className="mm-head-actions">
-            <button className="btn btn-outline" onClick={() => setShowAddExam(true)} style={{ marginRight: '10px' }}>
-              <Icon name="plus" /> New Exam
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
+              onClick={() => setShowAddExam(true)}
+            >
+              <Icon name="plus" className="w-4 h-4" /> New Exam
             </button>
-            <button className="btn" onClick={() => { setEditingConfig(null); setFormOpen(true); }}>
-              <Icon name="calendar" /> Add Schedule
+            <button
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
+              onClick={() => { setEditingConfig(null); setFormOpen(true); }}
+            >
+              <Icon name="calendar" className="w-4 h-4" /> Add Schedule
             </button>
           </div>
         </div>
@@ -67,91 +76,195 @@ export default function Index({ schedules, exams, classes, classrooms, filters }
     >
       <Head title="Exam Schedule" />
 
-      {/* Filters */}
-      <div className="card mm-card" style={{ marginBottom: '20px' }}>
-        <div className="mm-filters" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
-          <select value={examId} onChange={(e) => setExamId(e.target.value)}>
-            <option value="">Select Exam</option>
-            {exams.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
-          </select>
-          <select value={classId} onChange={(e) => { setClassId(e.target.value); setSectionId(''); }}>
-            <option value="">Select Class</option>
-            {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
-          <select value={sectionId} onChange={(e) => setSectionId(e.target.value)} disabled={!classId}>
-            <option value="">Select Section</option>
-            {selectedClassForFilter?.sections?.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-          </select>
-          <button className="btn btn-outline" onClick={() => applyFilters()}>Search Schedule</button>
-        </div>
-      </div>
-
-      {/* Result Grid */}
-      <div className="card mm-card">
-        {isFilterApplied ? (
-          <>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', paddingBottom: '10px', borderBottom: '1px solid #e2e8f0' }}>
-              <h3 style={{ margin: 0 }}>Showing Schedule for {selectedClassForFilter?.name}</h3>
-              <button onClick={handleEditSchedule} className="btn" style={{ background: '#4f46e5', color: '#fff' }}>
-                <Icon name="edit" /> Edit Entire Schedule
+      <div className=" mx-auto sm:px-6 lg:px-8">
+        {/* Filters */}
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-6">
+          <div className="flex flex-col sm:flex-row gap-4 items-end">
+            <div className="w-full sm:w-1/4">
+              <label className="block text-xs font-medium text-gray-700 mb-1">Exam</label>
+              <select className={selectClass} value={examId} onChange={(e) => setExamId(e.target.value)}>
+                <option value="">Select Exam</option>
+                {exams.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+              </select>
+            </div>
+            <div className="w-full sm:w-1/4">
+              <label className="block text-xs font-medium text-gray-700 mb-1">Class</label>
+              <select className={selectClass} value={classId} onChange={(e) => { setClassId(e.target.value); setSectionId(''); }}>
+                <option value="">Select Class</option>
+                {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+            <div className="w-full sm:w-1/4">
+              <label className="block text-xs font-medium text-gray-700 mb-1">Section</label>
+              <select className={selectClass} value={sectionId} onChange={(e) => setSectionId(e.target.value)} disabled={!classId}>
+                <option value="">Select Section</option>
+                {selectedClassForFilter?.sections?.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+            </div>
+            <div className="w-full sm:w-1/4">
+              <button
+                className="w-full inline-flex justify-center items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-800 border border-transparent rounded-md shadow-sm hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 transition-colors"
+                onClick={() => applyFilters()}
+              >
+                <Icon name="search" className="w-4 h-4" /> Search Schedule
               </button>
             </div>
-            
-            <div className="mm-table-wrap">
-              <table className="mm-table">
-                <thead>
-                  <tr>
-                    <th>Exam Date</th>
-                    <th>Subject</th>
-                    <th>Time</th>
-                    <th>Room & Capacity</th>
-                    <th className="mm-actions-col">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {schedules.length === 0 && <tr><td colSpan={5} className="mm-empty">এই ক্লাসের কোনো পরীক্ষার রুটিন নেই।</td></tr>}
-                  {schedules.map((item) => (
-                    <tr key={item.id}>
-                      <td style={{ fontWeight: 600, color: '#334155' }}>{new Date(item.exam_date).toLocaleDateString('en-GB')}</td>
-                      <td><span className="badge" style={{ background: '#e0e7ff', color: '#3730a3' }}>{item.subject?.name}</span></td>
-                      <td style={{ color: '#475569' }}>{item.start_time.substring(0,5)} - {item.end_time.substring(0,5)}</td>
-                      <td>
-                        {item.classroom ? (
-                          <span className="badge" style={{ background: '#f1f5f9', color: '#475569' }}>
-                            <Icon name="home" style={{ width: '12px' }} /> {item.classroom.room_number} (Cap: {item.classroom.capacity})
-                          </span>
-                        ) : '—'}
-                      </td>
-                      <td>
-                        <button className="icon-btn icon-btn-danger" onClick={() => setDeletingItem(item)}><Icon name="trash" /></button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </>
-        ) : (
-          <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
-            <Icon name="search" style={{ width: '40px', margin: '0 auto', color: '#cbd5e1' }} />
-            <p style={{ marginTop: '10px' }}>Exam, Class এবং Section সিলেক্ট করে Search করুন।</p>
           </div>
-        )}
+        </div>
+
+        {/* Result Grid */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+          {isFilterApplied ? (
+            <>
+              <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                <h3 className="text-lg font-semibold text-gray-800">
+                  Showing Schedule for <span className="text-indigo-600">{selectedClassForFilter?.name}</span>
+                </h3>
+                <button
+                  onClick={handleEditSchedule}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-indigo-700 bg-indigo-100 rounded-md hover:bg-indigo-200 transition-colors"
+                >
+                  <Icon name="edit" className="w-4 h-4" /> Edit Entire Schedule
+                </button>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Exam Date</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room & Capacity</th>
+                      <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {schedules.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
+                          <Icon name="calendar" className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+                          <p>এই ক্লাসের কোনো পরীক্ষার রুটিন নেই।</p>
+                        </td>
+                      </tr>
+                    )}
+                    {schedules.map((item) => (
+                      <tr key={item.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-slate-700">
+                          {new Date(item.exam_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                            {item.subject?.name}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 font-medium">
+                          {item.start_time.substring(0,5)} - {item.end_time.substring(0,5)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
+                          {item.classroom ? (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 border border-slate-200">
+                              <Icon name="home" className="w-3.5 h-3.5 text-slate-400" />
+                              {item.classroom.room_number} <span className="text-xs text-slate-400 ml-1">(Cap: {item.classroom.capacity})</span>
+                            </span>
+                          ) : <span className="text-gray-400">—</span>}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <button
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-full transition-colors inline-flex"
+                            onClick={() => setDeletingItem(item)}
+                            title="Delete Schedule"
+                          >
+                            <Icon name="trash" className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-16 px-4">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-50 mb-4">
+                <Icon name="search" className="w-8 h-8 text-slate-300" />
+              </div>
+              <h3 className="text-lg font-medium text-slate-900 mb-1">No Schedule Selected</h3>
+              <p className="text-slate-500">Exam, Class এবং Section সিলেক্ট করে Search করুন।</p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Add Exam Modal */}
       {showAddExam && (
-        <div className="mm-modal-overlay" onClick={() => setShowAddExam(false)}>
-          <div className="mm-modal mm-modal-sm" onClick={e => e.stopPropagation()}>
-            <div className="mm-modal-head"><h3>Create New Exam</h3><button className="icon-btn" onClick={() => setShowAddExam(false)}><Icon name="close" /></button></div>
-            <form onSubmit={handleCreateExam} className="mm-form">
-              <div className="mm-form-grid">
-                <label style={{ gridColumn: '1 / -1' }}><span>Exam Name</span><input value={examForm.data.name} onChange={e => examForm.setData('name', e.target.value)} required placeholder="e.g., Final Exam 2026" /></label>
-                <label><span>Start Date</span><input type="date" value={examForm.data.start_date} onChange={e => examForm.setData('start_date', e.target.value)} /></label>
-                <label><span>End Date</span><input type="date" value={examForm.data.end_date} onChange={e => examForm.setData('end_date', e.target.value)} /></label>
+        <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            {/* Overlay */}
+            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onClick={() => setShowAddExam(false)}></div>
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            {/* Modal Panel */}
+            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div className="flex justify-between items-center mb-5">
+                  <h3 className="text-lg leading-6 font-medium text-gray-900" id="modal-title">Create New Exam</h3>
+                  <button className="text-gray-400 hover:text-gray-500 focus:outline-none" onClick={() => setShowAddExam(false)}>
+                    <Icon name="close" className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <form onSubmit={handleCreateExam} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Exam Name</label>
+                    <input
+                      type="text"
+                      className={inputClass}
+                      value={examForm.data.name}
+                      onChange={e => examForm.setData('name', e.target.value)}
+                      required
+                      placeholder="e.g., Final Exam 2026"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Start Date</label>
+                      <input
+                        type="date"
+                        className={inputClass}
+                        value={examForm.data.start_date}
+                        onChange={e => examForm.setData('start_date', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">End Date</label>
+                      <input
+                        type="date"
+                        className={inputClass}
+                        value={examForm.data.end_date}
+                        onChange={e => examForm.setData('end_date', e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-6 sm:flex sm:flex-row-reverse">
+                    <button
+                      type="submit"
+                      className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm"
+                      disabled={examForm.processing}
+                    >
+                      Save Exam
+                    </button>
+                    <button
+                      type="button"
+                      className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                      onClick={() => setShowAddExam(false)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
               </div>
-              <div className="mm-modal-foot"><button type="submit" className="btn" disabled={examForm.processing}>Save Exam</button></div>
-            </form>
+            </div>
           </div>
         </div>
       )}

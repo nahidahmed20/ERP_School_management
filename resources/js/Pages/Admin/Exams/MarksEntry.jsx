@@ -45,7 +45,7 @@ export default function MarksEntry({ exams, classes, subjects, students, filters
   };
 
   const handleMarkChange = (studentId, field, value) => {
-    const newMarks = data.marks.map(m => 
+    const newMarks = data.marks.map(m =>
       m.student_id === studentId ? { ...m, [field]: value } : m
     );
     setData('marks', newMarks);
@@ -108,12 +108,12 @@ export default function MarksEntry({ exams, classes, subjects, students, filters
     }>
       <Head title="Marks Entry" />
 
-      <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
 
         {/* 🎛️ Modern Filter Card */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
           <form onSubmit={searchStudents} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 xl:grid-cols-5 gap-5 items-end">
-            
+
             <div className="flex flex-col space-y-1.5">
               <label className="text-sm font-bold text-gray-700">Exam <span className="text-rose-500">*</span></label>
               <select value={data.exam_id} onChange={e => setData('exam_id', e.target.value)} required className="w-full rounded-lg border-gray-300 bg-gray-50 focus:bg-white shadow-sm focus:ring-2 focus:ring-indigo-500 sm:text-sm py-2.5 transition-all">
@@ -121,7 +121,7 @@ export default function MarksEntry({ exams, classes, subjects, students, filters
                 {exams?.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
               </select>
             </div>
-            
+
             <div className="flex flex-col space-y-1.5">
               <label className="text-sm font-bold text-gray-700">Class <span className="text-rose-500">*</span></label>
               <select value={data.class_id} onChange={e => { setData('class_id', e.target.value); setData('section_id', ''); }} required className="w-full rounded-lg border-gray-300 bg-gray-50 focus:bg-white shadow-sm focus:ring-2 focus:ring-indigo-500 sm:text-sm py-2.5 transition-all">
@@ -129,7 +129,7 @@ export default function MarksEntry({ exams, classes, subjects, students, filters
                 {classes?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
-            
+
             <div className="flex flex-col space-y-1.5">
               <label className="text-sm font-bold text-gray-700">Section</label>
               <select value={data.section_id} onChange={e => setData('section_id', e.target.value)} disabled={!data.class_id} className="w-full rounded-lg border-gray-300 bg-gray-50 focus:bg-white shadow-sm focus:ring-2 focus:ring-indigo-500 sm:text-sm py-2.5 transition-all disabled:opacity-50">
@@ -137,7 +137,7 @@ export default function MarksEntry({ exams, classes, subjects, students, filters
                 {selectedClass?.sections?.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </div>
-            
+
             <div className="flex flex-col space-y-1.5">
               <label className="text-sm font-bold text-gray-700">Subject <span className="text-rose-500">*</span></label>
               <select value={data.subject_id} onChange={e => setData('subject_id', e.target.value)} required className="w-full rounded-lg border-gray-300 bg-gray-50 focus:bg-white shadow-sm focus:ring-2 focus:ring-indigo-500 sm:text-sm py-2.5 transition-all">
@@ -145,7 +145,7 @@ export default function MarksEntry({ exams, classes, subjects, students, filters
                 {subjects?.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </div>
-            
+
             <div>
               <button type="submit" className="w-full flex justify-center items-center gap-2 py-2.5 px-4 rounded-lg shadow-md text-sm font-bold text-white bg-slate-900 hover:bg-slate-800 focus:ring-2 focus:ring-offset-2 focus:ring-slate-900 transition-all">
                 <Icon name="search" className="w-4 h-4" /> Load Students
@@ -157,7 +157,7 @@ export default function MarksEntry({ exams, classes, subjects, students, filters
         {/* 📝 Full Width Excel-like Table */}
         {students && students.length > 0 && (
           <form onSubmit={submitMarks} className="bg-white rounded-2xl shadow-lg border border-gray-200 flex flex-col" style={{ maxHeight: 'calc(100vh - 280px)' }}>
-            
+
             {/* Table Header Area */}
             <div className="bg-slate-50 px-6 py-4 border-b border-gray-200 flex flex-wrap justify-between items-center rounded-t-2xl gap-4 shrink-0">
               <div className="flex items-center gap-3">
@@ -169,7 +169,7 @@ export default function MarksEntry({ exams, classes, subjects, students, filters
                   </span>
                 )}
               </div>
-              
+
               <div className="flex items-center gap-3">
                 {hasSavedMarks && (
                   <button type="button" onClick={deleteMarks} className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-rose-600 bg-rose-50 border border-rose-200 rounded-lg hover:bg-rose-100 transition-colors">
@@ -210,7 +210,7 @@ export default function MarksEntry({ exams, classes, subjects, students, filters
                         </td>
                         <td className="px-6 py-3 whitespace-nowrap bg-indigo-50/30">
                           {/* 🎯 Excel-like Number Input */}
-                          <input 
+                          <input
                             type="number"
                             step="0.01"
                             min="0"
@@ -222,7 +222,7 @@ export default function MarksEntry({ exams, classes, subjects, students, filters
                         </td>
                         <td className="px-6 py-3 whitespace-nowrap">
                           {/* 📝 Note Input */}
-                          <input 
+                          <input
                             type="text"
                             value={markData.note}
                             onChange={(e) => handleMarkChange(student.id, 'note', e.target.value)}
@@ -236,7 +236,7 @@ export default function MarksEntry({ exams, classes, subjects, students, filters
                 </tbody>
               </table>
             </div>
-            
+
           </form>
         )}
       </div>

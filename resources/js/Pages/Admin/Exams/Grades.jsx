@@ -69,16 +69,16 @@ export default function Grades({ grades }) {
     }>
       <Head title="Grade Setup" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className=" mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row gap-8">
-          
+
           {/* 📝 Left Side: Form */}
           <div className="w-full lg:w-1/3">
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sticky top-8">
               <h3 className="text-lg font-extrabold text-slate-800 mb-5 border-b border-gray-100 pb-3">
                 {editingId ? 'Edit Grade' : 'Add New Grade'}
               </h3>
-              
+
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="text-sm font-bold text-gray-700">Grade Name (e.g. A+)</label>
@@ -112,7 +112,7 @@ export default function Grades({ grades }) {
                     <button type="button" onClick={cancelEdit} className="flex-1 py-2.5 px-4 rounded-xl border border-gray-200 text-slate-700 font-bold hover:bg-slate-50 transition-all">Cancel</button>
                   )}
                   <button type="submit" disabled={processing} className="flex-1 py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-md transition-all">
-                    {processing ? 'Saving...' : (editingId ? 'Update Grade' : 'Save Grade')}
+                    {processing ? 'Saving...' : (editingId ? 'Update' : 'Save Grade')}
                   </button>
                 </div>
               </form>
@@ -125,7 +125,7 @@ export default function Grades({ grades }) {
               <div className="bg-slate-50 px-6 py-4 border-b border-gray-200">
                 <h3 className="text-lg font-extrabold text-slate-800">Grading Scale List</h3>
               </div>
-              
+
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-white">

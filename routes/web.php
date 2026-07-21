@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\Exam\ExamController;
 use App\Http\Controllers\Admin\Exam\ExamScheduleController;
 use App\Http\Controllers\Admin\Exam\GradeController;
 use App\Http\Controllers\Admin\Exam\MarksController;
+use App\Http\Controllers\Admin\Exam\TabulationSheetController;
 use App\Http\Controllers\Admin\FeeGroupController;
 use App\Http\Controllers\Admin\FeeTypeController;
 use App\Http\Controllers\Admin\FileManagerController;
@@ -107,6 +108,7 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
     Route::delete('exams-marks/clear', [MarksController::class, 'destroy'])->name('exams-marks.destroy');
     Route::resource('exams-marks',MarksController::class);
     Route::get('exams/report/cards', [MarksController::class, 'examsReportcards'])->name('exams.reportcards');
+    Route::get('exams/tabulation/sheet', [TabulationSheetController::class, 'index'])->name('exams.tabulation');
 
     Route::get('students/search-guardian', [StudentController::class, 'searchGuardian'])->name('students.search_guardian');
     Route::get('students/parents', [GuardianController::class, 'index'])->name('students.parents');

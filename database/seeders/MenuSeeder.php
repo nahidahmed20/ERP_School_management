@@ -47,7 +47,7 @@ class MenuSeeder extends Seeder
                     ['key' => 'admin.subjects.index', 'label' => 'Subjects', 'route' => 'admin.subjects.index'],
                     ['key' => 'admin.classrooms.index', 'label' => 'Classroom', 'route' => 'admin.classrooms.index'],
                     ['key' => 'admin.time-tables.index', 'label' => 'Class Timetable', 'route' => 'admin.time-tables.index'],
-                    ['key' => 'academics.lessonplans', 'label' => 'Lesson & Syllabus', 'route' => 'admin.academics.lessonplans'], 
+                    ['key' => 'academics.lessonplans', 'label' => 'Lesson & Syllabus', 'route' => 'admin.academics.lessonplans'],
                     ['key' => 'admin.sessions.index', 'label' => 'Academic Sessions', 'route' => 'admin.sessions.index'],
                 ]],
                 ['key' => 'attendance', 'label' => 'Attendance', 'icon' => 'calendar', 'count' => 3, 'children' => [
@@ -60,8 +60,9 @@ class MenuSeeder extends Seeder
                     ['key' => 'admin.exams.index', 'label' => 'Exam List', 'route' => 'admin.exams.index'],
                     ['key' => 'admin.exam-schedules.index', 'label' => 'Exam Schedule', 'route' => 'admin.exam-schedules.index'],
                     ['key' => 'admin.exams-marks.index', 'label' => 'Marks Entry', 'route' => 'admin.exams-marks.index'],
+                    ['key' => 'admin.grades.index', 'label' => 'Grade Setup', 'route' => 'admin.grades.index'],
                     ['key' => 'admin.exams.reportcards', 'label' => 'Report Cards', 'route' => 'admin.exams.reportcards'],
-                    ['key' => 'admin.grades', 'label' => 'Grade Setup', 'route' => 'admin.grades'],
+                    ['key' => 'admin.exams.tabulation', 'label' => 'Tabulation Sheet', 'route' => 'admin.exams.tabulation'],
                     ['key' => 'exams.questionbanks', 'label' => 'Question Banks', 'route' => 'admin.exams.questionbanks'],
                 ]],
             ]],
@@ -167,7 +168,7 @@ class MenuSeeder extends Seeder
                     ['key' => 'communication.notifications', 'label' => 'Notifications', 'route' => 'admin.communication.notifications'],
                     ['key' => 'admin.communication-calendars.index', 'label' => 'Calendar & Events', 'route' => 'admin.communication-calendars.index'],
                     ['key' => 'communication.cms', 'label' => 'Website CMS', 'route' => 'admin.communication.cms'],
-                    ['key' => 'communication.helpdesk', 'label' => 'Helpdesk / Tickets', 'route' => 'admin.communication.helpdesk'], 
+                    ['key' => 'communication.helpdesk', 'label' => 'Helpdesk / Tickets', 'route' => 'admin.communication.helpdesk'],
                 ]],
             ]],
 
