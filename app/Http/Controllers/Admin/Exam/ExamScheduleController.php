@@ -55,7 +55,7 @@ class ExamScheduleController extends Controller
     {
         $request->validate([
             'exam_id' => 'required|exists:exams,id',
-            'class_id' => 'required|exists:classes,id',
+            'class_id' => 'required|exists:school_classes,id',
             'section_id' => 'required|exists:sections,id',
             'periods' => 'nullable|array',
             'periods.*.subject_id' => 'required_with:periods|exists:subjects,id|distinct',

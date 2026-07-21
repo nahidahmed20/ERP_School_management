@@ -10,7 +10,7 @@ class InvoiceController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Payment::with(['student.currentEnrollment.school_class', 'feeAssignment.feeGroup']);
+        $query = Payment::with(['student.currentEnrollment.schoolClass', 'feeAssignment.feeGroup']);
 
         if ($request->search) {
             $query->whereHas('student', function($q) use ($request) {

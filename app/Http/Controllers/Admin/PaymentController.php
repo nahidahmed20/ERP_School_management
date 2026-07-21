@@ -18,7 +18,7 @@ class PaymentController extends Controller
 
         if ($request->filled('admission_no')) {
             $student = Student::with([
-                'currentEnrollment.school_class',
+                'currentEnrollment.schoolClass',
                 'currentEnrollment.section',
                 'guardian',
                 'feeAssignments' => function ($q) {

@@ -33,6 +33,29 @@ class LedgerController extends Controller
         ]);
 
         Expense::create($request->all());
-        return back()->with('success', 'খরচের হিসাব সফলভাবে যুক্ত করা হয়েছে!');
+        
+        return back()->with('success', 'খরচের হিসাব সফলভাবে যুক্ত করা হয়েছে!');
+    }
+
+    public function updateExpense(Request $request, $id)
+    {
+        $request->validate([
+            'expense_head' => 'required|string|max:255',
+            'amount'       => 'required|numeric|min:1',
+            'expense_date' => 'required|date',
+        ]);
+
+        $expense = Expense::findOrFail($id);
+        $expense->update($request->all());
+
+        return back()->with('success', 'খরচের হিসাব সফলভাবে আপডেট করা হয়েছে!');
+    }
+
+    public function destroyExpense($id)
+    {
+        $expense = Expense::findOrFail($id);
+        $expense->delete();
+
+        return back()->with('success', 'খরচের হিসাব সফলভাবে মুছে ফেলা হয়েছে!');
     }
 }

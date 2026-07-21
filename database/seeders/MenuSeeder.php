@@ -47,19 +47,21 @@ class MenuSeeder extends Seeder
                     ['key' => 'admin.subjects.index', 'label' => 'Subjects', 'route' => 'admin.subjects.index'],
                     ['key' => 'admin.classrooms.index', 'label' => 'Classroom', 'route' => 'admin.classrooms.index'],
                     ['key' => 'admin.time-tables.index', 'label' => 'Class Timetable', 'route' => 'admin.time-tables.index'],
-                    ['key' => 'academics.lessonplans', 'label' => 'Lesson & Syllabus', 'route' => 'admin.academics.lessonplans'], // নতুন
+                    ['key' => 'academics.lessonplans', 'label' => 'Lesson & Syllabus', 'route' => 'admin.academics.lessonplans'], 
                     ['key' => 'admin.sessions.index', 'label' => 'Academic Sessions', 'route' => 'admin.sessions.index'],
                 ]],
                 ['key' => 'attendance', 'label' => 'Attendance', 'icon' => 'calendar', 'count' => 3, 'children' => [
-                    ['key' => 'attendance.students', 'label' => 'Student Attendance', 'route' => 'admin.attendance.students'],
-                    ['key' => 'attendance.staff', 'label' => 'Staff Attendance', 'route' => 'admin.attendance.staff'],
+                    ['key' => 'admin.student-attendance.index', 'label' => 'Student Attendance', 'route' => 'admin.student-attendance.index'],
                     ['key' => 'attendance.sync', 'label' => 'Biometric Sync Logs', 'route' => 'admin.attendance.sync'],
+                    ['key' => 'admin.student_attendance.report', 'label' => 'Student Attendance Report', 'route' => 'admin.student_attendance.report'],
+                    ['key' => 'admin.attendance-report.index', 'label' => 'Staff Attendance', 'route' => 'admin.attendance-report.index'],
                 ]],
                 ['key' => 'exams', 'label' => 'Exams & Marks', 'icon' => 'pencil', 'count' => 5, 'children' => [
                     ['key' => 'admin.exams.index', 'label' => 'Exam List', 'route' => 'admin.exams.index'],
                     ['key' => 'admin.exam-schedules.index', 'label' => 'Exam Schedule', 'route' => 'admin.exam-schedules.index'],
-                    ['key' => 'exams.marks', 'label' => 'Marks Entry', 'route' => 'admin.exams.marks'],
-                    ['key' => 'exams.reportcards', 'label' => 'Report Cards', 'route' => 'admin.exams.reportcards'],
+                    ['key' => 'admin.exams-marks.index', 'label' => 'Marks Entry', 'route' => 'admin.exams-marks.index'],
+                    ['key' => 'admin.exams.reportcards', 'label' => 'Report Cards', 'route' => 'admin.exams.reportcards'],
+                    ['key' => 'admin.grades', 'label' => 'Grade Setup', 'route' => 'admin.grades'],
                     ['key' => 'exams.questionbanks', 'label' => 'Question Banks', 'route' => 'admin.exams.questionbanks'],
                 ]],
             ]],
@@ -88,8 +90,8 @@ class MenuSeeder extends Seeder
 
             ['label' => 'Finance', 'items' => [
                 ['key' => 'fees', 'label' => 'Fees & Accounts', 'icon' => 'wallet', 'count' => 5, 'children' => [
-                    ['key' => 'admin.fees-groups', 'label' => 'Fee Groups & Types', 'route' => 'admin.fees-groups'],
-                    ['key' => 'admin.fees-studentfees', 'label' => 'Student Fee Assignment', 'route' => 'admin.fees-studentfees'],
+                    ['key' => 'admin.fees-groups.index', 'label' => 'Fee Groups & Types', 'route' => 'admin.fees-groups.index'],
+                    ['key' => 'admin.studentfees.index', 'label' => 'Student Fee Assignment', 'route' => 'admin.studentfees.index'],
                     ['key' => 'admin.fees.invoices', 'label' => 'Invoices', 'route' => 'admin.fees.invoices'],
                     ['key' => 'admin.fees.payments', 'label' => 'Payments', 'route' => 'admin.fees.payments'],
                     ['key' => 'admin.fees.ledger', 'label' => 'Income / Expense Ledger', 'route' => 'admin.fees.ledger'],
@@ -165,7 +167,7 @@ class MenuSeeder extends Seeder
                     ['key' => 'communication.notifications', 'label' => 'Notifications', 'route' => 'admin.communication.notifications'],
                     ['key' => 'admin.communication-calendars.index', 'label' => 'Calendar & Events', 'route' => 'admin.communication-calendars.index'],
                     ['key' => 'communication.cms', 'label' => 'Website CMS', 'route' => 'admin.communication.cms'],
-                    ['key' => 'communication.helpdesk', 'label' => 'Helpdesk / Tickets', 'route' => 'admin.communication.helpdesk'], // নতুন
+                    ['key' => 'communication.helpdesk', 'label' => 'Helpdesk / Tickets', 'route' => 'admin.communication.helpdesk'], 
                 ]],
             ]],
 
@@ -174,7 +176,8 @@ class MenuSeeder extends Seeder
                     ['key' => 'reports.saved', 'label' => 'Saved Reports', 'route' => 'admin.reports.saved'],
                     ['key' => 'reports.widgets', 'label' => 'Dashboard Widgets', 'route' => 'admin.reports.widgets'],
                     ['key' => 'reports.analytics', 'label' => 'Usage Analytics', 'route' => 'admin.reports.analytics'],
-                    ['key' => 'admin.attendance-report.index', 'label' => 'Staff Attendance', 'route' => 'admin.attendance-report.index'],
+                    ['key' => 'admin.reports.fees', 'label' => 'Fee Collection Report', 'route' => 'admin.reports.fees'],
+                    ['key' => 'admin.due_fees', 'label' => 'Due Fee Report', 'route' => 'admin.due_fees']
                 ]],
                 ['key' => 'workflow', 'label' => 'Workflow & Forms', 'icon' => 'workflow', 'count' => 3, 'children' => [
                     ['key' => 'workflow.builder', 'label' => 'Form Builder', 'route' => 'admin.workflow.builder'],

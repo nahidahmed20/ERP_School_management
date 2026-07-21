@@ -20,6 +20,13 @@ export default function Index({ student, filters }) {
     remarks: ''
   });
 
+  // 1. FIXED: Update student_id in form state when student prop changes
+  useEffect(() => {
+    if (student?.id) {
+      setData('student_id', student.id);
+    }
+  }, [student]);
+
   // --- Beautiful Error & Success Handling ---
   useEffect(() => {
     if (flash?.success) {
@@ -54,7 +61,7 @@ export default function Index({ student, filters }) {
   const handlePaymentSubmit = (e) => {
     e.preventDefault();
     if (!data.fee_assignment_id) {
-      Swal.fire({ icon: 'warning', title: 'Oops', text: 'দয়া করে একটি ফি সিলেক্ট করুন!' });
+      Swal.fire({ icon: 'warning', title: 'Oops', text: 'দয়া করে একটি ফি সিলেক্ট করুন!' });
       return;
     }
     post(route('admin.fees.payments.store'));
@@ -78,7 +85,7 @@ export default function Index({ student, filters }) {
           <div>
             <span className="eyebrow">Finance & Accounts</span>
             <h1>Receive Payment</h1>
-            <p className="desc">শিক্ষার্থীর অ্যাডমিশন নম্বর দিয়ে বকেয়া ফি খুঁজুন এবং পেমেন্ট রিসিভ করুন।</p>
+            <p className="desc">শিক্ষার্থীর অ্যাডমিশন নম্বর দিয়ে বকেয়া ফি খুঁজুন এবং পেমেন্ট রিসিভ করুন।</p>
           </div>
         </div>
       }
@@ -176,12 +183,11 @@ export default function Index({ student, filters }) {
                   onChange={handleFeeSelect}
                   style={{ width: '100%', padding: '12px', borderRadius: '8px', border: errors.fee_assignment_id ? '1px solid #ef4444' : '1px solid #cbd5e1', background: '#f8fafc' }}
                 >
-                  <option value="">-- বকেয়া ফি সিলেক্ট করুন --</option>
+                  <option value="">-- বকেয়া ফি সিলেক্ট করুন --</option>
                   {student.fee_assignments?.map(assign => (
                     <option key={assign.id} value={assign.id}>{assign.fee_group?.name}</option>
                   ))}
                 </select>
-                {/* Beautiful Inline Error */}
                 {errors.fee_assignment_id && <div style={{ color: '#dc2626', fontSize: '12px', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '4px', background: '#fef2f2', padding: '4px 8px', borderRadius: '4px' }}><Icon name="warning" style={{ fontSize: '12px' }}/> {errors.fee_assignment_id}</div>}
               </div>
 
@@ -237,7 +243,7 @@ export default function Index({ student, filters }) {
 
               {/* Submit Button */}
               <div style={{ marginTop: '12px' }}>
-                <button type="submit" disabled={processing || student.fee_assignments?.length === 0} className="btn" style={{ width: '100%', padding: '14px', background: '#16a34a', color: '#fff', borderRadius: '8px', fontWeight: '700', fontSize: '16px', border: 'none', boxShadow: '0 4px 6px -1px rgba(22, 163, 74, 0.4)' }}>
+                <button type="submit" disabled={processing || student.fee_assignments?.length === 0} className="btn" style={{textAlign: 'center', display: 'flex', justifyContent: 'center',alignItems: 'center', width: '100%', padding: '14px', background: '#16a34a', color: '#fff', borderRadius: '8px', fontWeight: '700', fontSize: '16px', border: 'none', boxShadow: '0 4px 6px -1px rgba(22, 163, 74, 0.4)' }}>
                   {processing ? 'Processing Payment...' : 'Collect Payment & Save'}
                 </button>
               </div>

@@ -25,4 +25,9 @@ class FeeAssignment extends Model
     {
         return $this->belongsTo(AcademicSession::class, 'academic_session_id');
     }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class, 'fee_assignment_id');
+    }
 }
