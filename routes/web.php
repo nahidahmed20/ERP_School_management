@@ -44,6 +44,11 @@ use App\Http\Controllers\Admin\SubjectController;
 use App\Http\Controllers\Admin\SystemRegistryController;
 use App\Http\Controllers\Admin\TimeTableController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\VisitorController;
+use App\Http\Controllers\Admin\NoticeController;
+use App\Http\Controllers\Admin\BookController;
+use App\Http\Controllers\Admin\HomeworkController;
+use App\Http\Controllers\Admin\CertificateTemplateController;
 use App\Http\Controllers\DynamicPageController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -155,6 +160,12 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
 
     Route::get('sms/logs', [SmsLogController::class, 'index'])->name('sms-logs');
     Route::post('student-attendance/send-absent-sms', [StudentAttendanceController::class, 'sendAbsentSms'])->name('attendance.send-absent-sms');
+
+    Route::resource('frontoffice/visitors', VisitorController::class)->names('frontoffice.visitors');
+    Route::resource('frontoffice/notices', NoticeController::class)->names('frontoffice.notices');
+    Route::resource('library/catalogue', BookController::class)->names('library.catalogue');
+    Route::resource('lms/homework', HomeworkController::class)->names('lms.homework');
+    Route::resource('documents/certificatetemplates', CertificateTemplateController::class)->names('documents.certificatetemplates');
 });
 
 

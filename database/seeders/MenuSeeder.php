@@ -22,9 +22,10 @@ class MenuSeeder extends Seeder
             ]],
 
             ['label' => 'Front Office', 'items' => [
-                ['key' => 'frontoffice', 'label' => 'Reception & Front Desk', 'icon' => 'phone', 'count' => 4, 'children' => [
+                ['key' => 'frontoffice', 'label' => 'Reception & Front Desk', 'icon' => 'phone', 'count' => 5, 'children' => [
                     ['key' => 'frontoffice.inquiries', 'label' => 'Admission Inquiries', 'route' => 'admin.frontoffice.inquiries'],
-                    ['key' => 'frontoffice.visitors', 'label' => 'Visitor Book', 'route' => 'admin.frontoffice.visitors'],
+                    ['key' => 'admin.frontoffice.visitors.index', 'label' => 'Visitor Book', 'route' => 'admin.frontoffice.visitors.index'],
+                    ['key' => 'admin.frontoffice.notices.index', 'label' => 'Notice Board', 'route' => 'admin.frontoffice.notices.index'],
                     ['key' => 'frontoffice.calls', 'label' => 'Phone Call Logs', 'route' => 'admin.frontoffice.calls'],
                     ['key' => 'frontoffice.postal', 'label' => 'Postal Dispatch/Receive', 'route' => 'admin.frontoffice.postal'],
                 ]],
@@ -116,7 +117,7 @@ class MenuSeeder extends Seeder
 
             ['label' => 'Campus Life', 'items' => [
                 ['key' => 'library', 'label' => 'Library', 'icon' => 'book', 'count' => 2, 'children' => [
-                    ['key' => 'library.catalogue', 'label' => 'Catalogue', 'route' => 'admin.library.catalogue'],
+                    ['key' => 'admin.library.catalogue.inde', 'label' => 'Catalogue', 'route' => 'admin.library.catalogue.index'],
                     ['key' => 'library.issues', 'label' => 'Book Issues & Fines', 'route' => 'admin.library.issues'],
                 ]],
                 ['key' => 'transport', 'label' => 'Transport', 'icon' => 'bus', 'count' => 2, 'children' => [
@@ -146,7 +147,7 @@ class MenuSeeder extends Seeder
                 ['key' => 'lms', 'label' => 'LMS & Online Exams', 'icon' => 'laptop', 'count' => 6, 'children' => [
                     ['key' => 'lms.courses', 'label' => 'Courses', 'route' => 'admin.lms.courses'],
                     ['key' => 'lms.lessons', 'label' => 'Lessons', 'route' => 'admin.lms.lessons'],
-                    ['key' => 'lms.homework', 'label' => 'Homework', 'route' => 'admin.lms.homework'],
+                    ['key' => 'lms.homework', 'label' => 'Homework', 'route' => 'admin.lms.homework.index'],
                     ['key' => 'lms.onlineexams', 'label' => 'Online Exams', 'route' => 'admin.lms.onlineexams'],
                     ['key' => 'lms.quizattempts', 'label' => 'Quiz Attempts', 'route' => 'admin.lms.quizattempts'],
                     ['key' => 'lms.questionbanks', 'label' => 'Question Banks', 'route' => 'admin.lms.questionbanks'],
@@ -155,7 +156,7 @@ class MenuSeeder extends Seeder
 
             ['label' => 'Documents & Certificates', 'items' => [
                 ['key' => 'documents', 'label' => 'Certificates & ID Cards', 'icon' => 'award', 'count' => 4, 'children' => [
-                    ['key' => 'documents.certificatetemplates', 'label' => 'Certificate Templates', 'route' => 'admin.documents.certificatetemplates'],
+                    ['key' => 'documents.certificatetemplates', 'label' => 'Certificate Templates', 'route' => 'admin.documents.certificatetemplates.index'],
                     ['key' => 'documents.certificates', 'label' => 'Generated Certificates', 'route' => 'admin.documents.certificates'],
                     ['key' => 'documents.idcards', 'label' => 'ID Card Templates', 'route' => 'admin.documents.idcards'],
                     ['key' => 'documents.transcripts', 'label' => 'Transcript Templates', 'route' => 'admin.documents.transcripts'],
@@ -169,7 +170,7 @@ class MenuSeeder extends Seeder
                     ['key' => 'admin.communication-calendars.index', 'label' => 'Calendar & Events', 'route' => 'admin.communication-calendars.index'],
                     ['key' => 'communication.cms', 'label' => 'Website CMS', 'route' => 'admin.communication.cms'],
                     ['key' => 'communication.helpdesk', 'label' => 'Helpdesk / Tickets', 'route' => 'admin.communication.helpdesk'],
-                    ['key' => 'admin.sms-logs', 'label' => 'SMS Logs', 'route' => 'admin.sms-logs'], 
+                    ['key' => 'admin.sms-logs', 'label' => 'SMS Logs', 'route' => 'admin.sms-logs'],
                 ]],
             ]],
 
