@@ -15,10 +15,10 @@ export default function Index({ classes, students, filters }) {
     class_id: classId,
     section_id: sectionId,
     date: attendanceDate,
-    attendances: []
+    attendances: [],
+    selected_students: []
   });
 
-  // স্টুডেন্টদের ডেটা আসলে ফর্মে সেট করা
   useEffect(() => {
     if (students && students.length > 0) {
       setData(prev => ({
@@ -77,6 +77,41 @@ export default function Index({ classes, students, filters }) {
     post(route('admin.student-attendance.store'));
   };
 
+ const handleSendAbsentSms = () => {
+    if (data.selected_students.length === 0) {
+      return Swal.fire({ icon: 'warning', title: 'Oops!', text: 'দয়া করে কমপক্ষে ১ জন স্টুডেন্ট সিলেক্ট করুন!' });
+    }
+
+    const selectedDate = attendanceDate || new Date().toISOString().split('T')[0]; 
+
+    Swal.fire({
+      title: '<span style="color: #1e293b; font-weight: 800; font-size: 1.5rem;">Send Absent SMS?</span>',
+      html: `<p style="color: #64748b; font-size: 0.95rem; margin-top: 6px;">নির্বাচিত <strong>${data.selected_students.length}</strong> জন শিক্ষার্থীর অভিভাবককে SMS পাঠানো হবে!<br><strong style="color: #4f46e5;">Are you sure?</strong></p>`,
+      icon: 'question',
+      iconColor: '#4f46e5',
+      showCancelButton: true,
+      confirmButtonColor: '#4f46e5',
+      cancelButtonColor: '#f1f5f9',
+      confirmButtonText: '<span style="font-weight: 700;">Yes, Send SMS</span>',
+      cancelButtonText: '<span style="color: #475569; font-weight: 700;">Cancel</span>',
+      buttonsStyling: false,
+      customClass: {
+        popup: 'rounded-2xl shadow-2xl border border-gray-100 p-6',
+        confirmButton: 'px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg shadow-indigo-200 transition-all font-semibold mr-3',
+        cancelButton: 'px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-all font-semibold'
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        router.post(route('admin.attendance.send-absent-sms'), { 
+          date: selectedDate,
+          student_ids: data.selected_students 
+        }, {
+          preserveScroll: true,
+        });
+      }
+    });
+  };
+
   const selectedClass = classes.find(c => c.id == classId);
 
   // Status Badge Colors
@@ -92,7 +127,33 @@ export default function Index({ classes, students, filters }) {
   };
 
   return (
-    <AuthenticatedLayout header={<div className="page-head"><h1>Daily Attendance</h1><p>শিক্ষার্থীদের প্রতিদিনের উপস্থিতি ও অনুপস্থিতির রেকর্ড রাখুন।</p></div>}>
+    
+    
+    <AuthenticatedLayout 
+      header={
+        <div className="page-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+          <div>
+            <h1 style={{ margin: 0 }}>Daily Attendance</h1>
+            <p style={{ margin: 0, color: '#64748b', fontSize: '14px' }}>শিক্ষার্থীদের প্রতিদিনের উপস্থিতি ও অনুপস্থিতির রেকর্ড রাখুন।</p>
+          </div>
+          
+          {/* 🆕 Send Absent SMS Button */}
+          <button 
+            onClick={handleSendAbsentSms}
+            style={{ 
+              display: 'flex', alignItems: 'center', gap: '8px', 
+              padding: '10px 20px', background: '#e11d48', color: '#fff', 
+              borderRadius: '8px', fontWeight: 'bold', border: 'none', 
+              cursor: 'pointer', boxShadow: '0 4px 6px -1px rgba(225, 29, 72, 0.2)' 
+            }}
+          >
+            <Icon name="mail" style={{ width: '18px', height: '18px' }} />
+            Send Absent SMS
+          </button>
+        </div>
+      }
+    >
+
       <Head title="Student Attendance" />
 
       {/* Filter Form */}
@@ -135,26 +196,65 @@ export default function Index({ classes, students, filters }) {
             <table className="mm-table" style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: '#fff', borderBottom: '2px solid #e2e8f0' }}>
+                  
+                  {/* 🆕 Select All Checkbox */}
+                  <th style={{ padding: '15px', width: '50px', textAlign: 'center' }}>
+                    <input 
+                      type="checkbox" 
+                      title="Select All"
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setData('selected_students', students.map(s => s.id));
+                        } else {
+                          setData('selected_students', []);
+                        }
+                      }}
+                      checked={data.selected_students?.length === students.length && students.length > 0}
+                      style={{ cursor: 'pointer', width: '18px', height: '18px', accentColor: '#4f46e5' }}
+                    />
+                  </th>
+
                   <th style={{ padding: '15px' }}>Roll / Adm</th>
                   <th style={{ padding: '15px' }}>Student Name</th>
                   <th style={{ padding: '15px', minWidth: '280px' }}>Attendance Status</th>
                   <th style={{ padding: '15px' }}>Remarks</th>
                 </tr>
               </thead>
+              
               <tbody>
                 {students.map((student, index) => {
                   const currentAtt = data.attendances.find(a => a.student_id === student.id);
                   if (!currentAtt) return null;
 
+                  const isChecked = data.selected_students?.includes(student.id) || false;
+
                   return (
                     <tr key={student.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      
+                      <td style={{ padding: '15px', textAlign: 'center' }}>
+                        <input 
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setData('selected_students', [...(data.selected_students || []), student.id]);
+                            } else {
+                              setData('selected_students', (data.selected_students || []).filter(id => id !== student.id));
+                            }
+                          }}
+                          style={{ cursor: 'pointer', width: '18px', height: '18px', accentColor: '#4f46e5' }}
+                        />
+                      </td>
+
                       <td style={{ padding: '15px', color: '#64748b' }}>
                         <span style={{ fontWeight: 'bold', color: '#0f172a' }}>{student.current_enrollment?.roll_no || '--'}</span> <br/>
                         <span style={{ fontSize: '12px' }}>{student.admission_no}</span>
                       </td>
+                      
                       <td style={{ padding: '15px', fontWeight: '600' }}>
                         {student.first_name} {student.last_name}
                       </td>
+                      
                       <td style={{ padding: '15px' }}>
                         <div style={{ display: 'flex', gap: '6px' }}>
                           {[
@@ -182,6 +282,7 @@ export default function Index({ classes, students, filters }) {
                           })}
                         </div>
                       </td>
+                      
                       <td style={{ padding: '15px' }}>
                         <input 
                           type="text" 
@@ -191,6 +292,7 @@ export default function Index({ classes, students, filters }) {
                           style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '13px' }}
                         />
                       </td>
+                      
                     </tr>
                   )
                 })}

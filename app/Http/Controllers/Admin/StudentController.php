@@ -12,6 +12,7 @@ use App\Models\SchoolClass;
 use App\Models\Student;
 use App\Models\StudentCategory;
 use App\Models\User;
+use App\Services\SmsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -218,6 +219,11 @@ class StudentController extends Controller
             ]);
 
             DB::commit();
+            $parentPhone = $request->father_phone ?? $request->mother_phone;
+            if ($parentPhone) {
+                $smsMsg = "Welcome to our School! {$request->first_name} has been successfully admitted. Admission No: {$admissionNo}";
+                SmsService::send($parentPhone, $smsMsg);
+            }
             return redirect()->route('admin.students.index')->with('success', 'স্টুডেন্ট ভর্তি এবং অ্যাকাউন্ট তৈরি সফল হয়েছে!');
 
         } catch (\Exception $e) {

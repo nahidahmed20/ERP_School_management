@@ -1,36 +1,9 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 
-export default function Dashboard() {
-    const stats = [
-        { title: 'Total Students', value: '2,845', trend: '+4.5%', bgColor: 'bg-blue-500' },
-        { title: 'Total Staff & Teachers', value: '142', trend: '0%', bgColor: 'bg-purple-500' },
-        { title: 'Today\'s Attendance', value: '92%', trend: '-1.2%', bgColor: 'bg-green-500' },
-        { title: 'Today\'s Collection', value: '45,500', isCurrency: true, trend: '+15%', bgColor: 'bg-indigo-500' },
-        { title: 'Pending Dues', value: '1,20,000', isCurrency: true, trend: '-5%', bgColor: 'bg-red-500' },
-    ];
-
-    const recentAdmissions = [
-        { id: 'STU-001', name: 'Rahim Uddin', class: 'Class 8', date: 'Today, 10:30 AM' },
-        { id: 'STU-002', name: 'Sadia Islam', class: 'Class 5', date: 'Today, 09:15 AM' },
-        { id: 'STU-003', name: 'Arafat Hossain', class: 'Class 9', date: 'Yesterday' },
-    ];
-
-    const pendingLeaves = [
-        { name: 'Mr. Anisur Rahman', role: 'Math Teacher', dates: '12-14 Jul', reason: 'Sick Leave' },
-        { name: 'Ms. Fahmida', role: 'Librarian', dates: '15 Jul', reason: 'Casual' },
-    ];
-
-    const absentStaff = [
-        { name: 'Mr. Shafiqul', role: 'Physics Teacher', phone: '01711XXXXXX' },
-        { name: 'Abdul Karim', role: 'Security Guard', phone: '01922XXXXXX' },
-    ];
-
-    const notices = [
-        { title: 'First Term Exam Routine', date: '15 Feb, 2024', type: 'Exam' },
-        { title: 'Parents-Teacher Meeting', date: '10 Feb, 2024', type: 'Event' },
-    ];
-
+// 🆕 লারাভেল থেকে পাঠানো Props গুলো এখানে রিসিভ করা হলো
+export default function Dashboard({ stats, recentAdmissions, pendingLeaves, absentStaff, notices }) {
+    
     const TakaSymbol = () => (
         <span style={{ fontFamily: 'Arial, sans-serif', fontStyle: 'normal' }}>৳</span>
     );
@@ -51,9 +24,9 @@ export default function Dashboard() {
                         <button className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm">
                             Generate Reports
                         </button>
-                        <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm">
+                        <Link href={route('admin.students.admissions')} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm inline-block">
                             + New Admission
-                        </button>
+                        </Link>
                     </div>
                 </div>
             }

@@ -3,10 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AcademicSession;
 use App\Models\SchoolClass;
 use App\Models\Student;
 use App\Models\StudentAttendance;
-use App\Models\AcademicSession;
+use App\Services\SmsService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -100,5 +101,43 @@ class StudentAttendanceController extends Controller
         $query->delete();
 
         return back()->with('success', 'এই দিনের অ্যাটেনডেন্স রেকর্ড মুছে ফেলা (Delete) হয়েছে!');
+    }
+
+    public function sendAbsentSms(Request $request)
+    {
+        $request->validate([
+            'date' => 'required|date',
+            'student_ids' => 'required|array',
+        ]);
+
+        $date = $request->date;
+        $studentIds = $request->student_ids;
+
+        $absentAttendances = StudentAttendance::where('attendance_date', $date)
+            ->whereIn('student_id', $studentIds)
+            ->where('status', 'absent') 
+            ->with('student.guardian') 
+            ->get();
+
+        $smsCount = 0;
+
+        foreach ($absentAttendances as $attendance) {
+            $student = $attendance->student; 
+            
+            $guardian = $student->guardian ?? null;
+            
+            $phone = $guardian->father_phone ?? $guardian->mother_phone ?? $student->phone;
+
+            if ($phone) {
+                $formattedDate = \Carbon\Carbon::parse($date)->format('d-M-Y');
+                
+                $message = "সম্মানিত অভিভাবক, আপনার সন্তান {$student->first_name} আজ ({$formattedDate}) স্কুলে অনুপস্থিত। - স্কুল কর্তৃপক্ষ";
+                
+                SmsService::send($phone, $message);
+                $smsCount++;
+            }
+        }
+
+        return back()->with('success', "মোট {$smsCount} জন শিক্ষার্থীর অভিভাবককে সফলভাবে SMS পাঠানো হয়েছে!");
     }
 }

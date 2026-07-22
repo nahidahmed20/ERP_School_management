@@ -163,12 +163,13 @@ class MenuSeeder extends Seeder
             ]],
 
             ['label' => 'Communication', 'items' => [
-                ['key' => 'communication', 'label' => 'Chat, CMS & Alerts', 'icon' => 'chat', 'count' => 5, 'children' => [
+                ['key' => 'communication', 'label' => 'Chat, CMS & Alerts', 'icon' => 'chat', 'count' => 6, 'children' => [
                     ['key' => 'communication.chat', 'label' => 'Chat', 'route' => 'admin.communication.chat'],
                     ['key' => 'communication.notifications', 'label' => 'Notifications', 'route' => 'admin.communication.notifications'],
                     ['key' => 'admin.communication-calendars.index', 'label' => 'Calendar & Events', 'route' => 'admin.communication-calendars.index'],
                     ['key' => 'communication.cms', 'label' => 'Website CMS', 'route' => 'admin.communication.cms'],
                     ['key' => 'communication.helpdesk', 'label' => 'Helpdesk / Tickets', 'route' => 'admin.communication.helpdesk'],
+                    ['key' => 'admin.sms-logs', 'label' => 'SMS Logs', 'route' => 'admin.sms-logs'], 
                 ]],
             ]],
 
