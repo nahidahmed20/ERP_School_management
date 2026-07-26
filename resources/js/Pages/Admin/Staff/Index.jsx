@@ -130,20 +130,34 @@ export default function Index({ staff, departments, designations, filters }) {
   const handleSearchChange = (e) => {
     const val = e.target.value;
     setSearch(val);
-    if(val === '') {
+    if (val === '') {
       applyFilters({ search: '' });
     }
   };
 
   const exportToCSV = () => {
-    if (!staff.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!' });
+    if (!staff.data.length) {
+      Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
+      return;
+    }
     const headers = ['EMP ID', 'Name', 'Department', 'Designation', 'Phone', 'Joining Date', 'Status'];
-    const rows = staff.data.map(s => [ s.staff_id_no, `${s.first_name} ${s.last_name || ''}`, s.department?.name, s.designation?.name, s.phone, s.joining_date, s.is_active ? 'Active' : 'Inactive' ]);
+    const rows = staff.data.map(s => [
+      s.staff_id_no,
+      `${s.first_name} ${s.last_name || ''}`,
+      s.department?.name,
+      s.designation?.name,
+      s.phone,
+      s.joining_date,
+      s.is_active ? 'Active' : 'Inactive'
+    ]);
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows.map(e => e.map(val => `"${val}"`).join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
-    link.href = encodeURI(csvContent);
-    link.download = `Staff_List_${new Date().toISOString().slice(0,10)}.csv`;
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `Staff_List_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
   };
 
   const copyToClipboard = () => {
@@ -151,11 +165,15 @@ export default function Index({ staff, departments, designations, filters }) {
     let text = "EMP ID\tName\tDepartment\tDesignation\tPhone\n";
     staff.data.forEach(s => { text += `${s.staff_id_no}\t${s.first_name} ${s.last_name || ''}\t${s.department?.name}\t${s.designation?.name}\t${s.phone}\n`; });
     navigator.clipboard.writeText(text);
-    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Copied to Clipboard!', showConfirmButton: false, timer: 2000 });
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'টেবিল ডেটা ক্লিপবোর্ডে কপি হয়েছে!', showConfirmButton: false, timer: 2000 });
+  };
+
+  const handlePrint = () => {
+    window.print();
   };
 
   const confirmDelete = () => {
-    if(!deletingItem) return;
+    if (!deletingItem) return;
     router.delete(route('admin.staff.destroy', deletingItem.id), {
       onSuccess: () => setDeletingItem(null),
     });
@@ -166,12 +184,12 @@ export default function Index({ staff, departments, designations, filters }) {
       header={
         <div className="page-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <span className="eyebrow" style={{ color: '#64748b', fontSize: '13px', fontWeight: '600', textTransform: 'uppercase' }}>Directory</span>
-            <h1 style={{ margin: '4px 0', fontSize: '24px', color: '#0f172a' }}>Staff & Teachers</h1>
-            <p className="desc" style={{ margin: 0, color: '#475569', fontSize: '14px' }}>Manage all employees, teachers, and staff members.</p>
+            <span className="eyebrow">Directory</span>
+            <h1>Staff &amp; Teachers Directory</h1>
+            <p className="desc">কর্মচারী, শিক্ষক ও স্টাফদের তথ্য, ফিল্টারিং ও পোর্টাল অ্যাক্সেস পরিচালনা করুন।</p>
           </div>
           <div className="mm-head-actions">
-            <Link href={route('admin.staff.create')} className="btn btn-primary" style={{ display: 'flex', gap: '8px', alignItems: 'center', background: '#4f46e5', color: '#fff', padding: '10px 20px', borderRadius: '8px', textDecoration: 'none', fontWeight: '600' }}>
+            <Link href={route('admin.staff.create')} className="btn" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <Icon name="plus" /> Add New Staff
             </Link>
           </div>
@@ -180,108 +198,248 @@ export default function Index({ staff, departments, designations, filters }) {
     >
       <Head title="Staff Directory" />
 
+      {/* Print-specific styles */}
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
-          nav, aside, header, .page-head, .no-print, button, a, select, input, .mm-head-actions, .mm-filters { display: none !important; }
-          body, html { background: #fff !important; color: #000 !important; margin: 0 !important; padding: 15px !important; }
-          .card, .mm-card { border: none !important; box-shadow: none !important; padding: 0 !important; margin: 0 !important; width: 100% !important; }
-          .mm-table th, .mm-table td { border: 1px solid #cbd5e1 !important; padding: 8px 12px !important; font-size: 11px !important; color: #000 !important; }
-          .print-only-title { display: block !important; font-size: 18px !important; font-weight: bold !important; text-align: center !important; margin-bottom: 15px !important; border-bottom: 2px solid #000; padding-bottom: 8px; }
+          nav, aside, header, .page-head, .no-print, button, a, select, input, .mm-head-actions, .mm-filters {
+            display: none !important;
+          }
+          body, html {
+            background: #fff !important;
+            color: #000 !important;
+            margin: 0 !important;
+            padding: 15px !important;
+          }
+          .card, .mm-card {
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+          }
+          .mm-table-wrap {
+            overflow: visible !important;
+          }
+          .mm-table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+          }
+          .mm-table th, .mm-table td {
+            border: 1px solid #cbd5e1 !important;
+            padding: 8px 12px !important;
+            font-size: 11px !important;
+            color: #000 !important;
+          }
+          .mm-table th {
+            background-color: #f1f5f9 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .print-only-title {
+            display: block !important;
+            font-size: 18px !important;
+            font-weight: bold !important;
+            text-align: center !important;
+            margin-bottom: 15px !important;
+            border-bottom: 2px solid #000;
+            padding-bottom: 8px;
+          }
         }
-        @media screen { .print-only-title { display: none; } }
+        @media screen {
+          .print-only-title {
+            display: none;
+          }
+        }
       `}} />
 
-      <div className="print-only-title">Staff & Teachers Directory - {new Date().toLocaleDateString('en-GB')}</div>
+      {/* Print Only Header */}
+      <div className="print-only-title">
+        Staff & Teachers Directory - {new Date().toLocaleDateString('en-GB')}
+      </div>
 
-      {/* Filters Section */}
-      <div className="card mm-card no-print" style={{ marginBottom: '20px', background: '#fff', padding: '20px', borderRadius: '12px', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)' }}>
-        <div className="mm-filters" style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
-          <select value={perPage} onChange={e => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }} style={{ padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', background: '#f8fafc', color: '#334155' }}>
-            <option value="10">10 / Page</option><option value="20">20 / Page</option><option value="50">50 / Page</option><option value="all">Show All</option>
+      <style>{`
+        .stf-toolbar-scope {
+          --stf-ink: #16213A; --stf-ink-soft: #56647B; --stf-forest: #21402F; --stf-forest-dark: #142720;
+          --stf-brass: #AD7F35; --stf-brass-soft: #F1E4C8; --stf-mist: #EEF1EA; --stf-paper: #FFFFFF;
+          --stf-line: #DCE2D8;
+          --stf-font-display: 'Fraunces', Georgia, serif; --stf-font-body: 'Public Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+          --stf-font-mono: 'JetBrains Mono', ui-monospace, monospace;
+          font-family: var(--stf-font-body);
+        }
+        .stf-toolbar-scope *, .stf-toolbar-scope *::before, .stf-toolbar-scope *::after { box-sizing: border-box; }
+
+        .stf-toolbar-card { background: var(--stf-paper); border: 1px solid var(--stf-line); border-radius: 14px; padding: 22px 24px; margin-bottom: 24px; }
+
+        .stf-toolbar-filters { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+
+        .stf-toolbar-select { padding: 10px 14px; border-radius: 8px; border: 1.5px solid var(--stf-line); min-width: 150px; background: #fff; font-family: var(--stf-font-body); font-size: 14px; color: var(--stf-ink); outline: none; transition: border-color .15s, box-shadow .15s; }
+        .stf-toolbar-select:focus { border-color: var(--stf-brass); box-shadow: 0 0 0 3px rgba(173,127,53,.16); }
+        .stf-toolbar-select:disabled { opacity: .55; cursor: not-allowed; }
+        .stf-toolbar-select.mono { font-family: var(--stf-font-mono); }
+
+        .stf-search-wrap { position: relative; flex: 1; min-width: 220px; }
+        .stf-search-wrap input { width: 100%; padding: 10px 14px 10px 38px; border-radius: 8px; border: 1.5px solid var(--stf-line); font-size: 14px; font-family: var(--stf-font-body); color: var(--stf-ink); outline: none; transition: border-color .15s, box-shadow .15s; }
+        .stf-search-wrap input:focus { border-color: var(--stf-brass); box-shadow: 0 0 0 3px rgba(173,127,53,.16); }
+        .stf-search-wrap .stf-search-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--stf-ink-soft); }
+
+        .stf-filter-btn { padding: 10px 22px; border-radius: 8px; border: none; background: var(--stf-forest); color: #fff; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background .15s, transform .15s; }
+        .stf-filter-btn:hover { background: var(--stf-forest-dark); transform: translateY(-1px); }
+
+        .stf-export-row { display: flex; gap: 8px; margin-top: 18px; border-top: 1px solid var(--stf-line); padding-top: 16px; flex-wrap: wrap; align-items: center; }
+        .stf-export-label { font-family: var(--stf-font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--stf-brass); font-weight: 600; margin-right: 6px; display: flex; align-items: center; gap: 6px; }
+        .stf-export-label::before { content: ''; width: 14px; height: 1px; background: var(--stf-brass); display: inline-block; }
+        .stf-export-btn { padding: 8px 14px; font-size: 13px; display: flex; align-items: center; gap: 7px; border-radius: 8px; border: 1.5px solid var(--stf-line); background: #fff; color: var(--stf-forest-dark); font-weight: 600; cursor: pointer; transition: all .15s; }
+        .stf-export-btn:hover { border-color: var(--stf-brass); background: var(--stf-brass-soft); }
+      `}</style>
+
+      {/* Filter Card marked with 'no-print' class */}
+      <div className="card mm-card no-print stf-toolbar-scope stf-toolbar-card">
+        <div className="mm-filters stf-toolbar-filters">
+
+          {/* Per Page dropdown */}
+          <select
+            value={perPage}
+            onChange={e => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}
+            className="stf-toolbar-select mono"
+          >
+            <option value="10">10 / Page</option>
+            <option value="20">20 / Page</option>
+            <option value="50">50 / Page</option>
+            <option value="all">Show All</option>
           </select>
 
-          <div className="search" style={{ position: 'relative', flex: '1', minWidth: '250px' }}>
-            <input placeholder="Search ID, Name, Phone..." value={search} onChange={handleSearchChange} onKeyDown={e => e.key === 'Enter' && applyFilters()} style={{ padding: '10px 10px 10px 40px', borderRadius: '8px', border: '1px solid #cbd5e1', width: '100%', outline: 'none' }} />
-            <Icon name="search" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+          {/* Search Field */}
+          <div className="search stf-search-wrap">
+            <input
+              placeholder="Search ID, Name, Phone..."
+              value={search}
+              onChange={handleSearchChange}
+              onKeyDown={e => e.key === 'Enter' && applyFilters()}
+            />
+            <Icon name="search" className="stf-search-icon" />
           </div>
 
-          <select value={departmentId} onChange={e => setDepartmentId(e.target.value)} style={{ padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', background: '#f8fafc', color: '#334155' }}>
+          {/* Department selector */}
+          <select
+            value={departmentId}
+            onChange={e => setDepartmentId(e.target.value)}
+            className="stf-toolbar-select"
+          >
             <option value="">All Departments</option>
             {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
 
-          <select value={designationId} onChange={e => setDesignationId(e.target.value)} style={{ padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', background: '#f8fafc', color: '#334155' }}>
+          {/* Designation selector */}
+          <select
+            value={designationId}
+            onChange={e => setDesignationId(e.target.value)}
+            className="stf-toolbar-select"
+          >
             <option value="">All Designations</option>
             {designations.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
 
-          <button className="btn btn-outline" onClick={() => applyFilters()} style={{ padding: '10px 20px', borderRadius: '8px', background: '#f1f5f9', border: '1px solid #cbd5e1', fontWeight: '600', cursor: 'pointer' }}>Filter</button>
+          <button className="btn btn-outline stf-filter-btn" onClick={() => applyFilters()}>
+            Filter
+          </button>
         </div>
 
-        <div style={{ display: 'flex', gap: '12px', marginTop: '20px', borderTop: '1px solid #f1f5f9', paddingTop: '16px' }}>
-          <button className="btn btn-outline" onClick={copyToClipboard} style={{ padding: '8px 16px', fontSize: '13px', display: 'flex', gap: '8px', alignItems: 'center', borderRadius: '6px', cursor: 'pointer', background: 'transparent', border: '1px solid #e2e8f0' }}><Icon name="copy" size="16"/> Copy Table</button>
-          <button className="btn btn-outline" onClick={exportToCSV} style={{ padding: '8px 16px', fontSize: '13px', display: 'flex', gap: '8px', alignItems: 'center', borderRadius: '6px', cursor: 'pointer', background: 'transparent', border: '1px solid #e2e8f0' }}><Icon name="excel" size="16"/> CSV / Excel</button>
-          <button className="btn btn-outline" onClick={() => window.print()} style={{ padding: '8px 16px', fontSize: '13px', display: 'flex', gap: '8px', alignItems: 'center', borderRadius: '6px', cursor: 'pointer', background: 'transparent', border: '1px solid #e2e8f0' }}><Icon name="print" size="16"/> Print PDF</button>
+        {/* Export Buttons */}
+        <div className="stf-export-row">
+          <span className="stf-export-label">Export</span>
+          <button className="btn btn-outline stf-export-btn" onClick={copyToClipboard}>
+            <Icon name="copy" /> Copy Table
+          </button>
+          <button className="btn btn-outline stf-export-btn" onClick={exportToCSV}>
+            <Icon name="excel" /> CSV / Excel
+          </button>
+          <button className="btn btn-outline stf-export-btn" onClick={handlePrint}>
+            <Icon name="print" /> PDF / Print
+          </button>
         </div>
       </div>
 
       {/* Table Section */}
-      <div className="card mm-card" style={{ background: '#fff', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)' }}>
+      <div className="card mm-card" style={{ background: '#fff', borderRadius: '12px', overflow: 'hidden' }}>
         <div className="mm-table-wrap" style={{ overflowX: 'auto' }}>
           <table className="mm-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
             <thead style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
               <tr>
-                <th style={{ padding: '16px', color: '#475569', fontWeight: '600' }}>SL</th>
-                <th style={{ padding: '16px', color: '#475569', fontWeight: '600' }}>EMP ID</th>
-                <th style={{ padding: '16px', color: '#475569', fontWeight: '600' }}>Staff Profile</th>
-                <th style={{ padding: '16px', color: '#475569', fontWeight: '600' }}>Department & Role</th>
-                <th style={{ padding: '16px', color: '#475569', fontWeight: '600' }}>Contact</th>
-                <th className="no-print" style={{ padding: '16px', textAlign: 'center', color: '#475569', fontWeight: '600' }}>Actions</th>
+                <th style={{ padding: '15px' }}>SL</th>
+                <th style={{ padding: '15px' }}>EMP ID</th>
+                <th style={{ padding: '15px' }}>Staff Profile</th>
+                <th style={{ padding: '15px' }}>Department &amp; Role</th>
+                <th style={{ padding: '15px' }}>Contact</th>
+                <th className="no-print" style={{ padding: '15px', textAlign: 'center' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {staff.data.length === 0 && (
-                <tr><td colSpan={6} style={{ padding: '40px', textAlign: 'center', color: '#64748b', fontSize: '15px' }}>কোনো স্টাফ ডেটা পাওয়া যায়নি।</td></tr>
+                <tr>
+                  <td colSpan={6} style={{ padding: '30px', textAlign: 'center', color: '#64748b' }}>
+                    কোনো স্টাফ ডেটা পাওয়া যায়নি।
+                  </td>
+                </tr>
               )}
               {staff.data.map((s, index) => (
-                <tr key={s.id} style={{ borderBottom: '1px solid #e2e8f0', transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
-                  <td style={{ padding: '16px', color: '#64748b' }}>{(staff.current_page - 1) * staff.per_page + index + 1}</td>
-                  <td style={{ padding: '16px', fontWeight: '600', color: '#0f172a' }}>{s.staff_id_no}</td>
-                  <td style={{ padding: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <img src={s.photo ? `/storage/${s.photo}` : '/images/default-avatar.png'} alt="avatar" style={{ width: '45px', height: '45px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #e2e8f0' }} />
+                <tr key={s.id} style={{ borderBottom: '1px solid #e2e8f0', transition: 'background-color 0.2s' }}>
+                  <td style={{ padding: '15px' }}>{(staff.current_page - 1) * staff.per_page + index + 1}</td>
+                  <td style={{ padding: '15px' }}><strong>{s.staff_id_no}</strong></td>
+                  <td style={{ padding: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <img
+                      src={s.photo ? `/storage/${s.photo}` : '/images/default-avatar.png'}
+                      alt="Staff"
+                      style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
+                    />
                     <div>
-                      <div style={{ fontWeight: '600', color: '#1e293b', fontSize: '15px' }}>{s.first_name} {s.last_name || ''}</div>
+                      {s.first_name} {s.last_name || ''}
                       <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginTop: '4px' }}>
                         <span style={{ fontSize: '11px', padding: '2px 6px', borderRadius: '4px', background: s.is_active ? '#dcfce7' : '#fee2e2', color: s.is_active ? '#166534' : '#991b1b', fontWeight: '500' }}>
                           {s.is_active ? 'Active' : 'Inactive'}
                         </span>
-                        {/* User Account Indicator Badge */}
                         {s.user_id && (
-                           <span style={{ fontSize: '11px', padding: '2px 6px', borderRadius: '4px', background: '#e0e7ff', color: '#3730a3', fontWeight: '500' }} title="Has Portal Access">
-                             Portal Access
-                           </span>
+                          <span style={{ fontSize: '11px', padding: '2px 6px', borderRadius: '4px', background: '#e0e7ff', color: '#3730a3', fontWeight: '500' }} title="Has Portal Access">
+                            Portal Access
+                          </span>
                         )}
                       </div>
                     </div>
                   </td>
-                  <td style={{ padding: '16px' }}>
-                    <div style={{ fontWeight: '600', color: '#3730a3', fontSize: '14px' }}>{s.designation?.name}</div>
-                    <div style={{ fontSize: '13px', color: '#64748b', marginTop: '2px' }}>{s.department?.name}</div>
+                  <td style={{ padding: '15px' }}>
+                    <div style={{ fontWeight: '500' }}>{s.designation?.name}</div>
+                    <small style={{ color: '#64748b' }}>{s.department?.name}</small>
                   </td>
-                  <td style={{ padding: '16px' }}>
-                    <div style={{ color: '#1e293b', fontSize: '14px', fontWeight: '500' }}>{s.phone}</div>
-                    <div style={{ fontSize: '13px', color: '#64748b', marginTop: '2px' }}>{s.email || 'N/A'}</div>
+                  <td style={{ padding: '15px' }}>
+                    <div style={{ fontWeight: '500' }}>{s.phone}</div>
+                    <small style={{ color: '#64748b' }}>{s.email || 'N/A'}</small>
                   </td>
-                  <td className="no-print" style={{ padding: '16px' }}>
-                    <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-                      <button onClick={() => setViewingItem(s)} style={{ padding: '8px', color: '#4f46e5', background: '#e0e7ff', border: 'none', borderRadius: '8px', cursor: 'pointer', transition: 'transform 0.1s' }} title="View Profile">
-                        <Icon name="eye" size="18" />
+                  <td className="no-print" style={{ padding: '15px' }}>
+                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                      {/* View Details Button */}
+                      <button
+                        onClick={() => setViewingItem(s)}
+                        title="View Profile"
+                        style={{ padding: '6px', color: '#4f46e5', background: '#f5f3ff', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                      >
+                        <Icon name="eye" />
                       </button>
-                      <Link href={route('admin.staff.edit', s.id)} style={{ padding: '8px', color: '#0284c7', background: '#e0f2fe', borderRadius: '8px', display: 'flex', alignItems: 'center' }} title="Edit Staff">
-                        <Icon name="edit" size="18" />
+
+                      {/* Edit Button */}
+                      <Link
+                        href={route('admin.staff.edit', s.id)}
+                        title="Edit Staff"
+                        style={{ padding: '6px', color: '#3b82f6', background: '#eff6ff', borderRadius: '6px', display: 'flex', alignItems: 'center' }}
+                      >
+                        <Icon name="edit" />
                       </Link>
-                      <button onClick={() => setDeletingItem(s)} style={{ padding: '8px', color: '#e11d48', background: '#ffe4e6', border: 'none', borderRadius: '8px', cursor: 'pointer' }} title="Delete Staff">
-                        <Icon name="trash" size="18" />
+
+                      {/* Delete Button */}
+                      <button
+                        onClick={() => setDeletingItem(s)}
+                        title="Delete Staff"
+                        style={{ padding: '6px', color: '#ef4444', background: '#fef2f2', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                      >
+                        <Icon name="trash" />
                       </button>
                     </div>
                   </td>
@@ -290,12 +448,15 @@ export default function Index({ staff, departments, designations, filters }) {
             </tbody>
           </table>
         </div>
-        <div className="no-print" style={{ padding: '20px', borderTop: '1px solid #f1f5f9', background: '#f8fafc' }}>
+        <div className="no-print" style={{ padding: '20px', borderTop: '1px solid #f1f5f9' }}>
           <Pagination meta={staff} />
         </div>
       </div>
 
-      {viewingItem && <StaffViewModal staff={viewingItem} onClose={() => setViewingItem(null)} />}
+      {/* Modals */}
+      {viewingItem && (
+        <StaffViewModal staff={viewingItem} onClose={() => setViewingItem(null)} />
+      )}
 
       {deletingItem && (
         <ConfirmDeleteModal

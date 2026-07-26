@@ -29,28 +29,39 @@ export default function Sidebar({ mobileOpen = false }) {
 
   useEffect(() => {
     setOpenKeys(prev => {
-      const next = new Set(prev);
+      const next = new Set();
       let hasChanges = false;
       
       navigation.forEach(group => {
         group.items.forEach(item => {
           if (item.children?.some(child => isActive(child.route))) {
-            if (!next.has(item.key)) {
-              next.add(item.key);
-              hasChanges = true;
-            }
+            next.add(item.key); 
           }
         });
       });
+
+      if (prev.size !== next.size) {
+        hasChanges = true;
+      } else {
+        for (let key of next) {
+          if (!prev.has(key)) hasChanges = true;
+        }
+      }
+
       return hasChanges ? next : prev; 
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url, navigation]);
 
   function toggle(key) {
     setOpenKeys(prev => {
-      const next = new Set(prev);
-      next.has(key) ? next.delete(key) : next.add(key);
+      const isOpen = prev.has(key);
+      
+      const next = new Set();
+      
+      if (!isOpen) {
+        next.add(key);
+      }
+      
       return next;
     });
   }
@@ -94,12 +105,14 @@ export default function Sidebar({ mobileOpen = false }) {
         {navigation.map(group => (
           <div className="nav-group" key={group.label}>
             <div className="nav-label">{group.label}</div>
-            {group.items.map(item =>
-              item.children?.length ? (
+            {group.items.map(item => {
+              const isParentActive = item.children?.some(child => isActive(child.route));
+
+              return item.children?.length ? (
                 <div className="nav-parent" key={item.key}>
                   <button
                     type="button"
-                    className={`nav-item nav-toggle ${openKeys.has(item.key) ? 'open' : ''}`}
+                    className={`nav-item nav-toggle ${openKeys.has(item.key) ? 'open' : ''} ${isParentActive ? 'active' : ''}`}
                     onClick={() => toggle(item.key)}
                     aria-expanded={openKeys.has(item.key)}
                   >
@@ -111,7 +124,7 @@ export default function Sidebar({ mobileOpen = false }) {
 
                   <div
                     className="nav-submenu"
-                    style={{ maxHeight: openKeys.has(item.key) ? '480px' : '0px' }}
+                    style={{ maxHeight: openKeys.has(item.key) ? '480px' : '0px', overflow: 'hidden', transition: 'max-height 0.3s ease' }}
                   >
                     {item.children.map(child => (
                       <Link
@@ -135,8 +148,8 @@ export default function Sidebar({ mobileOpen = false }) {
                   <span>{item.label}</span>
                   {item.count ? <span className="nav-count">{item.count}</span> : null}
                 </Link>
-              )
-            )}
+              );
+            })}
           </div>
         ))}
       </nav>

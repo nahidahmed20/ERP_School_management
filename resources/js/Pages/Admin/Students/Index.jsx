@@ -379,82 +379,116 @@ export default function Index({ students, classes, filters }) {
         Students Directory - {new Date().toLocaleDateString('en-GB')}
       </div>
 
-      {/* Filter Card marked with 'no-print' class */}
-      <div className="card mm-card no-print" style={{ marginBottom: '20px', background: '#fff', padding: '20px', borderRadius: '12px' }}>
-        <div className="mm-filters" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+      
 
-          {/* Per Page dropdown */}
-          <select
-            value={perPage}
-            onChange={e => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}
-            style={{ padding: '10px', borderRadius: '6px', border: '1px solid #ddd', minWidth: '110px', background: '#fff' }}
-          >
-            <option value="10">10 / Page</option>
-            <option value="20">20 / Page</option>
-            <option value="50">50 / Page</option>
-            <option value="100">100 / Page</option>
-            <option value="500">500 / Page</option>
-            <option value="1000">1000 / Page</option>
-            <option value="all">Show All</option>
-          </select>
+<style>{`
+  .adm-toolbar-scope {
+    --adm-ink: #16213A; --adm-ink-soft: #56647B; --adm-forest: #21402F; --adm-forest-dark: #142720;
+    --adm-brass: #AD7F35; --adm-brass-soft: #F1E4C8; --adm-mist: #EEF1EA; --adm-paper: #FFFFFF;
+    --adm-line: #DCE2D8;
+    --adm-font-display: 'Fraunces', Georgia, serif; --adm-font-body: 'Public Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    --adm-font-mono: 'JetBrains Mono', ui-monospace, monospace;
+    font-family: var(--adm-font-body);
+  }
+  .adm-toolbar-scope *, .adm-toolbar-scope *::before, .adm-toolbar-scope *::after { box-sizing: border-box; }
 
-          {/* Search Field */}
-          <div className="search" style={{ position: 'relative', flex: '1', minWidth: '220px' }}>
-            <input
-              placeholder="Search by Admission No, Name, Phone..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && applyFilters()}
-              style={{ padding: '10px 10px 10px 35px', borderRadius: '6px', border: '1px solid #ddd', width: '100%' }}
-            />
-            <Icon name="search" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-          </div>
+  .adm-toolbar-card { background: var(--adm-paper); border: 1px solid var(--adm-line); border-radius: 14px; padding: 22px 24px; margin-bottom: 24px; }
 
-          {/* Class selector */}
-          <select
-            value={classId}
-            onChange={e => { setClassId(e.target.value); setSectionId(''); }}
-            style={{ padding: '10px', borderRadius: '6px', border: '1px solid #ddd', minWidth: '150px' }}
-          >
-            <option value="">All Classes</option>
-            {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
+  .adm-toolbar-filters { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
 
-          {/* Section selector */}
-          <select
-            value={sectionId}
-            onChange={e => setSectionId(e.target.value)}
-            disabled={!classId}
-            style={{ padding: '10px', borderRadius: '6px', border: '1px solid #ddd', minWidth: '150px' }}
-          >
-            <option value="">All Sections</option>
-            {selectedClass?.sections?.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-          </select>
+  .adm-toolbar-select { padding: 10px 14px; border-radius: 8px; border: 1.5px solid var(--adm-line); min-width: 130px; background: #fff; font-family: var(--adm-font-body); font-size: 14px; color: var(--adm-ink); outline: none; transition: border-color .15s, box-shadow .15s; }
+  .adm-toolbar-select:focus { border-color: var(--adm-brass); box-shadow: 0 0 0 3px rgba(173,127,53,.16); }
+  .adm-toolbar-select:disabled { opacity: .55; cursor: not-allowed; }
+  .adm-toolbar-select.mono { font-family: var(--adm-font-mono); }
 
-          <button className="btn btn-outline" onClick={() => applyFilters()} style={{ padding: '10px 20px', borderRadius: '6px' }}>
-            Filter
-          </button>
-        </div>
+  .adm-search-wrap { position: relative; flex: 1; min-width: 220px; }
+  .adm-search-wrap input { width: 100%; padding: 10px 14px 10px 38px; border-radius: 8px; border: 1.5px solid var(--adm-line); font-size: 14px; font-family: var(--adm-font-body); color: var(--adm-ink); outline: none; transition: border-color .15s, box-shadow .15s; }
+  .adm-search-wrap input:focus { border-color: var(--adm-brass); box-shadow: 0 0 0 3px rgba(173,127,53,.16); }
+  .adm-search-wrap .adm-search-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--adm-ink-soft); }
 
-        {/* Export Buttons */}
-        <div style={{ display: 'flex', gap: '8px', marginTop: '16px', borderTop: '1px solid #f1f5f9', paddingTop: '16px', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '13px', fontWeight: '600', color: '#64748b', display: 'flex', alignItems: 'center', marginRight: '8px' }}>
-            Export Options:
-          </span>
-          <button className="btn btn-outline" onClick={copyToClipboard} style={{ padding: '6px 12px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Icon name="copy" /> Copy Table
-          </button>
-          <button className="btn btn-outline" onClick={exportToCSV} style={{ padding: '6px 12px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Icon name="excel" /> CSV
-          </button>
-          <button className="btn btn-outline" onClick={exportToCSV} style={{ padding: '6px 12px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Icon name="excel" /> Excel
-          </button>
-          <button className="btn btn-outline" onClick={handlePrint} style={{ padding: '6px 12px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Icon name="print" /> PDF / Print
-          </button>
-        </div>
-      </div>
+  .adm-filter-btn { padding: 10px 22px; border-radius: 8px; border: none; background: var(--adm-forest); color: #fff; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background .15s, transform .15s; }
+  .adm-filter-btn:hover { background: var(--adm-forest-dark); transform: translateY(-1px); }
+
+  .adm-export-row { display: flex; gap: 8px; margin-top: 18px; border-top: 1px solid var(--adm-line); padding-top: 16px; flex-wrap: wrap; align-items: center; }
+  .adm-export-label { font-family: var(--adm-font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--adm-brass); font-weight: 600; margin-right: 6px; display: flex; align-items: center; gap: 6px; }
+  .adm-export-label::before { content: ''; width: 14px; height: 1px; background: var(--adm-brass); display: inline-block; }
+  .adm-export-btn { padding: 8px 14px; font-size: 13px; display: flex; align-items: center; gap: 7px; border-radius: 8px; border: 1.5px solid var(--adm-line); background: #fff; color: var(--adm-forest-dark); font-weight: 600; cursor: pointer; transition: all .15s; }
+  .adm-export-btn:hover { border-color: var(--adm-brass); background: var(--adm-brass-soft); }
+`}</style>
+
+{/* Filter Card marked with 'no-print' class */}
+<div className="card mm-card no-print adm-toolbar-scope adm-toolbar-card">
+  <div className="mm-filters adm-toolbar-filters">
+
+    {/* Per Page dropdown */}
+    <select
+      value={perPage}
+      onChange={e => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}
+      className="adm-toolbar-select mono"
+    >
+      <option value="10">10 / Page</option>
+      <option value="20">20 / Page</option>
+      <option value="50">50 / Page</option>
+      <option value="100">100 / Page</option>
+      <option value="500">500 / Page</option>
+      <option value="1000">1000 / Page</option>
+      <option value="all">Show All</option>
+    </select>
+
+    {/* Search Field */}
+    <div className="search adm-search-wrap">
+      <input
+        placeholder="Search by Admission No, Name, Phone..."
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+        onKeyDown={e => e.key === 'Enter' && applyFilters()}
+      />
+      <Icon name="search" className="adm-search-icon" />
+    </div>
+
+    {/* Class selector */}
+    <select
+      value={classId}
+      onChange={e => { setClassId(e.target.value); setSectionId(''); }}
+      className="adm-toolbar-select"
+    >
+      <option value="">All Classes</option>
+      {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+    </select>
+
+    {/* Section selector */}
+    <select
+      value={sectionId}
+      onChange={e => setSectionId(e.target.value)}
+      disabled={!classId}
+      className="adm-toolbar-select"
+    >
+      <option value="">All Sections</option>
+      {selectedClass?.sections?.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+    </select>
+
+    <button className="btn btn-outline adm-filter-btn" onClick={() => applyFilters()}>
+      Filter
+    </button>
+  </div>
+
+  {/* Export Buttons */}
+  <div className="adm-export-row">
+    <span className="adm-export-label">Export</span>
+    <button className="btn btn-outline adm-export-btn" onClick={copyToClipboard}>
+      <Icon name="copy" /> Copy Table
+    </button>
+    <button className="btn btn-outline adm-export-btn" onClick={exportToCSV}>
+      <Icon name="excel" /> CSV
+    </button>
+    <button className="btn btn-outline adm-export-btn" onClick={exportToCSV}>
+      <Icon name="excel" /> Excel
+    </button>
+    <button className="btn btn-outline adm-export-btn" onClick={handlePrint}>
+      <Icon name="print" /> PDF / Print
+    </button>
+  </div>
+</div>
 
       {/* Table Section */}
       <div className="card mm-card" style={{ background: '#fff', borderRadius: '12px', overflow: 'hidden' }}>

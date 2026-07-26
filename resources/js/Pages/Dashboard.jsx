@@ -1,7 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 
-// 🆕 লারাভেল থেকে পাঠানো Props গুলো এখানে রিসিভ করা হলো
 export default function Dashboard({ stats, recentAdmissions, pendingLeaves, absentStaff, notices }) {
     
     const TakaSymbol = () => (
