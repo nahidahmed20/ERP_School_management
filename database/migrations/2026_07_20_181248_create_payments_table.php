@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('fee_assignment_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('student_id')->constrained()->cascadeOnDelete();
+            $table->unsignedInteger('fee_assignment_id');
+            $table->unsignedInteger('student_id');
             $table->decimal('amount_paid', 10, 2);
             $table->date('payment_date');
             $table->string('payment_method')->default('Cash'); // Cash, Bank, Mobile Banking

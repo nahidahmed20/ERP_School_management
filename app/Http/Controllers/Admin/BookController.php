@@ -30,7 +30,7 @@ class BookController extends Controller
             ? $query->paginate($query->count())->withQueryString()
             : $query->paginate($perPage)->withQueryString();
 
-        return Inertia::render('Admin/Library/Catalogue/Index', [
+        return Inertia::render('Admin/LibraryCatalogue/Index', [
             'books' => $books,
             'filters' => $request->only(['search', 'per_page']),
         ]);

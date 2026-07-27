@@ -11,12 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('fee_types', function (Blueprint $table) {
+        Schema::create('transport_allocations', function (Blueprint $table) {
             $table->id();
-            $table->unsignedInteger('fee_group_id');
-            $table->string('name');
-            $table->decimal('amount', 10, 2); 
-            $table->text('description')->nullable();
+            $table->unsignedBigInteger('campus_id')->nullable();
+            $table->unsignedBigInteger('vehicle_id');
+            $table->unsignedBigInteger('user_id'); 
+            $table->string('pickup_point'); // কোথা থেকে গাড়িতে উঠবে
+            $table->decimal('monthly_fare', 10, 2)->default(0.00);
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
@@ -27,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('fee_types');
+        Schema::dropIfExists('transport_allocations');
     }
 };

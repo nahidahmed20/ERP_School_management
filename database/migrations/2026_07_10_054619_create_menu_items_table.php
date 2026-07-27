@@ -13,9 +13,8 @@ return new class extends Migration
     {
         Schema::create('menu_items', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('menu_group_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('parent_id')->nullable()
-                  ->constrained('menu_items')->cascadeOnDelete();
+            $table->unsignedInteger('menu_group_id');
+            $table->unsignedInteger('parent_id')->nullable();
             $table->string('key')->unique();
             $table->string('label');
             $table->string('icon')->nullable();

@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('homeworks', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('school_class_id')->constrained('school_classes')->cascadeOnDelete();
-            $table->foreignId('section_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('subject_id')->constrained()->cascadeOnDelete();
+            $table->unsignedInteger('school_class_id');
+            $table->unsignedInteger('section_id');
+            $table->unsignedInteger('subject_id');
             $table->date('homework_date');
             $table->date('submission_date');
             $table->string('document')->nullable(); // PDF attachment

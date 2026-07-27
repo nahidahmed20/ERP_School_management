@@ -1,8 +1,11 @@
 <?php
 
 use App\Http\Controllers\Admin\AcademicSessionController;
+use App\Http\Controllers\Admin\BookController;
+use App\Http\Controllers\Admin\BookIssueController;
 use App\Http\Controllers\Admin\BranchController;
 use App\Http\Controllers\Admin\CampusController;
+use App\Http\Controllers\Admin\CertificateTemplateController;
 use App\Http\Controllers\Admin\ClassroomController;
 use App\Http\Controllers\Admin\Communication\EventController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -18,12 +21,16 @@ use App\Http\Controllers\Admin\FeeTypeController;
 use App\Http\Controllers\Admin\FileManagerController;
 use App\Http\Controllers\Admin\GeneralSettingController;
 use App\Http\Controllers\Admin\GuardianController;
+use App\Http\Controllers\Admin\HomeworkController;
+use App\Http\Controllers\Admin\HostelAllocationController;
+use App\Http\Controllers\Admin\HostelRoomController;
 use App\Http\Controllers\Admin\HouseController;
 use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Admin\LeaveTypeController;
 use App\Http\Controllers\Admin\LedgerController;
 use App\Http\Controllers\Admin\MenuGroupController;
 use App\Http\Controllers\Admin\MenuItemController;
+use App\Http\Controllers\Admin\NoticeController;
 use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\PromotionController;
@@ -43,12 +50,10 @@ use App\Http\Controllers\Admin\StudentFeeController;
 use App\Http\Controllers\Admin\SubjectController;
 use App\Http\Controllers\Admin\SystemRegistryController;
 use App\Http\Controllers\Admin\TimeTableController;
+use App\Http\Controllers\Admin\TransportAllocationController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\VehicleController;
 use App\Http\Controllers\Admin\VisitorController;
-use App\Http\Controllers\Admin\NoticeController;
-use App\Http\Controllers\Admin\BookController;
-use App\Http\Controllers\Admin\HomeworkController;
-use App\Http\Controllers\Admin\CertificateTemplateController;
 use App\Http\Controllers\DynamicPageController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -166,6 +171,12 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
     Route::resource('library/catalogue', BookController::class)->names('library.catalogue');
     Route::resource('lms/homework', HomeworkController::class)->names('lms.homework');
     Route::resource('documents/certificatetemplates', CertificateTemplateController::class)->names('documents.certificatetemplates');
+
+    Route::resource('vehicles', VehicleController::class);
+    Route::resource('transports', TransportAllocationController::class);
+    Route::resource('hostel-rooms', HostelRoomController::class);
+    Route::resource('hostel-allocations', HostelAllocationController::class);
+    Route::resource('library-issues', BookIssueController::class);
 });
 
 

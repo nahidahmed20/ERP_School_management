@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('exam_marks', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('exam_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('school_class_id')->constrained('school_classes')->cascadeOnDelete();
-            $table->foreignId('section_id')->nullable()->constrained()->cascadeOnDelete();
-            $table->foreignId('subject_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('student_id')->constrained()->cascadeOnDelete();
+            $table->unsignedInteger('exam_id');
+            $table->unsignedInteger('school_class_id');
+            $table->unsignedInteger('section_id')->nullable();
+            $table->unsignedInteger('subject_id');
+            $table->unsignedInteger('student_id');
             $table->decimal('marks_obtained', 5, 2)->nullable();
             $table->string('grade')->nullable(); 
             $table->decimal('grade_point', 4, 2)->nullable(); 

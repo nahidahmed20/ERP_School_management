@@ -118,15 +118,15 @@ class MenuSeeder extends Seeder
             ['label' => 'Campus Life', 'items' => [
                 ['key' => 'library', 'label' => 'Library', 'icon' => 'book', 'count' => 2, 'children' => [
                     ['key' => 'admin.library.catalogue.inde', 'label' => 'Catalogue', 'route' => 'admin.library.catalogue.index'],
-                    ['key' => 'library.issues', 'label' => 'Book Issues & Fines', 'route' => 'admin.library.issues'],
+                    ['key' => 'admin.library-issues.index', 'label' => 'Book Issues & Fines', 'route' => 'admin.library-issues.index'],
                 ]],
                 ['key' => 'transport', 'label' => 'Transport', 'icon' => 'bus', 'count' => 2, 'children' => [
-                    ['key' => 'transport.vehicles', 'label' => 'Vehicles & Routes', 'route' => 'admin.transport.vehicles'],
-                    ['key' => 'transport.allocations', 'label' => 'Transport Allocation', 'route' => 'admin.transport.allocations'],
+                    ['key' => 'admin.vehicles.index', 'label' => 'Vehicles', 'route' => 'admin.vehicles.index'],
+                    ['key' => 'admin.transports.index', 'label' => 'Transport Allocation', 'route' => 'admin.transports.index'],
                 ]],
                 ['key' => 'hostel', 'label' => 'Hostel Management', 'icon' => 'home', 'count' => 2, 'children' => [
-                    ['key' => 'hostel.rooms', 'label' => 'Hostels & Rooms', 'route' => 'admin.hostel.rooms'],
-                    ['key' => 'hostel.allocations', 'label' => 'Room Allocation', 'route' => 'admin.hostel.allocations'],
+                    ['key' => 'admin.hostel-rooms.index', 'label' => 'Hostels & Rooms', 'route' => 'admin.hostel-rooms.index'],
+                    ['key' => 'admin.hostel-allocations.index', 'label' => 'Room Allocation', 'route' => 'admin.hostel-allocations.index'],
                 ]],
                 ['key' => 'cafeteria', 'label' => 'Cafeteria', 'icon' => 'cutlery', 'count' => 4, 'children' => [
                     ['key' => 'cafeteria.outlets', 'label' => 'Outlets', 'route' => 'admin.cafeteria.outlets'],

@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('student_attendances', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('student_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('school_class_id')->constrained('school_classes')->cascadeOnDelete();
-            $table->foreignId('section_id')->nullable()->constrained()->cascadeOnDelete();
-            $table->foreignId('academic_session_id')->constrained()->cascadeOnDelete();
+            $table->unsignedInteger('student_id');
+            $table->unsignedInteger('school_class_id');
+            $table->unsignedInteger('section_id')->nullable();
+            $table->unsignedInteger('academic_session_id');
             $table->date('attendance_date');
             $table->enum('status', ['present', 'absent', 'late', 'half_day'])->default('present');
             $table->string('remarks')->nullable();

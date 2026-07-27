@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('fee_assignments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('student_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('fee_group_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('academic_session_id')->constrained()->cascadeOnDelete();
+            $table->unsignedInteger('student_id');
+            $table->unsignedInteger('fee_group_id');
+            $table->unsignedInteger('academic_session_id');
             $table->date('due_date');
             $table->enum('status', ['unpaid', 'partially_paid', 'paid'])->default('unpaid');
             $table->timestamps();
