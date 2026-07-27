@@ -12,11 +12,6 @@ class HostelAllocation extends Model
 
     protected $guarded = ['id'];
 
-    protected $casts = [
-        'allocation_date' => 'date',
-        'is_active' => 'boolean',
-    ];
-
     public function room()
     {
         return $this->belongsTo(HostelRoom::class, 'hostel_room_id');

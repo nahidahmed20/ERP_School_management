@@ -11,13 +11,6 @@ class AcademicSession extends Model
 
     protected $guarded = ['id'];
 
-    protected $casts = [
-        'start_date' => 'date',
-        'end_date' => 'date',
-        'is_current' => 'boolean',
-        'is_active' => 'boolean',
-    ];
-
     public function campus()
     {
         return $this->belongsTo(Campus::class);

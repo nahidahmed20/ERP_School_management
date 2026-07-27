@@ -23,11 +23,11 @@ class MenuSeeder extends Seeder
 
             ['label' => 'Front Office', 'items' => [
                 ['key' => 'frontoffice', 'label' => 'Reception & Front Desk', 'icon' => 'phone', 'count' => 5, 'children' => [
-                    ['key' => 'frontoffice.inquiries', 'label' => 'Admission Inquiries', 'route' => 'admin.frontoffice.inquiries'],
+                    ['key' => 's', 'label' => 'Admission Inquiries', 'route' => ''],
                     ['key' => 'admin.frontoffice.visitors.index', 'label' => 'Visitor Book', 'route' => 'admin.frontoffice.visitors.index'],
                     ['key' => 'admin.frontoffice.notices.index', 'label' => 'Notice Board', 'route' => 'admin.frontoffice.notices.index'],
-                    ['key' => 'frontoffice.calls', 'label' => 'Phone Call Logs', 'route' => 'admin.frontoffice.calls'],
-                    ['key' => 'frontoffice.postal', 'label' => 'Postal Dispatch/Receive', 'route' => 'admin.frontoffice.postal'],
+                    ['key' => '', 'label' => 'Phone Call Logs', 'route' => ''],
+                    ['key' => '', 'label' => 'Postal Dispatch/Receive', 'route' => ''],
                 ]],
             ]],
 
@@ -48,12 +48,12 @@ class MenuSeeder extends Seeder
                     ['key' => 'admin.subjects.index', 'label' => 'Subjects', 'route' => 'admin.subjects.index'],
                     ['key' => 'admin.classrooms.index', 'label' => 'Classroom', 'route' => 'admin.classrooms.index'],
                     ['key' => 'admin.time-tables.index', 'label' => 'Class Timetable', 'route' => 'admin.time-tables.index'],
-                    ['key' => 'academics.lessonplans', 'label' => 'Lesson & Syllabus', 'route' => 'admin.academics.lessonplans'],
+                    ['key' => '', 'label' => 'Lesson & Syllabus', 'route' => ''],
                     ['key' => 'admin.sessions.index', 'label' => 'Academic Sessions', 'route' => 'admin.sessions.index'],
                 ]],
                 ['key' => 'attendance', 'label' => 'Attendance', 'icon' => 'calendar', 'count' => 3, 'children' => [
                     ['key' => 'admin.student-attendance.index', 'label' => 'Student Attendance', 'route' => 'admin.student-attendance.index'],
-                    ['key' => 'attendance.sync', 'label' => 'Biometric Sync Logs', 'route' => 'admin.attendance.sync'],
+                    ['key' => '', 'label' => 'Biometric Sync Logs', 'route' => ''],
                     ['key' => 'admin.student_attendance.report', 'label' => 'Student Attendance Report', 'route' => 'admin.student_attendance.report'],
                     ['key' => 'admin.attendance-report.index', 'label' => 'Staff Attendance', 'route' => 'admin.attendance-report.index'],
                 ]],
@@ -64,7 +64,6 @@ class MenuSeeder extends Seeder
                     ['key' => 'admin.grades.index', 'label' => 'Grade Setup', 'route' => 'admin.grades.index'],
                     ['key' => 'admin.exams.reportcards', 'label' => 'Report Cards', 'route' => 'admin.exams.reportcards'],
                     ['key' => 'admin.exams.tabulation', 'label' => 'Tabulation Sheet', 'route' => 'admin.exams.tabulation'],
-                    ['key' => 'exams.questionbanks', 'label' => 'Question Banks', 'route' => 'admin.exams.questionbanks'],
                 ]],
             ]],
 
@@ -79,14 +78,14 @@ class MenuSeeder extends Seeder
                     ['key' => 'admin.leave-types.index', 'label' => 'Leave Types', 'route' => 'admin.leave-types.index'],
                 ]],
                 ['key' => 'recruitment', 'label' => 'Recruitment', 'icon' => 'briefcase', 'count' => 4, 'children' => [
-                    ['key' => 'recruitment.jobs', 'label' => 'Job Posts', 'route' => 'admin.recruitment.jobs'],
-                    ['key' => 'recruitment.applicants', 'label' => 'Applicants', 'route' => 'admin.recruitment.applicants'],
-                    ['key' => 'recruitment.interviews', 'label' => 'Interviews', 'route' => 'admin.recruitment.interviews'],
-                    ['key' => 'recruitment.offers', 'label' => 'Offer Letters', 'route' => 'admin.recruitment.offers'],
+                    ['key' => '', 'label' => 'Job Posts', 'route' => ''],
+                    ['key' => '', 'label' => 'Applicants', 'route' => 'a'],
+                    ['key' => '', 'label' => 'Interviews', 'route' => ''],
+                    ['key' => '', 'label' => 'Offer Letters', 'route' => ''],
                 ]],
                 ['key' => 'alumni', 'label' => 'Alumni Management', 'icon' => 'star', 'count' => 2, 'children' => [
-                    ['key' => 'alumni.directory', 'label' => 'Alumni Directory', 'route' => 'admin.alumni.directory'],
-                    ['key' => 'alumni.events', 'label' => 'Alumni Events', 'route' => 'admin.alumni.events'],
+                    ['key' => '', 'label' => 'Alumni Directory', 'route' => ''],
+                    ['key' => '', 'label' => 'Alumni Events', 'route' => ''],
                 ]],
             ]],
 
@@ -99,25 +98,25 @@ class MenuSeeder extends Seeder
                     ['key' => 'admin.fees.ledger', 'label' => 'Income / Expense Ledger', 'route' => 'admin.fees.ledger'],
                 ]],
                 ['key' => 'payments', 'label' => 'Payment Gateways', 'icon' => 'card', 'count' => 3, 'children' => [
-                    ['key' => 'payments.gateways', 'label' => 'Gateway Config', 'route' => 'admin.payments.gateways'],
-                    ['key' => 'payments.transactions', 'label' => 'Transactions', 'route' => 'admin.payments.transactions'],
-                    ['key' => 'payments.refunds', 'label' => 'Refunds', 'route' => 'admin.payments.refunds'],
+                    ['key' => '', 'label' => 'Gateway Config', 'route' => ''],
+                    ['key' => '', 'label' => 'Transactions', 'route' => ''],
+                    ['key' => '', 'label' => 'Refunds', 'route' => ''],
                 ]],
                 ['key' => 'purchase', 'label' => 'Purchase & Assets', 'icon' => 'box', 'count' => 8, 'children' => [
-                    ['key' => 'purchase.vendors', 'label' => 'Vendors', 'route' => 'admin.purchase.vendors'],
-                    ['key' => 'purchase.suppliers', 'label' => 'Suppliers', 'route' => 'admin.purchase.suppliers'],
-                    ['key' => 'purchase.items', 'label' => 'Inventory Items', 'route' => 'admin.purchase.items'],
-                    ['key' => 'purchase.requests', 'label' => 'Purchase Requests', 'route' => 'admin.purchase.requests'],
-                    ['key' => 'purchase.orders', 'label' => 'Purchase Orders', 'route' => 'admin.purchase.orders'],
-                    ['key' => 'purchase.assets', 'label' => 'Asset Register', 'route' => 'admin.purchase.assets'],
-                    ['key' => 'purchase.assetassignments', 'label' => 'Asset Assignments', 'route' => 'admin.purchase.assetassignments'],
-                    ['key' => 'purchase.maintenance', 'label' => 'Asset Maintenance', 'route' => 'admin.purchase.maintenance'],
+                    ['key' => 'admin.purchase.vendors.index', 'label' => 'Vendors', 'route' => 'admin.purchase.vendors.index'],
+                    ['key' => '', 'label' => 'Suppliers', 'route' => ''],
+                    ['key' => 'admin.purchase.items.index', 'label' => 'Inventory Items', 'route' => 'admin.purchase.items.index'],
+                    ['key' => 'admin.purchase.requests.index', 'label' => 'Purchase Requests', 'route' => 'admin.purchase.requests.index'],
+                    ['key' => 'admin.purchase.orders.index', 'label' => 'Purchase Orders', 'route' => 'admin.purchase.orders.index'],
+                    ['key' => 'admin.purchase.assets.index', 'label' => 'Asset Register', 'route' => 'admin.purchase.assets.index'],
+                    ['key' => '', 'label' => 'Asset Assignments', 'route' => ''],
+                    ['key' => '', 'label' => 'Asset Maintenance', 'route' => ''],
                 ]],
             ]],
 
             ['label' => 'Campus Life', 'items' => [
                 ['key' => 'library', 'label' => 'Library', 'icon' => 'book', 'count' => 2, 'children' => [
-                    ['key' => 'admin.library.catalogue.inde', 'label' => 'Catalogue', 'route' => 'admin.library.catalogue.index'],
+                    ['key' => 'admin.library.catalogue.index', 'label' => 'Catalogue', 'route' => 'admin.library.catalogue.index'],
                     ['key' => 'admin.library-issues.index', 'label' => 'Book Issues & Fines', 'route' => 'admin.library-issues.index'],
                 ]],
                 ['key' => 'transport', 'label' => 'Transport', 'icon' => 'bus', 'count' => 2, 'children' => [
@@ -129,28 +128,29 @@ class MenuSeeder extends Seeder
                     ['key' => 'admin.hostel-allocations.index', 'label' => 'Room Allocation', 'route' => 'admin.hostel-allocations.index'],
                 ]],
                 ['key' => 'cafeteria', 'label' => 'Cafeteria', 'icon' => 'cutlery', 'count' => 4, 'children' => [
-                    ['key' => 'cafeteria.outlets', 'label' => 'Outlets', 'route' => 'admin.cafeteria.outlets'],
-                    ['key' => 'cafeteria.menu', 'label' => 'Menu Items', 'route' => 'admin.cafeteria.menu'],
-                    ['key' => 'cafeteria.orders', 'label' => 'Orders', 'route' => 'admin.cafeteria.orders'],
-                    ['key' => 'cafeteria.payments', 'label' => 'Meal Payments', 'route' => 'admin.cafeteria.payments'],
+                    ['key' => '', 'label' => 'Outlets', 'route' => ''],
+                    ['key' => '', 'label' => 'Menu Items', 'route' => ''],
+                    ['key' => '', 'label' => 'Orders', 'route' => ''],
+                    ['key' => '', 'label' => 'Meal Payments', 'route' => ''],
                 ]],
                 ['key' => 'medical', 'label' => 'Medical Room', 'icon' => 'cross', 'count' => 5, 'children' => [
-                    ['key' => 'medical.rooms', 'label' => 'Medical Rooms & Staff', 'route' => 'admin.medical.rooms'],
-                    ['key' => 'medical.visits', 'label' => 'Visit Log', 'route' => 'admin.medical.visits'],
-                    ['key' => 'medical.records', 'label' => 'Student Health Records', 'route' => 'admin.medical.records'],
-                    ['key' => 'medical.medicines', 'label' => 'Medicine Stock', 'route' => 'admin.medical.medicines'],
-                    ['key' => 'medical.vaccinations', 'label' => 'Vaccinations', 'route' => 'admin.medical.vaccinations'],
+                    ['key' => '', 'label' => 'Medical Rooms & Staff', 'route' => ''],
+                    ['key' => '', 'label' => 'Visit Log', 'route' => ''],
+                    ['key' => '', 'label' => 'Student Health Records', 'route' => ''],
+                    ['key' => '', 'label' => 'Medicine Stock', 'route' => ''],
+                    ['key' => '', 'label' => 'Vaccinations', 'route' => ''],
                 ]],
             ]],
 
             ['label' => 'Learning', 'items' => [
-                ['key' => 'lms', 'label' => 'LMS & Online Exams', 'icon' => 'laptop', 'count' => 6, 'children' => [
-                    ['key' => 'lms.courses', 'label' => 'Courses', 'route' => 'admin.lms.courses'],
-                    ['key' => 'lms.lessons', 'label' => 'Lessons', 'route' => 'admin.lms.lessons'],
-                    ['key' => 'lms.homework', 'label' => 'Homework', 'route' => 'admin.lms.homework.index'],
-                    ['key' => 'lms.onlineexams', 'label' => 'Online Exams', 'route' => 'admin.lms.onlineexams'],
-                    ['key' => 'lms.quizattempts', 'label' => 'Quiz Attempts', 'route' => 'admin.lms.quizattempts'],
-                    ['key' => 'lms.questionbanks', 'label' => 'Question Banks', 'route' => 'admin.lms.questionbanks'],
+                ['key' => 'lms', 'label' => 'LMS & Online Exams', 'icon' => 'laptop', 'count' => 7, 'children' => [
+                    ['key' => 'admin.lms.courses.index', 'label' => 'Courses', 'route' => 'admin.lms.courses.index'],
+                    ['key' => 'admin.lms.lessons.index', 'label' => 'Lessons', 'route' => 'admin.lms.lessons.index'],
+                    ['key' => 'admin.lms.homework.index', 'label' => 'Homework', 'route' => 'admin.lms.homework.index'],
+                    ['key' => 'admin.lms.exams.index', 'label' => 'Online Exams', 'route' => 'admin.lms.exams.index'],
+                    ['key' => 'admin.lms.quizattempts.index', 'label' => 'Quiz Attempts', 'route' => 'admin.lms.quizattempts.index'],
+                    ['key' => 'admin.lms.questions.index', 'label' => 'Question Banks', 'route' => 'admin.lms.questions.index'],
+                    ['key' => 'admin.lms.exam-questions.index', 'label' => 'Assign Questions', 'route' => 'admin.lms.exam-questions.index'],
                 ]],
             ]],
 

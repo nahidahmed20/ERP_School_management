@@ -11,9 +11,6 @@ class SystemLog extends Model
 
     protected $guarded = ['id'];
 
-    protected $casts = [
-        'context' => 'array',
-    ];
 
     public function user()
     {

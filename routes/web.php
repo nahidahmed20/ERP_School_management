@@ -54,6 +54,17 @@ use App\Http\Controllers\Admin\TransportAllocationController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VehicleController;
 use App\Http\Controllers\Admin\VisitorController;
+use App\Http\Controllers\Admin\VendorController;
+use App\Http\Controllers\Admin\PurchaseItemController;
+use App\Http\Controllers\Admin\PurchaseRequestController;
+use App\Http\Controllers\Admin\PurchaseOrderController;
+use App\Http\Controllers\Admin\AssetController;
+use App\Http\Controllers\Admin\OnlineExamController;
+use App\Http\Controllers\Admin\QuestionBankController;
+use App\Http\Controllers\Admin\ExamQuestionController;
+use App\Http\Controllers\Admin\CourseController;
+use App\Http\Controllers\Admin\LessonController;
+use App\Http\Controllers\Admin\QuizAttemptController;
 use App\Http\Controllers\DynamicPageController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -169,7 +180,6 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
     Route::resource('frontoffice/visitors', VisitorController::class)->names('frontoffice.visitors');
     Route::resource('frontoffice/notices', NoticeController::class)->names('frontoffice.notices');
     Route::resource('library/catalogue', BookController::class)->names('library.catalogue');
-    Route::resource('lms/homework', HomeworkController::class)->names('lms.homework');
     Route::resource('documents/certificatetemplates', CertificateTemplateController::class)->names('documents.certificatetemplates');
 
     Route::resource('vehicles', VehicleController::class);
@@ -177,6 +187,27 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
     Route::resource('hostel-rooms', HostelRoomController::class);
     Route::resource('hostel-allocations', HostelAllocationController::class);
     Route::resource('library-issues', BookIssueController::class);
+
+    Route::prefix('purchase')->name('purchase.')->group(function () {
+        Route::resource('vendors', VendorController::class);
+        Route::resource('items', PurchaseItemController::class);
+        Route::resource('requests', PurchaseRequestController::class);
+        Route::resource('orders', PurchaseOrderController::class);
+        Route::resource('assets', AssetController::class);
+    });
+
+    Route::prefix('lms')->name('lms.')->group(function () {
+        Route::resource('exams', OnlineExamController::class);
+        Route::resource('questions', QuestionBankController::class);
+        Route::get('exam-questions', [ExamQuestionController::class, 'index'])->name('exam-questions.index');
+        Route::post('exam-questions', [ExamQuestionController::class, 'store'])->name('exam-questions.store');
+        Route::delete('exam-questions/{id}', [ExamQuestionController::class, 'destroy'])->name('exam-questions.destroy');
+        Route::resource('courses', CourseController::class);
+        Route::resource('lessons', LessonController::class);
+        Route::resource('homework', HomeworkController::class);
+        Route::resource('quizattempts', QuizAttemptController::class);
+    });
+
 });
 
 

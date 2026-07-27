@@ -11,11 +11,6 @@ class Campus extends Model
 
     protected $guarded = ['id'];
 
-    protected $casts = [
-        'is_main' => 'boolean',
-        'is_active' => 'boolean',
-    ];
-
     public function academicSessions()
     {
         return $this->hasMany(AcademicSession::class);

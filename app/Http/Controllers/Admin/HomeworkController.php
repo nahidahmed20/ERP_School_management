@@ -6,79 +6,94 @@ use App\Http\Controllers\Controller;
 use App\Models\Homework;
 use App\Models\SchoolClass;
 use App\Models\Subject;
+use App\Models\Campus;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class HomeworkController extends Controller
 {
     public function index(Request $request)
     {
-        $perPage = $request->input('per_page', 10);
-        $search = $request->input('search');
-        $classId = $request->input('school_class_id');
-        $subjectId = $request->input('subject_id');
+        $query = Homework::with(['schoolClass', 'subject']);
 
-        $query = Homework::with(['schoolClass', 'section', 'subject'])->latest('homework_date');
-
-        if ($search) {
-            $query->where('description', 'like', "%{$search}%");
+        if ($search = $request->get('search')) {
+            $query->where('title', 'like', "%{$search}%");
         }
-        if ($classId) {
-            $query->where('school_class_id', $classId);
+        if ($request->filled('class_id')) {
+            $query->where('school_class_id', $request->get('class_id'));
         }
-        if ($subjectId) {
-            $query->where('subject_id', $subjectId);
+        if ($request->filled('subject_id')) {
+            $query->where('subject_id', $request->get('subject_id'));
         }
 
-        $homeworks = ($perPage === 'all')
-            ? $query->paginate($query->count())->withQueryString()
-            : $query->paginate($perPage)->withQueryString();
+        $query->latest('homework_date');
 
-        return Inertia::render('Admin/Lms/Homework/Index', [
+        $perPage = $request->get('per_page', 10);
+        $homeworks = $perPage === 'all'
+            ? ['data' => $query->get(), 'links' => [], 'meta' => ['total' => $query->count()]]
+            : $query->paginate((int) $perPage)->withQueryString();
+
+        return Inertia::render('Admin/LMSHomework/Index', [
             'homeworks' => $homeworks,
-            'classes' => SchoolClass::with('sections')->where('is_active', true)->get(),
-            'subjects' => Subject::all(),
-            'filters' => $request->only(['search', 'school_class_id', 'subject_id', 'per_page']),
+            'campuses' => Campus::select('id', 'name')->get(),
+            'classes' => SchoolClass::where('is_active', true)->select('id', 'name')->get(),
+            'subjects' => Subject::where('is_active', true)->select('id', 'name', 'code')->get(),
+            'filters' => $request->only(['search', 'class_id', 'subject_id', 'per_page']),
         ]);
     }
 
     public function store(Request $request)
     {
-        $request->validate($this->validationRules());
+        $data = $this->validateData($request);
 
-        DB::beginTransaction();
-        try {
-            $documentPath = null;
-            if ($request->hasFile('document')) {
-                $documentPath = $request->file('document')->store('homeworks', 'public');
-            }
-
-            Homework::create(array_merge($request->all(), ['document' => $documentPath]));
-
-            DB::commit();
-            return back()->with('success', 'Homework assigned!');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->with('error', 'Error: ' . $e->getMessage());
+        if ($request->hasFile('document')) {
+            $data['document_path'] = $request->file('document')->store('homework_materials', 'public');
         }
+
+        Homework::create($data);
+        return back()->with('success', 'নতুন হোমওয়ার্ক সফলভাবে যোগ করা হয়েছে।');
     }
 
-    // Update and destroy methods follow the same file handling pattern as NoticeController...
-    // (Omitted for length, simply copy the update/destroy logic from NoticeController
-    // and change 'attachment' to 'document' and Model to Homework)
-
-    private function validationRules(): array
+    public function update(Request $request, $id)
     {
-        return [
+        $homework = Homework::findOrFail($id);
+        $data = $this->validateData($request);
+
+        if ($request->hasFile('document')) {
+            if ($homework->document_path) {
+                Storage::disk('public')->delete($homework->document_path);
+            }
+            $data['document_path'] = $request->file('document')->store('homework_materials', 'public');
+        }
+
+        $homework->update($data);
+        return back()->with('success', 'হোমওয়ার্ক আপডেট করা হয়েছে।');
+    }
+
+    public function destroy($id)
+    {
+        $homework = Homework::findOrFail($id);
+        if ($homework->document_path) {
+            Storage::disk('public')->delete($homework->document_path);
+        }
+        $homework->delete();
+        return back()->with('success', 'হোমওয়ার্ক মুছে ফেলা হয়েছে।');
+    }
+
+    private function validateData(Request $request): array
+    {
+        return $request->validate([
+            'campus_id' => 'required|exists:campuses,id',
+            'title' => 'required|string|max:255',
             'school_class_id' => 'required|exists:school_classes,id',
-            'section_id' => 'required|exists:sections,id',
             'subject_id' => 'required|exists:subjects,id',
             'homework_date' => 'required|date',
             'submission_date' => 'required|date|after_or_equal:homework_date',
-            'description' => 'required|string',
-            'document' => 'nullable|file|mimes:pdf,jpg,png,doc,docx|max:5120', // 5MB
-        ];
+            'total_marks' => 'nullable|numeric|min:0',
+            'description' => 'nullable|string',
+            'document' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png,zip|max:5120', // Max 5MB
+            'is_active' => 'boolean',
+        ]);
     }
 }

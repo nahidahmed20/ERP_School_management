@@ -10,16 +10,7 @@ class BookIssue extends Model
 {
     use HasFactory, BelongsToCampus;
 
-    protected $fillable = [
-        'campus_id', 'book_id', 'user_id', 'issue_date', 
-        'due_date', 'return_date', 'fine_amount', 'status', 'note'
-    ];
-
-    protected $casts = [
-        'issue_date' => 'date',
-        'due_date' => 'date',
-        'return_date' => 'date',
-    ];
+    protected $guarded = ['id'];
 
     public function book()
     {

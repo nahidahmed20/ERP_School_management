@@ -13,13 +13,16 @@ return new class extends Migration
     {
         Schema::create('homeworks', function (Blueprint $table) {
             $table->id();
-            $table->unsignedInteger('school_class_id');
-            $table->unsignedInteger('section_id');
-            $table->unsignedInteger('subject_id');
+            $table->unsignedBigInteger('campus_id')->nullable();
+            $table->string('title');
+            $table->unsignedBigInteger('school_class_id');
+            $table->unsignedBigInteger('subject_id');
             $table->date('homework_date');
             $table->date('submission_date');
-            $table->string('document')->nullable(); // PDF attachment
+            $table->decimal('total_marks', 6, 2)->default(0.00);
             $table->text('description')->nullable();
+            $table->string('document_path')->nullable(); 
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }
