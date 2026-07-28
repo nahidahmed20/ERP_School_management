@@ -74,6 +74,10 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VehicleController;
 use App\Http\Controllers\Admin\VendorController;
 use App\Http\Controllers\Admin\VisitorController;
+use App\Http\Controllers\Admin\InterviewController;
+use App\Http\Controllers\Admin\OfferLetterController;
+use App\Http\Controllers\Admin\AlumniController;
+use App\Http\Controllers\Admin\AlumniEventController;
 use App\Http\Controllers\DynamicPageController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -198,6 +202,16 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
         Route::resource('job-posts', JobPostController::class);
         Route::resource('applicants', ApplicantController::class);
         Route::patch('applicants/{applicant}/status', [ApplicantController::class, 'updateStatus'])->name('applicants.update-status');
+        Route::patch('interviews/{interview}/status', [InterviewController::class, 'updateStatus'])->name('interviews.update-status');
+        Route::resource('interviews', InterviewController::class);
+        Route::patch('offer-letters/{offer_letter}/status', [OfferLetterController::class, 'updateStatus'])->name('offer-letters.update-status');
+        Route::resource('offer-letters', OfferLetterController::class);
+    });
+
+    Route::prefix('alumni')->name('alumni.')->group(function () {
+        Route::resource('directory', AlumniController::class);
+        Route::patch('events/{event}/status', [AlumniEventController::class, 'updateStatus'])->name('events.update-status');
+        Route::resource('events', AlumniEventController::class);
     });
 
     Route::resource('library/catalogue', BookController::class)->names('library.catalogue');
@@ -209,7 +223,7 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
     Route::resource('hostel-allocations', HostelAllocationController::class);
     Route::resource('library-issues', BookIssueController::class);
 
-    
+
 
     Route::prefix('purchase')->name('purchase.')->group(function () {
         Route::resource('vendors', VendorController::class);
@@ -229,13 +243,13 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
         Route::resource('lessons', LessonController::class);
         Route::resource('homework', HomeworkController::class);
         Route::resource('quizattempts', QuizAttemptController::class);
-        
+
     });
     Route::prefix('students')->name('students.')->group(function () {
         Route::resource('admissions', AdmissionController::class);
         Route::resource('documents', StudentDocumentController::class);
         Route::resource('discipline', DisciplinaryRecordController::class);
-        
+
     });
 
 });
