@@ -1,152 +1,303 @@
 import { useState, useEffect } from 'react';
-import { Head, useForm, router } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import Icon from '@/Components/Icons';
+import Pagination from '@/Components/Pagination';
 import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
+import Swal from 'sweetalert2';
 
 export default function Catalogue({ books, filters }) {
-    const [showModal, setShowModal] = useState(false);
-    const [editMode, setEditMode] = useState(false);
-    const [itemToDelete, setItemToDelete] = useState(null);
-    const [searchTerm, setSearchTerm] = useState(filters?.search || '');
+  const { flash } = usePage().props;
 
-    const { data, setData, post, put, processing, reset } = useForm({
-        id: '', title: '', author: '', isbn_no: '', publisher: '', qty: 1, price: ''
+  const [search, setSearch] = useState(filters?.search ?? '');
+  const [perPage, setPerPage] = useState(filters?.per_page ?? '10');
+
+  const [formOpen, setFormOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [deletingItem, setDeletingItem] = useState(null);
+
+  const { data, setData, post, put, processing, reset } = useForm({
+    id: '', title: '', author: '', isbn_no: '', publisher: '', qty: 1, price: '',
+  });
+
+  useEffect(() => {
+    if (flash?.success) {
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: flash.success, showConfirmButton: false, timer: 3000, timerProgressBar: true });
+    }
+    if (flash?.error) {
+      Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: flash.error, showConfirmButton: false, timer: 4000, timerProgressBar: true });
+    }
+  }, [flash]);
+
+  function applyFilters(overrides = {}) {
+    router.get(route('admin.library.catalogue.index'), {
+      search, per_page: perPage, ...overrides,
+    }, { preserveState: true, replace: true });
+  }
+
+  const openAddModal = () => {
+    reset(); setEditMode(false); setFormOpen(true);
+  };
+
+  const openEditModal = (book) => {
+    setData({
+      id: book.id, title: book.title, author: book.author || '',
+      isbn_no: book.isbn_no || '', publisher: book.publisher || '',
+      qty: book.qty, price: book.price || '',
     });
+    setEditMode(true); setFormOpen(true);
+  };
 
-    useEffect(() => {
-        const delayDebounceFn = setTimeout(() => {
-            router.get(route('admin.library.catalogue.index'), { search: searchTerm }, { preserveState: true, preserveScroll: true });
-        }, 500);
-        return () => clearTimeout(delayDebounceFn);
-    }, [searchTerm]);
+  const submit = (e) => {
+    e.preventDefault();
+    const routeName = editMode
+      ? route('admin.library.catalogue.update', data.id)
+      : route('admin.library.catalogue.store');
 
-    const openAddModal = () => {
-        reset(); setEditMode(false); setShowModal(true);
-    };
+    if (editMode) {
+      put(routeName, { onSuccess: () => { setFormOpen(false); reset(); } });
+    } else {
+      post(routeName, { onSuccess: () => { setFormOpen(false); reset(); } });
+    }
+  };
 
-    const openEditModal = (book) => {
-        setData({
-            id: book.id, title: book.title, author: book.author || '',
-            isbn_no: book.isbn_no || '', publisher: book.publisher || '',
-            qty: book.qty, price: book.price || ''
-        });
-        setEditMode(true); setShowModal(true);
-    };
+  const confirmDelete = () => {
+    router.delete(route('admin.library.catalogue.destroy', deletingItem.id), {
+      onSuccess: () => setDeletingItem(null),
+    });
+  };
 
-    const submit = (e) => {
-        e.preventDefault();
-        const routeName = editMode ? route('admin.library.catalogue.update', data.id) : route('admin.library.catalogue.store');
+  return (
+    <AuthenticatedLayout
+      header={
+        <div className="page-head">
+          <div>
+            <span className="eyebrow">Campus Life &gt; Library</span>
+            <h1>Book Catalogue</h1>
+            <p className="desc">বইয়ের সংগ্রহ, স্টক এবং প্রকাশনার তথ্য পরিচালনা করুন।</p>
+          </div>
+          <div className="mm-head-actions">
+            <button className="btn" onClick={openAddModal}>
+              <Icon name="plus" /> Add Book
+            </button>
+          </div>
+        </div>
+      }
+    >
+      <Head title="Library Catalogue" />
 
-        if (editMode) {
-            put(routeName, { onSuccess: () => { setShowModal(false); reset(); } });
-        } else {
-            post(routeName, { onSuccess: () => { setShowModal(false); reset(); } });
-        }
-    };
+      <div className="card mm-card">
+        <div className="mm-filters" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          <select value={perPage} onChange={(e) => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}>
+            <option value="10">10 / page</option>
+            <option value="50">50 / page</option>
+            <option value="all">Show All</option>
+          </select>
 
-    const confirmDelete = () => {
-        router.delete(route('admin.library.catalogue.destroy', itemToDelete.id), {
-            onSuccess: () => setItemToDelete(null),
-        });
-    };
+          <div className="search">
+            <Icon name="search" />
+            <input
+              placeholder="Search title, author, ISBN..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
+            />
+          </div>
 
-    return (
-        <AuthenticatedLayout header={<h2 className="font-semibold text-xl text-gray-800">Library Catalogue</h2>}>
-            <Head title="Library Catalogue" />
-            <div className="py-8 max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <button className="btn btn-outline" onClick={() => applyFilters()}>Filter</button>
+        </div>
 
-                    <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                        <h3 className="text-lg font-bold text-gray-800">Book Collection</h3>
-                        <div className="flex gap-3 w-full md:w-auto">
-                            <input type="text" placeholder="Search book, author, ISBN..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full md:w-64 rounded-lg border-gray-300 shadow-sm text-sm" />
-                            <button onClick={openAddModal} className="bg-indigo-600 whitespace-nowrap text-white px-4 py-2 rounded-lg text-sm font-bold shadow hover:bg-indigo-700">
-                                + Add Book
-                            </button>
-                        </div>
+        <div className="mm-table-wrap">
+          <table className="mm-table">
+            <thead>
+              <tr>
+                <th>Book & Author</th>
+                <th>ISBN & Publisher</th>
+                <th>Stock</th>
+                <th>Price</th>
+                <th className="mm-actions-col">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {books.data.length === 0 && (
+                <tr><td colSpan={5} className="mm-empty">কোনো বই খুঁজে পাওয়া যায়নি।</td></tr>
+              )}
+              {books.data.map((book) => (
+                <tr key={book.id}>
+                  <td>
+                    <div className="mm-label-cell">
+                      <Icon name="book-open" className="mm-row-icon" />
+                      <div>
+                        <div style={{ fontWeight: 500, color: '#111827' }}>{book.title}</div>
+                        <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>{book.author || 'Unknown Author'}</div>
+                      </div>
                     </div>
-
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="bg-gray-50 text-gray-600 text-sm border-b">
-                                    <th className="p-4 font-semibold">Book Title & Author</th>
-                                    <th className="p-4 font-semibold">ISBN & Publisher</th>
-                                    <th className="p-4 font-semibold text-center">Stock Info</th>
-                                    <th className="p-4 font-semibold text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                {books.data.map((book) => (
-                                    <tr key={book.id} className="hover:bg-gray-50">
-                                        <td className="p-4">
-                                            <div className="font-bold text-gray-800">{book.title}</div>
-                                            <div className="text-xs text-gray-500">{book.author || 'Unknown Author'}</div>
-                                        </td>
-                                        <td className="p-4">
-                                            <div className="text-sm font-mono text-indigo-600">{book.isbn_no || '--'}</div>
-                                            <div className="text-xs text-gray-500">{book.publisher || '--'}</div>
-                                        </td>
-                                        <td className="p-4 text-center">
-                                            <div className="text-xs text-gray-600 mb-1">Total: {book.qty}</div>
-                                            <span className={`text-xs px-2 py-1 rounded-md font-bold ${book.available > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
-                                                Available: {book.available}
-                                            </span>
-                                        </td>
-                                        <td className="p-4 text-right">
-                                            <button onClick={() => openEditModal(book)} className="text-blue-600 font-bold text-sm mr-3">Edit</button>
-                                            <button onClick={() => setItemToDelete(book)} className="text-rose-500 font-bold text-sm">Delete</button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                  </td>
+                  <td>
+                    <div style={{ fontFamily: 'monospace', fontSize: '0.85rem', color: '#166534' }}>{book.isbn_no || '--'}</div>
+                    <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>{book.publisher || '--'}</div>
+                  </td>
+                  <td>
+                    <div style={{ fontSize: '0.8rem', color: '#6B7280', marginBottom: '4px' }}>Total: {book.qty}</div>
+                    <span style={{
+                      backgroundColor: book.available > 0 ? '#dcfce7' : '#fee2e2',
+                      color: book.available > 0 ? '#15803d' : '#b91c1c',
+                      padding: '4px 10px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 'bold',
+                    }}>
+                      Available: {book.available}
+                    </span>
+                  </td>
+                  <td><strong style={{ color: '#374151' }}>৳ {book.price ?? '--'}</strong></td>
+                  <td>
+                    <div className="mm-row-actions">
+                      <button className="icon-btn" title="Edit" onClick={() => openEditModal(book)}>
+                        <Icon name="edit" />
+                      </button>
+                      <button className="icon-btn icon-btn-danger" title="Delete" onClick={() => setDeletingItem(book)}>
+                        <Icon name="trash" />
+                      </button>
                     </div>
-                </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <Pagination meta={books} />
+      </div>
+
+      {/* Add / Edit Modal (Smooth Animation Included) */}
+      <div 
+        className={`fixed inset-0 z-40 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 transition-all duration-300 ease-in-out ${
+          formOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
+        }`}
+      >
+        <div 
+          className={`bg-white rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden transform transition-all duration-300 ease-in-out ${
+            formOpen ? 'scale-100 translate-y-0' : 'scale-95 translate-y-4'
+          }`}
+        >
+          <div className="bg-gradient-to-r from-emerald-800 to-emerald-700 px-6 py-5 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center">
+                <Icon name="book" className="text-white" />
+              </div>
+              <div>
+                <h3 className="text-white font-bold text-lg leading-tight">
+                  {editMode ? 'Edit Book' : 'Add New Book'}
+                </h3>
+                <p className="text-emerald-100 text-xs">
+                  {editMode ? 'বইয়ের তথ্য হালনাগাদ করুন' : 'ক্যাটালগে নতুন বই যুক্ত করুন'}
+                </p>
+              </div>
+            </div>
+            <button type="button" onClick={() => setFormOpen(false)} className="text-white/70 hover:text-white transition-colors">
+              <Icon name="cross" />
+            </button>
+          </div>
+
+          <form onSubmit={submit} className="p-6 space-y-5">
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Book Title *</label>
+              <input
+                type="text" 
+                value={data.title} 
+                onChange={e => setData('title', e.target.value)}
+                placeholder="Enter book title (e.g. The Great Gatsby)"
+                className="w-full rounded-lg border-gray-300 focus:border-emerald-500 focus:ring-emerald-500"
+                required
+              />
             </div>
 
-            {/* Modal */}
-            {showModal && (
-                <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/50 p-4">
-                    <div className="bg-white rounded-2xl w-full max-w-lg p-6">
-                        <h3 className="text-lg font-bold text-gray-900 mb-4">{editMode ? 'Edit Book' : 'Add New Book'}</h3>
-                        <form onSubmit={submit} className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Book Title *</label>
-                                <input type="text" value={data.title} onChange={e => setData('title', e.target.value)} className="mt-1 w-full rounded-lg border-gray-300" required />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Author</label>
-                                    <input type="text" value={data.author} onChange={e => setData('author', e.target.value)} className="mt-1 w-full rounded-lg border-gray-300" />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">ISBN Number</label>
-                                    <input type="text" value={data.isbn_no} onChange={e => setData('isbn_no', e.target.value)} className="mt-1 w-full rounded-lg border-gray-300" />
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-3 gap-4">
-                                <div className="col-span-2">
-                                    <label className="block text-sm font-medium text-gray-700">Publisher</label>
-                                    <input type="text" value={data.publisher} onChange={e => setData('publisher', e.target.value)} className="mt-1 w-full rounded-lg border-gray-300" />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Quantity *</label>
-                                    <input type="number" min="1" value={data.qty} onChange={e => setData('qty', e.target.value)} className="mt-1 w-full rounded-lg border-gray-300" required />
-                                </div>
-                            </div>
-                            <div className="flex justify-end gap-3 mt-6">
-                                <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 bg-gray-100 rounded-lg text-gray-700 font-bold">Cancel</button>
-                                <button type="submit" disabled={processing} className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-bold">
-                                    {editMode ? 'Update' : 'Save'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Author</label>
+                <input
+                  type="text" 
+                  value={data.author} 
+                  onChange={e => setData('author', e.target.value)}
+                  placeholder="Enter author name"
+                  className="w-full rounded-lg border-gray-300 focus:border-emerald-500 focus:ring-emerald-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">ISBN Number</label>
+                <input
+                  type="text" 
+                  value={data.isbn_no} 
+                  onChange={e => setData('isbn_no', e.target.value)}
+                  placeholder="e.g. 978-x-xx-xxxxxx-x"
+                  className="w-full rounded-lg border-gray-300 font-mono focus:border-emerald-500 focus:ring-emerald-500"
+                />
+              </div>
+            </div>
 
-            {itemToDelete && <ConfirmDeleteModal item={{ name: itemToDelete.title }} onCancel={() => setItemToDelete(null)} onConfirm={confirmDelete} />}
-        </AuthenticatedLayout>
-    );
+            <div className="h-px bg-gradient-to-r from-transparent via-amber-300 to-transparent" />
+
+            <div className="grid grid-cols-3 gap-4">
+              <div className="col-span-1">
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Publisher</label>
+                <input
+                  type="text" 
+                  value={data.publisher} 
+                  onChange={e => setData('publisher', e.target.value)}
+                  placeholder="Enter publisher"
+                  className="w-full rounded-lg border-gray-300 focus:border-emerald-500 focus:ring-emerald-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Quantity *</label>
+                <input
+                  type="number" 
+                  min="1" 
+                  value={data.qty} 
+                  onChange={e => setData('qty', e.target.value)}
+                  placeholder="0"
+                  className="w-full rounded-lg border-gray-300 focus:border-emerald-500 focus:ring-emerald-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Price (৳)</label>
+                <input
+                  type="number" 
+                  min="0" 
+                  step="0.01" 
+                  value={data.price} 
+                  onChange={e => setData('price', e.target.value)}
+                  placeholder="0.00"
+                  className="w-full rounded-lg border-gray-300 focus:border-emerald-500 focus:ring-emerald-500"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button" 
+                onClick={() => setFormOpen(false)}
+                className="px-5 py-2.5 rounded-lg text-gray-600 font-semibold hover:bg-gray-100 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit" 
+                disabled={processing}
+                className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-emerald-700 to-emerald-600 text-white font-bold shadow-lg shadow-emerald-600/30 hover:shadow-xl transition-all disabled:opacity-60"
+              >
+                {editMode ? 'Update Book' : 'Save Book'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      {deletingItem && (
+        <ConfirmDeleteModal
+          item={{ name: deletingItem.title }}
+          onCancel={() => setDeletingItem(null)}
+          onConfirm={confirmDelete}
+        />
+      )}
+    </AuthenticatedLayout>
+  );
 }

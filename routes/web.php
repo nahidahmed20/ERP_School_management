@@ -1,6 +1,10 @@
 <?php
 
 use App\Http\Controllers\Admin\AcademicSessionController;
+use App\Http\Controllers\Admin\AdmissionController;
+use App\Http\Controllers\Admin\AdmissionInquiryController;
+use App\Http\Controllers\Admin\ApplicantController;
+use App\Http\Controllers\Admin\AssetController;
 use App\Http\Controllers\Admin\BookController;
 use App\Http\Controllers\Admin\BookIssueController;
 use App\Http\Controllers\Admin\BranchController;
@@ -8,14 +12,17 @@ use App\Http\Controllers\Admin\CampusController;
 use App\Http\Controllers\Admin\CertificateTemplateController;
 use App\Http\Controllers\Admin\ClassroomController;
 use App\Http\Controllers\Admin\Communication\EventController;
+use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DepartmentController;
 use App\Http\Controllers\Admin\DesignationController;
+use App\Http\Controllers\Admin\DisciplinaryRecordController;
 use App\Http\Controllers\Admin\Exam\ExamController;
 use App\Http\Controllers\Admin\Exam\ExamScheduleController;
 use App\Http\Controllers\Admin\Exam\GradeController;
 use App\Http\Controllers\Admin\Exam\MarksController;
 use App\Http\Controllers\Admin\Exam\TabulationSheetController;
+use App\Http\Controllers\Admin\ExamQuestionController;
 use App\Http\Controllers\Admin\FeeGroupController;
 use App\Http\Controllers\Admin\FeeTypeController;
 use App\Http\Controllers\Admin\FileManagerController;
@@ -26,14 +33,25 @@ use App\Http\Controllers\Admin\HostelAllocationController;
 use App\Http\Controllers\Admin\HostelRoomController;
 use App\Http\Controllers\Admin\HouseController;
 use App\Http\Controllers\Admin\InvoiceController;
+use App\Http\Controllers\Admin\JobPostController;
 use App\Http\Controllers\Admin\LeaveTypeController;
 use App\Http\Controllers\Admin\LedgerController;
+use App\Http\Controllers\Admin\LessonController;
+use App\Http\Controllers\Admin\LessonPlanController;
 use App\Http\Controllers\Admin\MenuGroupController;
 use App\Http\Controllers\Admin\MenuItemController;
 use App\Http\Controllers\Admin\NoticeController;
+use App\Http\Controllers\Admin\OnlineExamController;
 use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\PhoneCallLogController;
+use App\Http\Controllers\Admin\PostalRecordController;
 use App\Http\Controllers\Admin\PromotionController;
+use App\Http\Controllers\Admin\PurchaseItemController;
+use App\Http\Controllers\Admin\PurchaseOrderController;
+use App\Http\Controllers\Admin\PurchaseRequestController;
+use App\Http\Controllers\Admin\QuestionBankController;
+use App\Http\Controllers\Admin\QuizAttemptController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SchoolClassController;
@@ -46,6 +64,7 @@ use App\Http\Controllers\Admin\StaffPayrollController;
 use App\Http\Controllers\Admin\StudentAttendanceController;
 use App\Http\Controllers\Admin\StudentCategoryController;
 use App\Http\Controllers\Admin\StudentController;
+use App\Http\Controllers\Admin\StudentDocumentController;
 use App\Http\Controllers\Admin\StudentFeeController;
 use App\Http\Controllers\Admin\SubjectController;
 use App\Http\Controllers\Admin\SystemRegistryController;
@@ -53,18 +72,8 @@ use App\Http\Controllers\Admin\TimeTableController;
 use App\Http\Controllers\Admin\TransportAllocationController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VehicleController;
-use App\Http\Controllers\Admin\VisitorController;
 use App\Http\Controllers\Admin\VendorController;
-use App\Http\Controllers\Admin\PurchaseItemController;
-use App\Http\Controllers\Admin\PurchaseRequestController;
-use App\Http\Controllers\Admin\PurchaseOrderController;
-use App\Http\Controllers\Admin\AssetController;
-use App\Http\Controllers\Admin\OnlineExamController;
-use App\Http\Controllers\Admin\QuestionBankController;
-use App\Http\Controllers\Admin\ExamQuestionController;
-use App\Http\Controllers\Admin\CourseController;
-use App\Http\Controllers\Admin\LessonController;
-use App\Http\Controllers\Admin\QuizAttemptController;
+use App\Http\Controllers\Admin\VisitorController;
 use App\Http\Controllers\DynamicPageController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -121,6 +130,7 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
     Route::resource('classrooms', ClassroomController::class);
     Route::resource('time-tables', TimeTableController::class);
     Route::post('time-tables/bulk-update', [TimeTableController::class, 'bulkUpdate'])->name('time-tables.bulk-update');
+    Route::resource('lesson-plans', LessonPlanController::class);
 
     Route::resource('communication-calendars', EventController::class);
     Route::resource('exams', ExamController::class);
@@ -167,7 +177,7 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
     Route::resource('studentfees', StudentFeeController::class);
     Route::get('fees/payments', [PaymentController::class, 'index'])->name('fees.payments');
     Route::post('fees/payments', [PaymentController::class, 'store'])->name('fees.payments.store');
-    Route::get('fees/invoices', [InvoiceController::class, 'index'])->name('fees.invoices');
+    Route::get('fees/invoices', [PaymentController::class, 'feesInvoices'])->name('fees.invoices');
 
     Route::get('fees/ledger', [LedgerController::class, 'index'])->name('fees.ledger');
     Route::post('fees/ledger/expenses', [LedgerController::class, 'storeExpense'])->name('fees.ledger.store');
@@ -177,8 +187,19 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
     Route::get('sms/logs', [SmsLogController::class, 'index'])->name('sms-logs');
     Route::post('student-attendance/send-absent-sms', [StudentAttendanceController::class, 'sendAbsentSms'])->name('attendance.send-absent-sms');
 
-    Route::resource('frontoffice/visitors', VisitorController::class)->names('frontoffice.visitors');
-    Route::resource('frontoffice/notices', NoticeController::class)->names('frontoffice.notices');
+    Route::prefix('frontoffice')->name('frontoffice.')->group(function () {
+        Route::resource('visitors', VisitorController::class)->except(['create', 'edit']);
+        Route::resource('notices', NoticeController::class)->except(['create', 'edit']);
+        Route::resource('admission-inquiries', AdmissionInquiryController::class)->except(['create', 'edit']);
+        Route::resource('call-logs', PhoneCallLogController::class)->except(['create', 'edit']);
+        Route::resource('postal', PostalRecordController::class);
+    });
+    Route::prefix('recruitment')->name('recruitment.')->group(function () {
+        Route::resource('job-posts', JobPostController::class);
+        Route::resource('applicants', ApplicantController::class);
+        Route::patch('applicants/{applicant}/status', [ApplicantController::class, 'updateStatus'])->name('applicants.update-status');
+    });
+
     Route::resource('library/catalogue', BookController::class)->names('library.catalogue');
     Route::resource('documents/certificatetemplates', CertificateTemplateController::class)->names('documents.certificatetemplates');
 
@@ -187,6 +208,8 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
     Route::resource('hostel-rooms', HostelRoomController::class);
     Route::resource('hostel-allocations', HostelAllocationController::class);
     Route::resource('library-issues', BookIssueController::class);
+
+    
 
     Route::prefix('purchase')->name('purchase.')->group(function () {
         Route::resource('vendors', VendorController::class);
@@ -206,6 +229,13 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
         Route::resource('lessons', LessonController::class);
         Route::resource('homework', HomeworkController::class);
         Route::resource('quizattempts', QuizAttemptController::class);
+        
+    });
+    Route::prefix('students')->name('students.')->group(function () {
+        Route::resource('admissions', AdmissionController::class);
+        Route::resource('documents', StudentDocumentController::class);
+        Route::resource('discipline', DisciplinaryRecordController::class);
+        
     });
 
 });

@@ -23,7 +23,7 @@ export default function Dashboard({ stats, recentAdmissions, pendingLeaves, abse
                         <button className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm">
                             Generate Reports
                         </button>
-                        <Link href={route('admin.students.admissions')} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm inline-block">
+                        <Link href={route('admin.students.admissions.index')} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm inline-block">
                             + New Admission
                         </Link>
                     </div>

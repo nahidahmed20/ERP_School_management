@@ -4,6 +4,9 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
 import Swal from 'sweetalert2';
 
+const labelCls = "block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5";
+const selectCls = "w-full rounded-lg border border-gray-300 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-700 focus:border-emerald-500 focus:ring-emerald-500 focus:bg-white transition";
+
 export default function Index({ students, classes, feeGroups, filters }) {
   const { flash } = usePage().props;
 
@@ -85,161 +88,192 @@ export default function Index({ students, classes, feeGroups, filters }) {
   };
 
   const selectedClass = classes.find(c => c.id == classId);
-
-  // Reusable Input Style
-  const inputStyle = { width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid #cbd5e1', backgroundColor: '#f8fafc', fontSize: '14px', outline: 'none', transition: 'border 0.3s ease', cursor: 'pointer' };
+  const allSelected = students?.length > 0 && data.student_ids.length === students.length;
 
   return (
     <AuthenticatedLayout
       header={
-        <div className="page-head" style={{ marginBottom: '20px' }}>
+        <div className="page-head">
           <div>
-            <span style={{ fontSize: '13px', fontWeight: '600', color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Finance & Accounts</span>
-            <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#0f172a', margin: '4px 0' }}>Assign Student Fees</h1>
-            <p style={{ color: '#64748b', fontSize: '14px', margin: 0 }}>শিক্ষার্থীদের বিভিন্ন ফি গ্রুপ (যেমন: মাসিক ফি, ভর্তি ফি) অ্যাসাইন করুন।</p>
+            <span className="eyebrow">Finance & Accounts</span>
+            <h1>Assign Student Fees</h1>
+            <p className="desc">শিক্ষার্থীদের বিভিন্ন ফি গ্রুপ (যেমন: মাসিক ফি, ভর্তি ফি) অ্যাসাইন করুন।</p>
           </div>
         </div>
       }
     >
       <Head title="Assign Student Fees" />
 
-      <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
+      <div className="pb-10 space-y-6">
+
         {/* Step 1: Filter Students */}
-        <div style={{ background: '#ffffff', padding: '28px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.04)', marginBottom: '32px', border: '1px solid #f1f5f9' }}>
-          <h3 style={{ margin: '0 0 20px 0', fontSize: '17px', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '600' }}>
-            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', background: '#e0e7ff', color: '#4f46e5', borderRadius: '8px' }}>
-              <Icon name="search" size="18" />
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-7">
+          <div className="flex items-center gap-3 mb-6">
+            <span className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+              <Icon name="search" className="w-[18px] h-[18px]" />
             </span>
-            ১. শিক্ষার্থী খুঁজুন
-          </h3>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', alignItems: 'end' }}>
+            <h3 className="text-lg font-bold text-gray-900">১. শিক্ষার্থী খুঁজুন</h3>
+          </div>
+
+          <div className="grid gap-5 items-end" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
             <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: '#334155' }}>Class <span style={{color:'#ef4444'}}>*</span></label>
-              <select value={classId} onChange={e => { setClassId(e.target.value); setSectionId(''); }} style={inputStyle}>
+              <label className={labelCls}>Class <span className="text-rose-500">*</span></label>
+              <select value={classId} onChange={e => { setClassId(e.target.value); setSectionId(''); }} className={selectCls}>
                 <option value="">-- Select Class --</option>
                 {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
+
             <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: '#334155' }}>Section <span style={{color:'#94a3b8', fontWeight: 'normal'}}>(Optional)</span></label>
-              <select value={sectionId} onChange={e => setSectionId(e.target.value)} disabled={!classId} style={{...inputStyle, opacity: !classId ? 0.6 : 1}}>
+              <label className={labelCls}>Section <span className="text-gray-400 font-normal normal-case">(Optional)</span></label>
+              <select
+                value={sectionId} onChange={e => setSectionId(e.target.value)}
+                disabled={!classId} className={`${selectCls} disabled:opacity-60 disabled:cursor-not-allowed`}
+              >
                 <option value="">-- All Sections --</option>
                 {selectedClass?.sections?.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </div>
-            <button onClick={fetchStudents} style={{ padding: '12px 24px', background: '#0f172a', color: '#fff', borderRadius: '8px', fontWeight: '600', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'background 0.3s' }}>
-              <Icon name="filter" size="16" /> Fetch Students
+
+            <button
+              type="button" onClick={fetchStudents}
+              className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-emerald-700 to-emerald-600 text-white font-bold shadow-lg shadow-emerald-600/25 hover:shadow-xl transition flex items-center justify-center gap-2"
+            >
+              <Icon name="filter" /> Fetch Students
             </button>
           </div>
         </div>
 
         {/* Step 2: Assign Form & Table */}
         {students && students.length > 0 && (
-          <form onSubmit={handleAssignSubmit}>
-            
+          <form onSubmit={handleAssignSubmit} className="space-y-6">
+
             {/* Fee Setup Card */}
-            <div style={{ background: 'linear-gradient(145deg, #eef2ff 0%, #f5f3ff 100%)', padding: '28px', borderRadius: '16px', marginBottom: '24px', border: '1px solid #c7d2fe', boxShadow: '0 4px 15px rgba(79, 70, 229, 0.05)' }}>
-              <h3 style={{ margin: '0 0 20px 0', fontSize: '17px', color: '#3730a3', display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '600' }}>
-                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', background: '#c7d2fe', color: '#3730a3', borderRadius: '8px' }}>
-                  <Icon name="check-circle" size="18" />
+            <div className="relative bg-amber-50/50 rounded-2xl border border-amber-200/60 shadow-sm p-7 pl-8 overflow-hidden">
+              <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-emerald-700 to-amber-400" />
+              <div className="flex items-center gap-3 mb-6">
+                <span className="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+                  <Icon name="check" className="w-[18px] h-[18px]" />
                 </span>
-                ২. ফি নির্ধারণ করুন
-              </h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px' }}>
+                <h3 className="text-lg font-bold text-gray-900">২. ফি নির্ধারণ করুন</h3>
+              </div>
+
+              <div className="grid gap-6" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))' }}>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: '#3730a3' }}>Select Fee Group <span style={{color:'#ef4444'}}>*</span></label>
-                  <select value={data.fee_group_id} onChange={e => setData('fee_group_id', e.target.value)} required style={{...inputStyle, background: '#fff', borderColor: '#a5b4fc'}}>
+                  <label className={labelCls}>Select Fee Group <span className="text-rose-500">*</span></label>
+                  <select
+                    value={data.fee_group_id} onChange={e => setData('fee_group_id', e.target.value)}
+                    required className={`${selectCls} bg-white`}
+                  >
                     <option value="">-- Select Fee Group --</option>
                     {feeGroups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
                   </select>
-                  {errors.fee_group_id && <span style={{ color: '#ef4444', fontSize: '12px', marginTop: '4px', display: 'block' }}>{errors.fee_group_id}</span>}
+                  {errors.fee_group_id && <p className="text-xs text-rose-600 mt-1">{errors.fee_group_id}</p>}
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: '#3730a3' }}>Due Date <span style={{color:'#ef4444'}}>*</span></label>
-                  <input type="date" value={data.due_date} onChange={e => setData('due_date', e.target.value)} required style={{...inputStyle, background: '#fff', borderColor: '#a5b4fc'}} />
-                  {errors.due_date && <span style={{ color: '#ef4444', fontSize: '12px', marginTop: '4px', display: 'block' }}>{errors.due_date}</span>}
+                  <label className={labelCls}>Due Date <span className="text-rose-500">*</span></label>
+                  <input
+                    type="date" value={data.due_date} onChange={e => setData('due_date', e.target.value)}
+                    required className={`${selectCls} bg-white`}
+                  />
+                  {errors.due_date && <p className="text-xs text-rose-600 mt-1">{errors.due_date}</p>}
                 </div>
               </div>
             </div>
 
             {/* Student List Table */}
-            <div style={{ background: '#fff', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.04)', border: '1px solid #f1f5f9' }}>
-              <div style={{ padding: '20px 24px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h4 style={{ margin: 0, fontSize: '16px', color: '#0f172a', fontWeight: '600' }}>
-                  শিক্ষার্থী তালিকা <span style={{ color: '#64748b', fontSize: '13px', fontWeight: 'normal', marginLeft: '6px' }}>(Total: {students.length})</span>
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="px-6 py-4 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
+                <h4 className="text-sm font-bold text-gray-900">
+                  শিক্ষার্থী তালিকা <span className="text-gray-400 font-normal ml-1">(Total: {students.length})</span>
                 </h4>
-                <div style={{ background: '#e0e7ff', padding: '6px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: '600', color: '#4f46e5' }}>
+                <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold">
                   Selected: {data.student_ids.length}
-                </div>
+                </span>
               </div>
 
-              <div style={{ overflowX: 'auto', maxHeight: '500px', overflowY: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                  <thead style={{ background: '#f8fafc', position: 'sticky', top: 0, zIndex: 10 }}>
+              <div className="overflow-x-auto overflow-y-auto max-h-[500px]">
+                <table className="w-full text-left border-collapse">
+                  <thead className="bg-gray-50 sticky top-0 z-10">
                     <tr>
-                      <th style={{ padding: '16px', width: '60px', textAlign: 'center', borderBottom: '2px solid #e2e8f0' }}>
-                        <input type="checkbox" onChange={toggleAll} checked={students.length > 0 && data.student_ids.length === students.length} style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#4f46e5' }} />
+                      <th className="px-4 py-4 w-14 text-center border-b-2 border-gray-100">
+                        <input
+                          type="checkbox" onChange={toggleAll} checked={allSelected}
+                          className="w-[18px] h-[18px] cursor-pointer accent-emerald-600"
+                        />
                       </th>
-                      <th style={{ padding: '16px', fontSize: '13px', fontWeight: '600', color: '#475569', textTransform: 'uppercase', borderBottom: '2px solid #e2e8f0' }}>Admission No</th>
-                      <th style={{ padding: '16px', fontSize: '13px', fontWeight: '600', color: '#475569', textTransform: 'uppercase', borderBottom: '2px solid #e2e8f0' }}>Student Name</th>
-                      <th style={{ padding: '16px', fontSize: '13px', fontWeight: '600', color: '#475569', textTransform: 'uppercase', borderBottom: '2px solid #e2e8f0' }}>Class (Roll)</th>
-                      <th style={{ padding: '16px', fontSize: '13px', fontWeight: '600', color: '#475569', textTransform: 'uppercase', borderBottom: '2px solid #e2e8f0' }}>Unpaid Fees</th>
+                      <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wide border-b-2 border-gray-100">Admission No</th>
+                      <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wide border-b-2 border-gray-100">Student Name</th>
+                      <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wide border-b-2 border-gray-100">Class (Roll)</th>
+                      <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wide border-b-2 border-gray-100">Unpaid Fees</th>
                     </tr>
                   </thead>
                   <tbody>
                     {students.map((student) => {
                       const isSelected = data.student_ids.includes(student.id);
+                      const unpaid = student.fee_assignments?.filter(fa => fa.status === 'unpaid') ?? [];
                       return (
-                        <tr key={student.id} style={{ borderBottom: '1px solid #f1f5f9', background: isSelected ? '#f5f8ff' : '#fff', transition: 'background 0.2s' }}>
-                          <td style={{ padding: '16px', textAlign: 'center' }}>
-                            <input type="checkbox" checked={isSelected} onChange={() => toggleStudent(student.id)} style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#4f46e5' }} />
+                        <tr key={student.id} className={`border-b border-gray-50 transition ${isSelected ? 'bg-emerald-50/60' : 'bg-white hover:bg-gray-50/70'}`}>
+                          <td className="px-4 py-4 text-center">
+                            <input
+                              type="checkbox" checked={isSelected} onChange={() => toggleStudent(student.id)}
+                              className="w-[18px] h-[18px] cursor-pointer accent-emerald-600"
+                            />
                           </td>
-                          <td style={{ padding: '16px', fontWeight: '600', color: '#334155', fontSize: '14px' }}>
-                            #{student.admission_no}
-                          </td>
-                          <td style={{ padding: '16px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                              <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3730a3', fontSize: '14px', fontWeight: 'bold', border: '1px solid #a5b4fc' }}>
+                          <td className="px-4 py-4 font-semibold text-gray-700 text-sm">#{student.admission_no}</td>
+                          <td className="px-4 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-800 flex items-center justify-center text-sm font-bold border border-emerald-200">
                                 {student.first_name[0]}
                               </div>
-                              <span style={{ fontSize: '14px', fontWeight: '500', color: '#0f172a' }}>{student.first_name} {student.last_name}</span>
+                              <span className="text-sm font-medium text-gray-900">{student.first_name} {student.last_name}</span>
                             </div>
                           </td>
-                          <td style={{ padding: '16px', color: '#64748b', fontSize: '14px' }}>
-                            <span style={{ background: '#f1f5f9', padding: '4px 10px', borderRadius: '6px', fontWeight: '500' }}>
+                          <td className="px-4 py-4">
+                            <span className="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-md text-xs font-medium">
                               {student.current_enrollment?.school_class?.name} - {student.current_enrollment?.roll_no || 'N/A'}
                             </span>
                           </td>
-                          <td style={{ padding: '16px' }}>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                              {student.fee_assignments?.filter(fa => fa.status === 'unpaid').map(assignment => (
-                                <div key={assignment.id} style={{ background: '#fffbeb', border: '1px solid #fde68a', padding: '4px 10px', borderRadius: '20px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}>
-                                  <span style={{ color: '#d97706', fontWeight: '600' }}>{assignment.fee_group?.name}</span>
-                                  <button type="button" onClick={() => handleRevoke(assignment.id)} style={{ background: '#fef3c7', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.2s' }} title="Revoke this fee">
-                                    <Icon name="close" size="12" />
+                          <td className="px-4 py-4">
+                            <div className="flex flex-wrap gap-2">
+                              {unpaid.map(assignment => (
+                                <div key={assignment.id} className="bg-amber-50 border border-amber-200 pl-3 pr-1.5 py-1 rounded-full text-xs flex items-center gap-2">
+                                  <span className="text-amber-700 font-bold">{assignment.fee_group?.name}</span>
+                                  <button
+                                    type="button" onClick={() => handleRevoke(assignment.id)}
+                                    className="bg-amber-100 hover:bg-rose-100 text-rose-500 rounded-full w-5 h-5 flex items-center justify-center transition"
+                                    title="Revoke this fee"
+                                  >
+                                    <Icon name="close" className="w-3 h-3" />
                                   </button>
                                 </div>
                               ))}
-                              {student.fee_assignments?.filter(fa => fa.status === 'unpaid').length === 0 && (
-                                <span style={{ color: '#94a3b8', fontSize: '13px', fontStyle: 'italic', background: '#f8fafc', padding: '4px 10px', borderRadius: '20px' }}>No pending fees</span>
+                              {unpaid.length === 0 && (
+                                <span className="text-gray-400 text-xs italic bg-gray-50 px-2.5 py-1 rounded-full">No pending fees</span>
                               )}
                             </div>
                           </td>
                         </tr>
-                      )
+                      );
                     })}
                   </tbody>
                 </table>
               </div>
 
               {/* Submit Button Section */}
-              <div style={{ padding: '24px', background: '#f8fafc', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-                {data.student_ids.length === 0 ? (
-                  <span style={{ color: '#94a3b8', fontSize: '14px', marginRight: '16px' }}>Select students to assign fees</span>
-                ) : null}
-                <button type="submit" disabled={processing || data.student_ids.length === 0} style={{ padding: '14px 32px', background: processing || data.student_ids.length === 0 ? '#94a3b8' : 'linear-gradient(135deg, #4f46e5 0%, #4338ca 100%)', color: '#fff', borderRadius: '8px', fontWeight: '600', fontSize: '15px', border: 'none', cursor: processing || data.student_ids.length === 0 ? 'not-allowed' : 'pointer', boxShadow: processing || data.student_ids.length === 0 ? 'none' : '0 4px 12px rgba(79, 70, 229, 0.3)', transition: 'all 0.3s' }}>
+              <div className="px-6 py-5 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-4">
+                {data.student_ids.length === 0 && (
+                  <span className="text-gray-400 text-sm">Select students to assign fees</span>
+                )}
+                <button
+                  type="submit" disabled={processing || data.student_ids.length === 0}
+                  className={`px-8 py-3 rounded-lg font-bold shadow-lg transition ${
+                    processing || data.student_ids.length === 0
+                      ? 'bg-gray-300 text-white cursor-not-allowed shadow-none'
+                      : 'bg-gradient-to-r from-emerald-700 to-emerald-600 text-white shadow-emerald-600/25 hover:shadow-xl'
+                  }`}
+                >
                   {processing ? 'Assigning...' : `Assign Fee to ${data.student_ids.length} Students`}
                 </button>
               </div>

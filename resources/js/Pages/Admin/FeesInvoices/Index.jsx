@@ -8,7 +8,7 @@ export default function Index({ payments, filters }) {
   const [search, setSearch] = useState(filters.search ?? '');
 
   const applyFilters = () => {
-    router.get(route('admin.fees.invoices'), { search }, { preserveState: true });
+    router.get(route('admin.fees.payments.create'), { search }, { preserveState: true });
   };
 
   const handlePrint = (payment) => {
