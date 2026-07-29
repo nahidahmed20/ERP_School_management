@@ -49,7 +49,7 @@ export default function Login({ status, canResetPassword }) {
 
     return (
         <div
-            className="relative min-h-screen flex items-center justify-center p-4 sm:p-8 overflow-hidden bg-[#F1F0EC]"
+            className="relative min-h-screen flex items-center justify-center p-3 sm:p-4 md:p-8 overflow-hidden bg-[#F1F0EC]"
             style={{ '--accent': theme.hex }}
         >
             <Head title="EduERP Login">
@@ -244,11 +244,11 @@ export default function Login({ status, canResetPassword }) {
                 </div>
 
                 {/* Right Side - Login Form */}
-                <div className="w-full lg:w-[56%] p-8 sm:p-14 flex flex-col justify-center">
+                <div className="w-full lg:w-[56%] p-6 sm:p-10 lg:p-14 flex flex-col justify-center">
                     <div className="max-w-md w-full mx-auto">
 
                         {/* Mobile brand header */}
-                        <div className="flex lg:hidden items-center gap-2.5 mb-8">
+                        <div className="flex lg:hidden items-center gap-2.5 mb-6 sm:mb-8">
                             <div className="w-8 h-8 rounded-lg bg-[#16233D] flex items-center justify-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth="1.8">
                                     <path d="M12 3 3 8l9 5 9-5-9-5Z" strokeLinejoin="round" />
@@ -257,11 +257,11 @@ export default function Login({ status, canResetPassword }) {
                             <span className="text-[#16233D] text-lg" style={{ fontFamily: "'Fraunces', serif", fontWeight: 600 }}>EduERP</span>
                         </div>
 
-                        <div className="text-left mb-7">
-                            <h2 className="text-[26px] text-[#16233D]" style={{ fontFamily: "'Fraunces', serif", fontWeight: 600 }}>
+                        <div className="text-left mb-5 sm:mb-7">
+                            <h2 className="text-[22px] sm:text-[26px] text-[#16233D]" style={{ fontFamily: "'Fraunces', serif", fontWeight: 600 }}>
                                 Welcome back
                             </h2>
-                            <p className="text-gray-500 mt-1.5 text-[14px]">Sign in with the access card that fits your role.</p>
+                            <p className="text-gray-500 mt-1.5 text-[13.5px] sm:text-[14px]">Sign in with the access card that fits your role.</p>
                         </div>
 
                         {status && (
@@ -270,8 +270,8 @@ export default function Login({ status, canResetPassword }) {
                             </div>
                         )}
 
-                        {/* Role Selector — registry tabs */}
-                        <div className="flex gap-1 border-b border-gray-200 mb-7">
+                        {/* Role Selector — registry tabs (equal-width so 3 tabs always fit, never clip) */}
+                        <div className="flex gap-1 border-b border-gray-200 mb-5 sm:mb-7">
                             {Object.entries(ROLE_THEME).map(([r, t]) => {
                                 const active = role === r;
                                 return (
@@ -279,20 +279,20 @@ export default function Login({ status, canResetPassword }) {
                                         key={r}
                                         type="button"
                                         onClick={() => handleRoleChange(r)}
-                                        className={`relative flex items-center gap-2 px-4 pt-2.5 pb-2.5 text-sm font-medium rounded-t-lg border transition-colors ${
+                                        className={`relative flex flex-1 min-w-0 items-center justify-center gap-1 sm:gap-2 px-1.5 sm:px-4 pt-2.5 pb-2.5 text-[12.5px] sm:text-sm font-medium rounded-t-lg border transition-colors ${
                                             active
                                                 ? 'bg-white border-gray-200 border-b-white -mb-px text-[#16233D]'
                                                 : 'bg-transparent border-transparent text-gray-400 hover:text-gray-600'
                                         }`}
                                     >
-                                        <RoleIcon role={r} className="w-3.5 h-3.5" />
-                                        <span className="capitalize" style={{ color: active ? t.hex : undefined }}>{r}</span>
+                                        <RoleIcon role={r} className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
+                                        <span className="capitalize truncate" style={{ color: active ? t.hex : undefined }}>{r}</span>
                                     </button>
                                 );
                             })}
                         </div>
 
-                        <form onSubmit={submit} className="space-y-5">
+                        <form onSubmit={submit} className="space-y-4 sm:space-y-5">
                             {/* Identifier Input */}
                             <div>
                                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -307,7 +307,7 @@ export default function Login({ status, canResetPassword }) {
                                     <input
                                         id="email"
                                         type="text"
-                                        className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl text-gray-900 outline-none focus:ring-2 focus:ring-[var(--accent)]/40 focus:border-[var(--accent)] transition-colors sm:text-sm"
+                                        className="block w-full pl-10 pr-3 py-2.5 sm:py-3 border border-gray-300 rounded-xl text-gray-900 outline-none focus:ring-2 focus:ring-[var(--accent)]/40 focus:border-[var(--accent)] transition-colors sm:text-sm"
                                         placeholder={role === 'student' ? 'e.g. STU-2023-001' : 'admin@school.com'}
                                         value={data.email}
                                         onChange={(e) => setData('email', e.target.value)}
@@ -331,7 +331,7 @@ export default function Login({ status, canResetPassword }) {
                                     <input
                                         id="password"
                                         type="password"
-                                        className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl text-gray-900 outline-none focus:ring-2 focus:ring-[var(--accent)]/40 focus:border-[var(--accent)] transition-colors sm:text-sm"
+                                        className="block w-full pl-10 pr-3 py-2.5 sm:py-3 border border-gray-300 rounded-xl text-gray-900 outline-none focus:ring-2 focus:ring-[var(--accent)]/40 focus:border-[var(--accent)] transition-colors sm:text-sm"
                                         placeholder="••••••••"
                                         value={data.password}
                                         onChange={(e) => setData('password', e.target.value)}
@@ -367,14 +367,14 @@ export default function Login({ status, canResetPassword }) {
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className="w-full flex justify-center py-3.5 px-4 rounded-xl text-sm font-medium text-white transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
+                                className="w-full flex justify-center py-3 sm:py-3.5 px-4 rounded-xl text-sm font-medium text-white transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
                                 style={{ backgroundColor: 'var(--accent)' }}
                             >
                                 {processing ? 'Signing in…' : 'Sign in to Dashboard'}
                             </button>
                         </form>
 
-                        <p className="mt-8 text-center text-sm text-gray-500">
+                        <p className="mt-6 sm:mt-8 text-center text-sm text-gray-500">
                             Having trouble logging in? <br className="sm:hidden" />
                             <a href="#" className="font-medium hover:opacity-80" style={{ color: 'var(--accent)' }}>Contact IT Support</a>
                         </p>

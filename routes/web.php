@@ -3,6 +3,8 @@
 use App\Http\Controllers\Admin\AcademicSessionController;
 use App\Http\Controllers\Admin\AdmissionController;
 use App\Http\Controllers\Admin\AdmissionInquiryController;
+use App\Http\Controllers\Admin\AlumniController;
+use App\Http\Controllers\Admin\AlumniEventController;
 use App\Http\Controllers\Admin\ApplicantController;
 use App\Http\Controllers\Admin\AssetController;
 use App\Http\Controllers\Admin\BookController;
@@ -32,6 +34,7 @@ use App\Http\Controllers\Admin\HomeworkController;
 use App\Http\Controllers\Admin\HostelAllocationController;
 use App\Http\Controllers\Admin\HostelRoomController;
 use App\Http\Controllers\Admin\HouseController;
+use App\Http\Controllers\Admin\InterviewController;
 use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Admin\JobPostController;
 use App\Http\Controllers\Admin\LeaveTypeController;
@@ -41,8 +44,12 @@ use App\Http\Controllers\Admin\LessonPlanController;
 use App\Http\Controllers\Admin\MenuGroupController;
 use App\Http\Controllers\Admin\MenuItemController;
 use App\Http\Controllers\Admin\NoticeController;
+use App\Http\Controllers\Admin\OfferLetterController;
 use App\Http\Controllers\Admin\OnlineExamController;
 use App\Http\Controllers\Admin\PaymentController;
+use App\Http\Controllers\Admin\PaymentGatewayController;
+use App\Http\Controllers\Admin\PaymentRefundController;
+use App\Http\Controllers\Admin\PaymentTransactionController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\PhoneCallLogController;
 use App\Http\Controllers\Admin\PostalRecordController;
@@ -74,10 +81,6 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VehicleController;
 use App\Http\Controllers\Admin\VendorController;
 use App\Http\Controllers\Admin\VisitorController;
-use App\Http\Controllers\Admin\InterviewController;
-use App\Http\Controllers\Admin\OfferLetterController;
-use App\Http\Controllers\Admin\AlumniController;
-use App\Http\Controllers\Admin\AlumniEventController;
 use App\Http\Controllers\DynamicPageController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -192,10 +195,10 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
     Route::post('student-attendance/send-absent-sms', [StudentAttendanceController::class, 'sendAbsentSms'])->name('attendance.send-absent-sms');
 
     Route::prefix('frontoffice')->name('frontoffice.')->group(function () {
-        Route::resource('visitors', VisitorController::class)->except(['create', 'edit']);
-        Route::resource('notices', NoticeController::class)->except(['create', 'edit']);
-        Route::resource('admission-inquiries', AdmissionInquiryController::class)->except(['create', 'edit']);
-        Route::resource('call-logs', PhoneCallLogController::class)->except(['create', 'edit']);
+        Route::resource('visitors', VisitorController::class);
+        Route::resource('notices', NoticeController::class);
+        Route::resource('admission-inquiries', AdmissionInquiryController::class);
+        Route::resource('call-logs', PhoneCallLogController::class);
         Route::resource('postal', PostalRecordController::class);
     });
     Route::prefix('recruitment')->name('recruitment.')->group(function () {
@@ -250,6 +253,15 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
         Route::resource('documents', StudentDocumentController::class);
         Route::resource('discipline', DisciplinaryRecordController::class);
 
+    });
+
+    Route::prefix('payments')->name('payments.')->group(function () {
+        Route::patch('gateways/{gateway}/status', [PaymentGatewayController::class, 'updateStatus'])->name('gateways.update-status');
+        Route::resource('gateways', PaymentGatewayController::class);
+        Route::patch('transactions/{transaction}/status', [PaymentTransactionController::class, 'updateStatus'])->name('transactions.update-status');
+        Route::resource('transactions', PaymentTransactionController::class);
+        Route::patch('refunds/{refund}/status', [PaymentRefundController::class, 'updateStatus'])->name('refunds.update-status');
+        Route::resource('refunds', PaymentRefundController::class);
     });
 
 });
