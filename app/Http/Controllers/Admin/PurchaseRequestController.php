@@ -75,4 +75,14 @@ class PurchaseRequestController extends Controller
             'admin_remark' => 'nullable|string',
         ]);
     }
+
+    public function updateStatus(Request $request, $id)
+    {
+        $request->validate(['status' => 'required|in:Pending,Approved,Rejected,Completed']);
+
+        $purchaseRequest = PurchaseRequest::findOrFail($id);
+        $purchaseRequest->update(['status' => $request->status]);
+
+        return back()->with('success', 'রিকুয়েস্ট স্ট্যাটাস আপডেট করা হয়েছে!');
+    }
 }

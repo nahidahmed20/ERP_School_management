@@ -11,4 +11,10 @@ class PurchaseItem extends Model
     use HasFactory, BelongsToCampus;
 
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'size' => 'array',
+        'color' => 'array',
+        'is_active' => 'boolean',
+    ];
 }

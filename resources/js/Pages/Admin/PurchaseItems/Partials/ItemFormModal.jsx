@@ -1,20 +1,38 @@
 import { useForm, usePage } from '@inertiajs/react';
 import Icon from '@/Components/Icons';
 
-export default function ItemFormModal({ item, campuses, activeCampusId, onClose }) {
+export default function ItemFormModal({ item, campuses, sizes, colors, activeCampusId, onClose }) {
   const isEdit = !!item;
   const { auth } = usePage().props;
   const isSuperAdmin = auth?.user?.role === 'super_admin' || auth?.user?.roles?.some(r => r.name === 'Super Admin');
 
+  const generateSKU = () => {
+    return `PRD-${new Date().getFullYear()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+  };
+
   const { data, setData, post, put, processing, errors, reset } = useForm({
     campus_id: item?.campus_id ?? activeCampusId,
+    item_code: item?.item_code || generateSKU(),
     name: item?.name ?? '',
     category: item?.category ?? 'Stationery',
+    size: item?.size ?? [], // Array
+    color: item?.color ?? [], // Array
     unit: item?.unit ?? 'pcs',
     quantity: item?.quantity ?? 0,
+    purchase_price: item?.purchase_price ?? '',
+    selling_price: item?.selling_price ?? '',
     description: item?.description ?? '',
     is_active: item?.is_active ?? true,
   });
+
+  const toggleArrayItem = (field, value) => {
+    const currentArray = data[field] || [];
+    if (currentArray.includes(value)) {
+        setData(field, currentArray.filter(i => i !== value));
+    } else {
+        setData(field, [...currentArray, value]);
+    }
+  };
 
   function submit(e) {
     e.preventDefault();
@@ -35,67 +53,100 @@ export default function ItemFormModal({ item, campuses, activeCampusId, onClose 
           <div className="mm-form-grid">
 
             <label style={{ gridColumn: '1 / -1' }}>
-              <span>Assign to Campus *</span>
-              <select value={data.campus_id || ''} onChange={(e) => setData('campus_id', e.target.value)} disabled={!isSuperAdmin} required>
-                <option value="" disabled>Select Campus</option>
-                {campuses?.map(campus => <option key={campus.id} value={campus.id}>{campus.name}</option>)}
-              </select>
-              {errors.campus_id && <em>{errors.campus_id}</em>}
+              <span>Item Name *</span>
+              <input value={data.name} onChange={(e) => setData('name', e.target.value)} required placeholder="e.g. School T-Shirt" />
+              {errors.name && <em>{errors.name}</em>}
             </label>
 
-            <label style={{ gridColumn: '1 / -1' }}>
-              <span>Item Name *</span>
-              <input value={data.name} onChange={(e) => setData('name', e.target.value)} autoFocus required placeholder="e.g. A4 Paper Rim, Whiteboard Marker" />
-              {errors.name && <em>{errors.name}</em>}
+            <label>
+              <span>Item Code / SKU *</span>
+              <input value={data.item_code} onChange={(e) => setData('item_code', e.target.value)} required />
+              {errors.item_code && <em>{errors.item_code}</em>}
             </label>
 
             <label>
               <span>Category *</span>
               <select value={data.category} onChange={(e) => setData('category', e.target.value)} required>
+                <option value="Uniforms">Uniforms</option>
+                <option value="Books">Books</option>
                 <option value="Stationery">Stationery</option>
-                <option value="Electronics">Electronics</option>
-                <option value="Furniture">Furniture</option>
-                <option value="Cleaning Supplies">Cleaning Supplies</option>
-                <option value="Sports">Sports</option>
                 <option value="Others">Others</option>
               </select>
-              {errors.category && <em>{errors.category}</em>}
             </label>
+
+            {/* Multiple Sizes Selection */}
+            <div style={{ gridColumn: '1 / -1', padding: '10px', background: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+              <span style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '13px' }}>Select Available Sizes</span>
+              <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+                {sizes?.map(s => (
+                  <label key={s.id} style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', margin: 0 }}>
+                    <input
+                       type="checkbox"
+                       checked={data.size.includes(s.name)}
+                       onChange={() => toggleArrayItem('size', s.name)}
+                    />
+                    {s.name}
+                  </label>
+                ))}
+                {sizes?.length === 0 && <span style={{ color: '#64748b', fontSize: '12px' }}>No sizes created yet.</span>}
+              </div>
+            </div>
+
+            {/* Multiple Colors Selection */}
+            <div style={{ gridColumn: '1 / -1', padding: '10px', background: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+              <span style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '13px' }}>Select Available Colors</span>
+              <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+                {colors?.map(c => (
+                  <label key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', margin: 0 }}>
+                    <input
+                       type="checkbox"
+                       checked={data.color.includes(c.name)}
+                       onChange={() => toggleArrayItem('color', c.name)}
+                    />
+                    {c.name}
+                  </label>
+                ))}
+                {colors?.length === 0 && <span style={{ color: '#64748b', fontSize: '12px' }}>No colors created yet.</span>}
+              </div>
+            </div>
 
             <label>
               <span>Unit Type *</span>
               <select value={data.unit} onChange={(e) => setData('unit', e.target.value)} required>
                 <option value="pcs">Pieces (pcs)</option>
-                <option value="box">Box</option>
-                <option value="dozen">Dozen</option>
-                <option value="kg">Kg</option>
-                <option value="liters">Liters</option>
-                <option value="rim">Rim (Paper)</option>
                 <option value="set">Set</option>
+                <option value="box">Box</option>
               </select>
-              {errors.unit && <em>{errors.unit}</em>}
             </label>
 
-            <label style={{ gridColumn: '1 / -1' }}>
-              <span>Initial/Current Stock</span>
+            <label>
+              <span>Initial/Current Stock *</span>
               <input type="number" value={data.quantity} onChange={(e) => setData('quantity', e.target.value)} min="0" required />
-              {errors.quantity && <em>{errors.quantity}</em>}
+            </label>
+
+            <label>
+              <span>Purchase Price (Buying Cost)</span>
+              <input type="number" step="0.01" value={data.purchase_price} onChange={(e) => setData('purchase_price', e.target.value)} min="0" />
+            </label>
+
+            <label>
+              <span>Selling Price (POS Sale Price) *</span>
+              <input type="number" step="0.01" value={data.selling_price} onChange={(e) => setData('selling_price', e.target.value)} min="0" required />
             </label>
 
             <label style={{ gridColumn: '1 / -1' }}>
-              <span>Description (Optional)</span>
-              <textarea rows="2" value={data.description} onChange={(e) => setData('description', e.target.value)} />
-            </label>
-
-            <label className="mm-checkbox" style={{ gridColumn: '1 / -1' }}>
-              <input type="checkbox" checked={data.is_active} onChange={(e) => setData('is_active', e.target.checked)} /> Active Item
+              <span>Assign to Campus *</span>
+              <select value={data.campus_id || ''} onChange={(e) => setData('campus_id', e.target.value)} disabled={!isSuperAdmin} required>
+                <option value="" disabled>Select Campus</option>
+                {campuses?.map(campus => <option key={campus.id} value={campus.id}>{campus.name}</option>)}
+              </select>
             </label>
 
           </div>
 
           <div className="mm-modal-foot mt-2">
-            <button type="button" className="btn btn-outline" onClick={onClose} disabled={processing}>Cancel</button>
-            <button type="submit" className="btn" disabled={processing}>{processing ? 'Saving...' : (isEdit ? 'Update' : 'Save')}</button>
+            <button type="button" className="btn btn-outline" onClick={onClose}>Cancel</button>
+            <button type="submit" className="btn" disabled={processing}>{processing ? 'Saving...' : 'Save Item'}</button>
           </div>
         </form>
       </div>

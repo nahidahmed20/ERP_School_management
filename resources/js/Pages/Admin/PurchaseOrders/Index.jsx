@@ -1,36 +1,35 @@
 import { useState, useEffect } from 'react';
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, router, usePage, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
 import Pagination from '@/Components/Pagination';
-import OrderFormModal from './Partials/OrderFormModal';
 import OrderShowModal from './Partials/OrderShowModal';
 import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 import Swal from 'sweetalert2';
 
-export default function Index({ orders, vendors, purchase_requests, campuses, filters }) {
-  const { flash, auth } = usePage().props;
+export default function Index({ orders, filters }) {
+  const { flash } = usePage().props;
 
   const [search, setSearch] = useState(filters.search ?? '');
   const [status, setStatus] = useState(filters.status ?? '');
   const [perPage, setPerPage] = useState(filters.per_page ?? '10');
 
-  const [formOpen, setFormOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState(null);
   const [deletingItem, setDeletingItem] = useState(null);
   const [viewingItem, setViewingItem] = useState(null);
 
   useEffect(() => {
     if (flash?.success) {
-      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: flash.success, showConfirmButton: false, timer: 3000, timerProgressBar: true });
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: flash.success, showConfirmButton: false, timer: 3000 });
     }
   }, [flash]);
 
   function applyFilters(overrides = {}) {
-    router.get(route('admin.purchase.orders.index'), {
-      search, status, per_page: perPage, ...overrides,
-    }, { preserveState: true, replace: true });
+    router.get(route('admin.purchase.orders.index'), { search, status, per_page: perPage, ...overrides }, { preserveState: true, replace: true });
   }
+
+  const handleStatusChange = (id, newStatus) => {
+    router.patch(route('admin.purchase.orders.update-status', id), { status: newStatus }, { preserveScroll: true });
+  };
 
   const getStatusColor = (status) => {
     switch(status) {
@@ -49,12 +48,11 @@ export default function Index({ orders, vendors, purchase_requests, campuses, fi
           <div>
             <span className="eyebrow">Purchase & Assets</span>
             <h1>Purchase Orders (PO)</h1>
-            <p className="desc">ভেন্ডরদের দেওয়া মালামাল ক্রয়ের অর্ডার পরিচালনা করুন।</p>
           </div>
           <div className="mm-head-actions">
-            <button className="btn" onClick={() => { setEditingItem(null); setFormOpen(true); }}>
+            <Link href={route('admin.purchase.orders.create')} className="btn">
               <Icon name="plus" /> Create PO
-            </button>
+            </Link>
           </div>
         </div>
       }
@@ -65,7 +63,6 @@ export default function Index({ orders, vendors, purchase_requests, campuses, fi
         <div className="mm-filters" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           <select value={perPage} onChange={(e) => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}>
             <option value="10">10 / page</option>
-            <option value="50">50 / page</option>
             <option value="all">Show All</option>
           </select>
 
@@ -109,34 +106,37 @@ export default function Index({ orders, vendors, purchase_requests, campuses, fi
                       <strong style={{ color: '#111827' }}>{item.order_number}</strong>
                     </div>
                   </td>
-                  <td>
-                    <div style={{ fontWeight: 500 }}>{item.vendor?.name}</div>
-                  </td>
+                  <td><div style={{ fontWeight: 500 }}>{item.vendor?.name}</div></td>
                   <td>
                     <div style={{ fontSize: '0.85rem' }}>Order: {item.order_date}</div>
                     <div style={{ fontSize: '0.85rem', color: '#6B7280' }}>Del: {item.delivery_date || 'N/A'}</div>
                   </td>
                   <td><strong style={{ color: '#047857' }}>৳ {item.total_amount}</strong></td>
                   <td>
-                    <span style={{
+                    <select
+                      value={item.status}
+                      onChange={(e) => handleStatusChange(item.id, e.target.value)}
+                      style={{
                         backgroundColor: getStatusColor(item.status).bg,
                         color: getStatusColor(item.status).text,
-                        padding: '4px 10px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 'bold'
-                    }}>
-                      {item.status}
-                    </span>
+                        padding: '4px 10px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 'bold', border: 'none', outline: 'none', cursor: 'pointer'
+                      }}
+                    >
+                      <option value="Pending">Pending</option>
+                      <option value="Ordered">Ordered</option>
+                      <option value="Received">Received</option>
+                      <option value="Cancelled">Cancelled</option>
+                    </select>
                   </td>
                   <td>
                     <div className="mm-row-actions">
-                      <button className="icon-btn" title="View" onClick={() => setViewingItem(item)}>
-                        <Icon name="eye" />
-                      </button>
-                      <button className="icon-btn" title="Edit" onClick={() => { setEditingItem(item); setFormOpen(true); }}>
+                      <button className="icon-btn" title="View" onClick={() => setViewingItem(item)}><Icon name="eye" /></button>
+
+                      <Link href={route('admin.purchase.orders.edit', item.id)} className="icon-btn" title="Edit">
                         <Icon name="edit" />
-                      </button>
-                      <button className="icon-btn icon-btn-danger" title="Delete" onClick={() => setDeletingItem(item)}>
-                        <Icon name="trash" />
-                      </button>
+                      </Link>
+
+                      <button className="icon-btn icon-btn-danger" title="Delete" onClick={() => setDeletingItem(item)}><Icon name="trash" /></button>
                     </div>
                   </td>
                 </tr>
@@ -147,13 +147,11 @@ export default function Index({ orders, vendors, purchase_requests, campuses, fi
         <Pagination meta={orders} />
       </div>
 
-      {formOpen && <OrderFormModal item={editingItem} vendors={vendors} purchase_requests={purchase_requests} campuses={campuses} activeCampusId={auth?.active_campus_id} onClose={() => setFormOpen(false)} />}
-
       {viewingItem && <OrderShowModal item={viewingItem} onClose={() => setViewingItem(null)} />}
 
       {deletingItem && (
         <ConfirmDeleteModal item={{ name: `Order ${deletingItem.order_number}` }} onCancel={() => setDeletingItem(null)} onConfirm={() => {
-            router.delete(route('admin.purchase.orders.destroy', deletingItem.id), { onSuccess: () => setDeletingItem(null) });
+            router.delete(route('admin.orders.destroy', deletingItem.id), { onSuccess: () => setDeletingItem(null) });
         }} />
       )}
     </AuthenticatedLayout>

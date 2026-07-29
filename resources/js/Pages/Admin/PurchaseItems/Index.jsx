@@ -6,9 +6,10 @@ import Pagination from '@/Components/Pagination';
 import ItemFormModal from './Partials/ItemFormModal';
 import ItemShowModal from './Partials/ItemShowModal';
 import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
+import AttributeManagerModal from './Partials/AttributeManagerModal';
 import Swal from 'sweetalert2';
 
-export default function Index({ items, campuses, filters }) {
+export default function Index({ items, campuses, sizes, colors, filters }) {
   const { flash, auth } = usePage().props;
 
   const [search, setSearch] = useState(filters.search ?? '');
@@ -20,6 +21,7 @@ export default function Index({ items, campuses, filters }) {
   const [editingItem, setEditingItem] = useState(null);
   const [deletingItem, setDeletingItem] = useState(null);
   const [viewingItem, setViewingItem] = useState(null);
+  const [attrModalOpen, setAttrModalOpen] = useState(false); // Size & Color Modal State
 
   useEffect(() => {
     if (flash?.success) {
@@ -38,11 +40,14 @@ export default function Index({ items, campuses, filters }) {
       header={
         <div className="page-head">
           <div>
-            <span className="eyebrow">Purchase & Assets</span>
-            <h1>Inventory Items</h1>
-            <p className="desc">স্কুলের ইনভেন্টরি, স্টেশনারি ও অন্যান্য সামগ্রীর তালিকা।</p>
+            <span className="eyebrow">Inventory & Assets</span>
+            <h1>Products & Items</h1>
+            <p className="desc">স্কুলের ইনভেন্টরি, স্টেশনারি ও বিক্রয়যোগ্য সামগ্রীর তালিকা।</p>
           </div>
           <div className="mm-head-actions">
+            <button className="btn btn-outline" onClick={() => setAttrModalOpen(true)}>
+              <Icon name="settings" /> Manage Size & Color
+            </button>
             <button className="btn" onClick={() => { setEditingItem(null); setFormOpen(true); }}>
               <Icon name="plus" /> Add Item
             </button>
@@ -50,7 +55,7 @@ export default function Index({ items, campuses, filters }) {
         </div>
       }
     >
-      <Head title="Inventory Items" />
+      <Head title="Products & Items" />
 
       <div className="card mm-card">
         <div className="mm-filters" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
@@ -62,11 +67,13 @@ export default function Index({ items, campuses, filters }) {
 
           <div className="search">
             <Icon name="search" />
-            <input placeholder="Search item name..." value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && applyFilters()} />
+            <input placeholder="Search name or code..." value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && applyFilters()} />
           </div>
 
           <select value={category} onChange={(e) => { setCategory(e.target.value); applyFilters({ category: e.target.value }); }}>
             <option value="">All Categories</option>
+            <option value="Books">Books</option>
+            <option value="Uniforms">Uniforms</option>
             <option value="Stationery">Stationery</option>
             <option value="Electronics">Electronics</option>
             <option value="Furniture">Furniture</option>
@@ -88,8 +95,10 @@ export default function Index({ items, campuses, filters }) {
           <table className="mm-table">
             <thead>
               <tr>
-                <th>Item Name</th>
+                <th>Item Name & Code</th>
                 <th>Category</th>
+                <th>Attributes</th>
+                <th>Sell Price</th>
                 <th>Current Stock</th>
                 <th>Status</th>
                 <th className="mm-actions-col">Actions</th>
@@ -97,17 +106,38 @@ export default function Index({ items, campuses, filters }) {
             </thead>
             <tbody>
               {items.data.length === 0 && (
-                <tr><td colSpan={5} className="mm-empty">কোনো আইটেম পাওয়া যায়নি।</td></tr>
+                <tr><td colSpan={7} className="mm-empty">কোনো আইটেম পাওয়া যায়নি।</td></tr>
               )}
               {items.data.map((item) => (
                 <tr key={item.id}>
                   <td>
                     <div className="mm-label-cell">
                       <Icon name="box" className="mm-row-icon" />
-                      <span style={{ fontWeight: 500 }}>{item.name}</span>
+                      <div>
+                        <span style={{ fontWeight: 500, display: 'block' }}>{item.name}</span>
+                        {item.item_code && <span style={{ fontSize: '12px', color: '#4f46e5' }}>Code: {item.item_code}</span>}
+                      </div>
                     </div>
                   </td>
                   <td>{item.category}</td>
+                  <td>
+                    <div style={{ fontSize: '12px', color: '#475569' }}>
+                      {item.size && item.size.length > 0 && (
+                          <div style={{ marginBottom: '2px' }}>
+                              Sizes: <strong style={{ color: '#0f172a' }}>{item.size.join(', ')}</strong>
+                          </div>
+                      )}
+                      {item.color && item.color.length > 0 && (
+                          <div>
+                              Colors: <strong style={{ color: '#0f172a' }}>{item.color.join(', ')}</strong>
+                          </div>
+                      )}
+                      {(!item.size || item.size.length === 0) && (!item.color || item.color.length === 0) && <span>-</span>}
+                    </div>
+                  </td>
+                  <td>
+                    <strong style={{ color: '#0f172a' }}>৳ {item.selling_price}</strong>
+                  </td>
                   <td>
                     <strong style={{ color: item.quantity <= 5 ? '#b91c1c' : '#047857' }}>
                       {item.quantity} {item.unit}
@@ -140,7 +170,9 @@ export default function Index({ items, campuses, filters }) {
         <Pagination meta={items} />
       </div>
 
-      {formOpen && <ItemFormModal item={editingItem} campuses={campuses} activeCampusId={auth?.active_campus_id} onClose={() => setFormOpen(false)} />}
+      {formOpen && <ItemFormModal item={editingItem} campuses={campuses} sizes={sizes} colors={colors} activeCampusId={auth?.active_campus_id} onClose={() => setFormOpen(false)} />}
+
+      {attrModalOpen && <AttributeManagerModal sizes={sizes} colors={colors} onClose={() => setAttrModalOpen(false)} />}
 
       {viewingItem && <ItemShowModal item={viewingItem} onClose={() => setViewingItem(null)} />}
 

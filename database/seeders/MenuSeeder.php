@@ -103,15 +103,20 @@ class MenuSeeder extends Seeder
                     ['key' => 'admin.payments.transactions.index', 'label' => 'Transactions', 'route' => 'admin.payments.transactions.index'],
                     ['key' => 'admin.payments.refunds.index', 'label' => 'Refunds', 'route' => 'admin.payments.refunds.index'],
                 ]],
-                ['key' => 'purchase', 'label' => 'Purchase & Assets', 'icon' => 'box', 'count' => 8, 'children' => [
-                    ['key' => 'admin.purchase.vendors.index', 'label' => 'Vendors', 'route' => 'admin.purchase.vendors.index'],
-                    ['key' => 'admin.purchase.suppliers.index', 'label' => 'Suppliers', 'route' => 'admin.purchase.suppliers.index'],
-                    ['key' => 'admin.purchase.items.index', 'label' => 'Inventory Items', 'route' => 'admin.purchase.items.index'],
+                ['key' => 'purchase', 'label' => 'Inventory & Assets', 'icon' => 'box', 'count' => 7, 'children' => [
+                    ['key' => 'admin.purchase.items.index', 'label' => 'Products & Items', 'route' => 'admin.purchase.items.index'],
+                    ['key' => 'admin.purchase.suppliers.index', 'label' => 'Suppliers & Vendors', 'route' => 'admin.purchase.suppliers.index'],
                     ['key' => 'admin.purchase.requests.index', 'label' => 'Purchase Requests', 'route' => 'admin.purchase.requests.index'],
                     ['key' => 'admin.purchase.orders.index', 'label' => 'Purchase Orders', 'route' => 'admin.purchase.orders.index'],
-                    ['key' => 'admin.purchase.assets.index', 'label' => 'Asset Register', 'route' => 'admin.purchase.assets.index'],
-                    ['key' => 'admin.purchase.asset-assignments.index', 'label' => 'Asset Assignments', 'route' => 'admin.purchase.asset-assignments.index'],
-                    ['key' => 'admin.purchase.asset-maintenance.index', 'label' => 'Asset Maintenance', 'route' => 'admin.purchase.asset-maintenance.index'],
+                    ['key' => 'admin.purchase.orders.create', 'label' => 'Purchase Orders Create', 'route' => 'admin.purchase.orders.create'],
+                    ['key' => 'admin.purchase.assets.index', 'label' => 'Fixed Assets', 'route' => 'admin.purchase.assets.index'],
+                    ['key' => 'admin.purchase.asset-assignments.index', 'label' => 'Issue Assets', 'route' => 'admin.purchase.asset-assignments.index'],
+                    ['key' => 'admin.purchase.asset-maintenance.index', 'label' => 'Asset Repairs', 'route' => 'admin.purchase.asset-maintenance.index'],
+                ]],
+                ['key' => 'sales', 'label' => 'Sales & POS', 'icon' => 'cart', 'count' => 3, 'children' => [
+                    ['key' => 'admin.sales.create', 'label' => 'Point of Sale (POS)', 'route' => 'admin.sales.create'],
+                    ['key' => 'admin.sales.index', 'label' => 'Sales Receipts', 'route' => 'admin.sales.index'],
+                    ['key' => 'admin.sales.reports.index', 'label' => 'Sales Reports', 'route' => 'admin.sales.reports.index'],
                 ]],
             ]],
 

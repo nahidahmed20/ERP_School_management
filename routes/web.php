@@ -81,6 +81,10 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VehicleController;
 use App\Http\Controllers\Admin\VendorController;
 use App\Http\Controllers\Admin\VisitorController;
+use App\Http\Controllers\Admin\SupplierController;
+use App\Http\Controllers\Admin\AssetAssignmentController;
+use App\Http\Controllers\Admin\AssetMaintenanceController;
+use App\Http\Controllers\Admin\SaleController;
 use App\Http\Controllers\DynamicPageController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -231,10 +235,23 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
     Route::prefix('purchase')->name('purchase.')->group(function () {
         Route::resource('vendors', VendorController::class);
         Route::resource('items', PurchaseItemController::class);
+        Route::patch('requests/{request}/status', [PurchaseRequestController::class, 'updateStatus'])->name('requests.update-status');
         Route::resource('requests', PurchaseRequestController::class);
+        Route::patch('orders/{order}/status', [PurchaseOrderController::class, 'updateStatus'])->name('orders.update-status');
         Route::resource('orders', PurchaseOrderController::class);
         Route::resource('assets', AssetController::class);
+        Route::patch('suppliers/{supplier}/status', [SupplierController::class, 'updateStatus'])->name('suppliers.update-status');
+        Route::resource('suppliers', SupplierController::class);
+        Route::patch('asset-assignments/{asset_assignment}/status', [AssetAssignmentController::class, 'updateStatus'])->name('asset-assignments.update-status');
+        Route::resource('asset-assignments', AssetAssignmentController::class);
+        Route::patch('asset-maintenance/{asset_maintenance}/status', [AssetMaintenanceController::class, 'updateStatus'])->name('asset-maintenance.update-status');
+        Route::resource('asset-maintenance', AssetMaintenanceController::class);
     });
+
+    Route::post('purchase-items/sizes', [PurchaseItemController::class, 'storeSize'])->name('purchase.items.sizes.store');
+    Route::delete('purchase-items/sizes/{id}', [PurchaseItemController::class, 'destroySize'])->name('purchase.items.sizes.destroy');
+    Route::post('purchase-items/colors', [PurchaseItemController::class, 'storeColor'])->name('purchase.items.colors.store');
+    Route::delete('purchase-items/colors/{id}', [PurchaseItemController::class, 'destroyColor'])->name('purchase.items.colors.destroy');
 
     Route::prefix('lms')->name('lms.')->group(function () {
         Route::resource('exams', OnlineExamController::class);
@@ -263,6 +280,9 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
         Route::patch('refunds/{refund}/status', [PaymentRefundController::class, 'updateStatus'])->name('refunds.update-status');
         Route::resource('refunds', PaymentRefundController::class);
     });
+
+    Route::get('sales/{sale}/invoice', [SaleController::class, 'invoice'])->name('sales.invoice'); // ইনভয়েস প্রিন্ট করার জন্য
+    Route::resource('sales', SaleController::class);
 
 });
 

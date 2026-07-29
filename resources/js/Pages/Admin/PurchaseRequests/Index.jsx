@@ -32,6 +32,12 @@ export default function Index({ requests, users, campuses, filters }) {
     }, { preserveState: true, replace: true });
   }
 
+  const handleStatusChange = (id, newStatus) => {
+    router.patch(route('admin.purchase.requests.update-status', id), {
+      status: newStatus
+    }, { preserveScroll: true });
+  };
+
   const getStatusColor = (status) => {
     switch(status) {
         case 'Pending': return { bg: '#fef3c7', text: '#d97706' }; // Yellow
@@ -117,13 +123,26 @@ export default function Index({ requests, users, campuses, filters }) {
                   <td><strong style={{ color: '#047857' }}>৳ {item.estimated_amount}</strong></td>
                   <td>{item.expected_date}</td>
                   <td>
-                    <span style={{
+                    <select
+                      value={item.status}
+                      onChange={(e) => handleStatusChange(item.id, e.target.value)}
+                      style={{
                         backgroundColor: getStatusColor(item.status).bg,
                         color: getStatusColor(item.status).text,
-                        padding: '4px 10px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 'bold'
-                    }}>
-                      {item.status}
-                    </span>
+                        padding: '4px 10px',
+                        borderRadius: '20px',
+                        fontSize: '0.75rem',
+                        fontWeight: 'bold',
+                        border: '1px solid transparent',
+                        cursor: 'pointer',
+                        outline: 'none'
+                      }}
+                    >
+                      <option value="Pending">Pending</option>
+                      <option value="Approved">Approved</option>
+                      <option value="Rejected">Rejected</option>
+                      <option value="Completed">Completed</option>
+                    </select>
                   </td>
                   <td>
                     <div className="mm-row-actions">
