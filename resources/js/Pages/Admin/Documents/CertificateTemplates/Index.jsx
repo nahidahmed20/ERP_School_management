@@ -1,139 +1,114 @@
 import { useState, useEffect } from 'react';
-import { Head, useForm, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import Icon from '@/Components/Icons';
+import Pagination from '@/Components/Pagination';
 import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
+import TemplateFormModal from './Partials/TemplateFormModal';
+import TemplateShowModal from './Partials/TemplateShowModal';
+import Swal from 'sweetalert2';
 
-export default function CertificateTemplates({ templates, filters }) {
-    const [showModal, setShowModal] = useState(false);
-    const [editMode, setEditMode] = useState(false);
-    const [itemToDelete, setItemToDelete] = useState(null);
-    const [searchTerm, setSearchTerm] = useState(filters?.search || '');
+export default function Index({ templates, campuses, activeCampusId, filters }) {
+  const { flash } = usePage().props;
+  const [search, setSearch] = useState(filters.search ?? '');
+  const [editingItem, setEditingItem] = useState(null);
+  const [viewingItem, setViewingItem] = useState(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [deletingItem, setDeletingItem] = useState(null);
 
-    const { data, setData, post, processing, reset } = useForm({
-        id: '', name: '', type: 'Student', body_content: '', background_image: null, _method: 'POST'
-    });
+  useEffect(() => {
+    if (flash?.success) {
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: flash.success, showConfirmButton: false, timer: 3000 });
+    }
+  }, [flash]);
 
-    useEffect(() => {
-        const delayDebounceFn = setTimeout(() => {
-            router.get(route('admin.documents.certificatetemplates.index'), { search: searchTerm }, { preserveState: true, preserveScroll: true });
-        }, 500);
-        return () => clearTimeout(delayDebounceFn);
-    }, [searchTerm]);
+  function applyFilters() {
+    router.get(route('admin.documents.certificatetemplates.index'), { search }, { preserveState: true, replace: true });
+  }
 
-    const openAddModal = () => {
-        reset(); setData('_method', 'POST'); setEditMode(false); setShowModal(true);
-    };
+  const handleStatusToggle = (item) => {
+    router.put(route('admin.documents.certificatetemplates.update', item.id), {
+      campus_id: item.campus_id,
+      title: item.title,
+      template_type: item.template_type,
+      content_body: item.content_body,
+      is_active: !item.is_active
+    }, { preserveScroll: true });
+  };
 
-    const openEditModal = (template) => {
-        setData({
-            id: template.id, name: template.name, type: template.type,
-            body_content: template.body_content, background_image: null,
-            _method: 'PUT' // File upload in edit requires POST route with _method PUT
-        });
-        setEditMode(true); setShowModal(true);
-    };
+  return (
+    <AuthenticatedLayout
+      header={
+        <div className="page-head">
+          <div><span className="eyebrow">Documents & Certificates</span><h1>Certificate Templates</h1></div>
+          <div className="mm-head-actions">
+            <button className="btn" onClick={() => { setEditingItem(null); setIsFormOpen(true); }}><Icon name="plus" /> Create Template</button>
+          </div>
+        </div>
+      }
+    >
+      <Head title="Certificate Templates" />
+      <div className="card mm-card">
+        <div className="mm-filters">
+          <div className="search">
+            <Icon name="search" />
+            <input placeholder="Search template title..." value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && applyFilters()} />
+          </div>
+          <button className="btn btn-outline" onClick={applyFilters}>Filter</button>
+        </div>
 
-    const submit = (e) => {
-        e.preventDefault();
-        const routeName = editMode ? route('admin.documents.certificatetemplates.update', data.id) : route('admin.documents.certificatetemplates.store');
-
-        post(routeName, { onSuccess: () => { setShowModal(false); reset(); } });
-    };
-
-    const confirmDelete = () => {
-        router.delete(route('admin.documents.certificatetemplates.destroy', itemToDelete.id), {
-            onSuccess: () => setItemToDelete(null),
-        });
-    };
-
-    return (
-        <AuthenticatedLayout header={<h2 className="font-semibold text-xl text-gray-800">Certificate Templates</h2>}>
-            <Head title="Templates" />
-            <div className="py-8 max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-
-                    <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                        <h3 className="text-lg font-bold text-gray-800">Template Designs</h3>
-                        <div className="flex gap-3 w-full md:w-auto">
-                            <input type="text" placeholder="Search templates..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full md:w-64 rounded-lg border-gray-300 shadow-sm text-sm" />
-                            <button onClick={openAddModal} className="bg-indigo-600 whitespace-nowrap text-white px-4 py-2 rounded-lg text-sm font-bold shadow hover:bg-indigo-700">
-                                + Add Template
-                            </button>
-                        </div>
+        <div className="mm-table-wrap">
+          <table className="mm-table">
+            <thead>
+              <tr>
+                <th style={{width: '60px'}}>SL</th>
+                <th>Template Title</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th className="mm-actions-col">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {templates.data.length === 0 && <tr><td colSpan={5} className="mm-empty">No certificate templates found.</td></tr>}
+              {templates.data.map((item, index) => (
+                <tr key={item.id}>
+                  <td>{(templates.from ?? 1) + index}</td>
+                  <td>
+                    <div style={{ fontWeight: 'bold', fontSize: '15px' }}>{item.title}</div>
+                    <div style={{ fontSize: '11px', color: '#64748b' }}>Created via system editor</div>
+                  </td>
+                  <td><span className="badge-outline">{item.template_type}</span></td>
+                  <td>
+                    <button 
+                      onClick={() => handleStatusToggle(item)}
+                      className={`mm-badge ${item.is_active ? 'badge-active' : 'badge-inactive'}`}
+                      style={{ border: 'none', cursor: 'pointer' }}
+                    >
+                      {item.is_active ? 'Active' : 'Inactive'}
+                    </button>
+                  </td>
+                  <td>
+                    <div className="mm-row-actions">
+                      <button className="icon-btn" title="Preview Certificate" onClick={() => setViewingItem(item)}><Icon name="eye" /></button>
+                      <button className="icon-btn" title="Edit Template" onClick={() => { setEditingItem(item); setIsFormOpen(true); }}><Icon name="edit" /></button>
+                      <button className="icon-btn icon-btn-danger" title="Delete" onClick={() => setDeletingItem(item)}><Icon name="trash" /></button>
                     </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <Pagination meta={templates} />
+      </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {templates.data.map((template) => (
-                            <div key={template.id} className="border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-all bg-gray-50">
-                                {/* Image Preview Block */}
-                                <div className="h-40 bg-gray-200 w-full flex items-center justify-center relative overflow-hidden">
-                                    {template.background_image ? (
-                                        <img src={`/storage/${template.background_image}`} alt={template.name} className="object-cover w-full h-full opacity-80" />
-                                    ) : (
-                                        <span className="text-gray-400 font-bold text-sm">No Background Image</span>
-                                    )}
-                                    <div className="absolute top-2 right-2 bg-black/60 text-white text-xs font-bold px-2 py-1 rounded">
-                                        {template.type}
-                                    </div>
-                                </div>
-                                {/* Details Block */}
-                                <div className="p-4 bg-white">
-                                    <h4 className="font-bold text-gray-800">{template.name}</h4>
-                                    <p className="text-xs text-gray-500 mt-1 line-clamp-2">{template.body_content}</p>
-                                    <div className="flex justify-end gap-3 mt-4 pt-3 border-t border-gray-100">
-                                        <button onClick={() => openEditModal(template)} className="text-blue-600 font-bold text-sm">Edit</button>
-                                        <button onClick={() => setItemToDelete(template)} className="text-rose-500 font-bold text-sm">Delete</button>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-
-            {/* Modal */}
-            {showModal && (
-                <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/50 p-4">
-                    <div className="bg-white rounded-2xl w-full max-w-lg p-6">
-                        <h3 className="text-lg font-bold text-gray-900 mb-4">{editMode ? 'Edit Template' : 'Add New Template'}</h3>
-                        <form onSubmit={submit} className="space-y-4">
-                            <div className="grid grid-cols-3 gap-4">
-                                <div className="col-span-2">
-                                    <label className="block text-sm font-medium text-gray-700">Template Name *</label>
-                                    <input type="text" value={data.name} onChange={e => setData('name', e.target.value)} className="mt-1 w-full rounded-lg border-gray-300" placeholder="e.g. Transfer Certificate" required />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Type *</label>
-                                    <select value={data.type} onChange={e => setData('type', e.target.value)} className="mt-1 w-full rounded-lg border-gray-300" required>
-                                        <option value="Student">Student</option>
-                                        <option value="Staff">Staff</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Body Content *</label>
-                                <p className="text-xs text-gray-400 mb-1">Use tags like [student_name], [class], [date]</p>
-                                <textarea value={data.body_content} onChange={e => setData('body_content', e.target.value)} rows="5" className="w-full rounded-lg border-gray-300" required></textarea>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Background Image (Optional)</label>
-                                <input type="file" onChange={e => setData('background_image', e.target.files[0])} className="mt-1 w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
-                            </div>
-
-                            <div className="flex justify-end gap-3 mt-6">
-                                <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 bg-gray-100 rounded-lg text-gray-700 font-bold">Cancel</button>
-                                <button type="submit" disabled={processing} className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-bold">
-                                    {editMode ? 'Update Template' : 'Save Template'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-            {itemToDelete && <ConfirmDeleteModal item={{ name: itemToDelete.name }} onCancel={() => setItemToDelete(null)} onConfirm={confirmDelete} />}
-        </AuthenticatedLayout>
-    );
+      {isFormOpen && <TemplateFormModal item={editingItem} campuses={campuses} activeCampusId={activeCampusId} onClose={() => setIsFormOpen(false)} />}
+      {viewingItem && <TemplateShowModal item={viewingItem} onClose={() => setViewingItem(null)} />}
+      {deletingItem && (
+        <ConfirmDeleteModal item={{ name: deletingItem.title }} onCancel={() => setDeletingItem(null)} onConfirm={() => {
+            router.delete(route('admin.documents.certificatetemplates.destroy', deletingItem.id), { onSuccess: () => setDeletingItem(null) });
+        }} />
+      )}
+    </AuthenticatedLayout>
+  );
 }

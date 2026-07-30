@@ -6,10 +6,14 @@ use App\Http\Controllers\Admin\AdmissionInquiryController;
 use App\Http\Controllers\Admin\AlumniController;
 use App\Http\Controllers\Admin\AlumniEventController;
 use App\Http\Controllers\Admin\ApplicantController;
+use App\Http\Controllers\Admin\AssetAssignmentController;
 use App\Http\Controllers\Admin\AssetController;
+use App\Http\Controllers\Admin\AssetMaintenanceController;
 use App\Http\Controllers\Admin\BookController;
 use App\Http\Controllers\Admin\BookIssueController;
 use App\Http\Controllers\Admin\BranchController;
+use App\Http\Controllers\Admin\CafeteriaOrderController;
+use App\Http\Controllers\Admin\CafeteriaOutletController;
 use App\Http\Controllers\Admin\CampusController;
 use App\Http\Controllers\Admin\CertificateTemplateController;
 use App\Http\Controllers\Admin\ClassroomController;
@@ -28,8 +32,11 @@ use App\Http\Controllers\Admin\ExamQuestionController;
 use App\Http\Controllers\Admin\FeeGroupController;
 use App\Http\Controllers\Admin\FeeTypeController;
 use App\Http\Controllers\Admin\FileManagerController;
+use App\Http\Controllers\Admin\FoodItemController;
 use App\Http\Controllers\Admin\GeneralSettingController;
+use App\Http\Controllers\Admin\GeneratedCertificateController;
 use App\Http\Controllers\Admin\GuardianController;
+use App\Http\Controllers\Admin\HealthRecordController;
 use App\Http\Controllers\Admin\HomeworkController;
 use App\Http\Controllers\Admin\HostelAllocationController;
 use App\Http\Controllers\Admin\HostelRoomController;
@@ -41,6 +48,9 @@ use App\Http\Controllers\Admin\LeaveTypeController;
 use App\Http\Controllers\Admin\LedgerController;
 use App\Http\Controllers\Admin\LessonController;
 use App\Http\Controllers\Admin\LessonPlanController;
+use App\Http\Controllers\Admin\MealPaymentController;
+use App\Http\Controllers\Admin\MedicalRoomController;
+use App\Http\Controllers\Admin\MedicineStockController;
 use App\Http\Controllers\Admin\MenuGroupController;
 use App\Http\Controllers\Admin\MenuItemController;
 use App\Http\Controllers\Admin\NoticeController;
@@ -61,6 +71,7 @@ use App\Http\Controllers\Admin\QuestionBankController;
 use App\Http\Controllers\Admin\QuizAttemptController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\SaleController;
 use App\Http\Controllers\Admin\SchoolClassController;
 use App\Http\Controllers\Admin\SectionController;
 use App\Http\Controllers\Admin\SmsLogController;
@@ -74,17 +85,16 @@ use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\StudentDocumentController;
 use App\Http\Controllers\Admin\StudentFeeController;
 use App\Http\Controllers\Admin\SubjectController;
+use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Admin\SystemRegistryController;
 use App\Http\Controllers\Admin\TimeTableController;
 use App\Http\Controllers\Admin\TransportAllocationController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\VaccinationController;
 use App\Http\Controllers\Admin\VehicleController;
 use App\Http\Controllers\Admin\VendorController;
+use App\Http\Controllers\Admin\VisitLogController;
 use App\Http\Controllers\Admin\VisitorController;
-use App\Http\Controllers\Admin\SupplierController;
-use App\Http\Controllers\Admin\AssetAssignmentController;
-use App\Http\Controllers\Admin\AssetMaintenanceController;
-use App\Http\Controllers\Admin\SaleController;
 use App\Http\Controllers\DynamicPageController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -223,6 +233,7 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
 
     Route::resource('library/catalogue', BookController::class)->names('library.catalogue');
     Route::resource('documents/certificatetemplates', CertificateTemplateController::class)->names('documents.certificatetemplates');
+    Route::resource('documents/certificates', GeneratedCertificateController::class)->names('documents.certificates');
 
     Route::resource('vehicles', VehicleController::class);
     Route::resource('transports', TransportAllocationController::class);
@@ -281,8 +292,23 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
         Route::resource('refunds', PaymentRefundController::class);
     });
 
-    Route::get('sales/{sale}/invoice', [SaleController::class, 'invoice'])->name('sales.invoice'); // ইনভয়েস প্রিন্ট করার জন্য
+    Route::get('sales/{sale}/invoice', [SaleController::class, 'invoice'])->name('sales.invoice'); 
     Route::resource('sales', SaleController::class);
+
+    Route::prefix('cafeteria')->name('cafeteria.')->group(function () {
+            Route::resource('outlets', CafeteriaOutletController::class);
+            Route::resource('menu-items', FoodItemController::class);
+            Route::resource('orders', CafeteriaOrderController::class);
+            Route::resource('meal-payments', MealPaymentController::class);
+        });
+
+        Route::prefix('medical')->name('medical.')->group(function () {
+            Route::resource('rooms', MedicalRoomController::class);
+            Route::resource('visit-logs', VisitLogController::class);
+            Route::resource('health-records', HealthRecordController::class);
+            Route::resource('medicine-stock', MedicineStockController::class);
+            Route::resource('vaccinations', VaccinationController::class);
+        });
 
 });
 

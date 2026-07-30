@@ -9,7 +9,6 @@ export default function CreateEdit({ order, vendors, purchase_requests, inventor
   const { auth } = usePage().props;
   const isSuperAdmin = auth?.user?.role === 'super_admin' || auth?.user?.roles?.some(r => r.name === 'Super Admin');
 
-  // Edit Mode এ আগের আইটেমগুলো লোড করা
   const initialCart = (order?.items || []).map(oi => ({
       purchase_item_id: oi.purchase_item_id,
       product: inventory_items.find(i => i.id == oi.purchase_item_id) || {},
@@ -76,7 +75,7 @@ export default function CreateEdit({ order, vendors, purchase_requests, inventor
     if (!hasVariants) {
         const exists = cart.find(c => c.purchase_item_id === product.id);
         if (exists) {
-            Swal.fire({ icon: 'warning', title: 'Already Added!', text: 'এই প্রোডাক্টটি কার্টে আগেই যুক্ত করা আছে। আপনি চাইলে পরিমাণ (Qty) বাড়াতে পারেন।' });
+            Swal.fire({ icon: 'warning', title: 'Already Added!', text: 'এই প্রোডাক্টটি কার্টে আগেই যুক্ত করা আছে। আপনি চাইলে পরিমাণ (Qty) বাড়াতে পারেন।' });
             setSearchTerm('');
             setShowResults(false);
             return;
@@ -146,210 +145,392 @@ export default function CreateEdit({ order, vendors, purchase_requests, inventor
     else post(route('admin.purchase.orders.store'));
   }
 
+  // Deterministic barcode from the PO number — same device used on the invoice,
+  // so the two documents read as part of one system.
+  const code = String(data.order_number || 'PO');
+  const barcodeWidths = Array.from(code).map(ch => (ch.charCodeAt(0) % 4) + 1);
+  const Barcode = () => (
+    <span className="po-barcode" aria-hidden="true">
+      {barcodeWidths.map((w, i) => <span key={i} style={{ width: `${w}px` }} />)}
+    </span>
+  );
+
+  const statusTone = (status) => {
+    const s = (status || '').toLowerCase();
+    if (s.includes('cancel') || s.includes('reject')) return 'status-red';
+    if (s.includes('approve') || s.includes('complete') || s.includes('receiv')) return 'status-green';
+    return 'status-amber';
+  };
+
+  // --- Custom CSS Inject ---
+  const customStyles = `
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap');
+
+    .po-app {
+      --paper: #F2F4EE;
+      --paper-soft: #FBFBF8;
+      --ink: #1E2A22;
+      --ink-soft: #445044;
+      --muted: #77806F;
+      --accent: #E2984A;
+      --accent-dark: #B96F1F;
+      --stamp-red: #BE4438;
+      --stamp-green: #2C6E4E;
+      --line: #DBD9CB;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      color: var(--ink);
+    }
+    .po-app *:focus-visible { outline: 2px solid var(--accent-dark); outline-offset: 2px; }
+    .po-app input[type="number"]::-webkit-outer-spin-button,
+    .po-app input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+    .po-eyebrow {
+      display: inline-flex; align-items: center; gap: 9px;
+      font-family: 'Space Grotesk', sans-serif; font-size: 11px; font-weight: 700;
+      letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted);
+    }
+    .po-back {
+      display: inline-flex; align-items: center; gap: 6px;
+      color: var(--muted); font-size: 13px; font-weight: 600; text-decoration: none;
+      margin-bottom: 10px; transition: color 0.15s ease;
+    }
+    .po-back:hover { color: var(--ink); }
+    .po-title { font-family: 'Space Grotesk', sans-serif; font-size: 25px; font-weight: 700; color: var(--ink); margin: 6px 0 0; letter-spacing: -0.01em; }
+
+    .po-barcode { display: inline-flex; align-items: flex-end; gap: 2px; height: 13px; }
+    .po-barcode span { display: block; height: 100%; background: var(--ink); }
+
+    .po-layout { display: grid; grid-template-columns: 1fr 380px; gap: 22px; align-items: start; }
+    @media (max-width: 1024px) { .po-layout { grid-template-columns: 1fr; } }
+
+    .po-card {
+      background: var(--paper-soft);
+      border-radius: 6px;
+      border: 1px solid var(--line);
+      box-shadow: 0 1px 2px rgba(30, 42, 34, 0.05);
+      padding: 26px;
+    }
+
+    .po-search-wrapper {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--ink); border-radius: 8px; padding: 14px 18px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+    }
+    .po-search-wrapper input {
+      border: none; background: transparent; outline: none; width: 100%;
+      font-family: 'JetBrains Mono', monospace; font-size: 15px; color: var(--paper-soft);
+    }
+    .po-search-wrapper input::placeholder { color: rgba(242,244,238,0.42); }
+    .po-search-wrapper .search-ic { color: var(--accent); font-size: 19px; flex-shrink: 0; }
+
+    .po-dropdown {
+      position: absolute; top: 100%; left: 0; right: 0; margin-top: 8px;
+      background: var(--paper-soft); border: 1px solid var(--line); border-radius: 8px;
+      max-height: 350px; overflow-y: auto; z-index: 50;
+      box-shadow: 0 12px 24px -8px rgba(30,42,34,0.18);
+    }
+    .po-row {
+      padding: 13px 18px; border-bottom: 1px dashed var(--line); cursor: pointer;
+      display: flex; justify-content: space-between; align-items: center; gap: 12px;
+      transition: background 0.15s ease;
+    }
+    .po-row:last-child { border-bottom: none; }
+    .po-row:hover { background: #ECEFE7; }
+    .po-row-name { font-weight: 600; color: var(--ink); font-size: 14.5px; }
+    .po-row-code { color: var(--accent-dark); font-family: 'JetBrains Mono', monospace; font-size: 12px; margin-right: 6px; }
+    .po-row-meta { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
+    .po-row-meta .in { color: var(--stamp-green); font-weight: 700; }
+    .po-row-meta .out { color: var(--stamp-red); font-weight: 700; }
+    .po-row-price { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--accent-dark); font-size: 15.5px; white-space: nowrap; }
+    .po-empty-search { padding: 22px; text-align: center; color: var(--stamp-red); font-weight: 600; font-size: 14px; }
+
+    .po-table { width: 100%; border-collapse: collapse; margin-top: 22px; }
+    .po-table th {
+      text-align: left; font-family: 'Space Grotesk', sans-serif; font-size: 11px; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);
+      padding: 0 12px 10px; border-bottom: 1px solid var(--line);
+    }
+    .po-table td { padding: 15px 12px; border-bottom: 1px dashed var(--line); vertical-align: middle; }
+    .po-table tr:last-child td { border-bottom: none; }
+    .po-item-name { font-weight: 600; color: var(--ink); font-size: 14px; margin-bottom: 4px; }
+    .po-item-code { font-size: 11.5px; color: var(--ink-soft); background: #E7E9DF; display: inline-block; padding: 2px 8px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; }
+    .po-variant-select { width: 100%; padding: 6px 8px; margin-bottom: 6px; font-size: 12px; border: 1px solid var(--line); border-radius: 5px; background: var(--paper-soft); color: var(--ink); }
+    .po-variant-select:last-child { margin-bottom: 0; }
+    .po-no-variant { font-size: 12px; color: #A2A899; font-style: italic; }
+
+    .po-num-field {
+      width: 100%; padding: 9px 10px; border: 1px solid var(--line); border-radius: 5px;
+      background: var(--paper-soft); font-family: 'JetBrains Mono', monospace;
+      font-variant-numeric: tabular-nums; color: var(--ink); font-weight: 600;
+    }
+    .po-num-field:focus { border-color: var(--accent-dark); }
+    .po-qty-field { text-align: center; font-size: 15px; }
+    .po-line-total { font-family: 'JetBrains Mono', monospace; font-weight: 700; text-align: right; color: var(--ink); font-size: 14.5px; }
+
+    .po-remove-btn {
+      color: var(--stamp-red); background: transparent; border: 1px solid transparent; border-radius: 5px;
+      padding: 7px 9px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s ease;
+    }
+    .po-remove-btn:hover { background: rgba(190,68,56,0.08); border-color: rgba(190,68,56,0.25); }
+
+    .po-empty-cart { text-align: center; padding: 56px 20px; border: 1px dashed var(--line); border-radius: 8px; background: #EFF1E9; }
+    .po-empty-cart h4 { font-family: 'Space Grotesk', sans-serif; color: var(--ink-soft); margin: 14px 0 6px; font-size: 15px; }
+    .po-empty-cart p { color: var(--muted); font-size: 13px; margin: 0; }
+
+    .po-total-bar { display: flex; justify-content: flex-end; margin-top: 22px; }
+    .po-total-chip {
+      background: var(--ink); border-radius: 6px; padding: 15px 22px; min-width: 300px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .po-total-chip span:first-child { font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #9AA592; }
+    .po-total-chip span:last-child { font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 700; color: var(--accent); }
+
+    /* --- Order Details panel --- */
+    .po-panel-head { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; border-bottom: 1px dashed var(--line); padding-bottom: 14px; }
+    .po-panel-head h3 { margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 700; color: var(--ink); }
+
+    .po-form-group { margin-bottom: 18px; }
+    .po-label { display: flex; align-items: center; justify-content: space-between; font-family: 'Space Grotesk', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 7px; }
+    .po-field {
+      width: 100%; padding: 10px 13px; font-size: 14px; border: 1px solid var(--line); border-radius: 6px;
+      background: var(--paper-soft); color: var(--ink); font-family: 'Inter', sans-serif; transition: all 0.15s ease;
+    }
+    .po-field:focus { outline: none; border-color: var(--accent-dark); box-shadow: 0 0 0 3px rgba(185,111,31,0.12); }
+    .po-error { color: var(--stamp-red); font-size: 12px; margin-top: 4px; display: block; }
+
+    .status-badge { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 999px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; border: 1px solid; }
+    .status-badge.status-amber { color: var(--accent-dark); border-color: var(--accent-dark); background: rgba(185,111,31,0.08); }
+    .status-badge.status-green { color: var(--stamp-green); border-color: var(--stamp-green); background: rgba(44,110,78,0.08); }
+    .status-badge.status-red { color: var(--stamp-red); border-color: var(--stamp-red); background: rgba(190,68,56,0.08); }
+
+    .po-submit-btn {
+      display: flex; align-items: center; justify-content: center; gap: 9px; width: 100%;
+      background: var(--ink); color: var(--accent); border: none; padding: 15px;
+      font-family: 'Space Grotesk', sans-serif; font-size: 14.5px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.03em; border-radius: 6px; cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .po-submit-btn:hover:not(:disabled) { background: #14201A; transform: translateY(-1px); }
+    .po-submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  `;
+
   return (
     <AuthenticatedLayout
       header={
-        <div className="page-head">
+        <div className="po-app">
+          <style>{customStyles}</style>
           <div>
-            <Link href={route('admin.purchase.orders.index')} className="back-link" style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#64748b', fontSize: '13px', marginBottom: '5px', textDecoration: 'none' }}>
-                <Icon name="arrow-left" style={{ fontSize: '12px' }}/> Back to Orders
+            <Link href={route('admin.purchase.orders.index')} className="po-back">
+                <Icon name="arrow-left" style={{ fontSize: '13px' }}/> Back to Orders
             </Link>
-            <h1>{isEdit ? 'Edit Purchase Order' : 'Create New Purchase Order'}</h1>
+            <div className="po-eyebrow"><Barcode /> Purchase Order</div>
+            <h1 className="po-title">{isEdit ? 'Edit Purchase Order' : 'Create New Purchase Order'}</h1>
           </div>
         </div>
       }
     >
       <Head title={isEdit ? 'Edit PO' : 'Create PO'} />
 
-      <form onSubmit={submit}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '20px', alignItems: 'start' }}>
+      <div className="po-app">
+        <style>{customStyles}</style>
+        <form onSubmit={submit}>
+          <div className="po-layout">
 
-            {/* Left Column: Cart & Search Section */}
-            <div className="card mm-card" style={{ padding: '20px', overflow: 'visible' }}>
+              {/* Left Column: Order Items */}
+              <div className="po-card" style={{ overflow: 'visible' }}>
 
-                {/* --- ADVANCED SEARCH BOX --- */}
-                <div style={{ marginBottom: '25px', position: 'relative' }} ref={searchRef}>
-                    <div style={{ display: 'flex', alignItems: 'center', background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '10px 15px' }}>
-                        <Icon name="search" style={{ color: '#64748b', marginRight: '10px' }} />
-                        <input
-                            type="text"
-                            placeholder="Search product by name or SKU to add..."
-                            value={searchTerm}
-                            onChange={(e) => { setSearchTerm(e.target.value); setShowResults(true); }}
-                            onFocus={() => setShowResults(true)}
-                            style={{ border: 'none', background: 'transparent', outline: 'none', width: '100%', fontSize: '16px' }}
-                        />
-                    </div>
+                  <div className="po-eyebrow" style={{ marginBottom: '12px' }}>Order Items</div>
 
-                    {showResults && searchTerm && (
-                        <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #cbd5e1', borderRadius: '8px', marginTop: '5px', maxHeight: '300px', overflowY: 'auto', zIndex: 50, boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}>
-                            {filteredItems.map(item => (
-                                <div
-                                    key={item.id}
-                                    onClick={() => addToCart(item)}
-                                    style={{ padding: '12px 15px', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-                                    onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
-                                    onMouseLeave={(e) => e.currentTarget.style.background = '#fff'}
-                                >
-                                    <div>
-                                        <div style={{ fontWeight: '600', color: '#0f172a' }}>
-                                            {item.item_code && <span style={{ color: '#4f46e5', marginRight: '5px' }}>[{item.item_code}]</span>}
-                                            {item.name}
-                                        </div>
-                                        <div style={{ fontSize: '12px', color: '#64748b', marginTop: '3px' }}>
-                                            {item.size?.length > 0 && <span>Sizes: {item.size.join(', ')} | </span>}
-                                            {item.color?.length > 0 && <span>Colors: {item.color.join(', ')} | </span>}
-                                            Stock: {item.quantity}
-                                        </div>
-                                    </div>
-                                    <div style={{ fontWeight: 'bold', color: '#059669' }}>৳{item.purchase_price}</div>
-                                </div>
-                            ))}
-                            {filteredItems.length === 0 && (
-                                <div style={{ padding: '15px', textAlign: 'center', color: '#b91c1c' }}>কোনো প্রোডাক্ট পাওয়া যায়নি!</div>
-                            )}
-                        </div>
-                    )}
-                </div>
-                {/* ----------------------------- */}
+                  {/* --- SEARCH BOX --- */}
+                  <div style={{ position: 'relative' }} ref={searchRef}>
+                      <div className="po-search-wrapper">
+                          <Icon name="search"  />
+                          <input
+                              type="text"
+                              placeholder="Search product by name or SKU to add..."
+                              value={searchTerm}
+                              onChange={(e) => { setSearchTerm(e.target.value); setShowResults(true); }}
+                              onFocus={() => setShowResults(true)}
+                          />
+                      </div>
 
-                <table className="mm-table" style={{ border: '1px solid #e2e8f0', borderRadius: '8px' }}>
-                    <thead style={{ background: '#f8fafc' }}>
-                        <tr>
-                            <th style={{ width: '32%' }}>Product Detail</th>
-                            <th style={{ width: '20%' }}>Variants</th>
-                            <th style={{ width: '16%' }}>Qty</th>
-                            <th style={{ width: '15%' }}>Unit Price</th>
-                            <th style={{ width: '12%', textAlign: 'right' }}>Subtotal</th>
-                            <th style={{ width: '5%' }}></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {cart.map((c, index) => {
-                            const p = c.product;
-                            const hasSize = p?.size && p.size.length > 0;
-                            const hasColor = p?.color && p.color.length > 0;
+                      {showResults && searchTerm && (
+                          <div className="po-dropdown">
+                              {filteredItems.map(item => (
+                                  <div key={item.id} onClick={() => addToCart(item)} className="po-row">
+                                      <div>
+                                          <div className="po-row-name">
+                                              {item.item_code && <span className="po-row-code">[{item.item_code}]</span>}
+                                              {item.name}
+                                          </div>
+                                          <div className="po-row-meta">
+                                              {item.size?.length > 0 && <span>Sizes: {item.size.join(', ')} &nbsp;·&nbsp; </span>}
+                                              {item.color?.length > 0 && <span>Colors: {item.color.join(', ')} &nbsp;·&nbsp; </span>}
+                                              <span className={item.quantity > 0 ? 'in' : 'out'}>Stock: {item.quantity}</span>
+                                          </div>
+                                      </div>
+                                      <div className="po-row-price">৳ {item.purchase_price}</div>
+                                  </div>
+                              ))}
+                              {filteredItems.length === 0 && (
+                                  <div className="po-empty-search">কোনো প্রোডাক্ট পাওয়া যায়নি!</div>
+                              )}
+                          </div>
+                      )}
+                  </div>
+                  {/* ----------------------------- */}
 
-                            return (
-                                <tr key={index}>
-                                    <td>
-                                        <div style={{ fontWeight: 600, color: '#111827' }}>{p?.name}</div>
-                                        <div style={{ fontSize: '12px', color: '#64748b' }}>{p?.item_code}</div>
-                                    </td>
-                                    <td>
-                                        {hasSize && (
-                                            <select value={c.size} onChange={(e) => handleCartChange(index, 'size', e.target.value)} style={{ width: '100%', padding: '4px', marginBottom: '4px', fontSize: '12px', border: '1px solid #cbd5e1', borderRadius: '4px' }} required>
-                                                <option value="" disabled>Select Size</option>
-                                                {p.size.map((s, i) => <option key={i} value={s}>{s}</option>)}
-                                            </select>
-                                        )}
-                                        {hasColor && (
-                                            <select value={c.color} onChange={(e) => handleCartChange(index, 'color', e.target.value)} style={{ width: '100%', padding: '4px', fontSize: '12px', border: '1px solid #cbd5e1', borderRadius: '4px' }} required>
-                                                <option value="" disabled>Select Color</option>
-                                                {p.color.map((color, i) => <option key={i} value={color}>{color}</option>)}
-                                            </select>
-                                        )}
-                                        {(!hasSize && !hasColor) && <span style={{ fontSize:'12px', color:'#94a3b8'}}>No Variants</span>}
-                                    </td>
-                                    <td>
-                                        <input
+                  <table className="po-table">
+                      <thead>
+                          <tr>
+                              <th style={{ width: '32%' }}>Product Detail</th>
+                              <th style={{ width: '22%' }}>Variants</th>
+                              <th style={{ width: '15%' }}>Qty</th>
+                              <th style={{ width: '15%' }}>Unit Price</th>
+                              <th style={{ width: '12%', textAlign: 'right' }}>Subtotal</th>
+                              <th style={{ width: '4%', textAlign: 'center' }}></th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          {cart.map((c, index) => {
+                              const p = c.product;
+                              const hasSize = p?.size && p.size.length > 0;
+                              const hasColor = p?.color && p.color.length > 0;
+
+                              return (
+                                  <tr key={index}>
+                                      <td>
+                                          <div className="po-item-name">{p?.name}</div>
+                                          <div className="po-item-code">{p?.item_code}</div>
+                                      </td>
+                                      <td>
+                                          {hasSize && (
+                                              <select className="po-variant-select" value={c.size} onChange={(e) => handleCartChange(index, 'size', e.target.value)} required>
+                                                  <option value="" disabled>Select Size</option>
+                                                  {p.size.map((s, i) => <option key={i} value={s}>{s}</option>)}
+                                              </select>
+                                          )}
+                                          {hasColor && (
+                                              <select className="po-variant-select" value={c.color} onChange={(e) => handleCartChange(index, 'color', e.target.value)} required>
+                                                  <option value="" disabled>Select Color</option>
+                                                  {p.color.map((color, i) => <option key={i} value={color}>{color}</option>)}
+                                              </select>
+                                          )}
+                                          {(!hasSize && !hasColor) && <span className="po-no-variant">No Variants</span>}
+                                      </td>
+                                      <td>
+                                          <input
+                                              type="number"
+                                              min="1"
+                                              value={c.quantity}
+                                              onChange={(e) => handleCartChange(index, 'quantity', e.target.value)}
+                                              required
+                                              className="po-num-field po-qty-field"
+                                          />
+                                      </td>
+                                      <td>
+                                          <input
                                             type="number"
-                                            min="1"
-                                            value={c.quantity}
-                                            onChange={(e) => handleCartChange(index, 'quantity', e.target.value)}
+                                            step="0.01"
+                                            min="0"
+                                            value={c.unit_price}
+                                            onChange={(e) => handleCartChange(index, 'unit_price', e.target.value)}
                                             required
-                                            style={{
-                                                width: '100%',
-                                                padding: '10px 8px',
-                                                fontSize: '16px',
-                                                fontWeight: 'bold',
-                                                textAlign: 'center',
-                                                border: '1px solid #94a3b8',
-                                                borderRadius: '6px'
-                                            }}
-                                        />
-                                    </td>
-                                    <td>
-                                        <input type="number" step="0.01" min="0" value={c.unit_price} onChange={(e) => handleCartChange(index, 'unit_price', e.target.value)} required style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
-                                    </td>
-                                    <td style={{ fontWeight: 'bold', textAlign: 'right', verticalAlign: 'middle', color: '#0f172a' }}>
-                                        ৳ {(c.quantity * c.unit_price).toFixed(2)}
-                                    </td>
-                                    <td style={{ verticalAlign: 'middle', textAlign: 'center' }}>
-                                        <button type="button" onClick={() => removeCartItem(index)} style={{ color: '#b91c1c', border: 'none', background: '#fee2e2', borderRadius: '4px', padding: '5px 8px', cursor: 'pointer' }}>
-                                            <Icon name="trash" />
-                                        </button>
-                                    </td>
-                                </tr>
-                            );
-                        })}
-                        {cart.length === 0 && (
-                            <tr><td colSpan="6" style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
-                                <Icon name="cart" style={{ fontSize: '30px', color: '#cbd5e1', marginBottom: '10px', display: 'block', margin: '0 auto' }} />
-                                উপরের সার্চ বক্স থেকে প্রোডাক্ট খুঁজুন
-                            </td></tr>
-                        )}
-                    </tbody>
-                </table>
+                                            className="po-num-field"
+                                          />
+                                      </td>
+                                      <td className="po-line-total">৳ {(c.quantity * c.unit_price).toFixed(2)}</td>
+                                      <td style={{ textAlign: 'center' }}>
+                                          <button type="button" onClick={() => removeCartItem(index)} className="po-remove-btn" title="Remove Item">
+                                              <Icon name="trash" style={{ fontSize: '15px' }}/>
+                                          </button>
+                                      </td>
+                                  </tr>
+                              );
+                          })}
+                          {cart.length === 0 && (
+                              <tr>
+                                  <td colSpan="6" style={{ padding: '20px 0', border: 'none' }}>
+                                      <div className="po-empty-cart">
+                                          <Icon name="box" style={{ fontSize: '30px', color: '#A2A899' }} />
+                                          <h4>No items added yet</h4>
+                                          <p>উপরের সার্চ বক্স থেকে প্রোডাক্ট খুঁজুন এবং কার্টে যোগ করুন</p>
+                                      </div>
+                                  </td>
+                              </tr>
+                          )}
+                      </tbody>
+                  </table>
 
-                <div style={{ textAlign: 'right', marginTop: '20px', fontSize: '20px', background: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                    Grand Total: <strong style={{ color: '#16a34a' }}>৳ {Number(data.total_amount || 0).toFixed(2)}</strong>
-                </div>
-            </div>
+                  <div className="po-total-bar">
+                      <div className="po-total-chip">
+                          <span>Grand Total</span>
+                          <span>৳ {Number(data.total_amount || 0).toFixed(2)}</span>
+                      </div>
+                  </div>
+              </div>
 
-            {/* Right Column: Order Details */}
-            <div className="card mm-card" style={{ padding: '20px' }}>
-                <h3 style={{ margin: '0 0 15px 0', fontSize: '18px', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>Order Information</h3>
+              {/* Right Column: Order Details */}
+              <div className="po-card">
+                  <div className="po-panel-head">
+                      <Icon name="file" style={{ fontSize: '19px', color: 'var(--accent-dark)' }} />
+                      <h3>Order Details</h3>
+                  </div>
 
-                <div className="mm-form-grid" style={{ gridTemplateColumns: '1fr' }}>
-                    <label>
-                        <span>Campus *</span>
-                        <select value={data.campus_id || ''} onChange={(e) => setData('campus_id', e.target.value)} disabled={!isSuperAdmin} required>
-                            {campuses?.map(campus => <option key={campus.id} value={campus.id}>{campus.name}</option>)}
-                        </select>
-                        {errors.campus_id && <em style={{color:'red'}}>{errors.campus_id}</em>}
-                    </label>
+                  <div className="po-form-group">
+                      <label className="po-label">Campus *</label>
+                      <select className="po-field" value={data.campus_id || ''} onChange={(e) => setData('campus_id', e.target.value)} disabled={!isSuperAdmin} required>
+                          {campuses?.map(campus => <option key={campus.id} value={campus.id}>{campus.name}</option>)}
+                      </select>
+                      {errors.campus_id && <span className="po-error">{errors.campus_id}</span>}
+                  </div>
 
-                    <label>
-                        <span>PO Number *</span>
-                        <input value={data.order_number} onChange={(e) => setData('order_number', e.target.value)} required />
-                        {errors.order_number && <em style={{color:'red'}}>{errors.order_number}</em>}
-                    </label>
+                  <div className="po-form-group">
+                      <label className="po-label">
+                          <span>PO Number *</span>
+                          {isEdit && order?.status && <span className={`status-badge ${statusTone(order.status)}`}>{order.status}</span>}
+                      </label>
+                      <input className="po-field" value={data.order_number} onChange={(e) => setData('order_number', e.target.value)} required />
+                      <div style={{ marginTop: '8px' }}><Barcode /></div>
+                      {errors.order_number && <span className="po-error">{errors.order_number}</span>}
+                  </div>
 
-                    <label>
-                        <span>Select Vendor *</span>
-                        <select value={data.vendor_id} onChange={(e) => setData('vendor_id', e.target.value)} required>
-                            <option value="" disabled>-- Choose Vendor --</option>
-                            {vendors?.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
-                        </select>
-                        {errors.vendor_id && <em style={{color:'red'}}>{errors.vendor_id}</em>}
-                    </label>
+                  <div className="po-form-group">
+                      <label className="po-label">Select Vendor *</label>
+                      <select className="po-field" value={data.vendor_id} onChange={(e) => setData('vendor_id', e.target.value)} required>
+                          <option value="" disabled>-- Choose Vendor --</option>
+                          {vendors?.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
+                      </select>
+                      {errors.vendor_id && <span className="po-error">{errors.vendor_id}</span>}
+                  </div>
 
-                    <label>
-                        <span>Order Date *</span>
-                        <input type="date" value={data.order_date} onChange={(e) => setData('order_date', e.target.value)} required />
-                    </label>
+                  <div className="po-form-group">
+                      <label className="po-label">Order Date *</label>
+                      <input type="date" className="po-field" value={data.order_date} onChange={(e) => setData('order_date', e.target.value)} required />
+                  </div>
 
-                    <label>
-                        <span>Shipping Address</span>
-                        <textarea rows="2" value={data.shipping_address} onChange={(e) => setData('shipping_address', e.target.value)} />
-                    </label>
+                  <div className="po-form-group">
+                      <label className="po-label">Shipping Address</label>
+                      <textarea className="po-field" rows="2" style={{ resize: 'vertical' }} value={data.shipping_address} onChange={(e) => setData('shipping_address', e.target.value)} />
+                  </div>
 
-                    <label>
-                        <span>Terms & Notes</span>
-                        <textarea rows="2" value={data.notes} onChange={(e) => setData('notes', e.target.value)} />
-                    </label>
-                </div>
+                  <div className="po-form-group">
+                      <label className="po-label">Terms & Notes</label>
+                      <textarea className="po-field" rows="2" style={{ resize: 'vertical' }} placeholder="Add any special instructions..." value={data.notes} onChange={(e) => setData('notes', e.target.value)} />
+                  </div>
 
-                <div style={{ marginTop: '20px' }}>
-                    <button type="submit" className="btn" style={{ width: '100%', justifyContent: 'center', padding: '12px', fontSize: '16px' }} disabled={processing}>
-                        <Icon name="check" /> {processing ? 'Processing...' : (isEdit ? 'Update Order' : 'Place Order')}
-                    </button>
-                </div>
-            </div>
+                  <div style={{ marginTop: '28px' }}>
+                      <button type="submit" className="po-submit-btn" disabled={processing}>
+                          <Icon name={isEdit ? "edit" : "check-circle"} style={{ fontSize: '18px' }} />
+                          {processing ? 'Processing...' : (isEdit ? 'Update Purchase Order' : 'Place Purchase Order')}
+                      </button>
+                  </div>
+              </div>
 
-        </div>
-      </form>
+          </div>
+        </form>
+      </div>
     </AuthenticatedLayout>
   );
 }

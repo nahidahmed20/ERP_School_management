@@ -11,13 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('certificate_templates', function (Blueprint $table) {
+        Schema::create('generated_certificates', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('campus_id');
-            $table->string('title');
-            $table->string('template_type'); 
-            $table->text('content_body');
-            $table->boolean('is_active')->default(true);
+            $table->unsignedBigInteger('certificate_template_id');
+            $table->unsignedBigInteger('user_id'); // Student
+            $table->string('certificate_no')->unique();
+            $table->date('issue_date');
             $table->timestamps();
             $table->softDeletes();
         });
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('certificate_templates');
+        Schema::dropIfExists('generated_certificates');
     }
 };

@@ -11,15 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('certificate_templates', function (Blueprint $table) {
+        Schema::create('medical_rooms', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('campus_id');
-            $table->string('title');
-            $table->string('template_type'); 
-            $table->text('content_body');
+            $table->unsignedBigInteger('campus_id')->nullable();
+            $table->string('room_number');
+            $table->string('nurse_name');
+            $table->string('phone')->nullable();
+            $table->integer('total_beds')->default(1);
             $table->boolean('is_active')->default(true);
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('certificate_templates');
+        Schema::dropIfExists('medical_rooms');
     }
 };

@@ -105,7 +105,8 @@ class MenuSeeder extends Seeder
                 ]],
                 ['key' => 'purchase', 'label' => 'Inventory & Assets', 'icon' => 'box', 'count' => 7, 'children' => [
                     ['key' => 'admin.purchase.items.index', 'label' => 'Products & Items', 'route' => 'admin.purchase.items.index'],
-                    ['key' => 'admin.purchase.suppliers.index', 'label' => 'Suppliers & Vendors', 'route' => 'admin.purchase.suppliers.index'],
+                    ['key' => 'admin.purchase.suppliers.index', 'label' => 'Suppliers ', 'route' => 'admin.purchase.suppliers.index'],
+                    ['key' => 'admin.purchase.vendors.index', 'label' => 'Vendors', 'route' => 'admin.purchase.vendors.index'],
                     ['key' => 'admin.purchase.requests.index', 'label' => 'Purchase Requests', 'route' => 'admin.purchase.requests.index'],
                     ['key' => 'admin.purchase.orders.index', 'label' => 'Purchase Orders', 'route' => 'admin.purchase.orders.index'],
                     ['key' => 'admin.purchase.orders.create', 'label' => 'Purchase Orders Create', 'route' => 'admin.purchase.orders.create'],
@@ -140,7 +141,7 @@ class MenuSeeder extends Seeder
                     ['key' => 'admin.cafeteria.meal-payments.index', 'label' => 'Meal Payments', 'route' => 'admin.cafeteria.meal-payments.index'],
                 ]],
                 ['key' => 'medical', 'label' => 'Medical Room', 'icon' => 'cross', 'count' => 5, 'children' => [
-                    ['key' => 'admin.medical.rooms.index', 'label' => 'Medical Rooms & Staff', 'route' => 'admin.medical.rooms.index'],
+                    ['key' => 'admin.medical.rooms.index', 'label' => 'Medical Rooms', 'route' => 'admin.medical.rooms.index'],
                     ['key' => 'admin.medical.visit-logs.index', 'label' => 'Visit Log', 'route' => 'admin.medical.visit-logs.index'],
                     ['key' => 'admin.medical.health-records.index', 'label' => 'Student Health Records', 'route' => 'admin.medical.health-records.index'],
                     ['key' => 'admin.medical.medicine-stock.index', 'label' => 'Medicine Stock', 'route' => 'admin.medical.medicine-stock.index'],
@@ -162,8 +163,8 @@ class MenuSeeder extends Seeder
 
             ['label' => 'Documents & Certificates', 'items' => [
                 ['key' => 'documents', 'label' => 'Certificates & ID Cards', 'icon' => 'award', 'count' => 4, 'children' => [
-                    ['key' => 'documents.certificatetemplates', 'label' => 'Certificate Templates', 'route' => 'admin.documents.certificatetemplates.index'],
-                    ['key' => 'documents.certificates', 'label' => 'Generated Certificates', 'route' => 'admin.documents.certificates'],
+                    ['key' => 'admin.documents.certificatetemplates.index', 'label' => 'Certificate Templates', 'route' => 'admin.documents.certificatetemplates.index'],
+                    ['key' => 'admin.documents.certificates', 'label' => 'Generated Certificates', 'route' => 'admin.documents.certificates'],
                     ['key' => 'documents.idcards', 'label' => 'ID Card Templates', 'route' => 'admin.documents.idcards'],
                     ['key' => 'documents.transcripts', 'label' => 'Transcript Templates', 'route' => 'admin.documents.transcripts'],
                 ]],
