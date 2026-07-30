@@ -4,7 +4,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
 import Pagination from '@/Components/Pagination';
 import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
-import TemplateShowModal from './Partials/TemplateShowModal';
+import IdCardShowModal from './Partials/IdCardShowModal';
 import Swal from 'sweetalert2';
 
 export default function Index({ templates, campuses, filters }) {
@@ -18,11 +18,12 @@ export default function Index({ templates, campuses, filters }) {
   }, [flash]);
 
   function applyFilters() {
-    router.get(route('admin.documents.certificatetemplates.index'), { search }, { preserveState: true, replace: true });
+    router.get(route('admin.documents.idcards.index'), { search }, { preserveState: true, replace: true });
   }
 
   const handleStatusToggle = (item) => {
-    router.put(route('admin.documents.certificatetemplates.update', item.id), {
+    // Fast status toggle without going to edit page
+    router.put(route('admin.documents.idcards.update', item.id), {
       ...item,
       is_active: !item.is_active
     }, { preserveScroll: true });
@@ -32,17 +33,17 @@ export default function Index({ templates, campuses, filters }) {
     <AuthenticatedLayout
       header={
         <div className="page-head">
-          <div><span className="eyebrow">Documents & Certificates</span><h1>Certificate Templates</h1></div>
+          <div><span className="eyebrow">Documents & Certificates</span><h1>ID Card Templates</h1></div>
           <div className="mm-head-actions">
             {/* LINK TO CREATE PAGE */}
-            <Link href={route('admin.documents.certificatetemplates.create')} className="btn">
+            <Link href={route('admin.documents.idcards.create')} className="btn">
               <Icon name="plus" /> Create Template
             </Link>
           </div>
         </div>
       }
     >
-      <Head title="Certificate Templates" />
+      <Head title="ID Card Templates" />
       <div className="card mm-card">
         <div className="mm-filters">
           <div className="search">
@@ -55,15 +56,15 @@ export default function Index({ templates, campuses, filters }) {
         <div className="mm-table-wrap">
           <table className="mm-table">
             <thead>
-              <tr><th style={{width: '60px'}}>SL</th><th>Title</th><th>Type</th><th>Status</th><th className="mm-actions-col">Actions</th></tr>
+              <tr><th>Title</th><th>Layout</th><th>Color Theme</th><th>Status</th><th className="mm-actions-col">Actions</th></tr>
             </thead>
             <tbody>
               {templates.data.length === 0 && <tr><td colSpan={5} className="mm-empty">No templates found.</td></tr>}
-              {templates.data.map((item, index) => (
+              {templates.data.map(item => (
                 <tr key={item.id}>
-                  <td>{(templates.from ?? 1) + index}</td>
                   <td><strong>{item.title}</strong></td>
-                  <td><span className="badge-outline">{item.template_type}</span></td>
+                  <td><span className="badge-outline">{item.layout_type}</span></td>
+                  <td><div style={{width: '24px', height: '24px', borderRadius: '4px', background: item.theme_color}}></div></td>
                   <td>
                     <button onClick={() => handleStatusToggle(item)} className={`mm-badge ${item.is_active ? 'badge-active' : 'badge-inactive'}`} style={{ border: 'none', cursor: 'pointer' }}>
                       {item.is_active ? 'Active' : 'Inactive'}
@@ -71,10 +72,10 @@ export default function Index({ templates, campuses, filters }) {
                   </td>
                   <td>
                     <div className="mm-row-actions">
-                      <button className="icon-btn" title="Preview" onClick={() => setViewingItem(item)}><Icon name="eye" /></button>
+                      <button className="icon-btn" title="Live Preview" onClick={() => setViewingItem(item)}><Icon name="eye" /></button>
 
                       {/* LINK TO EDIT PAGE */}
-                      <Link href={route('admin.documents.certificatetemplates.edit', item.id)} className="icon-btn" title="Edit">
+                      <Link href={route('admin.documents.idcards.edit', item.id)} className="icon-btn" title="Edit">
                         <Icon name="edit" />
                       </Link>
 
@@ -89,10 +90,10 @@ export default function Index({ templates, campuses, filters }) {
         <Pagination meta={templates} />
       </div>
 
-      {viewingItem && <TemplateShowModal item={viewingItem} onClose={() => setViewingItem(null)} />}
+      {viewingItem && <IdCardShowModal item={viewingItem} onClose={() => setViewingItem(null)} />}
       {deletingItem && (
         <ConfirmDeleteModal item={{ name: deletingItem.title }} onCancel={() => setDeletingItem(null)} onConfirm={() => {
-            router.delete(route('admin.documents.certificatetemplates.destroy', deletingItem.id), { onSuccess: () => setDeletingItem(null) });
+            router.delete(route('admin.documents.idcards.destroy', deletingItem.id), { onSuccess: () => setDeletingItem(null) });
         }} />
       )}
     </AuthenticatedLayout>

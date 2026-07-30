@@ -11,17 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('certificate_templates', function (Blueprint $table) {
+        Schema::create('transcript_templates', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('campus_id');
             $table->string('title');
-            $table->string('template_type');
-            $table->text('content_body');
-            $table->string('background_image')->nullable();
-            $table->string('signature_1_title')->default('Principal');
-            $table->string('signature_1_image')->nullable();
-            $table->string('signature_2_title')->default('Director');
-            $table->string('signature_2_image')->nullable();
+            $table->string('grading_system')->default('GPA 5.0');
+            $table->text('header_text')->nullable();
+            $table->text('footer_text')->nullable();
+            $table->string('watermark_image')->nullable();
+            $table->string('authorized_signature_title')->default('Controller of Examinations');
+            $table->string('authorized_signature_image')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
             $table->softDeletes();
@@ -33,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('certificate_templates');
+        Schema::dropIfExists('transcript_templates');
     }
 };

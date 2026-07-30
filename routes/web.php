@@ -95,6 +95,8 @@ use App\Http\Controllers\Admin\VehicleController;
 use App\Http\Controllers\Admin\VendorController;
 use App\Http\Controllers\Admin\VisitLogController;
 use App\Http\Controllers\Admin\VisitorController;
+use App\Http\Controllers\Admin\IdCardTemplateController;
+use App\Http\Controllers\Admin\TranscriptTemplateController;
 use App\Http\Controllers\DynamicPageController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -234,6 +236,8 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
     Route::resource('library/catalogue', BookController::class)->names('library.catalogue');
     Route::resource('documents/certificatetemplates', CertificateTemplateController::class)->names('documents.certificatetemplates');
     Route::resource('documents/certificates', GeneratedCertificateController::class)->names('documents.certificates');
+    Route::resource('documents/idcards', IdCardTemplateController::class)->names('documents.idcards');
+    Route::resource('documents/transcripts', TranscriptTemplateController::class)->names('documents.transcripts');
 
     Route::resource('vehicles', VehicleController::class);
     Route::resource('transports', TransportAllocationController::class);
@@ -292,7 +296,7 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
         Route::resource('refunds', PaymentRefundController::class);
     });
 
-    Route::get('sales/{sale}/invoice', [SaleController::class, 'invoice'])->name('sales.invoice'); 
+    Route::get('sales/{sale}/invoice', [SaleController::class, 'invoice'])->name('sales.invoice');
     Route::resource('sales', SaleController::class);
 
     Route::prefix('cafeteria')->name('cafeteria.')->group(function () {

@@ -164,9 +164,9 @@ class MenuSeeder extends Seeder
             ['label' => 'Documents & Certificates', 'items' => [
                 ['key' => 'documents', 'label' => 'Certificates & ID Cards', 'icon' => 'award', 'count' => 4, 'children' => [
                     ['key' => 'admin.documents.certificatetemplates.index', 'label' => 'Certificate Templates', 'route' => 'admin.documents.certificatetemplates.index'],
-                    ['key' => 'admin.documents.certificates', 'label' => 'Generated Certificates', 'route' => 'admin.documents.certificates'],
-                    ['key' => 'documents.idcards', 'label' => 'ID Card Templates', 'route' => 'admin.documents.idcards'],
-                    ['key' => 'documents.transcripts', 'label' => 'Transcript Templates', 'route' => 'admin.documents.transcripts'],
+                    ['key' => 'admin.documents.certificates.index', 'label' => 'Generated Certificates', 'route' => 'admin.documents.certificates.index'],
+                    ['key' => 'admin.documents.idcards.index', 'label' => 'ID Card Templates', 'route' => 'admin.documents.idcards.index'],
+                    ['key' => 'admin.documents.transcripts.index', 'label' => 'Transcript Templates', 'route' => 'admin.documents.transcripts.index'],
                 ]],
             ]],
 

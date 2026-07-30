@@ -1,0 +1,531 @@
+/* ===================================================================
+   ID Card Template Builder — styles for classes used in IdCardForm.jsx
+   Append to your existing mm- stylesheet (e.g. settings-registry.css)
+   so it inherits the shared forest-green / gold theme tokens.
+   =================================================================== */
+
+/* ---- Two-column layout that collapses on smaller screens ---- */
+.idcard-layout {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .idcard-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---- Field errors ---- */
+.mm-field-error {
+  color: #b91c1c;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.mm-hint-text {
+  color: #64748b;
+  font-size: 11px;
+  margin-top: 4px;
+}
+
+.mm-char-count {
+  text-align: right;
+  color: #94a3b8;
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+.mm-dirty-hint {
+  color: #b45309;
+  font-size: 12px;
+  font-style: italic;
+}
+
+/* ---- Read-only campus field for non-super-admins ---- */
+.mm-static-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  color: #334155;
+  font-weight: 500;
+}
+
+/* ---- Theme color swatches ---- */
+.mm-color-swatches {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.mm-swatch {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  outline: 1px solid #cbd5e1;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.15s ease, outline-color 0.15s ease;
+}
+
+.mm-swatch:hover {
+  transform: scale(1.12);
+}
+
+.mm-swatch.active {
+  outline: 2px solid #1B4332;
+  outline-offset: 2px;
+}
+
+/* ---- Image upload fields ---- */
+.mm-image-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mm-image-thumb {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+}
+
+.mm-image-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.mm-image-remove {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: none;
+  background: #b91c1c;
+  color: #fff;
+  font-size: 10px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---- Live preview pane ---- */
+.idcard-preview-pane {
+  position: sticky;
+  top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: center;
+}
+
+.mm-preview-toggle {
+  display: flex;
+  gap: 8px;
+}
+
+.mm-preview-toggle .btn.active {
+  background: #1B4332;
+  color: #fff;
+  border-color: #1B4332;
+}
+
+.mm-preview-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #94a3b8;
+  font-size: 11px;
+  text-align: center;
+  max-width: 260px;
+}
+
+/* ---- Card preview ---- */
+.idcard-preview-card {
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #cbd5e1;
+  transition: all 0.3s ease;
+  position: relative;
+  font-family: 'Inter', sans-serif;
+}
+
+.idcard-preview-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.idcard-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: bold;
+  padding: 0 10px;
+  position: relative;
+  font-family: 'Fraunces', serif;
+}
+
+.idcard-preview-logo {
+  height: 35px;
+  width: 35px;
+  object-fit: contain;
+  border-radius: 4px;
+  background: #fff;
+  padding: 2px;
+}
+
+.idcard-preview-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 15px;
+  position: relative;
+}
+
+.idcard-preview-avatar {
+  width: 75px;
+  height: 75px;
+  background: #e2e8f0;
+  border-radius: 50%;
+  border-width: 3px;
+  border-style: solid;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+}
+
+.idcard-preview-name {
+  font-size: 16px;
+  color: #0f172a;
+}
+
+.idcard-preview-meta {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.idcard-preview-details {
+  font-size: 11px;
+  color: #475569;
+  text-align: left;
+  width: 100%;
+  line-height: 1.6;
+}
+
+.idcard-preview-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.idcard-preview-blood {
+  color: #b91c1c;
+  font-weight: bold;
+}
+
+.idcard-preview-address {
+  font-size: 9px;
+  line-height: 1.2;
+  margin-top: 2px;
+}
+
+.idcard-preview-sign {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 15px 10px 15px;
+  position: relative;
+  align-items: flex-end;
+}
+
+.idcard-preview-sign-label {
+  font-size: 9px;
+  color: #64748b;
+}
+
+.idcard-preview-sig {
+  height: 25px;
+  object-fit: contain;
+}
+
+.idcard-preview-sig-line {
+  border-top: 1px solid #cbd5e1;
+  font-size: 9px;
+  color: #64748b;
+  padding-top: 2px;
+  width: 80px;
+  text-align: center;
+}
+
+.idcard-preview-footer {
+  height: 8px;
+  position: relative;
+}
+
+.idcard-preview-back-body {
+  flex: 1;
+  padding: 14px;
+  font-size: 10px;
+  color: #475569;
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.idcard-preview-barcode {
+  align-self: center;
+  font-family: monospace;
+  letter-spacing: 3px;
+  font-size: 11px;
+  padding: 6px 10px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 4px;
+  color: #334155;
+}
+
+/* ===================================================================
+   Design gallery, alignment controls, field-label grid, and the new
+   shape variants (banner / framed / minimal / split) used by
+   IdCardPreview.jsx.
+   =================================================================== */
+
+.mm-section {
+  padding: 0 20px 20px;
+}
+
+.mm-section-title {
+  font-weight: 600;
+  font-size: 13px;
+  color: #334155;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ---- Design gallery ---- */
+.idcard-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 14px;
+}
+
+.idcard-gallery-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 10px;
+}
+
+.idcard-gallery-item:hover {
+  background: #f1f5f9;
+}
+
+.idcard-gallery-item.active {
+  background: #ecfdf5;
+  outline: 2px solid #1B4332;
+}
+
+.idcard-gallery-thumb-wrap {
+  overflow: hidden;
+  position: relative;
+  border-radius: 6px;
+  box-shadow: 0 4px 8px -2px rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+}
+
+.idcard-gallery-name {
+  font-size: 10px;
+  color: #475569;
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* ---- Alignment segmented control ---- */
+.mm-align-picker {
+  display: flex;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+  width: fit-content;
+}
+
+.mm-align-btn {
+  border: none;
+  background: #fff;
+  padding: 7px 12px;
+  font-size: 12px;
+  color: #475569;
+  cursor: pointer;
+  border-right: 1px solid #e2e8f0;
+}
+
+.mm-align-btn:last-child {
+  border-right: none;
+}
+
+.mm-align-btn.active {
+  background: #1B4332;
+  color: #fff;
+}
+
+/* ---- Field label rename grid ---- */
+.mm-field-labels-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px 16px;
+}
+
+/* ---- Shared plain body wrapper for non-classic shapes ---- */
+.idcard-preview-body-plain {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 15px;
+  gap: 4px;
+}
+
+.idcard-avatar-square {
+  border-radius: 10px;
+}
+
+/* ---- Banner shape ---- */
+.idcard-shape-banner {
+  position: relative;
+}
+
+.idcard-banner-header {
+  display: flex;
+  align-items: center;
+  height: 54px;
+  padding: 0 14px;
+  font-weight: bold;
+  font-size: 13px;
+  clip-path: polygon(0 0, 100% 0, 100% 72%, 0 100%);
+  position: relative;
+}
+
+.idcard-banner-avatar-row {
+  display: flex;
+  margin-top: -20px;
+  padding: 0 14px;
+  position: relative;
+  z-index: 2;
+}
+
+/* ---- Framed shape ---- */
+.idcard-shape-framed {
+  position: relative;
+}
+
+.idcard-framed-logo-row {
+  display: flex;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: bold;
+  margin: 10px 10px 4px;
+  border-radius: 6px;
+}
+
+.idcard-corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-style: solid;
+  border-width: 0;
+  z-index: 2;
+}
+
+.idcard-corner-tl { top: 6px; left: 6px; border-top-width: 2px; border-left-width: 2px; }
+.idcard-corner-tr { top: 6px; right: 6px; border-top-width: 2px; border-right-width: 2px; }
+.idcard-corner-bl { bottom: 6px; left: 6px; border-bottom-width: 2px; border-left-width: 2px; }
+.idcard-corner-br { bottom: 6px; right: 6px; border-bottom-width: 2px; border-right-width: 2px; }
+
+/* ---- Minimal shape ---- */
+.idcard-shape-minimal {
+  display: flex;
+  flex-direction: column;
+}
+
+.idcard-minimal-topline,
+.idcard-minimal-bottomline {
+  height: 4px;
+}
+
+.idcard-minimal-logo-row {
+  display: flex;
+  padding: 10px 14px 4px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #334155;
+}
+
+/* ---- Split shape (landscape only) ---- */
+.idcard-shape-split {
+  display: flex;
+}
+
+.idcard-split-photo {
+  width: 38%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px;
+}
+
+.idcard-split-logo {
+  font-size: 10px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.idcard-split-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 14px;
+  gap: 6px;
+  justify-content: center;
+}
+
+.idcard-preview-sign-inline {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  margin-top: 6px;
+}
