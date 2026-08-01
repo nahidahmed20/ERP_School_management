@@ -4,7 +4,6 @@ import Icon from '@/Components/Icons';
 export default function EventFormModal({ item, classrooms, activeCampusId, onClose }) {
   const isEdit = !!item;
 
-  // ডাটাবেসের ISO datetime কে <input type="datetime-local"> এর ফরম্যাটে রূপান্তর
   function toDatetimeLocal(dateString) {
     if (!dateString) return '';
     const d = new Date(dateString);
@@ -34,7 +33,6 @@ export default function EventFormModal({ item, classrooms, activeCampusId, onClo
     }
   }
 
-  // --- একই ডিজাইন সিস্টেম, TimeTableFormModal / ExamScheduleFormModal থেকে ---
   const styles = {
     card: { background: '#f8fafc', padding: '20px', border: '1px solid #e2e8f0', borderRadius: '10px', marginBottom: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' },
     grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '20px' },

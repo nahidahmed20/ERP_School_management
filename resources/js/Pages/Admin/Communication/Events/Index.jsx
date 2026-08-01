@@ -79,10 +79,10 @@ export default function Index({ events, classrooms, filters }) {
                 <tr key={item.id}>
                   <td>
                     <div style={{ fontWeight: 600, color: '#334155' }}>{item.title}</div>
-                    <span className="badge" style={{ 
+                    <span className="badge" style={{
                       background: item.type === 'Holiday' ? '#fef2f2' : (item.type === 'Meeting' ? '#eff6ff' : '#f0fdf4'),
                       color: item.type === 'Holiday' ? '#dc2626' : (item.type === 'Meeting' ? '#2563eb' : '#16a34a'),
-                      fontSize: '11px' 
+                      fontSize: '11px'
                     }}>{item.type}</span>
                   </td>
                   <td style={{ fontSize: '13px', color: '#475569' }}>

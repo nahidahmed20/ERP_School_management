@@ -97,6 +97,10 @@ use App\Http\Controllers\Admin\VisitLogController;
 use App\Http\Controllers\Admin\VisitorController;
 use App\Http\Controllers\Admin\IdCardTemplateController;
 use App\Http\Controllers\Admin\TranscriptTemplateController;
+use App\Http\Controllers\Admin\CommunicationNotificationController;
+use App\Http\Controllers\Admin\HelpdeskTicketController;
+use App\Http\Controllers\Admin\CommunicationCmsController;
+use App\Http\Controllers\Admin\CommunicationChatController;
 use App\Http\Controllers\DynamicPageController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -207,7 +211,13 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
     Route::put('/fees/ledger/{id}', [LedgerController::class, 'updateExpense'])->name('fees.ledger.update');
     Route::delete('/fees/ledger/{id}', [LedgerController::class, 'destroyExpense'])->name('fees.ledger.destroy');
 
-    Route::get('sms/logs', [SmsLogController::class, 'index'])->name('sms-logs');
+    Route::resource('sms-logs', SmsLogController::class);
+    Route::resource('communication-notifications', CommunicationNotificationController::class);
+    Route::resource('communication-helpdesk', HelpdeskTicketController::class)->names('communication.helpdesk');
+    Route::post('communication-helpdesk/{id}/reply', [HelpdeskTicketController::class, 'reply'])->name('communication.helpdesk.reply');
+    Route::resource('communication-cms', CommunicationCmsController::class)->names('communication.cms');
+    Route::get('communication-chat', [CommunicationChatController::class, 'index'])->name('communication.chat');
+    Route::post('communication-chat', [CommunicationChatController::class, 'store'])->name('communication.chat.store');
     Route::post('student-attendance/send-absent-sms', [StudentAttendanceController::class, 'sendAbsentSms'])->name('attendance.send-absent-sms');
 
     Route::prefix('frontoffice')->name('frontoffice.')->group(function () {

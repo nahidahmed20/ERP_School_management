@@ -11,13 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sms_logs', function (Blueprint $table) {
+        Schema::create('communication_notifications', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('campus_id')->nullable();
-            $table->string('recipient_name')->nullable();
-            $table->string('phone_number');
+            $table->string('title');
             $table->text('message');
-            $table->string('status')->default('Sent'); 
+            $table->string('notification_type')->default('App Push');
+            $table->string('target_audience')->default('All');
+            $table->string('status')->default('Sent');
             $table->timestamps();
         });
     }
@@ -27,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('sms_logs');
+        Schema::dropIfExists('communication_notifications');
     }
 };
