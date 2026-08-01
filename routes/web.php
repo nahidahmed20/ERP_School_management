@@ -101,6 +101,11 @@ use App\Http\Controllers\Admin\CommunicationNotificationController;
 use App\Http\Controllers\Admin\HelpdeskTicketController;
 use App\Http\Controllers\Admin\CommunicationCmsController;
 use App\Http\Controllers\Admin\CommunicationChatController;
+use App\Http\Controllers\Admin\FormBuilderController;
+use App\Http\Controllers\Admin\ApprovalWorkflowController;
+use App\Http\Controllers\Admin\CustomFieldController;
+use App\Http\Controllers\Admin\BiometricDeviceController;
+use App\Http\Controllers\Admin\BiometricEnrolledUserController;
 use App\Http\Controllers\DynamicPageController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -310,19 +315,25 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
     Route::resource('sales', SaleController::class);
 
     Route::prefix('cafeteria')->name('cafeteria.')->group(function () {
-            Route::resource('outlets', CafeteriaOutletController::class);
-            Route::resource('menu-items', FoodItemController::class);
-            Route::resource('orders', CafeteriaOrderController::class);
-            Route::resource('meal-payments', MealPaymentController::class);
-        });
+        Route::resource('outlets', CafeteriaOutletController::class);
+        Route::resource('menu-items', FoodItemController::class);
+        Route::resource('orders', CafeteriaOrderController::class);
+        Route::resource('meal-payments', MealPaymentController::class);
+    });
 
-        Route::prefix('medical')->name('medical.')->group(function () {
-            Route::resource('rooms', MedicalRoomController::class);
-            Route::resource('visit-logs', VisitLogController::class);
-            Route::resource('health-records', HealthRecordController::class);
-            Route::resource('medicine-stock', MedicineStockController::class);
-            Route::resource('vaccinations', VaccinationController::class);
-        });
+    Route::prefix('medical')->name('medical.')->group(function () {
+        Route::resource('rooms', MedicalRoomController::class);
+        Route::resource('visit-logs', VisitLogController::class);
+        Route::resource('health-records', HealthRecordController::class);
+        Route::resource('medicine-stock', MedicineStockController::class);
+        Route::resource('vaccinations', VaccinationController::class);
+    });
+
+    Route::resource('workflow-builder', FormBuilderController::class);
+    Route::resource('workflow-approvals', ApprovalWorkflowController::class);
+    Route::resource('workflow-customfields', CustomFieldController::class);
+    Route::resource('biometric-devices', BiometricDeviceController::class);
+    Route::resource('biometric-enrolledusers', BiometricEnrolledUserController::class);
 
 });
 
