@@ -110,6 +110,14 @@ use App\Http\Controllers\Admin\VehicleController;
 use App\Http\Controllers\Admin\VendorController;
 use App\Http\Controllers\Admin\VisitLogController;
 use App\Http\Controllers\Admin\VisitorController;
+use App\Http\Controllers\Admin\SecurityAuditLogController;
+use App\Http\Controllers\Admin\SaasTenantController;
+use App\Http\Controllers\Admin\SaasPlanController;
+use App\Http\Controllers\Admin\SaasApiKeyController;
+use App\Http\Controllers\Admin\SaasAiAssistantController;
+use App\Http\Controllers\Admin\SaasBackupController;
+use App\Http\Controllers\Admin\SaasScheduledTaskController;
+use App\Http\Controllers\Admin\SaasQueueMonitorController;
 use App\Http\Controllers\DynamicPageController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -344,6 +352,14 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
     Route::get('security-failedlogins', [SecurityFailedLoginController::class, 'index'])->name('security.failedlogins');
 
     Route::resource('security-devices', SecurityTrustedDeviceController::class);
+    Route::get('security-auditlogs', [SecurityAuditLogController::class, 'index'])->name('security.auditlogs');
+    Route::resource('saas-tenants', SaasTenantController::class)->names('saas.tenants');
+    Route::resource('saas-plans', SaasPlanController::class)->names('saas.plans');
+    Route::resource('saas-apikeys', SaasApiKeyController::class)->names('saas.apikeys');
+    Route::resource('saas-ai', SaasAiAssistantController::class)->names('saas.ai');
+    Route::resource('saas-backups', SaasBackupController::class)->names('saas.backups');
+    Route::resource('saas-tasks', SaasScheduledTaskController::class)->names('saas.tasks');
+    Route::resource('admin/saas-queue', SaasQueueMonitorController::class)->names('admin.saas.queue');
 
 });
 
