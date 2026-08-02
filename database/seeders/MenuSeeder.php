@@ -191,18 +191,19 @@ class MenuSeeder extends Seeder
                 ]],
                 ['key' => 'workflow', 'label' => 'Workflow & Forms', 'icon' => 'workflow', 'count' => 3, 'children' => [
                     ['key' => 'admin.workflow-builder.index', 'label' => 'Form Builder', 'route' => 'admin.workflow-builder.index'],
+                    ['key' => 'admin.workflow-builder.create', 'label' => 'Form Builder Create', 'route' => 'admin.workflow-builder.create'],
                     ['key' => 'admin.workflow-approvals.index', 'label' => 'Approval Workflows', 'route' => 'admin.workflow-approvals.index'],
                     ['key' => 'admin.workflow-customfields.index', 'label' => 'Custom Fields', 'route' => 'admin.workflow-customfields.index'],
                 ]],
                 ['key' => 'biometric', 'label' => 'Biometric Devices', 'icon' => 'fingerprint', 'count' => 3, 'children' => [
                     ['key' => 'admin.biometric-devices.index', 'label' => 'Device Registry', 'route' => 'admin.biometric-devices.index'],
                     ['key' => 'admin.biometric-enrolledusers.index', 'label' => 'Enrolled Users', 'route' => 'admin.biometric-enrolledusers.index'],
-                    ['key' => 'admin.biometric-sync-logs.index', 'label' => 'Sync Logs', 'route' => 'admin.biometric-sync-logs.index'],
+                    ['key' => 'admin.biometric.synclogs', 'label' => 'Sync Logs', 'route' => 'admin.biometric.synclogs'],
                 ]],
                 ['key' => 'security', 'label' => 'Security Logs', 'icon' => 'shield', 'count' => 4, 'children' => [
                     ['key' => 'admin.security.logins', 'label' => 'Login History', 'route' => 'admin.security.logins'],
                     ['key' => 'admin.security.failedlogins', 'label' => 'Failed Login Attempts', 'route' => 'admin.security.failedlogins'],
-                    ['key' => 'admin.security.devices', 'label' => 'Trusted Devices', 'route' => 'admin.security.devices'],
+                    ['key' => 'admin.security-devices.index', 'label' => 'Trusted Devices', 'route' => 'admin.security-devices.index'],
                     ['key' => 'admin.security.audit', 'label' => 'Audit Logs', 'route' => 'admin.security.audit'],
                 ]],
                 ['key' => 'saas', 'label' => 'SaaS, AI & Backups', 'icon' => 'cloud', 'count' => 7, 'children' => [
