@@ -118,6 +118,8 @@ use App\Http\Controllers\Admin\SaasAiAssistantController;
 use App\Http\Controllers\Admin\SaasBackupController;
 use App\Http\Controllers\Admin\SaasScheduledTaskController;
 use App\Http\Controllers\Admin\SaasQueueMonitorController;
+use App\Http\Controllers\Admin\StudyMaterialController;
+use App\Http\Controllers\Admin\TransportRouteController;
 use App\Http\Controllers\DynamicPageController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -125,9 +127,11 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 
-Route::get('/', function () {
-    return redirect()->route('login');
-});
+Route::get('/', fn () => Inertia::render('Site/Home'))->name('home');
+Route::get('/campuses', fn () => Inertia::render('Site/Campuses'))->name('site.campuses');
+Route::get('/academics', fn () => Inertia::render('Site/Academics'))->name('site.academics');
+Route::get('/admissions', fn () => Inertia::render('Site/Admissions'))->name('site.admissions');
+Route::get('/contact', fn () => Inertia::render('Site/Contact'))->name('site.contact');
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
@@ -359,7 +363,11 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
     Route::resource('saas-ai', SaasAiAssistantController::class)->names('saas.ai');
     Route::resource('saas-backups', SaasBackupController::class)->names('saas.backups');
     Route::resource('saas-tasks', SaasScheduledTaskController::class)->names('saas.tasks');
-    Route::resource('admin/saas-queue', SaasQueueMonitorController::class)->names('admin.saas.queue');
+    Route::resource('saas-queue', SaasQueueMonitorController::class)->names('saas.queue');
+
+    Route::resource('study-materials', StudyMaterialController::class);
+    Route::get('study-materials/{id}/download', [StudyMaterialController::class, 'download'])->name('study-materials.download');
+    Route::resource('transport-routes', TransportRouteController::class)->names('transport.routes');
 
 });
 

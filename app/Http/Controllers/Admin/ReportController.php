@@ -66,7 +66,7 @@ class ReportController extends Controller
         $classId = $request->class_id ?? '';
 
         $query = Payment::with([
-            'student.currentEnrollment.schoolClass', 
+            'student.currentEnrollment.schoolClass',
             'feeAssignment.feeGroup'
         ])->whereBetween('payment_date', [$startDate, $endDate]);
 
@@ -77,7 +77,7 @@ class ReportController extends Controller
         }
 
         $payments = $query->latest()->get();
-        
+
         $totalCollection = $payments->sum('amount_paid');
 
         return Inertia::render('Admin/Reports/FeeCollection', [
@@ -96,14 +96,14 @@ class ReportController extends Controller
     {
         $classId = $request->class_id ?? '';
         $sectionId = $request->section_id ?? '';
-        $dateUntil = $request->date_until ?? now()->toDateString(); 
+        $dateUntil = $request->date_until ?? now()->toDateString();
 
         $query = FeeAssignment::with([
             'student.currentEnrollment.schoolClass',
             'student.currentEnrollment.section',
             'student.guardian',
             'feeGroup.feeTypes',
-            'payments' 
+            'payments'
         ])
         ->whereIn('status', ['unpaid', 'partially_paid'])
         ->whereDate('due_date', '<=', $dateUntil);
@@ -128,7 +128,7 @@ class ReportController extends Controller
 
             return $assignment;
         })->filter(function ($assignment) {
-            return $assignment->due_amount > 0; 
+            return $assignment->due_amount > 0;
         });
 
         return Inertia::render('Admin/Reports/DueFees', [
@@ -147,7 +147,7 @@ class ReportController extends Controller
     {
         $classId = $request->class_id;
         $sectionId = $request->section_id;
-        
+
         $month = $request->month ?? date('m');
         $year = $request->year ?? date('Y');
 

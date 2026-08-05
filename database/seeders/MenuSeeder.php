@@ -43,13 +43,14 @@ class MenuSeeder extends Seeder
                     ['key' => 'admin.student-categories.index', 'label' => 'Student Categories', 'route' => 'admin.student-categories.index'],
                     ['key' => 'admin.houses.index', 'label' => 'Houses', 'route' => 'admin.houses.index'],
                 ]],
-                ['key' => 'classes', 'label' => 'Classes & Subjects', 'icon' => 'book', 'count' => 7, 'children' => [
+                ['key' => 'classes', 'label' => 'Classes & Subjects', 'icon' => 'book', 'count' => 8, 'children' => [
                     ['key' => 'admin.classes.index', 'label' => 'Classes', 'route' => 'admin.classes.index'],
                     ['key' => 'admin.sections.index', 'label' => 'Sections', 'route' => 'admin.sections.index'],
                     ['key' => 'admin.subjects.index', 'label' => 'Subjects', 'route' => 'admin.subjects.index'],
                     ['key' => 'admin.classrooms.index', 'label' => 'Classroom', 'route' => 'admin.classrooms.index'],
                     ['key' => 'admin.time-tables.index', 'label' => 'Class Timetable', 'route' => 'admin.time-tables.index'],
                     ['key' => 'admin.lesson-plans.index', 'label' => 'Lesson & Syllabus', 'route' => 'admin.lesson-plans.index'],
+                    ['key' => 'admin.study-materials.index', 'label' => 'Study Materials / Downloads', 'route' => 'admin.study-materials.index'], // Added this
                     ['key' => 'admin.sessions.index', 'label' => 'Academic Sessions', 'route' => 'admin.sessions.index'],
                 ]],
                 ['key' => 'attendance', 'label' => 'Attendance', 'icon' => 'calendar', 'count' => 3, 'children' => [
@@ -69,11 +70,13 @@ class MenuSeeder extends Seeder
             ]],
 
             ['label' => 'People', 'items' => [
-                ['key' => 'staff', 'label' => 'Staff & HR', 'icon' => 'users', 'count' => 7, 'children' => [
+                ['key' => 'staff', 'label' => 'Staff & HR', 'icon' => 'users', 'count' => 9, 'children' => [
                     ['key' => 'admin.staff.index', 'label' => 'Staff Directory', 'route' => 'admin.staff.index'],
                     ['key' => 'admin.staff-attendance.index', 'label' => 'Daily Attendance', 'route' => 'admin.staff-attendance.index'],
                     ['key' => 'admin.staff-leaves.index', 'label' => 'Leave Applications', 'route' => 'admin.staff-leaves.index'],
                     ['key' => 'admin.staff-payrolls.index', 'label' => 'Payroll Management', 'route' => 'admin.staff-payrolls.index'],
+                    ['key' => 'admin.staff-loans.index', 'label' => 'Advance Salary & Loans', 'route' => 'admin.staff-loans.index'], // Added this
+                    ['key' => 'admin.staff-appraisals.index', 'label' => 'Performance & Appraisals', 'route' => 'admin.staff-appraisals.index'], // Added this
                     ['key' => 'admin.departments.index', 'label' => 'Departments', 'route' => 'admin.departments.index'],
                     ['key' => 'admin.designations.index', 'label' => 'Designations', 'route' => 'admin.designations.index'],
                     ['key' => 'admin.leave-types.index', 'label' => 'Leave Types', 'route' => 'admin.leave-types.index'],
@@ -91,11 +94,13 @@ class MenuSeeder extends Seeder
             ]],
 
             ['label' => 'Finance', 'items' => [
-                ['key' => 'fees', 'label' => 'Fees & Accounts', 'icon' => 'wallet', 'count' => 5, 'children' => [
+                ['key' => 'fees', 'label' => 'Fees & Accounts', 'icon' => 'wallet', 'count' => 7, 'children' => [
                     ['key' => 'admin.fees-groups.index', 'label' => 'Fee Groups & Types', 'route' => 'admin.fees-groups.index'],
                     ['key' => 'admin.studentfees.index', 'label' => 'Student Fee Assignment', 'route' => 'admin.studentfees.index'],
                     ['key' => 'admin.fees.invoices', 'label' => 'Invoices', 'route' => 'admin.fees.invoices'],
                     ['key' => 'admin.fees.payments', 'label' => 'Payments', 'route' => 'admin.fees.payments'],
+                    ['key' => 'admin.accounting.chart.index', 'label' => 'Chart of Accounts & Banks', 'route' => 'admin.accounting.chart.index'], // Added this
+                    ['key' => 'admin.accounting.vouchers.index', 'label' => 'Accounting Vouchers', 'route' => 'admin.accounting.vouchers.index'], // Added this
                     ['key' => 'admin.fees.ledger', 'label' => 'Income / Expense Ledger', 'route' => 'admin.fees.ledger'],
                 ]],
                 ['key' => 'payments', 'label' => 'Payment Gateways', 'icon' => 'card', 'count' => 3, 'children' => [
@@ -126,13 +131,15 @@ class MenuSeeder extends Seeder
                     ['key' => 'admin.library.catalogue.index', 'label' => 'Catalogue', 'route' => 'admin.library.catalogue.index'],
                     ['key' => 'admin.library-issues.index', 'label' => 'Book Issues & Fines', 'route' => 'admin.library-issues.index'],
                 ]],
-                ['key' => 'transport', 'label' => 'Transport', 'icon' => 'bus', 'count' => 2, 'children' => [
+                ['key' => 'transport', 'label' => 'Transport', 'icon' => 'bus', 'count' => 3, 'children' => [
+                    ['key' => 'admin.transport.routes.index', 'label' => 'Routes & Stops', 'route' => 'admin.transport.routes.index'], // Added this
                     ['key' => 'admin.vehicles.index', 'label' => 'Vehicles', 'route' => 'admin.vehicles.index'],
                     ['key' => 'admin.transports.index', 'label' => 'Transport Allocation', 'route' => 'admin.transports.index'],
                 ]],
-                ['key' => 'hostel', 'label' => 'Hostel Management', 'icon' => 'home', 'count' => 2, 'children' => [
+                ['key' => 'hostel', 'label' => 'Hostel Management', 'icon' => 'home', 'count' => 3, 'children' => [
                     ['key' => 'admin.hostel-rooms.index', 'label' => 'Hostels & Rooms', 'route' => 'admin.hostel-rooms.index'],
                     ['key' => 'admin.hostel-allocations.index', 'label' => 'Room Allocation', 'route' => 'admin.hostel-allocations.index'],
+                    ['key' => 'admin.hostel-fees.index', 'label' => 'Hostel Fee Collection', 'route' => 'admin.hostel-fees.index'], // Added this
                 ]],
                 ['key' => 'cafeteria', 'label' => 'Cafeteria', 'icon' => 'cutlery', 'count' => 4, 'children' => [
                     ['key' => 'admin.cafeteria.outlets.index', 'label' => 'Outlets', 'route' => 'admin.cafeteria.outlets.index'],
@@ -171,12 +178,13 @@ class MenuSeeder extends Seeder
             ]],
 
             ['label' => 'Communication', 'items' => [
-                ['key' => 'communication', 'label' => 'Chat, CMS & Alerts', 'icon' => 'chat', 'count' => 6, 'children' => [
+                ['key' => 'communication', 'label' => 'Chat, CMS & Alerts', 'icon' => 'chat', 'count' => 7, 'children' => [
                     ['key' => 'admin.communication.chat.index', 'label' => 'Chat', 'route' => 'admin.communication.chat.index'],
                     ['key' => 'admin.communication-notifications.index', 'label' => 'Notifications', 'route' => 'admin.communication-notifications.index'],
                     ['key' => 'admin.communication-calendars.index', 'label' => 'Calendar & Events', 'route' => 'admin.communication-calendars.index'],
                     ['key' => 'admin.communication.cms.index', 'label' => 'Website CMS', 'route' => 'admin.communication.cms.index'],
                     ['key' => 'admin.communication.helpdesk.index', 'label' => 'Helpdesk / Tickets', 'route' => 'admin.communication.helpdesk.index'],
+                    ['key' => 'admin.email-logs.index', 'label' => 'Email Logs & Templates', 'route' => 'admin.email-logs.index'], // Added this
                     ['key' => 'admin.sms-logs.index', 'label' => 'SMS Logs', 'route' => 'admin.sms-logs.index'],
                 ]],
             ]],
