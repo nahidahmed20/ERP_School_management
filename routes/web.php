@@ -120,6 +120,12 @@ use App\Http\Controllers\Admin\SaasScheduledTaskController;
 use App\Http\Controllers\Admin\SaasQueueMonitorController;
 use App\Http\Controllers\Admin\StudyMaterialController;
 use App\Http\Controllers\Admin\TransportRouteController;
+use App\Http\Controllers\Admin\StaffLoanController;
+use App\Http\Controllers\Admin\StaffAppraisalController;
+use App\Http\Controllers\Admin\AccountingChartController;
+use App\Http\Controllers\Admin\AccountingVoucherController;
+use App\Http\Controllers\Admin\HostelFeeController;
+use App\Http\Controllers\Admin\EmailLogController;
 use App\Http\Controllers\DynamicPageController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -369,6 +375,19 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
     Route::get('study-materials/{id}/download', [StudyMaterialController::class, 'download'])->name('study-materials.download');
     Route::resource('transport-routes', TransportRouteController::class)->names('transport.routes');
 
+    Route::resource('staff-loans', StaffLoanController::class);
+    Route::resource('staff-appraisals', StaffAppraisalController::class);
+    Route::resource('accounting/chart', AccountingChartController::class)->names('accounting.chart');
+    Route::resource('accounting/vouchers', AccountingVoucherController::class)->names('accounting.vouchers');
+    Route::resource('hostel-fees', HostelFeeController::class);
+
+    Route::get('email-logs', [EmailLogController::class, 'index'])->name('email-logs.index');
+Route::delete('email-logs/{id}', [EmailLogController::class, 'destroyLog'])->name('email-logs.destroy');
+
+// For Templates
+Route::post('email-templates', [EmailLogController::class, 'storeTemplate'])->name('email-templates.store');
+Route::put('email-templates/{id}', [EmailLogController::class, 'updateTemplate'])->name('email-templates.update');
+Route::delete('email-templates/{id}', [EmailLogController::class, 'destroyTemplate'])->name('email-templates.destroy');
 });
 
 
