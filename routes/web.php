@@ -182,8 +182,12 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
     Route::resource('sections', SectionController::class);
     Route::resource('subjects', SubjectController::class);
     Route::resource('classrooms', ClassroomController::class);
-    Route::resource('time-tables', TimeTableController::class);
+
+    Route::get('time-tables/edit-day', [TimeTableController::class, 'editDay'])->name('time-tables.edit-day');
     Route::post('time-tables/bulk-update', [TimeTableController::class, 'bulkUpdate'])->name('time-tables.bulk-update');
+    Route::resource('time-tables', TimeTableController::class);
+
+
     Route::resource('lesson-plans', LessonPlanController::class);
 
     Route::resource('communication-calendars', EventController::class);
@@ -221,6 +225,7 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
     Route::get('fee-collection', [ReportController::class, 'feeCollection'])->name('reports.fees');
     Route::get('due-fees', [ReportController::class, 'dueFees'])->name('due_fees');
     Route::get('student/attendance/report', [ReportController::class, 'studentReport'])->name('student_attendance.report');
+    Route::get('/reports/saved', [ReportController::class, 'saved'])->name('reports.saved');
 
     Route::resource('fees-groups', FeeGroupController::class);
     Route::get('fees-groups/{feeGroup}/fees-types', [FeeTypeController::class, 'index'])->name('fees-types.index');

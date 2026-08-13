@@ -1,34 +1,36 @@
 import { useState, useEffect } from 'react';
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
-import TimeTableFormModal from './Partials/TimeTableFormModal';
 import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 import Swal from 'sweetalert2';
 
-export default function Index({ timeTables, campuses, classes, classrooms, filters }) {
-  const { flash, auth } = usePage().props;
+export default function Index({ timeTables, classes, filters }) {
+  const { flash } = usePage().props;
 
+  // Filter States
   const [classId, setClassId] = useState(filters.class_id ?? '');
   const [sectionId, setSectionId] = useState(filters.section_id ?? '');
   const [day, setDay] = useState(filters.day ?? '');
-
-  const [formOpen, setFormOpen] = useState(false);
-  const [editingConfig, setEditingConfig] = useState(null);
+  
+  // Delete State
   const [deletingItem, setDeletingItem] = useState(null);
 
   const selectedClassForFilter = classes.find(c => c.id == classId);
   const isFilterApplied = classId && sectionId;
 
+  // Notifications
   useEffect(() => {
-    if (flash?.success) Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: flash.success, showConfirmButton: false, timer: 3000, timerProgressBar: true });
-    if (flash?.error) Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: flash.error, showConfirmButton: false, timer: 4000, timerProgressBar: true });
+    if (flash?.success) Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: flash.success, showConfirmButton: false, timer: 3000 });
+    if (flash?.error) Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: flash.error, showConfirmButton: false, timer: 4000 });
   }, [flash]);
 
+  // Apply Filter
   function applyFilters(overrides = {}) {
     router.get(route('admin.time-tables.index'), { class_id: classId, section_id: sectionId, day, ...overrides }, { preserveState: true, replace: true });
   }
 
+  // Format Time (13:00 to 01:00 PM)
   function formatTime(timeString) {
     if (!timeString) return '';
     const [hourString, minute] = timeString.split(':');
@@ -38,88 +40,112 @@ export default function Index({ timeTables, campuses, classes, classrooms, filte
     return `${hour}:${minute} ${ampm}`;
   }
 
+  // Dynamic Subject Colors
   const getSubjectColor = (subjectName) => {
     const colors = [
-      { bg: '#eff6ff', text: '#2563eb', border: '#bfdbfe' },
-      { bg: '#f0fdf4', text: '#16a34a', border: '#bbf7d0' },
-      { bg: '#fef2f2', text: '#dc2626', border: '#fecaca' },
-      { bg: '#fdf4ff', text: '#c026d3', border: '#f5d0fe' },
-      { bg: '#fffbeb', text: '#d97706', border: '#fde68a' },
-      { bg: '#f5f3ff', text: '#7c3aed', border: '#ddd6fe' },
+      { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
+      { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200' },
+      { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200' },
+      { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
+      { bg: 'bg-yellow-50', text: 'text-yellow-700', border: 'border-yellow-200' },
+      { bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200' },
     ];
     let hash = 0;
     for (let i = 0; i < subjectName.length; i++) hash = subjectName.charCodeAt(i) + ((hash << 5) - hash);
     return colors[Math.abs(hash) % colors.length];
   };
 
+  // Group Routine by Days
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const groupedRoutine = {};
   daysOfWeek.forEach(d => {
     groupedRoutine[d] = timeTables.data.filter(t => t.day_of_week === d);
   });
 
-  const handleEditDay = (dayName, dayPeriods) => {
-    const filteredPeriods = dayPeriods.filter(p => p.class_id == classId && p.section_id == sectionId);
-    setEditingConfig({
-      isEdit: true,
-      day_of_week: dayName,
-      class_id: classId,
-      section_id: sectionId,
-      periods: filteredPeriods
-    });
-    setFormOpen(true);
+  // Modern Pagination with Icons
+  const Pagination = ({ meta }) => {
+    if (!meta || meta.last_page <= 1) return null;
+    return (
+      <div className="flex justify-center items-center gap-2 mt-8">
+        {meta.links.map((link, index) => {
+          let content = link.label;
+          if (content.includes('Previous')) content = <Icon name="chevron-left" className="w-4 h-4" />;
+          if (content.includes('Next')) content = <Icon name="chevron-right" className="w-4 h-4" />;
+
+          return link.url ? (
+            <Link key={index} href={link.url} className={`w-10 h-10 flex items-center justify-center rounded-lg border text-sm font-medium transition-all ${link.active ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`} dangerouslySetInnerHTML={{ __html: typeof content === 'string' ? content : '' }}>
+              {typeof content !== 'string' && content}
+            </Link>
+          ) : (
+            <span key={index} className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-100 bg-gray-50 text-gray-300 cursor-not-allowed" dangerouslySetInnerHTML={{ __html: typeof content === 'string' ? content : '' }}>
+              {typeof content !== 'string' && content}
+            </span>
+          );
+        })}
+      </div>
+    );
   };
 
   return (
     <AuthenticatedLayout
       header={
-        <div className="page-head">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <span className="eyebrow">Academics</span>
-            <h1>Class Timetable</h1>
-            <p className="desc">স্মার্ট রুটিন ম্যানেজমেন্ট - দিন অনুযায়ী ক্লাস সাজান এবং এডিট করুন।</p>
+            <span className="text-sm font-semibold text-indigo-600 uppercase tracking-wider">Academics</span>
+            <h1 className="text-2xl font-bold text-gray-900 mt-1">Class Timetable</h1>
           </div>
-          <div className="mm-head-actions">
-            <button className="btn" onClick={() => { setEditingConfig(null); setFormOpen(true); }}>
-              <Icon name="plus" /> Add Routine
-            </button>
-          </div>
+          <Link href={route('admin.time-tables.create')} className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg text-sm font-semibold shadow-sm flex items-center gap-2 transition-colors">
+            <Icon name="plus" className="w-4 h-4" /> Add Routine
+          </Link>
         </div>
       }
     >
       <Head title="Class Timetable" />
 
-      {/* Filters */}
-      <div className="card mm-card" style={{ marginBottom: '20px' }}>
-        <div className="mm-filters" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
-          <select value={classId} onChange={(e) => { setClassId(e.target.value); setSectionId(''); }}>
-            <option value="">Select Class</option>
-            {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
-          <select value={sectionId} onChange={(e) => setSectionId(e.target.value)} disabled={!classId}>
-            <option value="">Select Section</option>
-            {selectedClassForFilter?.sections?.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-          </select>
-          <select value={day} onChange={(e) => setDay(e.target.value)}>
-            <option value="">All Days</option>
-            {daysOfWeek.map(d => <option key={d} value={d}>{d}</option>)}
-          </select>
-          <button className="btn btn-outline" onClick={() => applyFilters()}>Search Routine</button>
-
-          {!isFilterApplied && (
-            <span style={{ fontSize: '12px', color: '#ef4444', marginLeft: '10px' }}>
-              * পুরো দিনের রুটিন একসাথে এডিট করতে Class এবং Section সিলেক্ট করে Search করুন।
-            </span>
-          )}
+      {/* Modern Filters Card */}
+      <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+          <label className="block">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block">Class</span>
+            <select className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm" value={classId} onChange={(e) => { setClassId(e.target.value); setSectionId(''); }}>
+              <option value="">All Classes</option>
+              {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </label>
+          <label className="block">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block">Section</span>
+            <select className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm disabled:bg-gray-50" value={sectionId} onChange={(e) => setSectionId(e.target.value)} disabled={!classId}>
+              <option value="">All Sections</option>
+              {selectedClassForFilter?.sections?.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+          </label>
+          <label className="block">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block">Day</span>
+            <select className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm" value={day} onChange={(e) => setDay(e.target.value)}>
+              <option value="">All Days</option>
+              {daysOfWeek.map(d => <option key={d} value={d}>{d}</option>)}
+            </select>
+          </label>
+          <button className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2" onClick={() => applyFilters()}>
+            <Icon name="search" className="w-4 h-4" /> Search Routine
+          </button>
         </div>
+        {!isFilterApplied && (
+          <p className="text-xs text-red-500 mt-3 flex items-center gap-1">
+            <Icon name="info" className="w-3 h-3" /> To edit a full day's routine, please filter by both Class and Section.
+          </p>
+        )}
       </div>
 
-      {/* Routine Grid */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      {/* Routine Display Area */}
+      <div className="space-y-6">
         {timeTables.data.length === 0 ? (
-          <div className="card mm-card" style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
-            <Icon name="calendar" style={{ width: '40px', margin: '0 auto', color: '#cbd5e1' }} />
-            <p style={{ marginTop: '10px' }}>কোনো রুটিন পাওয়া যায়নি। ক্লাস এবং সেকশন ফিল্টার করে খুঁজুন।</p>
+          <div className="bg-white p-12 rounded-2xl border border-dashed border-gray-300 text-center flex flex-col items-center">
+            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+              <Icon name="calendar" className="w-8 h-8 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-bold text-gray-900">No Routine Found</h3>
+            <p className="text-gray-500 text-sm mt-1">Try adjusting your filters or add a new routine.</p>
           </div>
         ) : (
           daysOfWeek.map(d => {
@@ -127,56 +153,56 @@ export default function Index({ timeTables, campuses, classes, classrooms, filte
             if (dayPeriods.length === 0) return null;
 
             return (
-              <div key={d} className="card mm-card" style={{ padding: '0', overflow: 'hidden' }}>
-                <div style={{ background: '#f8fafc', padding: '12px 20px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    <h3 style={{ margin: 0, fontSize: '16px', color: '#334155', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Icon name="calendar" style={{ width: '18px', color: '#64748b' }} /> {d}
-                    </h3>
-                  </div>
-
+              <div key={d} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                  <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                    <Icon name="calendar" className="w-5 h-5 text-indigo-500" /> {d}
+                  </h3>
                   {isFilterApplied && (
-                    <button
-                      onClick={() => handleEditDay(d, dayPeriods)}
-                      style={{ background: '#fff', border: '1px solid #cbd5e1', padding: '5px 12px', borderRadius: '6px', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', color: '#475569', fontWeight: 500 }}
+                    <Link 
+                      href={route('admin.time-tables.edit-day', { class_id: classId, section_id: sectionId, day: d })}
+                      className="text-sm font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-4 py-1.5 rounded-lg transition-colors flex items-center gap-2"
                     >
-                      <Icon name="edit" style={{ width: '14px' }} /> Edit Day Routine
-                    </button>
+                      <Icon name="edit" className="w-4 h-4" /> Edit Day
+                    </Link>
                   )}
                 </div>
 
-                <div style={{ padding: '20px', display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+                <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {dayPeriods.map((period, index) => {
                     const colors = getSubjectColor(period.subject?.name || 'Subject');
                     return (
-                      <div key={period.id} style={{
-                        flex: '1 1 200px',
-                        maxWidth: '280px',
-                        background: colors.bg,
-                        border: `1px solid ${colors.border}`,
-                        borderRadius: '8px',
-                        padding: '15px',
-                        position: 'relative'
-                      }}>
+                      <div key={period.id} className={`${colors.bg} ${colors.border} border rounded-xl p-5 relative group transition-all hover:shadow-md`}>
+                        
+                        <button 
+                          onClick={() => setDeletingItem(period)}
+                          className="absolute top-3 right-3 bg-white p-1.5 rounded-md text-red-500 shadow-sm border border-red-100 opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Delete Period"
+                        >
+                          <Icon name="trash" className="w-4 h-4" />
+                        </button>
 
-                        <div style={{ position: 'absolute', top: '10px', right: '10px' }}>
-                          <button
-                            onClick={() => setDeletingItem(period)}
-                            style={{ background: '#fff', border: `1px solid ${colors.border}`, color: '#ef4444', borderRadius: '4px', cursor: 'pointer', padding: '4px', display: 'flex' }}
-                            title="Delete this period"
-                          >
-                            <Icon name="trash" style={{ width: '14px' }} />
-                          </button>
-                        </div>
-
-                        <div style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', marginBottom: '5px' }}>PERIOD {index + 1}</div>
-                        <h4 style={{ margin: '0 0 10px 0', color: colors.text, fontSize: '16px', fontWeight: 700 }}>{period.subject?.name}</h4>
-
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '13px', color: '#475569' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Icon name="clock" style={{ width: '14px', opacity: 0.7 }} /><span>{formatTime(period.start_time)} - {formatTime(period.end_time)}</span></div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Icon name="users" style={{ width: '14px', opacity: 0.7 }} /><span>{period.school_class?.name} (Sec: {period.section?.name})</span></div>
-                          {period.classroom && <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Icon name="home" style={{ width: '14px', opacity: 0.7 }} /><span>{period.classroom.room_number}</span></div>}
+                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white border ${colors.border} ${colors.text} mb-3 inline-block`}>
+                          Period {index + 1}
+                        </span>
+                        
+                        <h4 className={`text-lg font-bold ${colors.text} mb-3`}>{period.subject?.name}</h4>
+                        
+                        <div className="space-y-2 text-sm text-gray-600 font-medium">
+                          <div className="flex items-center gap-2">
+                            <Icon name="clock" className="w-4 h-4 opacity-50" />
+                            {formatTime(period.start_time)} - {formatTime(period.end_time)}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Icon name="users" className="w-4 h-4 opacity-50" />
+                            {period.schoolClass?.name} (Sec: {period.section?.name})
+                          </div>
+                          {period.classroom && (
+                            <div className="flex items-center gap-2">
+                              <Icon name="home" className="w-4 h-4 opacity-50" />
+                              Room: {period.classroom.room_number}
+                            </div>
+                          )}
                         </div>
                       </div>
                     );
@@ -188,9 +214,17 @@ export default function Index({ timeTables, campuses, classes, classrooms, filte
         )}
       </div>
 
-      {formOpen && <TimeTableFormModal editingConfig={editingConfig} classes={classes} classrooms={classrooms} campuses={campuses} activeCampusId={auth?.active_campus_id} onClose={() => setFormOpen(false)} />}
+      <Pagination meta={timeTables} />
 
-      {deletingItem && <ConfirmDeleteModal item={deletingItem} onCancel={() => setDeletingItem(null)} onConfirm={() => { router.delete(route('admin.time-tables.destroy', deletingItem.id), { onSuccess: () => setDeletingItem(null) }); }} />}
+      {/* Delete Confirmation Modal */}
+      {deletingItem && (
+        <ConfirmDeleteModal 
+          item={deletingItem} 
+          message="Are you sure you want to delete this period?"
+          onCancel={() => setDeletingItem(null)} 
+          onConfirm={() => { router.delete(route('admin.time-tables.destroy', deletingItem.id), { onSuccess: () => setDeletingItem(null) }); }} 
+        />
+      )}
     </AuthenticatedLayout>
   );
 }

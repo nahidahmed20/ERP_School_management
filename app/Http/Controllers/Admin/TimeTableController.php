@@ -16,8 +16,9 @@ class TimeTableController extends Controller
 {
     public function index(Request $request)
     {
-        $query = TimeTable::with(['schoolClass', 'section', 'subject', 'classroom']);
+        $query = TimeTable::with(['schoolClass:id,name', 'section:id,name', 'subject:id,name', 'classroom:id,room_number']);
 
+        // Filters
         if ($request->filled('class_id')) {
             $query->where('class_id', $request->class_id);
         }
@@ -28,6 +29,7 @@ class TimeTableController extends Controller
             $query->where('day_of_week', $request->day);
         }
 
+        // Sorting by Day logically, then by time
         $query->orderByRaw("FIELD(day_of_week, 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday')")
               ->orderBy('start_time', 'asc');
 
@@ -35,13 +37,10 @@ class TimeTableController extends Controller
 
         return Inertia::render('Admin/TimeTables/Index', [
             'timeTables' => $timeTables,
-            'campuses' => Campus::select('id', 'name')->get(),
-            'classes' => SchoolClass::with(['sections:id,name', 'subjects:id,name'])
+            // Only sending classes with sections for the filter dropdown
+            'classes' => SchoolClass::with(['sections:id,name'])
                             ->where('is_active', true)
                             ->orderBy('numeric_name')
-                            ->get(),
-            'classrooms' => Classroom::select('id', 'room_number', 'type')
-                            ->where('is_active', true)
                             ->get(),
             'filters' => $request->only(['class_id', 'section_id', 'day']),
         ]);
@@ -116,6 +115,52 @@ class TimeTableController extends Controller
         }
 
         return back()->with('success', 'রুটিন সফলভাবে সেভ করা হয়েছে।');
+    }
+
+    public function create()
+    {
+        return Inertia::render('Admin/TimeTables/Create', [
+            'campuses' => Campus::select('id', 'name')->get(),
+            'classes' => SchoolClass::with(['sections', 'subjects'])
+                            ->where('is_active', true)
+                            ->orderBy('numeric_name')
+                            ->get(),
+            'classrooms' => Classroom::select('id', 'room_number', 'type')
+                            ->where('is_active', true)
+                            ->get(),
+        ]);
+    }
+
+    public function editDay(Request $request)
+    {
+        $request->validate([
+            'class_id' => 'required|exists:school_classes,id',
+            'section_id' => 'required|exists:sections,id',
+            'day' => 'required|string',
+        ]);
+
+        $periods = TimeTable::where('class_id', $request->class_id)
+            ->where('section_id', $request->section_id)
+            ->where('day_of_week', $request->day)
+            ->orderBy('start_time', 'asc')
+            ->get();
+
+        return Inertia::render('Admin/TimeTables/Edit', [
+            'campuses' => Campus::select('id', 'name')->get(),
+            'classes' => SchoolClass::with(['sections:id,name', 'subjects:id,name'])
+                            ->where('is_active', true)
+                            ->orderBy('numeric_name')
+                            ->get(),
+            'classrooms' => Classroom::select('id', 'room_number', 'type')
+                            ->where('is_active', true)
+                            ->get(),
+            'editData' => [
+                'class_id' => $request->class_id,
+                'section_id' => $request->section_id,
+                'day_of_week' => $request->day,
+                'periods' => $periods
+            ]
+        ]);
     }
 
     public function bulkUpdate(Request $request)
