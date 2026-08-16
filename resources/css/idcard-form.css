@@ -1,8 +1,3 @@
-/* ===================================================================
-   ID Card Template Builder — styles for classes used in IdCardForm.jsx
-   Append to your existing mm- stylesheet (e.g. settings-registry.css)
-   so it inherits the shared forest-green / gold theme tokens.
-   =================================================================== */
 
 /* ---- Two-column layout that collapses on smaller screens ---- */
 .idcard-layout {

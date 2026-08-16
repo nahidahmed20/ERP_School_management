@@ -23,8 +23,8 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
 
             'auth' => [
-                'user' => $request->user() ? clone $request->user()->load('campus') : null,
-                'active_campus_id' => config('app.active_campus_id'), 
+                'user' => $request->user() ? $request->user()->loadMissing('roles', 'permissions') : null,
+                'active_campus_id' => config('app.active_campus_id'),
             ],
 
             'all_campuses' => function () use ($request) {
@@ -52,25 +52,22 @@ class HandleInertiaRequests extends Middleware
 
                 $menusArray = json_decode(json_encode($rawMenus), true);
 
-                if ($user->hasRole('Super Admin')) {
+                $isSuperAdmin = $user->hasRole('Super Admin') || $user->role === 'Super Admin' || $user->role === 'super_admin';
+
+                if ($isSuperAdmin) {
                     return $menusArray;
                 }
 
                 return collect($menusArray)->map(function ($group) use ($user) {
-
                     $filteredItems = collect($group['items'] ?? [])->map(function ($item) use ($user) {
-
                         if (!empty($item['children'])) {
                             $item['children'] = collect($item['children'])->filter(function ($child) use ($user) {
                                 $route = $child['route_name'] ?? $child['route'] ?? null;
-                                return !empty($route) && $user->can($route);
+                                return !empty($route) && ($user->can($route) || in_array($route, ['admin.dashboard', 'dashboard']));
                             })->values()->all();
                         }
-
                         return $item;
-
                     })->filter(function ($item) use ($user) {
-
                         if (array_key_exists('children', $item) && is_array($item['children'])) {
                             return count($item['children']) > 0;
                         }
@@ -81,17 +78,14 @@ class HandleInertiaRequests extends Middleware
                         }
 
                         return !empty($route) && $user->can($route);
-
                     })->values()->all();
 
                     $group['items'] = $filteredItems;
                     return $group;
-
                 })->filter(function ($group) {
                     return !empty($group['items']);
                 })->values()->all();
             },
-            
         ];
     }
 }

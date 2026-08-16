@@ -6,10 +6,13 @@ export default function Sidebar({ mobileOpen = false }) {
   const { url, props } = usePage();
   const navigation = props.navigation ?? [];
 
+  // Helper to safely get the route name whether it comes as 'route' or 'route_name'
+  const getRoute = (item) => item?.route_name || item?.route || null;
+
   function isActive(routeName) {
     if (!routeName) return false;
     try {
-      return route().current(routeName);
+      return route().current(routeName) || route().current(routeName + '.*');
     } catch {
       return url.startsWith('/' + routeName.replaceAll('.', '/'));
     }
@@ -18,8 +21,8 @@ export default function Sidebar({ mobileOpen = false }) {
   const [openKeys, setOpenKeys] = useState(() => {
     const initialKeys = new Set();
     navigation.forEach(group => {
-      group.items.forEach(item => {
-        if (item.children?.some(child => isActive(child.route))) {
+      group.items?.forEach(item => {
+        if (item.children?.some(child => isActive(getRoute(child)))) {
           initialKeys.add(item.key);
         }
       });
@@ -27,46 +30,32 @@ export default function Sidebar({ mobileOpen = false }) {
     return initialKeys;
   });
 
+  // Automatically expand active parent when navigation or url changes
   useEffect(() => {
-    setOpenKeys(prev => {
-      const next = new Set();
-      let hasChanges = false;
-      
-      navigation.forEach(group => {
-        group.items.forEach(item => {
-          if (item.children?.some(child => isActive(child.route))) {
-            next.add(item.key); 
-          }
-        });
-      });
-
-      if (prev.size !== next.size) {
-        hasChanges = true;
-      } else {
-        for (let key of next) {
-          if (!prev.has(key)) hasChanges = true;
+    navigation.forEach(group => {
+      group.items?.forEach(item => {
+        if (item.children?.some(child => isActive(getRoute(child)))) {
+          setOpenKeys(prev => new Set(prev).add(item.key));
         }
-      }
-
-      return hasChanges ? next : prev; 
+      });
     });
   }, [url, navigation]);
 
   function toggle(key) {
     setOpenKeys(prev => {
-      const isOpen = prev.has(key);
-      
-      const next = new Set();
-      
-      if (!isOpen) {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
         next.add(key);
       }
-      
       return next;
     });
   }
 
-  function hrefFor(routeName) {
+  function hrefFor(item) {
+    const routeName = getRoute(item);
+    if (!routeName) return '#';
     try {
       return route(routeName);
     } catch {
@@ -74,7 +63,7 @@ export default function Sidebar({ mobileOpen = false }) {
     }
   }
 
-  if (!navigation.length) {
+  if (!navigation || navigation.length === 0) {
     return (
       <aside className={`sidebar ${mobileOpen ? 'mobile-open' : ''}`}>
         <div className="brand">
@@ -105,16 +94,17 @@ export default function Sidebar({ mobileOpen = false }) {
         {navigation.map(group => (
           <div className="nav-group" key={group.label}>
             <div className="nav-label">{group.label}</div>
-            {group.items.map(item => {
-              const isParentActive = item.children?.some(child => isActive(child.route));
+            {group.items?.map(item => {
+              const isParentActive = item.children?.some(child => isActive(getRoute(child)));
+              const isOpen = openKeys.has(item.key);
 
               return item.children?.length ? (
                 <div className="nav-parent" key={item.key}>
                   <button
                     type="button"
-                    className={`nav-item nav-toggle ${openKeys.has(item.key) ? 'open' : ''} ${isParentActive ? 'active' : ''}`}
+                    className={`nav-item nav-toggle ${isOpen ? 'open' : ''} ${isParentActive ? 'active' : ''}`}
                     onClick={() => toggle(item.key)}
-                    aria-expanded={openKeys.has(item.key)}
+                    aria-expanded={isOpen}
                   >
                     <Icon name={item.icon} />
                     <span>{item.label}</span>
@@ -124,25 +114,32 @@ export default function Sidebar({ mobileOpen = false }) {
 
                   <div
                     className="nav-submenu"
-                    style={{ maxHeight: openKeys.has(item.key) ? '480px' : '0px', overflow: 'hidden', transition: 'max-height 0.3s ease' }}
+                    style={{
+                      maxHeight: isOpen ? '600px' : '0px',
+                      overflow: 'hidden',
+                      transition: 'max-height 0.3s ease'
+                    }}
                   >
-                    {item.children.map(child => (
-                      <Link
-                        key={child.key}
-                        href={hrefFor(child.route)}
-                        className={`nav-subitem ${isActive(child.route) ? 'active' : ''}`}
-                      >
-                        <span className="dot" />
-                        <span>{child.label}</span>
-                      </Link>
-                    ))}
+                    {item.children.map(child => {
+                      const childRoute = getRoute(child);
+                      return (
+                        <Link
+                          key={child.key || childRoute}
+                          href={hrefFor(child)}
+                          className={`nav-subitem ${isActive(childRoute) ? 'active' : ''}`}
+                        >
+                          <span className="dot" />
+                          <span>{child.label}</span>
+                        </Link>
+                      );
+                    })}
                   </div>
                 </div>
               ) : (
                 <Link
-                  key={item.key}
-                  href={hrefFor(item.route)}
-                  className={`nav-item ${isActive(item.route) ? 'active' : ''}`}
+                  key={item.key || getRoute(item)}
+                  href={hrefFor(item)}
+                  className={`nav-item ${isActive(getRoute(item)) ? 'active' : ''}`}
                 >
                   <Icon name={item.icon} />
                   <span>{item.label}</span>

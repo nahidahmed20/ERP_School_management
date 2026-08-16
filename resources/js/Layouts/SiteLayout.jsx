@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import '../../css/site.css'; 
+import '../../css/site.css';
 
 export default function SiteLayout({ children, activePage = '' }) {
     const navItem = (href, label, key) => (
@@ -13,6 +13,7 @@ export default function SiteLayout({ children, activePage = '' }) {
 
     return (
         <>
+        <div className="verdant-front-site">
             <div className="vd-header">
                 <div className="vd-container vd-header-inner">
                     <Link className="vd-brand-link" href={route('home')}>
@@ -86,6 +87,7 @@ export default function SiteLayout({ children, activePage = '' }) {
                     </div>
                 </div>
             </footer>
+        </div>
         </>
     );
 }
