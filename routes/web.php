@@ -327,6 +327,12 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
         Route::resource('documents', StudentDocumentController::class);
         Route::resource('discipline', DisciplinaryRecordController::class);
 
+        // --- Student Profile Quick Actions (New Routes) ---
+        Route::get('/{student}/id-card', [StudentController::class, 'generateIdCard'])->name('id-card');
+        Route::get('/{student}/attendance', [StudentController::class, 'attendanceHistory'])->name('attendance');
+        Route::get('/{student}/results', [StudentController::class, 'academicResults'])->name('results');
+        Route::get('/{student}/fees', [StudentController::class, 'feePayments'])->name('fees');
+        Route::get('/{student}/message', [StudentController::class, 'sendMessage'])->name('message');
     });
 
     Route::prefix('payments')->name('payments.')->group(function () {

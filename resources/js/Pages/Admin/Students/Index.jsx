@@ -6,219 +6,191 @@ import Pagination from '@/Components/Pagination';
 import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 import Swal from 'sweetalert2';
 
+// ---------------------------------------------------------
+// Student View Modal (NEW Modern SaaS Split-View Design)
+// ---------------------------------------------------------
 function StudentViewModal({ student, onClose }) {
+  const [imageError, setImageError] = useState(false);
+
+  // Reset image error state when a new student is viewed
+  useEffect(() => {
+    setImageError(false);
+  }, [student]);
+
   if (!student) return null;
 
   return (
-    <div className="mm-modal-overlay" onClick={onClose} style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(15, 23, 42, 0.6)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 9999,
-    }}>
-      <div className="mm-modal" onClick={(e) => e.stopPropagation()} style={{
-        background: '#fff',
-        borderRadius: '16px',
-        width: '95%',
-        maxWidth: '1150px',
-        maxHeight: '92vh',
-        overflowY: 'auto',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-        border: '1px solid #e2e8f0',
-        display: 'flex',
-        flexDirection: 'column'
-      }}>
-        {/* Modal Header */}
-        <div className="mm-modal-head" style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '20px 24px',
-          borderBottom: '1px solid #f1f5f9',
-          background: '#f8fafc',
-          borderTopLeftRadius: '16px',
-          borderTopRightRadius: '16px'
-        }}>
-          <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '700', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Icon name="user" style={{ color: '#4f46e5' }} /> Complete Student Profile
-          </h3>
-          <button className="icon-btn" onClick={onClose} style={{
-            background: '#cbd5e1',
-            border: 'none',
-            borderRadius: '50%',
-            width: '32px',
-            height: '32px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'all 0.2s'
-          }}>
-            <Icon name="close" />
-          </button>
-        </div>
+    <div
+      className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 transition-opacity animate-in fade-in duration-200"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl w-full max-w-5xl max-h-[90vh] flex flex-col md:flex-row shadow-2xl overflow-hidden transform transition-all ring-1 ring-slate-900/5 animate-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Mobile Close Button (Absolute) */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 md:hidden w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 z-50"
+        >
+          <Icon name="close" className="w-4 h-4" />
+        </button>
 
-        {/* Modal Body */}
-        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          {/* Top Profile Summary Badge */}
-          <div style={{ display: 'flex', gap: '24px', alignItems: 'center', background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-            <div style={{
-              width: '90px',
-              height: '90px',
-              borderRadius: '50%',
-              background: '#e0e7ff',
-              color: '#4f46e5',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '2.25rem',
-              fontWeight: '700',
-              overflow: 'hidden',
-              border: '3px solid #fff',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-            }}>
-              {student.photo ? (
-                <img
-                  src={`/storage/${student.photo}`}
-                  alt={`${student.first_name}'s Photo`}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-              ) : (
-                student.first_name ? student.first_name[0].toUpperCase() : 'S'
-              )}
-            </div>
-            <div style={{ flex: 1 }}>
-              <h2 style={{ margin: '0 0 6px 0', fontSize: '1.6rem', fontWeight: '800', color: '#0f172a' }}>
-                {student.first_name} {student.last_name}
-              </h2>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', fontSize: '13px', color: '#475569' }}>
-                <span><strong>Admission No:</strong> <span style={{ color: '#4f46e5', fontWeight: '600' }}>{student.admission_no}</span></span>
-                <span>•</span>
-                <span><strong>Admission Date:</strong> {student.admission_date ?? 'N/A'}</span>
-                <span>•</span>
-                <span><strong>Campus:</strong> {student.campus?.name ?? 'Main Campus'}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Details Grid: Academic, Personal & Guardian */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '20px' }}>
-
-            {/* 1. Academic Information */}
-            <div style={{ background: '#fff', border: '1px solid #e2e8f0', padding: '20px', borderRadius: '12px' }}>
-              <h4 style={{ margin: '0 0 16px 0', fontSize: '15px', fontWeight: '700', color: '#4f46e5', borderBottom: '2px solid #e0e7ff', paddingBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Icon name="book" style={{ fontSize: '16px' }} /> Academic Details
-              </h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '14px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>Class:</span> <strong>{student.current_enrollment?.school_class?.name ?? 'N/A'}</strong></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>Section:</span> <strong>{student.current_enrollment?.section?.name ?? 'N/A'}</strong></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>Roll No:</span> <strong>{student.current_enrollment?.roll_no ?? 'N/A'}</strong></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>Category:</span> <strong>{student.category?.name || 'General'}</strong></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>House:</span> <strong>{student.house?.name || 'N/A'}</strong></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>Current Session:</span> <strong style={{ color: '#0369a1' }}>{student.current_enrollment?.academic_session?.name ?? 'Active Session'}</strong></div>
-              </div>
-            </div>
-
-            {/* 2. Personal Information */}
-            <div style={{ background: '#fff', border: '1px solid #e2e8f0', padding: '20px', borderRadius: '12px' }}>
-              <h4 style={{ margin: '0 0 16px 0', fontSize: '15px', fontWeight: '700', color: '#0ea5e9', borderBottom: '2px solid #e0f2fe', paddingBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Icon name="user" style={{ fontSize: '16px' }} /> Personal Details
-              </h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '14px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>Date of Birth:</span> <strong>{student.date_of_birth ?? 'N/A'}</strong></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>Gender:</span> <strong style={{ textTransform: 'capitalize' }}>{student.gender ?? 'N/A'}</strong></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>Blood Group:</span> <strong style={{ color: '#be123c' }}>{student.blood_group || 'N/A'}</strong></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>Religion / Nat:</span> <strong>{student.religion ?? 'N/A'} ({student.nationality ?? 'N/A'})</strong></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>Birth Cert No:</span> <strong>{student.birth_certificate_no || 'N/A'}</strong></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>National ID:</span> <strong>{student.national_id || 'N/A'}</strong></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>Mother Tongue:</span> <strong>{student.mother_tongue || 'N/A'}</strong></div>
-              </div>
-            </div>
-
-            {/* 3. Contact & Guardian Details */}
-            <div style={{ background: '#fff', border: '1px solid #e2e8f0', padding: '20px', borderRadius: '12px' }}>
-              <h4 style={{ margin: '0 0 16px 0', fontSize: '15px', fontWeight: '700', color: '#f59e0b', borderBottom: '2px solid #fef3c7', paddingBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Icon name="phone" style={{ fontSize: '16px' }} /> Contact & Guardian
-              </h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '14px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>Student's Phone:</span> <strong>{student.phone || 'N/A'}</strong></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>Student's Email:</span> <strong>{student.email || 'N/A'}</strong></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>Father's Name:</span> <strong>{student.guardian?.father_name ?? 'N/A'}</strong></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>Father's Phone:</span> <strong>{student.guardian?.father_phone ?? 'N/A'}</strong></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>Mother's Name:</span> <strong>{student.guardian?.mother_name ?? 'N/A'}</strong></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>Guardian Email:</span> <strong>{student.guardian?.guardian_email || 'N/A'}</strong></div>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Full-width Details Section (Addresses & Medical) */}
-          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '20px', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            <div style={{ fontSize: '14px' }}>
-              <span style={{ color: '#64748b', display: 'block', fontWeight: '600', marginBottom: '4px' }}>Present Address:</span>
-              <strong style={{ color: '#1e293b' }}>{student.present_address ?? 'N/A'}</strong>
-            </div>
-            <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '12px', fontSize: '14px' }}>
-              <span style={{ color: '#64748b', display: 'block', fontWeight: '600', marginBottom: '4px' }}>Permanent Address:</span>
-              <strong style={{ color: '#1e293b' }}>{student.permanent_address ?? 'N/A'}</strong>
-            </div>
-            <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '12px', fontSize: '14px' }}>
-              <span style={{ color: '#64748b', display: 'block', fontWeight: '600', marginBottom: '4px' }}>Previous School Details:</span>
-              <strong style={{ color: '#1e293b' }}>{student.previous_school_details || 'N/A'}</strong>
-            </div>
-            <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '12px', fontSize: '14px' }}>
-              <span style={{ color: '#ef4444', display: 'block', fontWeight: '600', marginBottom: '4px' }}>Medical History & Allergies:</span>
-              <strong style={{ color: '#1e293b' }}>{student.medical_history || 'None / Not Provided'}</strong>
-            </div>
-          </div>
-
-          <div style={{ background: '#fff', border: '1px solid #e2e8f0', padding: '20px', borderRadius: '12px', marginTop: '10px' }}>
-            <h4 style={{ margin: '0 0 16px 0', fontSize: '15px', fontWeight: '700', color: '#10b981', borderBottom: '2px solid #d1fae5', paddingBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Icon name="users" style={{ fontSize: '16px' }} /> Siblings Information (এই স্কুলে অধ্যয়নরত ভাই-বোন)
-            </h4>
-
-            {student.guardian?.students && student.guardian.students.filter(s => s.id !== student.id).length > 0 ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '12px' }}>
-                {student.guardian.students
-                  .filter(s => s.id !== student.id) 
-                  .map(sibling => (
-                  <div key={sibling.id} style={{ background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#e0e7ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5', fontWeight: 'bold' }}>
-                      {sibling.photo ? (
-                        <img src={`/storage/${sibling.photo}`} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
-                      ) : (
-                        sibling.first_name[0]
-                      )}
-                    </div>
-                    <div>
-                      <strong style={{ display: 'block', color: '#1e293b', fontSize: '14px' }}>{sibling.first_name} {sibling.last_name}</strong>
-                      <span style={{ fontSize: '12px', color: '#64748b' }}>Adm No: {sibling.admission_no}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
+        {/* LEFT SIDEBAR: Profile Summary */}
+        <div className="w-full md:w-2/5 lg:w-1/3 bg-slate-50 border-r border-slate-100 p-8 flex flex-col items-center text-center shrink-0 overflow-y-auto">
+          {/* Avatar with Error Handling & Fallback Icon */}
+          <div className="w-32 h-32 rounded-full overflow-hidden bg-white ring-4 ring-white shadow-sm border border-slate-100 flex items-center justify-center text-slate-300 mb-5 relative group">
+            {student.photo && !imageError ? (
+              <img
+                src={`/storage/${student.photo}`}
+                alt="Profile"
+                className="w-full h-full object-cover"
+                onError={() => setImageError(true)}
+              />
             ) : (
-              <span style={{ color: '#94a3b8', fontSize: '14px', fontStyle: 'italic' }}>এই স্কুলে অন্য কোনো ভাই-বোন অধ্যয়নরত নেই।</span>
+              <svg className="w-16 h-16 text-slate-300 mt-2" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
             )}
+            <div className="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center transition-all">
+              <Link href={route('admin.students.edit', student.id)} className="text-white text-xs font-semibold px-3 py-1.5 border border-white/50 rounded-lg hover:bg-white/20">
+                Change Photo
+              </Link>
+            </div>
           </div>
 
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight leading-tight mb-1">
+            {student.first_name} {student.last_name}
+          </h2>
+          <p className="text-sm font-medium text-slate-500 mb-4">{student.campus?.name ?? 'Main Campus'}</p>
+
+          <div className="flex flex-wrap justify-center gap-2 w-full mb-6">
+            <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-100/50">
+              ID: {student.admission_no}
+            </span>
+            <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-100/50">
+              Active Student
+            </span>
+          </div>
+
+          {/* Left Panel Action Buttons */}
+          <div className="w-full space-y-3 mt-auto pt-6">
+            <Link href={route('admin.students.edit', student.id)} className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-indigo-600 transition-colors shadow-sm">
+              <Icon name="edit" className="w-4 h-4" /> Edit Full Profile
+            </Link>
+            <button className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-indigo-600 border border-transparent rounded-xl text-sm font-semibold text-white hover:bg-indigo-700 transition-colors shadow-sm shadow-indigo-200">
+              <Icon name="printer" className="w-4 h-4" /> Print ID Card
+            </button>
+          </div>
         </div>
 
-        {/* Modal Footer */}
-        <div style={{ padding: '16px 24px', background: '#f8fafc', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'flex-end', borderBottomLeftRadius: '16px', borderBottomRightRadius: '16px' }}>
-          <button className="btn btn-outline" onClick={onClose} style={{ padding: '8px 16px', borderRadius: '6px', fontWeight: '600' }}>Close Portal</button>
+        {/* RIGHT SIDE: Detailed Information */}
+        <div className="w-full md:w-3/5 lg:w-2/3 flex flex-col bg-white">
+          {/* Right Header (Desktop Close Button) */}
+          <div className="hidden md:flex justify-end p-4 border-b border-slate-50">
+            <button
+              onClick={onClose}
+              className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+            >
+              <Icon name="close" className="w-5 h-5" />
+            </button>
+          </div>
+
+          <div className="p-6 sm:p-8 overflow-y-auto space-y-8">
+
+            {/* Section: Academic Data */}
+            <section>
+              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 flex items-center gap-2 border-b border-slate-100 pb-2">
+                <span className="w-2 h-2 rounded-full bg-indigo-500"></span> Academic Info
+              </h3>
+              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+                <div>
+                  <dt className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Class & Section</dt>
+                  <dd className="mt-1 text-sm font-medium text-slate-900">{student.current_enrollment?.school_class?.name ?? 'N/A'} ({student.current_enrollment?.section?.name ?? 'N/A'})</dd>
+                </div>
+                <div>
+                  <dt className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Roll Number</dt>
+                  <dd className="mt-1 text-sm font-medium text-slate-900">{student.current_enrollment?.roll_no ?? 'N/A'}</dd>
+                </div>
+                <div>
+                  <dt className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Admission Date</dt>
+                  <dd className="mt-1 text-sm font-medium text-slate-900">{student.admission_date ?? 'N/A'}</dd>
+                </div>
+                <div>
+                  <dt className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Category / House</dt>
+                  <dd className="mt-1 text-sm font-medium text-slate-900">{student.category?.name || 'General'} • {student.house?.name || 'No House'}</dd>
+                </div>
+              </dl>
+            </section>
+
+            {/* Section: Personal Data */}
+            <section>
+              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 flex items-center gap-2 border-b border-slate-100 pb-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Personal Details
+              </h3>
+              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+                <div>
+                  <dt className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Date of Birth</dt>
+                  <dd className="mt-1 text-sm font-medium text-slate-900">{student.date_of_birth ?? 'N/A'}</dd>
+                </div>
+                <div>
+                  <dt className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Gender</dt>
+                  <dd className="mt-1 text-sm font-medium text-slate-900 capitalize">{student.gender ?? 'N/A'}</dd>
+                </div>
+                <div>
+                  <dt className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Blood Group</dt>
+                  <dd className="mt-1 text-sm font-bold text-rose-600">{student.blood_group || 'Not Specified'}</dd>
+                </div>
+                <div>
+                  <dt className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Religion & Nationality</dt>
+                  <dd className="mt-1 text-sm font-medium text-slate-900">{student.religion ?? 'N/A'} ({student.nationality ?? 'N/A'})</dd>
+                </div>
+              </dl>
+            </section>
+
+            {/* Section: Guardian Data */}
+            <section>
+              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 flex items-center gap-2 border-b border-slate-100 pb-2">
+                <span className="w-2 h-2 rounded-full bg-amber-500"></span> Guardian & Contacts
+              </h3>
+              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+                <div>
+                  <dt className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Father's Name</dt>
+                  <dd className="mt-1 text-sm font-medium text-slate-900">{student.guardian?.father_name ?? 'N/A'}</dd>
+                </div>
+                <div>
+                  <dt className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Father's Phone</dt>
+                  <dd className="mt-1 text-sm font-medium text-slate-900">{student.guardian?.father_phone ?? 'N/A'}</dd>
+                </div>
+                <div>
+                  <dt className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Mother's Name</dt>
+                  <dd className="mt-1 text-sm font-medium text-slate-900">{student.guardian?.mother_name ?? 'N/A'}</dd>
+                </div>
+                <div>
+                  <dt className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Guardian Email</dt>
+                  <dd className="mt-1 text-sm font-medium text-slate-900 truncate" title={student.guardian?.guardian_email}>
+                    {student.guardian?.guardian_email || 'N/A'}
+                  </dd>
+                </div>
+                <div className="sm:col-span-2">
+                  <dt className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Present Address</dt>
+                  <dd className="mt-1 text-sm font-medium text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-100 leading-relaxed">
+                    {student.present_address ?? 'Address not provided'}
+                  </dd>
+                </div>
+              </dl>
+            </section>
+
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
+// ---------------------------------------------------------
+// Main Index Component
+// ---------------------------------------------------------
 export default function Index({ students, classes, filters }) {
   const { flash } = usePage().props;
   const [search, setSearch] = useState(filters.search ?? '');
@@ -228,17 +200,24 @@ export default function Index({ students, classes, filters }) {
 
   const [deletingItem, setDeletingItem] = useState(null);
   const [viewingItem, setViewingItem] = useState(null);
+  const [openDropdown, setOpenDropdown] = useState(null);
 
   const selectedClass = classes.find(c => c.id == classId);
 
   useEffect(() => {
     if (flash?.success) {
-      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: flash.success, showConfirmButton: false, timer: 3000, timerProgressBar: true });
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: flash.success, showConfirmButton: false, timer: 3000 });
     }
     if (flash?.error) {
-      Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: flash.error, showConfirmButton: false, timer: 4000, timerProgressBar: true });
+      Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: flash.error, showConfirmButton: false, timer: 4000 });
     }
   }, [flash]);
+
+  useEffect(() => {
+    const closeDropdown = () => setOpenDropdown(null);
+    document.addEventListener('click', closeDropdown);
+    return () => document.removeEventListener('click', closeDropdown);
+  }, []);
 
   const applyFilters = (overrides = {}) => {
     router.get(route('admin.students.index'), {
@@ -250,33 +229,20 @@ export default function Index({ students, classes, filters }) {
     }, { preserveState: true, replace: true });
   };
 
+  const handlePrint = () => window.print();
+
   const exportToCSV = () => {
-    if (!students.data.length) {
-      Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
-      return;
-    }
-    // Updated Headers: Added Category and House, kept Campus
-    const headers = ['Admission No', 'Student Name', 'Category', 'House', 'Campus', 'Class', 'Section', 'Roll', 'Father Name', 'Phone'];
-    const rows = students.data.map(student => [
-      student.admission_no,
-      `${student.first_name} ${student.last_name || ''}`,
-      student.category?.name || 'General',
-      student.house?.name || 'N/A',
-      student.campus?.name ?? '',
-      student.current_enrollment?.school_class?.name ?? '',
-      student.current_enrollment?.section?.name ?? '',
-      student.current_enrollment?.roll_no ?? '',
-      student.guardian?.father_name ?? '',
-      student.guardian?.father_phone ?? ''
+    if (!students.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
+    const headers = ['Admission No', 'Student Name', 'Category', 'Campus', 'Class', 'Section', 'Roll', 'Father Name', 'Phone'];
+    const rows = students.data.map(s => [
+      s.admission_no, `${s.first_name} ${s.last_name || ''}`, s.category?.name || 'General', s.campus?.name ?? '',
+      s.current_enrollment?.school_class?.name ?? '', s.current_enrollment?.section?.name ?? '', s.current_enrollment?.roll_no ?? '',
+      s.guardian?.father_name ?? '', s.guardian?.father_phone ?? ''
     ]);
-
-    const csvContent = "data:text/csv;charset=utf-8,"
-      + [headers.join(','), ...rows.map(e => e.map(val => `"${val}"`).join(','))].join('\n');
-
-    const encodedUri = encodeURI(csvContent);
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows.map(e => e.map(val => `"${val}"`).join(','))].join('\n');
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `Students_List_${new Date().toISOString().slice(0,10)}.csv`);
+    link.setAttribute("href", encodeURI(csvContent));
+    link.setAttribute("download", `Students_Directory_${new Date().toISOString().slice(0,10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -284,298 +250,305 @@ export default function Index({ students, classes, filters }) {
 
   const copyToClipboard = () => {
     if (!students.data.length) return;
-    // Updated Headers: Added Category, House and Campus to clipboard
-    let text = "Admission No\tStudent Name\tCategory\tHouse\tCampus\tClass\tRoll\tFather's Name\tPhone\n";
-    students.data.forEach(student => {
-      text += `${student.admission_no}\t${student.first_name} ${student.last_name || ''}\t${student.category?.name || 'General'}\t${student.house?.name || 'N/A'}\t${student.campus?.name ?? ''}\t${student.current_enrollment?.school_class?.name ?? ''}\t${student.current_enrollment?.roll_no ?? ''}\t${student.guardian?.father_name ?? ''}\t${student.guardian?.father_phone ?? ''}\n`;
+    let text = "Admission No\tStudent Name\tClass\tRoll\tFather's Name\tPhone\n";
+    students.data.forEach(s => {
+      text += `${s.admission_no}\t${s.first_name} ${s.last_name || ''}\t${s.current_enrollment?.school_class?.name ?? ''}\t${s.current_enrollment?.roll_no ?? ''}\t${s.guardian?.father_name ?? ''}\t${s.guardian?.father_phone ?? ''}\n`;
     });
     navigator.clipboard.writeText(text);
-    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'টেবিল ডেটা ক্লিপবোর্ডে কপি হয়েছে!', showConfirmButton: false, timer: 2000 });
-  };
-
-  const handlePrint = () => {
-    window.print();
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Table data copied to clipboard!', showConfirmButton: false, timer: 2000 });
   };
 
   return (
-    <AuthenticatedLayout
-      header={
-        <div className="page-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <span className="eyebrow">Directory</span>
-            <h1>Students Directory</h1>
-            <p className="desc">শিক্ষার্থীদের ভর্তি, ফিল্টারিং ও একাডেমিক সেশন পরিচালনা করুন।</p>
-          </div>
-          <div className="mm-head-actions">
-            <Link href={route('admin.students.create')} className="btn" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <Icon name="plus" /> New Admission
-            </Link>
-          </div>
-        </div>
-      }
-    >
+    <AuthenticatedLayout>
       <Head title="Students Directory" />
 
-      {/* Adding Print-specific styles directly in the component */}
+      {/* Print Specific CSS */}
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
-          /* Hide sidebar, navigation, filters, buttons and pagination */
-          nav, aside, header, .page-head, .no-print, button, a, select, input, .mm-head-actions, .mm-filters {
-            display: none !important;
-          }
-          /* Reset page margins and background colors for clean look */
-          body, html {
-            background: #fff !important;
-            color: #000 !important;
-            margin: 0 !important;
-            padding: 15px !important;
-          }
-          .card, .mm-card {
-            border: none !important;
-            box-shadow: none !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            width: 100% !important;
-          }
-          .mm-table-wrap {
-            overflow: visible !important;
-          }
-          /* Style table for optimal paper print */
-          .mm-table {
-            width: 100% !important;
-            border-collapse: collapse !important;
-          }
-          .mm-table th, .mm-table td {
-            border: 1px solid #cbd5e1 !important;
-            padding: 8px 12px !important;
-            font-size: 11px !important;
-            color: #000 !important;
-          }
-          .mm-table th {
-            background-color: #f1f5f9 !important;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-          }
-          /* Show a clean title only when printing */
-          .print-only-title {
-            display: block !important;
-            font-size: 18px !important;
-            font-weight: bold !important;
-            text-align: center !important;
-            margin-bottom: 15px !important;
-            border-bottom: 2px solid #000;
-            padding-bottom: 8px;
-          }
+          nav, aside, header, .no-print, button, a, select, input { display: none !important; }
+          body, html { background: #f8fafc !important; }
+          .print-table-wrapper { width: 100% !important; border: none !important; box-shadow: none !important; }
+          .print-title { display: block !important; font-size: 24px !important; font-weight: bold !important; margin-bottom: 20px !important; }
         }
-        @media screen {
-          .print-only-title {
-            display: none;
-          }
-        }
+        @media screen { .print-title { display: none; } }
       `}} />
 
-      {/* Print Only Header */}
-      <div className="print-only-title">
-        Students Directory - {new Date().toLocaleDateString('en-GB')}
-      </div>
+      <div className="print-title">Students Directory - {new Date().toLocaleDateString('en-GB')}</div>
 
-      
+      <div className="max-w-7xl mx-auto space-y-6 sm:px-6 lg:px-8 py-8 no-print">
 
-<style>{`
-  .adm-toolbar-scope {
-    --adm-ink: #16213A; --adm-ink-soft: #56647B; --adm-forest: #21402F; --adm-forest-dark: #142720;
-    --adm-brass: #AD7F35; --adm-brass-soft: #F1E4C8; --adm-mist: #EEF1EA; --adm-paper: #FFFFFF;
-    --adm-line: #DCE2D8;
-    --adm-font-display: 'Fraunces', Georgia, serif; --adm-font-body: 'Public Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-    --adm-font-mono: 'JetBrains Mono', ui-monospace, monospace;
-    font-family: var(--adm-font-body);
-  }
-  .adm-toolbar-scope *, .adm-toolbar-scope *::before, .adm-toolbar-scope *::after { box-sizing: border-box; }
-
-  .adm-toolbar-card { background: var(--adm-paper); border: 1px solid var(--adm-line); border-radius: 14px; padding: 22px 24px; margin-bottom: 24px; }
-
-  .adm-toolbar-filters { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
-
-  .adm-toolbar-select { padding: 10px 14px; border-radius: 8px; border: 1.5px solid var(--adm-line); min-width: 130px; background: #fff; font-family: var(--adm-font-body); font-size: 14px; color: var(--adm-ink); outline: none; transition: border-color .15s, box-shadow .15s; }
-  .adm-toolbar-select:focus { border-color: var(--adm-brass); box-shadow: 0 0 0 3px rgba(173,127,53,.16); }
-  .adm-toolbar-select:disabled { opacity: .55; cursor: not-allowed; }
-  .adm-toolbar-select.mono { font-family: var(--adm-font-mono); }
-
-  .adm-search-wrap { position: relative; flex: 1; min-width: 220px; }
-  .adm-search-wrap input { width: 100%; padding: 10px 14px 10px 38px; border-radius: 8px; border: 1.5px solid var(--adm-line); font-size: 14px; font-family: var(--adm-font-body); color: var(--adm-ink); outline: none; transition: border-color .15s, box-shadow .15s; }
-  .adm-search-wrap input:focus { border-color: var(--adm-brass); box-shadow: 0 0 0 3px rgba(173,127,53,.16); }
-  .adm-search-wrap .adm-search-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--adm-ink-soft); }
-
-  .adm-filter-btn { padding: 10px 22px; border-radius: 8px; border: none; background: var(--adm-forest); color: #fff; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background .15s, transform .15s; }
-  .adm-filter-btn:hover { background: var(--adm-forest-dark); transform: translateY(-1px); }
-
-  .adm-export-row { display: flex; gap: 8px; margin-top: 18px; border-top: 1px solid var(--adm-line); padding-top: 16px; flex-wrap: wrap; align-items: center; }
-  .adm-export-label { font-family: var(--adm-font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--adm-brass); font-weight: 600; margin-right: 6px; display: flex; align-items: center; gap: 6px; }
-  .adm-export-label::before { content: ''; width: 14px; height: 1px; background: var(--adm-brass); display: inline-block; }
-  .adm-export-btn { padding: 8px 14px; font-size: 13px; display: flex; align-items: center; gap: 7px; border-radius: 8px; border: 1.5px solid var(--adm-line); background: #fff; color: var(--adm-forest-dark); font-weight: 600; cursor: pointer; transition: all .15s; }
-  .adm-export-btn:hover { border-color: var(--adm-brass); background: var(--adm-brass-soft); }
-`}</style>
-
-{/* Filter Card marked with 'no-print' class */}
-<div className="card mm-card no-print adm-toolbar-scope adm-toolbar-card">
-  <div className="mm-filters adm-toolbar-filters">
-
-    {/* Per Page dropdown */}
-    <select
-      value={perPage}
-      onChange={e => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}
-      className="adm-toolbar-select mono"
-    >
-      <option value="10">10 / Page</option>
-      <option value="20">20 / Page</option>
-      <option value="50">50 / Page</option>
-      <option value="100">100 / Page</option>
-      <option value="500">500 / Page</option>
-      <option value="1000">1000 / Page</option>
-      <option value="all">Show All</option>
-    </select>
-
-    {/* Search Field */}
-    <div className="search adm-search-wrap">
-      <input
-        placeholder="Search by Admission No, Name, Phone..."
-        value={search}
-        onChange={e => setSearch(e.target.value)}
-        onKeyDown={e => e.key === 'Enter' && applyFilters()}
-      />
-      <Icon name="search" className="adm-search-icon" />
-    </div>
-
-    {/* Class selector */}
-    <select
-      value={classId}
-      onChange={e => { setClassId(e.target.value); setSectionId(''); }}
-      className="adm-toolbar-select"
-    >
-      <option value="">All Classes</option>
-      {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-    </select>
-
-    {/* Section selector */}
-    <select
-      value={sectionId}
-      onChange={e => setSectionId(e.target.value)}
-      disabled={!classId}
-      className="adm-toolbar-select"
-    >
-      <option value="">All Sections</option>
-      {selectedClass?.sections?.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-    </select>
-
-    <button className="btn btn-outline adm-filter-btn" onClick={() => applyFilters()}>
-      Filter
-    </button>
-  </div>
-
-  {/* Export Buttons */}
-  <div className="adm-export-row">
-    <span className="adm-export-label">Export</span>
-    <button className="btn btn-outline adm-export-btn" onClick={copyToClipboard}>
-      <Icon name="copy" /> Copy Table
-    </button>
-    <button className="btn btn-outline adm-export-btn" onClick={exportToCSV}>
-      <Icon name="excel" /> CSV
-    </button>
-    <button className="btn btn-outline adm-export-btn" onClick={exportToCSV}>
-      <Icon name="excel" /> Excel
-    </button>
-    <button className="btn btn-outline adm-export-btn" onClick={handlePrint}>
-      <Icon name="print" /> PDF / Print
-    </button>
-  </div>
-</div>
-
-      {/* Table Section */}
-      <div className="card mm-card" style={{ background: '#fff', borderRadius: '12px', overflow: 'hidden' }}>
-        <div className="mm-table-wrap" style={{ overflowX: 'auto' }}>
-          <table className="mm-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-            <thead style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
-              <tr>
-                <th style={{ padding: '15px' }}>SL</th>
-                <th style={{ padding: '15px' }}>Admission No</th>
-                <th style={{ padding: '15px' }}>Student Name</th>
-                <th style={{ padding: '15px' }}>Campus</th>
-                <th style={{ padding: '15px' }}>Class (Sec) & Roll</th>
-                <th style={{ padding: '15px' }}>Guardian Info</th>
-                <th className="no-print" style={{ padding: '15px', textAlign: 'center' }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {students.data.length === 0 && (
-                <tr>
-                  <td colSpan={7} style={{ padding: '30px', textAlign: 'center', color: '#64748b' }}>
-                    কোনো স্টুডেন্ট পাওয়া যায়নি।
-                  </td>
-                </tr>
-              )}
-              {students.data.map((student, index) => (
-                <tr key={student.id} style={{ borderBottom: '1px solid #e2e8f0', transition: 'background-color 0.2s' }}>
-                 <td>{index+1}</td>
-                  <td style={{ padding: '15px' }}><strong>{student.admission_no}</strong></td>
-                  <td style={{ padding: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <img
-                        src={student.photo ? `/storage/${student.photo}` : '/images/default-avatar.png'}
-                        alt="Student"
-                        style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
-                    />
-                    {student.first_name} {student.last_name || ''}
-                </td>
-                  <td style={{ padding: '15px' }}>{student.campus?.name ?? 'Main Campus'}</td>
-                  <td style={{ padding: '15px' }}>
-                    {student.current_enrollment ? (
-                      <span style={{ background: '#e0e7ff', color: '#3730a3', padding: '4px 10px', borderRadius: '20px', fontSize: '13px', fontWeight: '600' }}>
-                        {student.current_enrollment.school_class?.name} ({student.current_enrollment.section?.name}) - Roll: {student.current_enrollment.roll_no || 'N/A'}
-                      </span>
-                    ) : (
-                      <span style={{ color: '#94a3b8', fontStyle: 'italic' }}>Not Enrolled</span>
-                    )}
-                  </td>
-                  <td style={{ padding: '15px' }}>
-                    <div style={{ fontWeight: '500' }}>{student.guardian?.father_name ?? 'N/A'}</div>
-                    <small style={{ color: '#64748b' }}>{student.guardian?.father_phone ?? ''}</small>
-                  </td>
-                  <td className="no-print" style={{ padding: '15px' }}>
-                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                      {/* View Details Button */}
-                      <button
-                        onClick={() => setViewingItem(student)}
-                        title="View Details"
-                        style={{ padding: '6px', color: '#4f46e5', background: '#f5f3ff', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-                      >
-                        <Icon name="eye" />
-                      </button>
-
-                      {/* Edit Button */}
-                      <Link
-                        href={route('admin.students.edit', student.id)}
-                        title="Edit Student"
-                        style={{ padding: '6px', color: '#3b82f6', background: '#eff6ff', borderRadius: '6px', display: 'flex', alignItems: 'center' }}
-                      >
-                        <Icon name="edit" />
-                      </Link>
-
-                      {/* Delete Button */}
-                      <button
-                        onClick={() => setDeletingItem(student)}
-                        title="Delete Student"
-                        style={{ padding: '6px', color: '#ef4444', background: '#fef2f2', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-                      >
-                        <Icon name="trash" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        {/* Page Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Student Directory</h1>
+            <p className="text-sm text-slate-500 mt-1">Manage enrollments, view profiles, and update records.</p>
+          </div>
+          <Link
+            href={route('admin.students.create')}
+            className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md shadow-indigo-500/20 active:scale-95"
+          >
+            <Icon name="plus" className="w-4 h-4" /> New Admission
+          </Link>
         </div>
-        <div className="no-print" style={{ padding: '20px', borderTop: '1px solid #f1f5f9' }}>
-          <Pagination meta={students} />
+
+        {/* Unified Modern Toolbar */}
+        {/* Unified Modern Toolbar */}
+        <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col lg:flex-row items-center justify-between gap-4">
+
+          {/* Left Group: Search & Filters */}
+          <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
+
+            {/* Search */}
+            <div className="relative w-full sm:w-64">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+              </div>
+              <input
+                type="text"
+                placeholder="Search by name, ID, phone..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && applyFilters()}
+                className="block w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+              />
+            </div>
+
+            {/* Divider (Hidden on Mobile) */}
+            <div className="hidden sm:block w-px h-6 bg-slate-200"></div>
+
+            {/* Class Filter */}
+            <select
+              value={classId}
+              onChange={e => { setClassId(e.target.value); setSectionId(''); }}
+              className="w-full sm:w-40 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none cursor-pointer"
+            >
+              <option value="">All Classes</option>
+              {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+
+            {/* Section Filter */}
+            <select
+              value={sectionId}
+              onChange={e => setSectionId(e.target.value)}
+              disabled={!classId}
+              className="w-full sm:w-40 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none cursor-pointer disabled:opacity-50"
+            >
+              <option value="">All Sections</option>
+              {selectedClass?.sections?.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+
+            {/* Apply Button - Made bold and Indigo */}
+            <button
+              onClick={() => applyFilters()}
+              className="w-full sm:w-auto px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
+            >
+              Apply
+            </button>
+          </div>
+
+          {/* Right Group: Per Page & Actions */}
+          <div className="flex items-center gap-3 w-full lg:w-auto justify-between lg:justify-end border-t lg:border-none border-slate-100 pt-3 lg:pt-0">
+
+            <select
+            value={perPage}
+            onChange={e => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}
+            className="appearance-none py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
+            >
+            <option value="10">10 / Page</option>
+            <option value="20">20 / Page</option>
+            <option value="50">50 / Page</option>
+            </select>
+
+            {/* Icons - Uses explicit SVGs now */}
+            <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-xl shrink-0">
+              <button onClick={copyToClipboard} className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-white hover:shadow-sm rounded-lg transition-all" title="Copy Table">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+              </button>
+              <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+              <button onClick={exportToCSV} className="p-1.5 text-slate-500 hover:text-emerald-600 hover:bg-white hover:shadow-sm rounded-lg transition-all" title="Export CSV">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+              </button>
+              <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+              <button onClick={handlePrint} className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-white hover:shadow-sm rounded-lg transition-all" title="Print">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Table Card */}
+        <div className="bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 print-table-wrapper" style={{ minHeight: '400px' }}>
+          <div className="overflow-x-auto overflow-y-visible">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50/50">
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Student Details</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Enrollment</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Guardian</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right no-print">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {students.data.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-16 text-center">
+                      <div className="flex flex-col items-center justify-center">
+                        <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-3">
+                          <Icon name="users" className="w-8 h-8 text-slate-400" />
+                        </div>
+                        <p className="text-base font-medium text-slate-900">No students found</p>
+                        <p className="text-sm text-slate-500 mt-1">Adjust your filters or add a new student.</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  students.data.map((student) => {
+                    return (
+                      <tr key={student.id} className="hover:bg-slate-50/60 transition-colors group">
+
+                        {/* Student Profile Column with Error Handling Logic integrated below */}
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-4">
+                            <div className="relative w-10 h-10 rounded-full bg-slate-100 ring-2 ring-white shadow-sm flex items-center justify-center overflow-hidden shrink-0">
+                                {student.photo ? (
+                                  <img
+                                    src={`/storage/${student.photo}`}
+                                    alt="Avatar"
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      e.target.onerror = null; // Prevent infinite loop
+                                      e.target.style.display = 'none'; // hide broken image
+                                      e.target.nextSibling.style.display = 'block'; // show SVG
+                                    }}
+                                  />
+                                ) : null}
+                                <svg
+                                  className="w-6 h-6 text-slate-300 mt-1"
+                                  fill="currentColor"
+                                  viewBox="0 0 24 24"
+                                  style={{ display: student.photo ? 'none' : 'block' }}
+                                >
+                                  <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
+                                </svg>
+                                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></div>
+                            </div>
+                            <div>
+                              <span className="text-sm font-bold text-slate-900 block cursor-pointer hover:text-indigo-600 transition-colors" onClick={() => setViewingItem(student)}>
+                                {student.first_name} {student.last_name || ''}
+                              </span>
+                              <span className="text-xs text-slate-500 font-mono mt-0.5 block">{student.admission_no}</span>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Enrollment Column */}
+                        <td className="px-6 py-4">
+                          {student.current_enrollment ? (
+                            <div>
+                              <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-indigo-50 text-indigo-700 mb-1 border border-indigo-100">
+                                Class {student.current_enrollment.school_class?.name} • {student.current_enrollment.section?.name}
+                              </span>
+                              <div className="text-xs text-slate-500 font-medium ml-1">Roll: {student.current_enrollment.roll_no || 'N/A'}</div>
+                            </div>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-500">
+                              Not Enrolled
+                            </span>
+                          )}
+                        </td>
+
+                        {/* Guardian Column */}
+                        <td className="px-6 py-4">
+                          <div className="text-sm font-medium text-slate-900">{student.guardian?.father_name ?? 'N/A'}</div>
+                          <div className="text-xs text-slate-500 flex items-center gap-1 mt-1">
+                            <Icon name="phone" className="w-3 h-3 text-slate-400" /> {student.guardian?.father_phone ?? 'N/A'}
+                          </div>
+                        </td>
+
+                        {/* Actions Column */}
+                        <td className="px-6 py-4 no-print text-right relative">
+                          <div className="flex items-center justify-end gap-2">
+
+                            {/* Quick View Button */}
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setViewingItem(student); }}
+                              className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors tooltip-trigger"
+                              title="Quick View"
+                            >
+                              <Icon name="eye" className="w-4 h-4" />
+                            </button>
+
+                            {/* Action Dropdown */}
+                            <div className="relative">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOpenDropdown(openDropdown === student.id ? null : student.id);
+                                }}
+                                className={`p-2 rounded-lg transition-colors ${openDropdown === student.id ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-slate-800 hover:bg-slate-100'}`}
+                              >
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle>
+                                </svg>
+                              </button>
+
+                              {openDropdown === student.id && (
+                                <div
+                                  className="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-xl ring-1 ring-slate-900/5 z-50 py-2 animate-in fade-in zoom-in-95 duration-100 origin-top-right"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <div className="px-3 py-1.5 mb-1 border-b border-slate-50">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Quick Actions</p>
+                                  </div>
+
+                                  <Link href={route('admin.students.edit', student.id)} className="flex items-center gap-3 w-full px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors">
+                                    <Icon name="edit" className="w-4 h-4" /> Edit Profile
+                                  </Link>
+                                  <Link href={route('admin.students.id-card', student.id)} className="flex items-center gap-3 w-full px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors">
+                                    <Icon name="printer" className="w-4 h-4" /> Print ID Card
+                                  </Link>
+                                  <Link href={route('admin.students.attendance', student.id)} className="flex items-center gap-3 w-full px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors">
+                                    <Icon name="calendar" className="w-4 h-4" /> Attendance
+                                  </Link>
+                                  <Link href={route('admin.students.results', student.id)} className="flex items-center gap-3 w-full px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors">
+                                    <Icon name="book" className="w-4 h-4" /> Results
+                                  </Link>
+                                  <Link href={route('admin.students.fees', student.id)} className="flex items-center gap-3 w-full px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors">
+                                    <Icon name="wallet" className="w-4 h-4" /> Fees History
+                                  </Link>
+
+                                  <div className="h-px bg-slate-100 my-1"></div>
+
+                                  <button
+                                    onClick={() => { setOpenDropdown(null); setDeletingItem(student); }}
+                                    className="flex items-center gap-3 w-full px-4 py-2 text-sm font-medium text-rose-600 hover:bg-rose-50 transition-colors"
+                                  >
+                                    <Icon name="trash" className="w-4 h-4" /> Delete Record
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="no-print border-t border-slate-100 bg-white px-6 py-4 rounded-b-2xl">
+            <Pagination meta={students} />
+          </div>
         </div>
       </div>
 

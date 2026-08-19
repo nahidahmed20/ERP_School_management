@@ -1,124 +1,61 @@
-import React from 'react';
+import { Link, usePage, router } from '@inertiajs/react';
+import Icon from './Icons';
 import Dropdown from '@/Components/Dropdown';
-import { Link, usePage, router } from '@inertiajs/react'; 
-import Icon from './Icons'; 
 
 export default function Topbar({ onHamburgerClick }) {
-  const { auth, all_campuses } = usePage().props;
-  const user = auth?.user;
+    const { auth, all_campuses } = usePage().props;
+    const user = auth?.user;
 
-  const initials = user?.name
-    ?.split(' ')
-    .map(w => w[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
+    const handleCampusChange = (e) => {
+        if (!e.target.value) return;
+        router.post(route('admin.campus.switch'), { campus_id: e.target.value }, {
+            preserveScroll: true,
+        });
+    };
 
-  const handleCampusChange = (e) => {
-    router.post(route('admin.campus.switch'), { campus_id: e.target.value }, {
-      preserveScroll: true,
-      onSuccess: () => {
-        console.log('Campus switched successfully!');
-      }
-    });
-  };
-
-  return (
-    <header className="topbar">
-      {/* Hamburger Menu */}
-      <button className="hamburger" onClick={onHamburgerClick} aria-label="Toggle menu">
-        <svg 
-          xmlns="http://www.w3.org/2000/svg" 
-          viewBox="0 0 24 24" 
-          fill="none" 
-          stroke="currentColor" 
-          strokeWidth="2" 
-          strokeLinecap="round" 
-          strokeLinejoin="round"
-        >
-          <line x1="3" y1="12" x2="21" y2="12"></line>
-          <line x1="3" y1="6" x2="21" y2="6"></line>
-          <line x1="3" y1="18" x2="21" y2="18"></line>
-        </svg>
-      </button>
-
-      {/* Search Box */}
-      <div className="search">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <circle cx="11" cy="11" r="7" />
-          <path d="M21 21l-4.3-4.3" />
-        </svg>
-        <input type="text" placeholder="Search students, staff, invoices…" />
-      </div>
-
-      <div className="topbar-spacer" />
-
-      {/* --- Campus Switcher Section --- */}
-      {all_campuses && all_campuses.length > 0 ? (
-        <div className="campus-switch" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-          <span className="flag" /> 
-          <select
-            value={auth?.active_campus_id ? String(auth.active_campus_id) : ''}
-            onChange={handleCampusChange}
-            style={{ 
-              appearance: 'none', 
-              background: 'transparent', 
-              border: 'none', 
-              outline: 'none', 
-              cursor: 'pointer',
-              paddingRight: '20px', 
-              fontFamily: 'inherit',
-              fontSize: 'inherit',
-              color: 'inherit',
-              fontWeight: 'inherit'
-            }}
-          >
-            <option value="">-- All Campuses --</option>
-            {all_campuses.map((campus) => (
-              <option key={campus.id} value={campus.id} style={{ color: '#333' }}>
-                {campus.name}
-              </option>
-            ))}
-          </select>
-          {/* Custom Arrow Icon */}
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ position: 'absolute', right: '0', width: '16px', pointerEvents: 'none' }}>
-            <path d="M6 9l6 6 6-6" />
-          </svg>
-        </div>
-      ) : (
-        <div className="campus-switch">
-          <span className="flag" /> {user?.campus?.name || 'My Campus'}
-        </div>
-      )}
-      {/* ------------------------------- */}
-
-      {/* Notification Bell */}
-      <button className="icon-btn" aria-label="Notifications">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
-          <path d="M13.7 21a2 2 0 01-3.4 0" />
-        </svg>
-        <span className="ping" />
-      </button>
-
-      {/* Profile Dropdown */}
-      <Dropdown>
-        <Dropdown.Trigger>
-          <button type="button" className="profile" style={{ border: 'none', background: 'none' }}>
-            <div className="avatar">{initials || 'U'}</div>
-            <div className="who">
-              <div className="n">{user?.name}</div>
-              <div className="r">{user?.roles?.[0]?.name || 'User'}</div>
+    return (
+        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 sticky top-0 z-40">
+            <div className="flex items-center gap-4">
+                <button className="md:hidden p-2 text-gray-600" onClick={onHamburgerClick}><Icon name="menu" /></button>
+                <div className="relative w-64">
+                    <input type="text" placeholder="Search students, staff..." className="w-full pl-10 pr-4 py-2 bg-gray-50 border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 transition-all" />
+                    <Icon name="search" className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                </div>
             </div>
-          </button>
-        </Dropdown.Trigger>
-        <Dropdown.Content>
-          <Dropdown.Link href={route('profile.edit')}>Profile</Dropdown.Link>
-          <Dropdown.Link href={route('logout')} method="post" as="button">
-            Log Out
-          </Dropdown.Link>
-        </Dropdown.Content>
-      </Dropdown>
-    </header>
-  );
+
+            <div className="flex items-center gap-4">
+                <select className="bg-red-500 text-white text-[10px] font-bold px-3 py-1.5 rounded uppercase border-none hover:bg-red-600 transition-all cursor-pointer">
+                    <option value="en">English</option>
+                </select>
+
+                {/* ফিক্সড: option এ selected না দিয়ে select এর ভেতরে value দেওয়া হয়েছে */}
+                <select
+                    value={auth?.active_campus_id || ''}
+                    onChange={handleCampusChange}
+                    className="bg-indigo-900 text-white text-[10px] font-bold px-3 py-1.5 rounded uppercase border-none hover:bg-indigo-950 transition-all cursor-pointer"
+                >
+                    <option value="">Select Campus</option>
+                    {all_campuses?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+
+                <Dropdown>
+                    <Dropdown.Trigger>
+                        <div className="flex items-center gap-3 pl-4 border-l cursor-pointer">
+                            <div className="text-right hidden sm:block">
+                                <p className="text-xs font-bold text-gray-800">{user?.name}</p>
+                                <p className="text-[10px] text-gray-500 uppercase">{user?.roles?.[0]?.name || 'Admin'}</p>
+                            </div>
+                            <div className="w-9 h-9 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                                {user?.name?.charAt(0) || 'U'}
+                            </div>
+                        </div>
+                    </Dropdown.Trigger>
+                    <Dropdown.Content>
+                        <Dropdown.Link href={route('profile.edit')}>Profile</Dropdown.Link>
+                        <Dropdown.Link href={route('logout')} method="post" as="button">Log Out</Dropdown.Link>
+                    </Dropdown.Content>
+                </Dropdown>
+            </div>
+        </header>
+    );
 }

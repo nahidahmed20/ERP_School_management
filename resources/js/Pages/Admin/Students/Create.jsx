@@ -6,14 +6,14 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import axios from 'axios';
 
 const SearchIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-    <circle cx="11" cy="11" r="7" />
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="11" cy="11" r="8" />
     <line x1="21" y1="21" x2="16.65" y2="16.65" />
   </svg>
 );
 
 const CheckMark = () => (
-  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="20 6 9 17 4 12" />
   </svg>
 );
@@ -116,15 +116,14 @@ export default function Create({ classes, active_session, campuses, categories, 
     post(route('admin.students.store'), { forceFormData: true });
   };
 
-  // --- Registry index rail: tracks real completion state per section, not decoration ---
   const academicComplete = !!(data.campus_id && data.class_id && data.section_id && data.admission_date);
   const personalComplete = !!(data.first_name && data.date_of_birth && data.gender && data.nationality && data.present_address && data.permanent_address);
   const guardianComplete = !!(data.father_name && data.father_phone && data.mother_name);
 
   const sections = useMemo(() => ([
-    { id: 'section-academic', numeral: 'I', label: 'Academic', complete: academicComplete },
-    { id: 'section-personal', numeral: 'II', label: 'Personal', complete: personalComplete },
-    { id: 'section-guardian', numeral: 'III', label: 'Guardian', complete: guardianComplete },
+    { id: 'section-academic', step: '01', label: 'Academic', complete: academicComplete },
+    { id: 'section-personal', step: '02', label: 'Personal', complete: personalComplete },
+    { id: 'section-guardian', step: '03', label: 'Guardian', complete: guardianComplete },
   ]), [academicComplete, personalComplete, guardianComplete]);
 
   const [activeSection, setActiveSection] = useState('section-academic');
@@ -148,25 +147,24 @@ export default function Create({ classes, active_session, campuses, categories, 
   };
 
   const formattedEntryDate = data.admission_date
-    ? new Date(data.admission_date + 'T00:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+    ? new Date(data.admission_date + 'T00:00:00').toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })
     : '—';
 
   return (
     <AuthenticatedLayout
       header={
-        <div className="page-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '24px', flexWrap: 'wrap', marginBottom: '0px', fontFamily: "'Public Sans', -apple-system, BlinkMacSystemFont, sans-serif" }}>
+        <div className="mod-mast">
           <div>
-            <span style={{ fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: '11px', letterSpacing: '0.14em', textTransform: 'uppercase', color: '#AD7F35', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ width: '18px', height: '1px', background: '#AD7F35', display: 'inline-block' }} /> Admission Register
-            </span>
-            <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '30px', fontWeight: 600, color: '#142720', margin: '8px 0 0', letterSpacing: '-0.01em' }}>New Student Enrollment</h1>
+            <div className="mod-badge">Enrollment Portal</div>
+            <h1 className="mod-title">New Student Admission</h1>
+            <p className="mod-subtitle">Fill in the details below to register a new student into the system.</p>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
-            <div style={{ fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: '12.5px', color: '#21402F', border: '1px solid #21402F', borderRadius: '8px', padding: '9px 16px', display: 'flex', flexDirection: 'column', gap: '2px', background: '#fff', minWidth: '150px' }}>
-              <b style={{ fontSize: '10.5px', letterSpacing: '0.08em', color: '#56647B', textTransform: 'uppercase', fontFamily: "'Public Sans', sans-serif", fontWeight: 600 }}>Entry Date</b>
-              {formattedEntryDate}
+          <div className="mod-mast-actions">
+            <div className="mod-date-pill">
+              <span>Date</span>
+              <strong>{formattedEntryDate}</strong>
             </div>
-            <Link href={route('admin.students.index')} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#fff', color: '#142720', border: '1px solid #DCE2D8', padding: '11px 18px', borderRadius: '8px', textDecoration: 'none', fontWeight: 600, fontSize: '14px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+            <Link href={route('admin.students.index')} className="mod-btn-outline">
               <Icon name="list" /> View Directory
             </Link>
           </div>
@@ -176,407 +174,426 @@ export default function Create({ classes, active_session, campuses, categories, 
       <Head title="New Admission | Student">
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
       </Head>
 
       <style>{`
-        .adm-scope {
-          --adm-ink: #16213A; --adm-ink-soft: #56647B; --adm-forest: #21402F; --adm-forest-dark: #142720;
-          --adm-brass: #AD7F35; --adm-brass-soft: #F1E4C8; --adm-mist: #EEF1EA; --adm-paper: #FFFFFF;
-          --adm-brick: #A6402C; --adm-line: #DCE2D8; --adm-radius: 14px;
-          --adm-font-display: 'Fraunces', Georgia, serif; --adm-font-body: 'Public Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-          --adm-font-mono: 'JetBrains Mono', ui-monospace, monospace;
-          font-family: var(--adm-font-body); background: var(--adm-mist); color: var(--adm-ink);
-          max-width: 1400px; margin: 0 auto; padding: 28px 24px 56px;
+        .mod-scope {
+          --brand: #4f46e5;
+          --brand-hover: #4338ca;
+          --brand-light: #e0e7ff;
+          --bg-main: #f8fafc;
+          --bg-card: #ffffff;
+          --text-main: #0f172a;
+          --text-muted: #64748b;
+          --border: #e2e8f0;
+          --border-focus: #818cf8;
+          --ring: rgba(99, 102, 241, 0.2);
+          --danger: #ef4444;
+          --danger-bg: #fef2f2;
+
+          font-family: 'Inter', -apple-system, sans-serif;
+          background: var(--bg-main);
+          color: var(--text-main);
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 32px 24px 64px;
         }
-        .adm-scope *, .adm-scope *::before, .adm-scope *::after { box-sizing: border-box; }
 
-        .adm-mast { display:flex; justify-content:space-between; align-items:flex-end; gap:24px; padding-bottom:26px; border-bottom:1px solid var(--adm-line); margin-bottom:32px; flex-wrap:wrap; }
-        .adm-eyebrow { font-family: var(--adm-font-mono); font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color: var(--adm-brass); font-weight:600; display:flex; align-items:center; gap:8px; }
-        .adm-eyebrow::before { content:''; width:18px; height:1px; background: var(--adm-brass); }
-        .adm-title { font-family: var(--adm-font-display); font-size:33px; font-weight:600; color: var(--adm-forest-dark); margin:8px 0 0; letter-spacing:-0.01em; }
-        .adm-subtitle { font-size:14px; color: var(--adm-ink-soft); margin-top:6px; max-width:480px; }
-        .adm-mast-right { display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
-        .adm-stamp { font-family: var(--adm-font-mono); font-size:12.5px; color: var(--adm-forest); border:1px solid var(--adm-forest); border-radius:8px; padding:9px 16px; display:flex; flex-direction:column; gap:2px; background: var(--adm-paper); min-width:150px; }
-        .adm-stamp b { font-size:10.5px; letter-spacing:0.08em; color: var(--adm-ink-soft); text-transform:uppercase; font-family: var(--adm-font-body); font-weight:600; }
-        .adm-directory-link { display:inline-flex; align-items:center; gap:8px; padding:11px 18px; border-radius:8px; border:1px solid var(--adm-line); background: var(--adm-paper); color: var(--adm-forest-dark); font-weight:600; font-size:14px; text-decoration:none; transition: border-color .15s, transform .15s; }
-        .adm-directory-link:hover { border-color: var(--adm-brass); transform: translateY(-1px); }
+        .mod-scope *, .mod-scope *::before, .mod-scope *::after { box-sizing: border-box; }
 
-        .adm-alert { display:flex; gap:14px; align-items:flex-start; background:#FBEEE9; border-left:4px solid var(--adm-brick); color:#7A2E1D; padding:16px 20px; border-radius:8px; margin-bottom:28px; }
-        .adm-alert strong { display:block; font-size:15px; margin-bottom:2px; }
+        /* Header Styles */
+        .mod-mast { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; flex-wrap: wrap; margin-bottom: 32px; }
+        .mod-badge { display: inline-block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--brand); background: var(--brand-light); padding: 4px 10px; border-radius: 6px; margin-bottom: 12px; }
+        .mod-title { font-size: 28px; font-weight: 700; color: var(--text-main); margin: 0 0 6px; letter-spacing: -0.02em; }
+        .mod-subtitle { font-size: 15px; color: var(--text-muted); margin: 0; }
 
-        .adm-layout { display:grid; grid-template-columns: 88px 1fr; gap:24px; align-items:start; }
-        @media (max-width: 860px) { .adm-layout { grid-template-columns: 1fr; } .adm-rail { display:none; } }
+        .mod-mast-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+        .mod-date-pill { display: flex; flex-direction: column; background: var(--bg-card); border: 1px solid var(--border); padding: 8px 16px; border-radius: 10px; font-size: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+        .mod-date-pill span { font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em; }
+        .mod-date-pill strong { font-weight: 600; color: var(--text-main); }
 
-        .adm-rail { position:sticky; top:20px; display:flex; flex-direction:column; }
-        .adm-rail-track { position:relative; }
-        .adm-rail-track::before { content:''; position:absolute; left:19px; top:6px; bottom:6px; width:1px; background: var(--adm-line); }
-        .adm-rail-item { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; gap:6px; padding:16px 0; background:none; border:none; cursor:pointer; width:100%; }
-        .adm-rail-numeral { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family: var(--adm-font-display); font-size:16px; font-weight:600; background: var(--adm-paper); border:1.5px solid var(--adm-line); color: var(--adm-ink-soft); transition: all .2s; }
-        .adm-rail-item.active .adm-rail-numeral { border-color: var(--adm-forest); color: var(--adm-forest); box-shadow: 0 0 0 4px var(--adm-mist); }
-        .adm-rail-item.complete .adm-rail-numeral { background: var(--adm-forest); border-color: var(--adm-forest); color:#fff; }
-        .adm-rail-label { font-size:9.5px; letter-spacing:0.06em; text-transform:uppercase; color: var(--adm-ink-soft); font-weight:700; text-align:center; }
-        .adm-rail-item.active .adm-rail-label { color: var(--adm-forest-dark); }
+        .mod-btn-outline { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-main); font-weight: 600; font-size: 14px; text-decoration: none; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+        .mod-btn-outline:hover { background: var(--bg-main); border-color: #cbd5e1; }
 
-        .adm-card { background: var(--adm-paper); border-radius: var(--adm-radius); padding:32px; margin-bottom:24px; border:1px solid var(--adm-line); box-shadow: 0 1px 2px rgba(20,39,32,0.05); scroll-margin-top:24px; }
-        @media (prefers-reduced-motion: no-preference) { .adm-card { animation: adm-rise .45s ease both; } }
-        @keyframes adm-rise { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform:none; } }
+        .mod-alert { display: flex; gap: 12px; align-items: flex-start; background: var(--danger-bg); border: 1px solid #fecaca; color: #991b1b; padding: 16px; border-radius: 12px; margin-bottom: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .mod-alert strong { display: block; font-size: 15px; margin-bottom: 4px; }
 
-        .adm-section-title { font-family: var(--adm-font-display); font-size:20px; font-weight:600; color: var(--adm-forest-dark); display:flex; align-items:center; gap:12px; margin:0 0 24px; padding-bottom:16px; border-bottom:1px solid var(--adm-line); }
-        .adm-icon-chip { width:36px; height:36px; border-radius:9px; display:flex; align-items:center; justify-content:center; background: var(--adm-brass-soft); color: var(--adm-brass); flex-shrink:0; }
-        .adm-icon-chip.forest { background: var(--adm-forest); color:#fff; }
+        /* Layout */
+        .mod-layout { display: grid; grid-template-columns: 200px 1fr; gap: 40px; align-items: start; }
+        @media (max-width: 900px) { .mod-layout { grid-template-columns: 1fr; } .mod-rail { display: none; } }
 
-        .adm-toggle-row { display:flex; gap:14px; margin-bottom:24px; flex-wrap:wrap; }
-        .adm-toggle { display:flex; align-items:center; gap:10px; padding:11px 16px; border-radius:9px; border:1px solid var(--adm-line); background: var(--adm-mist); font-size:13.5px; font-weight:600; color: var(--adm-ink-soft); cursor:pointer; transition: all .15s; }
-        .adm-toggle.on { background: var(--adm-forest); border-color: var(--adm-forest); color:#fff; }
-        .adm-toggle input { accent-color: var(--adm-brass); width:16px; height:16px; }
+        /* Sidebar Progress Rail */
+        .mod-rail { position: sticky; top: 32px; display: flex; flex-direction: column; gap: 0; }
+        .mod-rail-item { display: flex; align-items: flex-start; gap: 16px; background: none; border: none; cursor: pointer; text-align: left; padding: 0 0 32px 0; position: relative; width: 100%; opacity: 0.6; transition: opacity 0.3s; }
+        .mod-rail-item:last-child { padding-bottom: 0; }
+        .mod-rail-item:not(:last-child)::after { content: ''; position: absolute; left: 15px; top: 36px; bottom: 8px; width: 2px; background: var(--border); }
 
-        .adm-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:20px; }
-        .adm-field { display:flex; flex-direction:column; gap:6px; }
-        .adm-field.span-2 { grid-column: 1 / -1; }
-        .adm-label { font-size:12.5px; font-weight:600; color: var(--adm-ink-soft); letter-spacing:0.01em; }
-        .adm-req { color: var(--adm-brick); margin-left:2px; }
+        .mod-rail-item.active, .mod-rail-item.complete { opacity: 1; }
+        .mod-rail-item.complete:not(:last-child)::after { background: var(--brand); }
 
-        .adm-input { width:100%; padding:10px 13px; font-size:14.5px; font-family: var(--adm-font-body); border:1.5px solid var(--adm-line); border-radius:8px; background:#fff; color: var(--adm-ink); outline:none; transition: border-color .15s, box-shadow .15s; min-height:42px; }
-        .adm-input:focus-visible, .adm-input:focus { border-color: var(--adm-brass); box-shadow: 0 0 0 3px rgba(173,127,53,0.16); }
-        .adm-input.mono { font-family: var(--adm-font-mono); letter-spacing:0.02em; }
-        .adm-input-error { border-color: var(--adm-brick) !important; }
-        textarea.adm-input { resize:vertical; min-height:72px; line-height:1.5; font-family: var(--adm-font-body); }
-        .adm-error-text { color: var(--adm-brick); font-size:11.5px; margin-top:2px; }
+        .mod-rail-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--bg-card); border: 2px solid var(--border); font-size: 12px; font-weight: 600; color: var(--text-muted); position: relative; z-index: 2; transition: all 0.3s; }
+        .mod-rail-item.active .mod-rail-icon { border-color: var(--brand); color: var(--brand); box-shadow: 0 0 0 4px var(--brand-light); }
+        .mod-rail-item.complete .mod-rail-icon { background: var(--brand); border-color: var(--brand); color: white; }
 
-        .adm-photo-row { display:flex; align-items:center; gap:24px; margin-bottom:32px; background: var(--adm-mist); padding:20px; border-radius:12px; }
-        .adm-id-frame {
-          width:104px; height:104px; border-radius:6px; position:relative; background:#fff; flex-shrink:0;
-          display:flex; align-items:center; justify-content:center; overflow:hidden;
-          background-image:
-            linear-gradient(var(--adm-brass), var(--adm-brass)), linear-gradient(var(--adm-brass), var(--adm-brass)),
-            linear-gradient(var(--adm-brass), var(--adm-brass)), linear-gradient(var(--adm-brass), var(--adm-brass)),
-            linear-gradient(var(--adm-brass), var(--adm-brass)), linear-gradient(var(--adm-brass), var(--adm-brass)),
-            linear-gradient(var(--adm-brass), var(--adm-brass)), linear-gradient(var(--adm-brass), var(--adm-brass));
-          background-repeat:no-repeat;
-          background-size: 16px 2px, 2px 16px, 16px 2px, 2px 16px, 16px 2px, 2px 16px, 16px 2px, 2px 16px;
-          background-position: 0 0, 0 0, 100% 0, 100% 0, 0 100%, 0 100%, 100% 100%, 100% 100%;
-        }
-        .adm-id-frame img { width:100%; height:100%; object-fit:cover; position:relative; z-index:1; }
-        .adm-id-frame input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; z-index:2; }
-        .adm-camera-hint { color: var(--adm-ink-soft); }
-        .adm-photo-copy h4 { margin:0 0 6px; font-family: var(--adm-font-display); font-size:16px; font-weight:600; color: var(--adm-forest-dark); }
-        .adm-photo-copy p { margin:0; font-size:13px; color: var(--adm-ink-soft); line-height:1.55; }
+        .mod-rail-text { padding-top: 6px; }
+        .mod-rail-label { display: block; font-size: 14px; font-weight: 600; color: var(--text-main); }
+        .mod-rail-desc { display: block; font-size: 12px; color: var(--text-muted); margin-top: 2px; }
 
-        .adm-sibling-box { margin-bottom:24px; padding-bottom:20px; border-bottom:1px dashed var(--adm-line); }
-        .adm-sibling-toggle { display:inline-flex; align-items:center; gap:10px; font-weight:600; font-size:14px; color: var(--adm-ink); cursor:pointer; }
-        .adm-sibling-toggle input { width:17px; height:17px; accent-color: var(--adm-brass); }
-        .adm-lookup { display:flex; gap:10px; background: var(--adm-mist); padding:16px; border-radius:8px; margin-top:16px; border:1px solid var(--adm-line); }
-        .adm-lookup input { flex:1; }
-        .adm-lookup-btn { background: var(--adm-forest); color:#fff; padding:0 22px; border-radius:8px; border:none; cursor:pointer; font-weight:600; font-size:13.5px; display:flex; align-items:center; gap:8px; transition: background .15s; white-space:nowrap; }
-        .adm-lookup-btn:hover { background: var(--adm-forest-dark); }
-        .adm-lookup-btn:disabled { opacity:.6; cursor:not-allowed; }
+        /* Form Cards */
+        .mod-card { background: var(--bg-card); border-radius: 16px; padding: 32px; margin-bottom: 32px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -2px rgba(0,0,0,0.02); scroll-margin-top: 32px; }
 
-        .adm-footer { display:flex; justify-content:flex-end; align-items:center; gap:20px; padding:20px 4px 4px; }
-        .adm-cancel { color: var(--adm-ink-soft); font-weight:600; text-decoration:none; font-size:14px; }
-        .adm-cancel:hover { color: var(--adm-ink); }
-        .adm-submit { background: linear-gradient(135deg, var(--adm-forest), var(--adm-forest-dark)); color:#fff; padding:14px 28px; font-size:15px; font-weight:700; border:none; border-radius:9px; cursor:pointer; display:flex; align-items:center; gap:10px; box-shadow: 0 6px 16px -4px rgba(20,39,32,0.4); transition: transform .15s, box-shadow .15s; }
-        .adm-submit:hover:not(:disabled) { transform: translateY(-1px); }
-        .adm-submit:disabled { opacity:.65; cursor:not-allowed; box-shadow:none; transform:none; }
-        .adm-seal { width:20px; height:20px; border-radius:50%; background: var(--adm-brass); display:flex; align-items:center; justify-content:center; flex-shrink:0; color:#fff; }
+        .mod-section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+        .mod-section-icon { width: 40px; height: 40px; border-radius: 10px; background: var(--bg-main); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--text-main); }
+        .mod-section-title { font-size: 18px; font-weight: 600; margin: 0; color: var(--text-main); letter-spacing: -0.01em; }
+
+        /* Inputs */
+        .mod-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+        .mod-field { display: flex; flex-direction: column; gap: 6px; }
+        .mod-field.span-2 { grid-column: 1 / -1; }
+        .mod-label { font-size: 13px; font-weight: 500; color: var(--text-main); }
+        .mod-req { color: var(--danger); margin-left: 2px; }
+
+        .mod-input { width: 100%; padding: 10px 14px; font-size: 14px; font-family: inherit; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-card); color: var(--text-main); outline: none; transition: all 0.2s; min-height: 44px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+        .mod-input::placeholder { color: #94a3b8; }
+        .mod-input:focus-visible, .mod-input:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px var(--ring); }
+        .mod-input.mono { font-family: 'JetBrains Mono', monospace; font-size: 13.5px; }
+        .mod-input-error { border-color: var(--danger) !important; box-shadow: 0 0 0 3px rgba(239,68,68,0.1) !important; }
+        textarea.mod-input { resize: vertical; min-height: 80px; line-height: 1.5; padding: 12px 14px; }
+        .mod-error-text { color: var(--danger); font-size: 12px; margin-top: 4px; font-weight: 500; }
+
+        /* Switches & Toggles */
+        .mod-toggles { display: flex; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
+        .mod-switch-label { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; color: var(--text-main); cursor: pointer; padding: 12px 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-main); transition: all 0.2s; }
+        .mod-switch-label:hover { border-color: #cbd5e1; }
+        .mod-switch-label input { width: 18px; height: 18px; accent-color: var(--brand); cursor: pointer; }
+
+        /* Photo Upload */
+        .mod-photo-area { display: flex; align-items: center; gap: 24px; margin-bottom: 32px; padding: 24px; border: 1px dashed var(--border); border-radius: 12px; background: var(--bg-main); transition: border-color 0.2s; }
+        .mod-photo-area:hover { border-color: #cbd5e1; }
+        .mod-avatar { width: 90px; height: 90px; border-radius: 50%; background: var(--bg-card); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; flex-shrink: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .mod-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .mod-avatar input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+        .mod-photo-info h4 { margin: 0 0 4px; font-size: 15px; font-weight: 600; }
+        .mod-photo-info p { margin: 0; font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+
+        /* Sibling Lookup */
+        .mod-sibling-box { padding: 20px; background: var(--bg-main); border-radius: 12px; margin-bottom: 28px; border: 1px solid var(--border); }
+        .mod-lookup-wrap { display: flex; gap: 12px; margin-top: 16px; }
+        .mod-lookup-wrap input { flex: 1; }
+        .mod-btn-search { background: var(--text-main); color: white; padding: 0 20px; border-radius: 10px; border: none; font-weight: 500; font-size: 14px; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: background 0.2s; }
+        .mod-btn-search:hover { background: #334155; }
+        .mod-btn-search:disabled { opacity: 0.7; cursor: not-allowed; }
+
+        /* Footer Actions */
+        .mod-footer { display: flex; justify-content: flex-end; align-items: center; gap: 16px; padding: 16px 0 0; }
+        .mod-btn-cancel { color: var(--text-muted); font-weight: 500; text-decoration: none; font-size: 14px; padding: 12px 20px; border-radius: 10px; transition: all 0.2s; }
+        .mod-btn-cancel:hover { color: var(--text-main); background: var(--bg-main); }
+        .mod-btn-submit { background: var(--brand); color: white; padding: 12px 28px; font-size: 15px; font-weight: 600; border: none; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 6px -1px rgba(79,70,229,0.3); transition: all 0.2s; }
+        .mod-btn-submit:hover:not(:disabled) { background: var(--brand-hover); transform: translateY(-1px); box-shadow: 0 6px 8px -1px rgba(79,70,229,0.3); }
+        .mod-btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
       `}</style>
 
-      <div className="adm-scope">
-
-        <p style={{ fontSize: '14px', color: '#56647B', margin: '4px 0 28px', fontFamily: "'Public Sans', sans-serif" }}>
-          Complete all three sections below to file a new admission record.
-        </p>
-
+      <div className="mod-scope">
         {!active_session && (
-          <div className="adm-alert">
-            <Icon name="warning" style={{ fontSize: '22px', marginTop: '2px' }} />
+          <div className="mod-alert">
+            <Icon name="warning" style={{ fontSize: '20px', marginTop: '2px' }} />
             <div>
-              <strong>No active session</strong>
-              <span style={{ fontSize: '14px' }}>Configure an active academic session before admitting new students.</span>
+              <strong>No active session found</strong>
+              <span style={{ fontSize: '14px' }}>Please configure an active academic session in settings before admitting new students.</span>
             </div>
           </div>
         )}
 
         <form onSubmit={submit}>
-          <div className="adm-layout">
+          <div className="mod-layout">
 
-            <nav className="adm-rail">
-              <div className="adm-rail-track">
-                {sections.map(s => (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => scrollToSection(s.id)}
-                    className={`adm-rail-item ${activeSection === s.id ? 'active' : ''} ${s.complete ? 'complete' : ''}`}
-                  >
-                    <span className="adm-rail-numeral">{s.complete ? <CheckMark /> : s.numeral}</span>
-                    <span className="adm-rail-label">{s.label}</span>
-                  </button>
-                ))}
-              </div>
+            {/* Sidebar Rail */}
+            <nav className="mod-rail">
+              {sections.map(s => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => scrollToSection(s.id)}
+                  className={`mod-rail-item ${activeSection === s.id ? 'active' : ''} ${s.complete ? 'complete' : ''}`}
+                >
+                  <div className="mod-rail-icon">
+                    {s.complete ? <CheckMark /> : s.step}
+                  </div>
+                  <div className="mod-rail-text">
+                    <span className="mod-rail-label">{s.label}</span>
+                    <span className="mod-rail-desc">
+                      {s.id === 'section-academic' && 'Class & Section'}
+                      {s.id === 'section-personal' && 'Bio & Address'}
+                      {s.id === 'section-guardian' && 'Parents info'}
+                    </span>
+                  </div>
+                </button>
+              ))}
             </nav>
 
+            {/* Form Content */}
             <div>
               {/* 1. Academic Details */}
-              <div id="section-academic" ref={el => sectionRefs.current['section-academic'] = el} className="adm-card">
-                <h3 className="adm-section-title">
-                  <span className="adm-icon-chip"><Icon name="book" /></span>
-                  Academic Details
-                </h3>
+              <div id="section-academic" ref={el => sectionRefs.current['section-academic'] = el} className="mod-card">
+                <div className="mod-section-header">
+                  <div className="mod-section-icon"><Icon name="book" /></div>
+                  <h3 className="mod-section-title">Academic Details</h3>
+                </div>
 
-                <div className="adm-toggle-row">
-                  <label className={`adm-toggle ${data.create_student_user ? 'on' : ''}`}>
+                <div className="mod-toggles">
+                  <label className="mod-switch-label">
                     <input type="checkbox" checked={data.create_student_user} onChange={e => setData('create_student_user', e.target.checked)} />
-                    Create Portal Account for Student
+                    Create Student Portal Account
                   </label>
-                  <label className={`adm-toggle ${data.create_parent_user ? 'on' : ''}`}>
+                  <label className="mod-switch-label">
                     <input type="checkbox" checked={data.create_parent_user} onChange={e => setData('create_parent_user', e.target.checked)} />
-                    Create Portal Account for Parents
+                    Create Parent Portal Account
                   </label>
                 </div>
 
-                <div className="adm-grid">
-                  <div className="adm-field">
-                    <label className="adm-label">Campus <span className="adm-req">*</span></label>
-                    <select className={`adm-input ${errors.campus_id ? 'adm-input-error' : ''}`} value={data.campus_id} onChange={e => setData('campus_id', e.target.value)} required>
-                      <option value="">-- Select Campus --</option>
+                <div className="mod-grid">
+                  <div className="mod-field">
+                    <label className="mod-label">Campus <span className="mod-req">*</span></label>
+                    <select className={`mod-input ${errors.campus_id ? 'mod-input-error' : ''}`} value={data.campus_id} onChange={e => setData('campus_id', e.target.value)} required>
+                      <option value="">Select Campus</option>
                       {campuses?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
-                    {errors.campus_id && <span className="adm-error-text">{errors.campus_id}</span>}
+                    {errors.campus_id && <span className="mod-error-text">{errors.campus_id}</span>}
                   </div>
 
-                  <div className="adm-field">
-                    <label className="adm-label">Student Category</label>
-                    <select className="adm-input" value={data.category_id} onChange={e => setData('category_id', e.target.value)}>
+                  <div className="mod-field">
+                    <label className="mod-label">Student Category</label>
+                    <select className="mod-input" value={data.category_id} onChange={e => setData('category_id', e.target.value)}>
                       <option value="">General / Regular</option>
                       {categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
-                    {errors.category_id && <span className="adm-error-text">{errors.category_id}</span>}
+                    {errors.category_id && <span className="mod-error-text">{errors.category_id}</span>}
                   </div>
 
-                  <div className="adm-field">
-                    <label className="adm-label">House (Optional)</label>
-                    <select className="adm-input" value={data.house_id} onChange={e => setData('house_id', e.target.value)}>
-                      <option value="">-- Select House --</option>
+                  <div className="mod-field">
+                    <label className="mod-label">House (Optional)</label>
+                    <select className="mod-input" value={data.house_id} onChange={e => setData('house_id', e.target.value)}>
+                      <option value="">Select House</option>
                       {houses?.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}
                     </select>
-                    {errors.house_id && <span className="adm-error-text">{errors.house_id}</span>}
+                    {errors.house_id && <span className="mod-error-text">{errors.house_id}</span>}
                   </div>
 
-                  <div className="adm-field">
-                    <label className="adm-label">Class <span className="adm-req">*</span></label>
-                    <select className={`adm-input ${errors.class_id ? 'adm-input-error' : ''}`} value={data.class_id} onChange={e => setData('class_id', e.target.value)} required>
-                      <option value="">-- Select Class --</option>
+                  <div className="mod-field">
+                    <label className="mod-label">Class <span className="mod-req">*</span></label>
+                    <select className={`mod-input ${errors.class_id ? 'mod-input-error' : ''}`} value={data.class_id} onChange={e => setData('class_id', e.target.value)} required>
+                      <option value="">Select Class</option>
                       {classes?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
-                    {errors.class_id && <span className="adm-error-text">{errors.class_id}</span>}
+                    {errors.class_id && <span className="mod-error-text">{errors.class_id}</span>}
                   </div>
 
-                  <div className="adm-field">
-                    <label className="adm-label">Section <span className="adm-req">*</span></label>
-                    <select className={`adm-input ${errors.section_id ? 'adm-input-error' : ''}`} value={data.section_id} onChange={e => setData('section_id', e.target.value)} required disabled={!data.class_id}>
-                      <option value="">-- Select Section --</option>
+                  <div className="mod-field">
+                    <label className="mod-label">Section <span className="mod-req">*</span></label>
+                    <select className={`mod-input ${errors.section_id ? 'mod-input-error' : ''}`} value={data.section_id} onChange={e => setData('section_id', e.target.value)} required disabled={!data.class_id}>
+                      <option value="">Select Section</option>
                       {availableSections.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                     </select>
-                    {errors.section_id && <span className="adm-error-text">{errors.section_id}</span>}
+                    {errors.section_id && <span className="mod-error-text">{errors.section_id}</span>}
                   </div>
 
-                  <div className="adm-field">
-                    <label className="adm-label">Roll Number</label>
-                    <input className="adm-input mono" type="text" placeholder="e.g. 101" value={data.roll_no} onChange={e => setData('roll_no', e.target.value)} />
-                    {errors.roll_no && <span className="adm-error-text">{errors.roll_no}</span>}
+                  <div className="mod-field">
+                    <label className="mod-label">Roll Number</label>
+                    <input className="mod-input mono" type="text" placeholder="e.g. 101" value={data.roll_no} onChange={e => setData('roll_no', e.target.value)} />
+                    {errors.roll_no && <span className="mod-error-text">{errors.roll_no}</span>}
                   </div>
 
-                  <div className="adm-field">
-                    <label className="adm-label">Admission Date <span className="adm-req">*</span></label>
-                    <input className="adm-input mono" type="date" value={data.admission_date} onChange={e => setData('admission_date', e.target.value)} required />
-                    {errors.admission_date && <span className="adm-error-text">{errors.admission_date}</span>}
+                  <div className="mod-field">
+                    <label className="mod-label">Admission Date <span className="mod-req">*</span></label>
+                    <input className="mod-input mono" type="date" value={data.admission_date} onChange={e => setData('admission_date', e.target.value)} required />
+                    {errors.admission_date && <span className="mod-error-text">{errors.admission_date}</span>}
                   </div>
                 </div>
               </div>
 
               {/* 2. Personal Information */}
-              <div id="section-personal" ref={el => sectionRefs.current['section-personal'] = el} className="adm-card">
-                <h3 className="adm-section-title">
-                  <span className="adm-icon-chip forest"><Icon name="user" /></span>
-                  Student Personal Information
-                </h3>
+              <div id="section-personal" ref={el => sectionRefs.current['section-personal'] = el} className="mod-card">
+                <div className="mod-section-header">
+                  <div className="mod-section-icon"><Icon name="user" /></div>
+                  <h3 className="mod-section-title">Personal Information</h3>
+                </div>
 
-                <div className="adm-photo-row">
-                  <div className="adm-id-frame">
+                <div className="mod-photo-area">
+                  <div className="mod-avatar">
                     {photoPreview ? (
                       <img src={photoPreview} alt="Preview" />
                     ) : (
-                      <Icon name="camera" className="adm-camera-hint" style={{ fontSize: '26px' }} />
+                      <Icon name="camera" style={{ fontSize: '24px', color: '#94a3b8' }} />
                     )}
                     <input type="file" accept="image/*" onChange={handlePhotoChange} title="Click to upload profile photo" />
                   </div>
-                  <div className="adm-photo-copy">
-                    <h4>Student Profile Photo</h4>
-                    <p>Click the frame to upload an image.<br />Recommended size: 300×300px. Max size: 2MB.</p>
-                    {errors.photo && <span className="adm-error-text">{errors.photo}</span>}
+                  <div className="mod-photo-info">
+                    <h4>Profile Photo</h4>
+                    <p>Click the avatar to upload an image.<br />Square format recommended. Max size: 2MB.</p>
+                    {errors.photo && <span className="mod-error-text">{errors.photo}</span>}
                   </div>
                 </div>
 
-                <div className="adm-grid">
-                  <div className="adm-field">
-                    <label className="adm-label">First Name <span className="adm-req">*</span></label>
-                    <input className={`adm-input ${errors.first_name ? 'adm-input-error' : ''}`} placeholder="e.g. Abdullah" type="text" value={data.first_name} onChange={e => setData('first_name', e.target.value)} required />
-                    {errors.first_name && <span className="adm-error-text">{errors.first_name}</span>}
+                <div className="mod-grid">
+                  <div className="mod-field">
+                    <label className="mod-label">First Name <span className="mod-req">*</span></label>
+                    <input className={`mod-input ${errors.first_name ? 'mod-input-error' : ''}`} placeholder="e.g. Abdullah" type="text" value={data.first_name} onChange={e => setData('first_name', e.target.value)} required />
+                    {errors.first_name && <span className="mod-error-text">{errors.first_name}</span>}
                   </div>
-                  <div className="adm-field">
-                    <label className="adm-label">Last Name</label>
-                    <input className="adm-input" placeholder="e.g. Al Noman" type="text" value={data.last_name} onChange={e => setData('last_name', e.target.value)} />
-                    {errors.last_name && <span className="adm-error-text">{errors.last_name}</span>}
+                  <div className="mod-field">
+                    <label className="mod-label">Last Name</label>
+                    <input className="mod-input" placeholder="e.g. Al Noman" type="text" value={data.last_name} onChange={e => setData('last_name', e.target.value)} />
+                    {errors.last_name && <span className="mod-error-text">{errors.last_name}</span>}
                   </div>
-                  <div className="adm-field">
-                    <label className="adm-label">Date of Birth <span className="adm-req">*</span></label>
-                    <input className={`adm-input mono ${errors.date_of_birth ? 'adm-input-error' : ''}`} type="date" value={data.date_of_birth} onChange={e => setData('date_of_birth', e.target.value)} required />
-                    {errors.date_of_birth && <span className="adm-error-text">{errors.date_of_birth}</span>}
+                  <div className="mod-field">
+                    <label className="mod-label">Date of Birth <span className="mod-req">*</span></label>
+                    <input className={`mod-input mono ${errors.date_of_birth ? 'mod-input-error' : ''}`} type="date" value={data.date_of_birth} onChange={e => setData('date_of_birth', e.target.value)} required />
+                    {errors.date_of_birth && <span className="mod-error-text">{errors.date_of_birth}</span>}
                   </div>
-                  <div className="adm-field">
-                    <label className="adm-label">Birth Certificate No.</label>
-                    <input className="adm-input mono" type="text" placeholder="17-digit registration number" value={data.birth_certificate_no} onChange={e => setData('birth_certificate_no', e.target.value)} />
-                    {errors.birth_certificate_no && <span className="adm-error-text">{errors.birth_certificate_no}</span>}
+                  <div className="mod-field">
+                    <label className="mod-label">Birth Certificate No.</label>
+                    <input className="mod-input mono" type="text" placeholder="17-digit registration number" value={data.birth_certificate_no} onChange={e => setData('birth_certificate_no', e.target.value)} />
+                    {errors.birth_certificate_no && <span className="mod-error-text">{errors.birth_certificate_no}</span>}
                   </div>
-                  <div className="adm-field">
-                    <label className="adm-label">National ID (If any)</label>
-                    <input className="adm-input mono" type="text" placeholder="For older students" value={data.national_id} onChange={e => setData('national_id', e.target.value)} />
-                    {errors.national_id && <span className="adm-error-text">{errors.national_id}</span>}
+                  <div className="mod-field">
+                    <label className="mod-label">National ID (If applicable)</label>
+                    <input className="mod-input mono" type="text" placeholder="For older students" value={data.national_id} onChange={e => setData('national_id', e.target.value)} />
+                    {errors.national_id && <span className="mod-error-text">{errors.national_id}</span>}
                   </div>
-                  <div className="adm-field">
-                    <label className="adm-label">Gender <span className="adm-req">*</span></label>
-                    <select className={`adm-input ${errors.gender ? 'adm-input-error' : ''}`} value={data.gender} onChange={e => setData('gender', e.target.value)} required>
-                      <option value="">-- Select Gender --</option>
+                  <div className="mod-field">
+                    <label className="mod-label">Gender <span className="mod-req">*</span></label>
+                    <select className={`mod-input ${errors.gender ? 'mod-input-error' : ''}`} value={data.gender} onChange={e => setData('gender', e.target.value)} required>
+                      <option value="">Select Gender</option>
                       <option value="male">Male</option>
                       <option value="female">Female</option>
                       <option value="other">Other</option>
                     </select>
-                    {errors.gender && <span className="adm-error-text">{errors.gender}</span>}
+                    {errors.gender && <span className="mod-error-text">{errors.gender}</span>}
                   </div>
-                  <div className="adm-field">
-                    <label className="adm-label">Blood Group</label>
-                    <select className="adm-input" value={data.blood_group} onChange={e => setData('blood_group', e.target.value)}>
-                      <option value="">-- Select Blood Group --</option>
+                  <div className="mod-field">
+                    <label className="mod-label">Blood Group</label>
+                    <select className="mod-input" value={data.blood_group} onChange={e => setData('blood_group', e.target.value)}>
+                      <option value="">Select Blood Group</option>
                       <option value="A+">A+</option><option value="O+">O+</option><option value="B+">B+</option><option value="AB+">AB+</option>
                       <option value="A-">A-</option><option value="O-">O-</option><option value="B-">B-</option><option value="AB-">AB-</option>
                     </select>
-                    {errors.blood_group && <span className="adm-error-text">{errors.blood_group}</span>}
+                    {errors.blood_group && <span className="mod-error-text">{errors.blood_group}</span>}
                   </div>
-                  <div className="adm-field">
-                    <label className="adm-label">Religion</label>
-                    <input className="adm-input" placeholder="e.g. Islam" type="text" value={data.religion} onChange={e => setData('religion', e.target.value)} />
-                    {errors.religion && <span className="adm-error-text">{errors.religion}</span>}
+                  <div className="mod-field">
+                    <label className="mod-label">Religion</label>
+                    <input className="mod-input" placeholder="e.g. Islam" type="text" value={data.religion} onChange={e => setData('religion', e.target.value)} />
+                    {errors.religion && <span className="mod-error-text">{errors.religion}</span>}
                   </div>
-                  <div className="adm-field">
-                    <label className="adm-label">Mother Tongue</label>
-                    <input className="adm-input" type="text" value={data.mother_tongue} onChange={e => setData('mother_tongue', e.target.value)} />
-                    {errors.mother_tongue && <span className="adm-error-text">{errors.mother_tongue}</span>}
+                  <div className="mod-field">
+                    <label className="mod-label">Mother Tongue</label>
+                    <input className="mod-input" type="text" value={data.mother_tongue} onChange={e => setData('mother_tongue', e.target.value)} />
+                    {errors.mother_tongue && <span className="mod-error-text">{errors.mother_tongue}</span>}
                   </div>
-                  <div className="adm-field">
-                    <label className="adm-label">Nationality <span className="adm-req">*</span></label>
-                    <input className="adm-input" type="text" value={data.nationality} onChange={e => setData('nationality', e.target.value)} required />
-                    {errors.nationality && <span className="adm-error-text">{errors.nationality}</span>}
+                  <div className="mod-field">
+                    <label className="mod-label">Nationality <span className="mod-req">*</span></label>
+                    <input className="mod-input" type="text" value={data.nationality} onChange={e => setData('nationality', e.target.value)} required />
+                    {errors.nationality && <span className="mod-error-text">{errors.nationality}</span>}
                   </div>
-                  <div className="adm-field">
-                    <label className="adm-label">Student's Phone (Optional)</label>
-                    <input className="adm-input mono" placeholder="01XXXXXXXXX" type="text" value={data.phone} onChange={e => setData('phone', e.target.value)} />
-                    {errors.phone && <span className="adm-error-text">{errors.phone}</span>}
+                  <div className="mod-field">
+                    <label className="mod-label">Phone (Optional)</label>
+                    <input className="mod-input mono" placeholder="01XXXXXXXXX" type="text" value={data.phone} onChange={e => setData('phone', e.target.value)} />
+                    {errors.phone && <span className="mod-error-text">{errors.phone}</span>}
                   </div>
-                  <div className="adm-field">
-                    <label className="adm-label">Student's Email (Optional)</label>
-                    <input className="adm-input" type="email" placeholder="student@example.com" value={data.email} onChange={e => setData('email', e.target.value)} />
-                    {errors.email && <span className="adm-error-text">{errors.email}</span>}
-                  </div>
-
-                  <div className="adm-field span-2">
-                    <label className="adm-label">Previous School Details (Transfer Info)</label>
-                    <textarea className="adm-input" placeholder="Name of previous school, TC Number, etc." value={data.previous_school_details} onChange={e => setData('previous_school_details', e.target.value)} />
-                    {errors.previous_school_details && <span className="adm-error-text">{errors.previous_school_details}</span>}
+                  <div className="mod-field">
+                    <label className="mod-label">Email (Optional)</label>
+                    <input className="mod-input" type="email" placeholder="student@example.com" value={data.email} onChange={e => setData('email', e.target.value)} />
+                    {errors.email && <span className="mod-error-text">{errors.email}</span>}
                   </div>
 
-                  <div className="adm-field span-2">
-                    <label className="adm-label">Medical History &amp; Allergies (If any)</label>
-                    <textarea className="adm-input" placeholder="Mention if the student has asthma, allergies to specific foods, etc." value={data.medical_history} onChange={e => setData('medical_history', e.target.value)} />
-                    {errors.medical_history && <span className="adm-error-text">{errors.medical_history}</span>}
+                  <div className="mod-field span-2">
+                    <label className="mod-label">Previous School Details</label>
+                    <textarea className="mod-input" placeholder="Name of previous school, TC Number, reason for leaving..." value={data.previous_school_details} onChange={e => setData('previous_school_details', e.target.value)} />
+                    {errors.previous_school_details && <span className="mod-error-text">{errors.previous_school_details}</span>}
                   </div>
 
-                  <div className="adm-field span-2">
-                    <label className="adm-label">Present Address <span className="adm-req">*</span></label>
-                    <textarea className={`adm-input ${errors.present_address ? 'adm-input-error' : ''}`} style={{ minHeight: '80px' }} placeholder="Enter full present address..." value={data.present_address} onChange={e => setData('present_address', e.target.value)} required />
-                    {errors.present_address && <span className="adm-error-text">{errors.present_address}</span>}
+                  <div className="mod-field span-2">
+                    <label className="mod-label">Medical History & Allergies</label>
+                    <textarea className="mod-input" placeholder="Mention if the student has asthma, allergies to specific foods, etc." value={data.medical_history} onChange={e => setData('medical_history', e.target.value)} />
+                    {errors.medical_history && <span className="mod-error-text">{errors.medical_history}</span>}
                   </div>
-                  <div className="adm-field span-2">
-                    <label className="adm-label">Permanent Address <span className="adm-req">*</span></label>
-                    <textarea className={`adm-input ${errors.permanent_address ? 'adm-input-error' : ''}`} style={{ minHeight: '80px' }} placeholder="Enter full permanent address..." value={data.permanent_address} onChange={e => setData('permanent_address', e.target.value)} required />
-                    {errors.permanent_address && <span className="adm-error-text">{errors.permanent_address}</span>}
+
+                  <div className="mod-field span-2">
+                    <label className="mod-label">Present Address <span className="mod-req">*</span></label>
+                    <textarea className={`mod-input ${errors.present_address ? 'mod-input-error' : ''}`} placeholder="Enter full present address..." value={data.present_address} onChange={e => setData('present_address', e.target.value)} required />
+                    {errors.present_address && <span className="mod-error-text">{errors.present_address}</span>}
+                  </div>
+                  <div className="mod-field span-2">
+                    <label className="mod-label">Permanent Address <span className="mod-req">*</span></label>
+                    <textarea className={`mod-input ${errors.permanent_address ? 'mod-input-error' : ''}`} placeholder="Enter full permanent address..." value={data.permanent_address} onChange={e => setData('permanent_address', e.target.value)} required />
+                    {errors.permanent_address && <span className="mod-error-text">{errors.permanent_address}</span>}
                   </div>
                 </div>
               </div>
 
               {/* 3. Guardian Information */}
-              <div id="section-guardian" ref={el => sectionRefs.current['section-guardian'] = el} className="adm-card">
-                <h3 className="adm-section-title">
-                  <span className="adm-icon-chip"><Icon name="users" /></span>
-                  Guardian / Parents Information
-                </h3>
+              <div id="section-guardian" ref={el => sectionRefs.current['section-guardian'] = el} className="mod-card">
+                <div className="mod-section-header">
+                  <div className="mod-section-icon"><Icon name="users" /></div>
+                  <h3 className="mod-section-title">Guardian Information</h3>
+                </div>
 
-                <div className="adm-sibling-box">
-                  <label className="adm-sibling-toggle">
+                <div className="mod-sibling-box">
+                  <label className="mod-switch-label" style={{ border: 'none', padding: 0, background: 'transparent' }}>
                     <input type="checkbox" checked={isSibling} onChange={e => setIsSibling(e.target.checked)} />
-                    Already have a sibling in this school? (আগে থেকে কোনো ভাই/বোন এই স্কুলে পড়ে?)
+                    Does the student already have a sibling in this school?
                   </label>
 
                   {isSibling && (
-                    <div className="adm-lookup">
+                    <div className="mod-lookup-wrap">
                       <input
-                        className="adm-input"
-                        placeholder="Enter Sibling's Admission No OR Father's Phone"
+                        className="mod-input"
+                        placeholder="Enter Sibling's Admission No or Father's Phone"
                         value={searchQuery}
                         onChange={e => setSearchQuery(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleSearchGuardian())}
                       />
-                      <button type="button" onClick={handleSearchGuardian} disabled={searching} className="adm-lookup-btn">
-                        <SearchIcon /> {searching ? 'Searching...' : 'Search'}
+                      <button type="button" onClick={handleSearchGuardian} disabled={searching} className="mod-btn-search">
+                        <SearchIcon /> {searching ? 'Searching...' : 'Search Guardian'}
                       </button>
                     </div>
                   )}
                 </div>
 
-                <div className="adm-grid">
-                  <div className="adm-field">
-                    <label className="adm-label">Father's Name <span className="adm-req">*</span></label>
-                    <input className={`adm-input ${errors.father_name ? 'adm-input-error' : ''}`} type="text" value={data.father_name} onChange={e => setData('father_name', e.target.value)} required />
-                    {errors.father_name && <span className="adm-error-text">{errors.father_name}</span>}
+                <div className="mod-grid">
+                  <div className="mod-field">
+                    <label className="mod-label">Father's Name <span className="mod-req">*</span></label>
+                    <input className={`mod-input ${errors.father_name ? 'mod-input-error' : ''}`} type="text" value={data.father_name} onChange={e => setData('father_name', e.target.value)} required />
+                    {errors.father_name && <span className="mod-error-text">{errors.father_name}</span>}
                   </div>
-                  <div className="adm-field">
-                    <label className="adm-label">Father's Phone <span className="adm-req">*</span></label>
-                    <input className={`adm-input mono ${errors.father_phone ? 'adm-input-error' : ''}`} type="text" placeholder="01XXXXXXXXX" value={data.father_phone} onChange={e => setData('father_phone', e.target.value)} required />
-                    {errors.father_phone && <span className="adm-error-text">{errors.father_phone}</span>}
+                  <div className="mod-field">
+                    <label className="mod-label">Father's Phone <span className="mod-req">*</span></label>
+                    <input className={`mod-input mono ${errors.father_phone ? 'mod-input-error' : ''}`} type="text" placeholder="01XXXXXXXXX" value={data.father_phone} onChange={e => setData('father_phone', e.target.value)} required />
+                    {errors.father_phone && <span className="mod-error-text">{errors.father_phone}</span>}
                   </div>
-                  <div className="adm-field">
-                    <label className="adm-label">Mother's Name <span className="adm-req">*</span></label>
-                    <input className={`adm-input ${errors.mother_name ? 'adm-input-error' : ''}`} type="text" value={data.mother_name} onChange={e => setData('mother_name', e.target.value)} required />
-                    {errors.mother_name && <span className="adm-error-text">{errors.mother_name}</span>}
+                  <div className="mod-field">
+                    <label className="mod-label">Mother's Name <span className="mod-req">*</span></label>
+                    <input className={`mod-input ${errors.mother_name ? 'mod-input-error' : ''}`} type="text" value={data.mother_name} onChange={e => setData('mother_name', e.target.value)} required />
+                    {errors.mother_name && <span className="mod-error-text">{errors.mother_name}</span>}
                   </div>
-                  <div className="adm-field">
-                    <label className="adm-label">Mother's Phone</label>
-                    <input className="adm-input mono" type="text" placeholder="01XXXXXXXXX" value={data.mother_phone} onChange={e => setData('mother_phone', e.target.value)} />
-                    {errors.mother_phone && <span className="adm-error-text">{errors.mother_phone}</span>}
+                  <div className="mod-field">
+                    <label className="mod-label">Mother's Phone</label>
+                    <input className="mod-input mono" type="text" placeholder="01XXXXXXXXX" value={data.mother_phone} onChange={e => setData('mother_phone', e.target.value)} />
+                    {errors.mother_phone && <span className="mod-error-text">{errors.mother_phone}</span>}
                   </div>
-                  <div className="adm-field">
-                    <label className="adm-label">Guardian Email</label>
-                    <input className="adm-input" type="email" placeholder="example@gmail.com" value={data.guardian_email} onChange={e => setData('guardian_email', e.target.value)} />
-                    {errors.guardian_email && <span className="adm-error-text">{errors.guardian_email}</span>}
+                  <div className="mod-field">
+                    <label className="mod-label">Guardian Email</label>
+                    <input className="mod-input" type="email" placeholder="example@gmail.com" value={data.guardian_email} onChange={e => setData('guardian_email', e.target.value)} />
+                    {errors.guardian_email && <span className="mod-error-text">{errors.guardian_email}</span>}
                   </div>
                 </div>
               </div>
 
-              <div className="adm-footer">
-                <Link href={route('admin.students.index')} className="adm-cancel">Cancel</Link>
-                <button type="submit" className="adm-submit" disabled={processing || !active_session}>
-                  <span className="adm-seal"><CheckMark /></span>
-                  {processing ? 'Processing Registration...' : 'Confirm Admission'}
+              <div className="mod-footer">
+                <Link href={route('admin.students.index')} className="mod-btn-cancel">Cancel</Link>
+                <button type="submit" className="mod-btn-submit" disabled={processing || !active_session}>
+                  <CheckMark />
+                  {processing ? 'Processing...' : 'Confirm Admission'}
                 </button>
               </div>
             </div>

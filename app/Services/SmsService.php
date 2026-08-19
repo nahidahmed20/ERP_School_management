@@ -19,7 +19,7 @@ class SmsService
         $senderId = "YOUR_SENDER_ID";
 
         try {
-            /* 
+            /*
             $response = Http::get($url, [
                 'api_key' => $apiKey,
                 'senderid' => $senderId,
@@ -45,9 +45,9 @@ class SmsService
             */
 
             Log::info("SMS SENT TO: {$number} | MESSAGE: {$message}");
-            
+
             SmsLog::create([
-                'phone' => $number,
+                'phone_number' => $number,
                 'message' => $message,
                 'status' => 'Success'
             ]);
@@ -56,9 +56,9 @@ class SmsService
 
         } catch (\Exception $e) {
             Log::error("SMS Sending Failed: " . $e->getMessage());
-            
+
             SmsLog::create([
-                'phone' => $number,
+                'phone_number' => $number,
                 'message' => $message,
                 'status' => 'Failed'
             ]);

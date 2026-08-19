@@ -43,12 +43,12 @@ export default function Sidebar({ mobileOpen = false }) {
 
   function toggle(key) {
     setOpenKeys(prev => {
-      const next = new Set(prev);
-      if (next.has(key)) {
-        next.delete(key);
-      } else {
+      const next = new Set();
+
+      if (!prev.has(key)) {
         next.add(key);
       }
+
       return next;
     });
   }
