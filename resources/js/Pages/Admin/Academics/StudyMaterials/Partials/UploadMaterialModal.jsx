@@ -14,54 +14,114 @@ export default function UploadMaterialModal({ classes, subjects, onClose }) {
     e.preventDefault();
     post(route('admin.study-materials.store'), {
       onSuccess: () => { reset(); onClose(); },
-      forceFormData: true, // Required for file uploads
+      forceFormData: true, 
     });
   }
 
   return (
-    <div className="mm-modal-overlay" onClick={onClose}>
-      <div className="mm-modal" onClick={e => e.stopPropagation()}>
-        <div className="mm-modal-head">
-          <h3>Upload Study Material</h3>
-          <button className="icon-btn" onClick={onClose}><Icon name="close" /></button>
-        </div>
-        <form onSubmit={submit} className="mm-form">
-          <div className="mm-form-grid">
-
-            <label style={{ gridColumn: '1 / -1' }}><span>Material Title *</span>
-              <input type="text" value={data.title} onChange={e => setData('title', e.target.value)} required placeholder="e.g. Chapter 1 Biology Notes" />
-              {errors.title && <span className="text-red-500 text-xs">{errors.title}</span>}
-            </label>
-
-            <label><span>Class *</span>
-              <select value={data.class_id} onChange={e => setData('class_id', e.target.value)} required>
-                <option value="">Select Class...</option>
-                {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-              {errors.class_id && <span className="text-red-500 text-xs">{errors.class_id}</span>}
-            </label>
-
-            <label><span>Subject (Optional)</span>
-              <select value={data.subject_id} onChange={e => setData('subject_id', e.target.value)}>
-                <option value="">General / No Subject</option>
-                {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
-            </label>
-
-            <label style={{ gridColumn: '1 / -1' }}><span>Upload File * (PDF, DOC, JPG - Max 10MB)</span>
-              <input type="file" onChange={e => setData('file', e.target.files[0])} required style={{ padding: '8px', border: '1px dashed #cbd5e1', background: '#f8fafc' }} />
-              {errors.file && <span className="text-red-500 text-xs">{errors.file}</span>}
-            </label>
-
-            <label style={{ gridColumn: '1 / -1' }}><span>Short Description</span>
-              <textarea rows="3" value={data.description} onChange={e => setData('description', e.target.value)} placeholder="Add any instructions for students..."></textarea>
-            </label>
-
+    <div 
+      className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 transition-opacity animate-in fade-in duration-200"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-white rounded-2xl w-full max-w-xl max-h-[90vh] shadow-2xl overflow-hidden transform transition-all flex flex-col ring-1 ring-slate-900/5 animate-in zoom-in-95 duration-200"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Modal Header */}
+        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
+          <div>
+            <h3 className="text-xl font-bold text-slate-900">Upload Study Material</h3>
+            <p className="text-sm text-slate-500 mt-1">Upload lecture notes, documents or assignments.</p>
           </div>
-          <div className="mm-modal-foot mt-4">
-            <button type="button" className="btn btn-outline" onClick={onClose}>Cancel</button>
-            <button type="submit" className="btn" disabled={processing}>
-              <Icon name="upload" /> {processing ? 'Uploading...' : 'Upload File'}
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors bg-slate-100">
+            <Icon name="close" className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Form Body */}
+        <form onSubmit={submit} className="flex flex-col flex-1 overflow-hidden" encType="multipart/form-data">
+          <div className="p-6 overflow-y-auto space-y-5 flex-1">
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              
+              {/* Material Title */}
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Material Title <span className="text-rose-500">*</span></label>
+                <input 
+                  type="text" 
+                  value={data.title} 
+                  onChange={e => setData('title', e.target.value)} 
+                  autoFocus
+                  required 
+                  placeholder="e.g. Chapter 1 Biology Notes" 
+                  className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                />
+                {errors.title && <p className="text-rose-500 text-xs mt-1">{errors.title}</p>}
+              </div>
+
+              {/* Class */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Class <span className="text-rose-500">*</span></label>
+                <select 
+                  value={data.class_id} 
+                  onChange={e => setData('class_id', e.target.value)} 
+                  className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
+                  required
+                >
+                  <option value="" disabled>Select Class...</option>
+                  {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+                {errors.class_id && <p className="text-rose-500 text-xs mt-1">{errors.class_id}</p>}
+              </div>
+
+              {/* Subject */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Subject <span className="text-slate-400 font-normal">(Optional)</span></label>
+                <select 
+                  value={data.subject_id} 
+                  onChange={e => setData('subject_id', e.target.value)}
+                  className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
+                >
+                  <option value="">General / No Subject</option>
+                  {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+              </div>
+
+              {/* Upload File */}
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Upload File * <span className="text-xs text-slate-400 font-normal">(PDF, DOC, JPG - Max 10MB)</span></label>
+                <input 
+                  type="file" 
+                  onChange={e => setData('file', e.target.files[0])} 
+                  required 
+                  className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition-all border border-slate-200 rounded-xl bg-slate-50 cursor-pointer"
+                />
+                {errors.file && <p className="text-rose-500 text-xs mt-1">{errors.file}</p>}
+              </div>
+
+              {/* Description */}
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Short Description</label>
+                <textarea 
+                  rows="3" 
+                  value={data.description} 
+                  onChange={e => setData('description', e.target.value)} 
+                  placeholder="Add any instructions for students..."
+                  className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 outline-none transition-all resize-none"
+                />
+              </div>
+
+            </div>
+          </div>
+
+          {/* Modal Footer */}
+          <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-end gap-3 shrink-0">
+            <button type="button" onClick={onClose} disabled={processing} className="px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 hover:text-slate-800 rounded-xl transition-all shadow-sm">
+              Cancel
+            </button>
+            <button type="submit" disabled={processing} className="flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md shadow-indigo-500/20 disabled:opacity-70 disabled:cursor-not-allowed active:scale-95">
+              <Icon name="upload" className="w-4 h-4" />
+              {processing ? 'Uploading...' : 'Upload File'}
             </button>
           </div>
         </form>

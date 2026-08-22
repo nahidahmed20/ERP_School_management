@@ -11,93 +11,112 @@ function StaffViewModal({ staff, onClose }) {
   if (!staff) return null;
 
   return (
-    <div className="mm-modal-overlay" onClick={onClose} style={{
-      position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-      backgroundColor: 'rgba(15, 23, 42, 0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999,
-    }}>
-      <div className="mm-modal" onClick={(e) => e.stopPropagation()} style={{
-        background: '#fff', borderRadius: '16px', width: '95%', maxWidth: '900px', maxHeight: '92vh', overflowY: 'auto',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column'
-      }}>
-        <div className="mm-modal-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 24px', borderBottom: '1px solid #f1f5f9', background: '#f8fafc', position: 'sticky', top: 0, zIndex: 10 }}>
-          <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '700', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Icon name="briefcase" style={{ color: '#4f46e5' }} /> Staff Profile Details
+    <div 
+      className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 transition-opacity animate-in fade-in duration-200"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] shadow-2xl overflow-hidden transform transition-all flex flex-col ring-1 ring-slate-900/5 animate-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Modal Header */}
+        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
+          <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2.5">
+            <Icon name="briefcase" className="w-5 h-5 text-indigo-600" /> Staff Profile Details
           </h3>
-          <button onClick={onClose} style={{ background: '#cbd5e1', border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
-            <Icon name="close" />
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors bg-slate-100">
+            <Icon name="close" className="w-4 h-4" />
           </button>
         </div>
 
-        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        {/* Modal Body */}
+        <div className="p-6 overflow-y-auto space-y-6 flex-1">
+          
           {/* Top Info Banner */}
-          <div style={{ display: 'flex', gap: '24px', alignItems: 'center', background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-            <div style={{ width: '100px', height: '100px', borderRadius: '50%', background: '#e0e7ff', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '4px solid #fff', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
-              {staff.photo ? <img src={`/storage/${staff.photo}`} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Icon name="user" style={{ fontSize: '45px', color: '#4f46e5' }} />}
+          <div className="flex flex-col sm:flex-row items-center gap-5 bg-gradient-to-r from-slate-50 to-indigo-50/30 p-6 rounded-2xl border border-slate-200">
+            <div className="w-24 h-24 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center overflow-hidden border-4 border-white shadow-md shrink-0">
+              {staff.photo ? (
+                <img src={`/storage/${staff.photo}`} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <Icon name="user" className="w-12 h-12 text-indigo-400" />
+              )}
             </div>
-            <div>
-              <h2 style={{ margin: '0 0 8px 0', fontSize: '1.6rem', fontWeight: '800', color: '#0f172a' }}>{staff.first_name} {staff.last_name || ''}</h2>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', fontSize: '14px', color: '#475569' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><strong>EMP ID:</strong> <span style={{ color: '#4f46e5', fontWeight: '600' }}>{staff.staff_id_no}</span></span>
-                <span>•</span>
+            <div className="text-center sm:text-left">
+              <h2 className="text-2xl font-bold text-slate-900">{staff.first_name} {staff.last_name || ''}</h2>
+              <div className="flex flex-wrap justify-center sm:justify-start items-center gap-3 text-xs sm:text-sm text-slate-600 mt-2 font-medium">
+                <span><strong>EMP ID:</strong> <span className="text-indigo-600 font-bold">{staff.staff_id_no}</span></span>
+                <span className="hidden sm:inline">•</span>
                 <span><strong>Designation:</strong> {staff.designation?.name}</span>
-                <span>•</span>
+                <span className="hidden sm:inline">•</span>
                 <span><strong>Department:</strong> {staff.department?.name}</span>
               </div>
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            
             {/* Employment Info */}
-            <div style={{ background: '#fff', border: '1px solid #e2e8f0', padding: '20px', borderRadius: '12px' }}>
-              <h4 style={{ margin: '0 0 16px 0', fontSize: '15px', color: '#4f46e5', borderBottom: '2px solid #e0e7ff', paddingBottom: '8px' }}>Employment Details</h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '14px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>Joining Date:</span> <strong>{staff.joining_date}</strong></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>Basic Salary:</span> <strong>৳ {staff.basic_salary}</strong></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>Qualification:</span> <strong>{staff.qualification || 'N/A'}</strong></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>Experience:</span> <strong>{staff.experience || 'N/A'}</strong></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ color: '#64748b' }}>Portal Access:</span>
+            <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm space-y-4">
+              <h4 className="text-sm font-bold text-indigo-600 border-b border-indigo-100 pb-2.5 uppercase tracking-wider">Employment Details</h4>
+              <div className="space-y-2.5 text-xs sm:text-sm text-slate-600">
+                <div className="flex justify-between"><span>Joining Date:</span> <strong className="text-slate-900">{staff.joining_date}</strong></div>
+                <div className="flex justify-between"><span>Basic Salary:</span> <strong className="text-slate-900">৳ {staff.basic_salary}</strong></div>
+                <div className="flex justify-between"><span>Qualification:</span> <strong className="text-slate-900">{staff.qualification || 'N/A'}</strong></div>
+                <div className="flex justify-between"><span>Experience:</span> <strong className="text-slate-900">{staff.experience || 'N/A'}</strong></div>
+                <div className="flex justify-between items-center">
+                  <span>Portal Access:</span>
                   {staff.user_id ? (
-                    <span style={{ background: '#dcfce7', color: '#166534', padding: '2px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '600' }}>Enabled</span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">Enabled</span>
                   ) : (
-                    <span style={{ background: '#f1f5f9', color: '#64748b', padding: '2px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '600' }}>Disabled</span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-slate-100 text-slate-600 border border-slate-200">Disabled</span>
                   )}
                 </div>
               </div>
             </div>
 
             {/* Personal Info */}
-            <div style={{ background: '#fff', border: '1px solid #e2e8f0', padding: '20px', borderRadius: '12px' }}>
-              <h4 style={{ margin: '0 0 16px 0', fontSize: '15px', color: '#0ea5e9', borderBottom: '2px solid #e0f2fe', paddingBottom: '8px' }}>Personal Details</h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '14px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>Father's Name:</span> <strong>{staff.father_name || 'N/A'}</strong></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>Mother's Name:</span> <strong>{staff.mother_name || 'N/A'}</strong></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>DOB / Gender:</span> <strong>{staff.date_of_birth} ({staff.gender})</strong></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>Blood Group:</span> <strong style={{ color: '#be123c' }}>{staff.blood_group || 'N/A'}</strong></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>Marital Status:</span> <strong>{staff.marital_status || 'N/A'}</strong></div>
+            <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm space-y-4">
+              <h4 className="text-sm font-bold text-sky-600 border-b border-sky-100 pb-2.5 uppercase tracking-wider">Personal Details</h4>
+              <div className="space-y-2.5 text-xs sm:text-sm text-slate-600">
+                <div className="flex justify-between"><span>Father's Name:</span> <strong className="text-slate-900">{staff.father_name || 'N/A'}</strong></div>
+                <div className="flex justify-between"><span>Mother's Name:</span> <strong className="text-slate-900">{staff.mother_name || 'N/A'}</strong></div>
+                <div className="flex justify-between"><span>DOB / Gender:</span> <strong className="text-slate-900">{staff.date_of_birth} ({staff.gender})</strong></div>
+                <div className="flex justify-between"><span>Blood Group:</span> <strong className="text-rose-600 font-bold">{staff.blood_group || 'N/A'}</strong></div>
+                <div className="flex justify-between"><span>Marital Status:</span> <strong className="text-slate-900">{staff.marital_status || 'N/A'}</strong></div>
               </div>
             </div>
 
             {/* Contact Info */}
-            <div style={{ background: '#fff', border: '1px solid #e2e8f0', padding: '20px', borderRadius: '12px' }}>
-              <h4 style={{ margin: '0 0 16px 0', fontSize: '15px', color: '#10b981', borderBottom: '2px solid #d1fae5', paddingBottom: '8px' }}>Contact Details</h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '14px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>Phone:</span> <strong>{staff.phone}</strong></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>Emergency:</span> <strong>{staff.emergency_phone || 'N/A'}</strong></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b' }}>Email:</span> <strong>{staff.email || 'N/A'}</strong></div>
+            <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm space-y-4">
+              <h4 className="text-sm font-bold text-emerald-600 border-b border-emerald-100 pb-2.5 uppercase tracking-wider">Contact Details</h4>
+              <div className="space-y-2.5 text-xs sm:text-sm text-slate-600">
+                <div className="flex justify-between"><span>Phone:</span> <strong className="text-slate-900">{staff.phone}</strong></div>
+                <div className="flex justify-between"><span>Emergency:</span> <strong className="text-slate-900">{staff.emergency_phone || 'N/A'}</strong></div>
+                <div className="flex justify-between"><span>Email:</span> <strong className="text-slate-900 truncate max-w-[150px]">{staff.email || 'N/A'}</strong></div>
               </div>
             </div>
+
           </div>
 
           {/* Address Info */}
-          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '20px', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            <div style={{ fontSize: '14px' }}><span style={{ color: '#64748b', display: 'block', fontWeight: '600', marginBottom: '4px' }}>Present Address:</span><span style={{ color: '#1e293b', lineHeight: '1.5' }}>{staff.present_address || 'N/A'}</span></div>
-            <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '12px', fontSize: '14px' }}><span style={{ color: '#64748b', display: 'block', fontWeight: '600', marginBottom: '4px' }}>Permanent Address:</span><span style={{ color: '#1e293b', lineHeight: '1.5' }}>{staff.permanent_address || 'N/A'}</span></div>
+          <div className="bg-slate-50 border border-slate-200 p-5 rounded-2xl space-y-3 text-xs sm:text-sm">
+            <div>
+              <span className="font-semibold text-slate-500 block mb-1 uppercase tracking-wider text-[11px]">Present Address:</span>
+              <p className="text-slate-800 leading-relaxed font-medium">{staff.present_address || 'N/A'}</p>
+            </div>
+            <div className="border-t border-slate-200 pt-3">
+              <span className="font-semibold text-slate-500 block mb-1 uppercase tracking-wider text-[11px]">Permanent Address:</span>
+              <p className="text-slate-800 leading-relaxed font-medium">{staff.permanent_address || 'N/A'}</p>
+            </div>
           </div>
+
         </div>
 
-        <div style={{ padding: '16px 24px', background: '#f8fafc', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'flex-end', position: 'sticky', bottom: 0, borderRadius: '0 0 16px 16px' }}>
-          <button className="btn btn-outline" onClick={onClose} style={{ padding: '8px 20px', borderRadius: '6px', fontWeight: '600' }}>Close</button>
+        {/* Modal Footer */}
+        <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-end rounded-b-2xl shrink-0">
+          <button type="button" className="px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 rounded-xl transition-all shadow-sm" onClick={onClose}>
+            Close
+          </button>
         </div>
       </div>
     </div>
@@ -126,7 +145,6 @@ export default function Index({ staff, departments, designations, filters }) {
     }, { preserveState: true, replace: true });
   };
 
-  // Handle Search Input clear
   const handleSearchChange = (e) => {
     const val = e.target.value;
     setSearch(val);
@@ -137,8 +155,7 @@ export default function Index({ staff, departments, designations, filters }) {
 
   const exportToCSV = () => {
     if (!staff.data.length) {
-      Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
-      return;
+      return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
     }
     const headers = ['EMP ID', 'Name', 'Department', 'Designation', 'Phone', 'Joining Date', 'Status'];
     const rows = staff.data.map(s => [
@@ -180,276 +197,221 @@ export default function Index({ staff, departments, designations, filters }) {
   };
 
   return (
-    <AuthenticatedLayout
-      header={
-        <div className="page-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <span className="eyebrow">Directory</span>
-            <h1>Staff &amp; Teachers Directory</h1>
-            <p className="desc">কর্মচারী, শিক্ষক ও স্টাফদের তথ্য, ফিল্টারিং ও পোর্টাল অ্যাক্সেস পরিচালনা করুন।</p>
-          </div>
-          <div className="mm-head-actions">
-            <Link href={route('admin.staff.create')} className="btn" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <Icon name="plus" /> Add New Staff
-            </Link>
-          </div>
-        </div>
-      }
-    >
+    <AuthenticatedLayout>
       <Head title="Staff Directory" />
 
-      {/* Print-specific styles */}
+      {/* Print Specific CSS */}
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
-          nav, aside, header, .page-head, .no-print, button, a, select, input, .mm-head-actions, .mm-filters {
-            display: none !important;
-          }
-          body, html {
-            background: #fff !important;
-            color: #000 !important;
-            margin: 0 !important;
-            padding: 15px !important;
-          }
-          .card, .mm-card {
-            border: none !important;
-            box-shadow: none !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            width: 100% !important;
-          }
-          .mm-table-wrap {
-            overflow: visible !important;
-          }
-          .mm-table {
-            width: 100% !important;
-            border-collapse: collapse !important;
-          }
-          .mm-table th, .mm-table td {
-            border: 1px solid #cbd5e1 !important;
-            padding: 8px 12px !important;
-            font-size: 11px !important;
-            color: #000 !important;
-          }
-          .mm-table th {
-            background-color: #f1f5f9 !important;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-          }
-          .print-only-title {
-            display: block !important;
-            font-size: 18px !important;
-            font-weight: bold !important;
-            text-align: center !important;
-            margin-bottom: 15px !important;
-            border-bottom: 2px solid #000;
-            padding-bottom: 8px;
-          }
+          nav, aside, header, .no-print, button, a, select, input { display: none !important; }
+          body, html { background: #f8fafc !important; }
+          .print-table-wrapper { width: 100% !important; border: none !important; box-shadow: none !important; }
+          .print-title { display: block !important; font-size: 24px !important; font-weight: bold !important; margin-bottom: 20px !important; }
         }
-        @media screen {
-          .print-only-title {
-            display: none;
-          }
-        }
+        @media screen { .print-title { display: none; } }
       `}} />
 
-      {/* Print Only Header */}
-      <div className="print-only-title">
-        Staff & Teachers Directory - {new Date().toLocaleDateString('en-GB')}
-      </div>
+      <div className="print-title">Staff & Teachers Directory - {new Date().toLocaleDateString('en-GB')}</div>
 
-      <style>{`
-        .stf-toolbar-scope {
-          --stf-ink: #16213A; --stf-ink-soft: #56647B; --stf-forest: #21402F; --stf-forest-dark: #142720;
-          --stf-brass: #AD7F35; --stf-brass-soft: #F1E4C8; --stf-mist: #EEF1EA; --stf-paper: #FFFFFF;
-          --stf-line: #DCE2D8;
-          --stf-font-display: 'Fraunces', Georgia, serif; --stf-font-body: 'Public Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-          --stf-font-mono: 'JetBrains Mono', ui-monospace, monospace;
-          font-family: var(--stf-font-body);
-        }
-        .stf-toolbar-scope *, .stf-toolbar-scope *::before, .stf-toolbar-scope *::after { box-sizing: border-box; }
-
-        .stf-toolbar-card { background: var(--stf-paper); border: 1px solid var(--stf-line); border-radius: 14px; padding: 22px 24px; margin-bottom: 24px; }
-
-        .stf-toolbar-filters { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
-
-        .stf-toolbar-select { padding: 10px 14px; border-radius: 8px; border: 1.5px solid var(--stf-line); min-width: 150px; background: #fff; font-family: var(--stf-font-body); font-size: 14px; color: var(--stf-ink); outline: none; transition: border-color .15s, box-shadow .15s; }
-        .stf-toolbar-select:focus { border-color: var(--stf-brass); box-shadow: 0 0 0 3px rgba(173,127,53,.16); }
-        .stf-toolbar-select:disabled { opacity: .55; cursor: not-allowed; }
-        .stf-toolbar-select.mono { font-family: var(--stf-font-mono); }
-
-        .stf-search-wrap { position: relative; flex: 1; min-width: 220px; }
-        .stf-search-wrap input { width: 100%; padding: 10px 14px 10px 38px; border-radius: 8px; border: 1.5px solid var(--stf-line); font-size: 14px; font-family: var(--stf-font-body); color: var(--stf-ink); outline: none; transition: border-color .15s, box-shadow .15s; }
-        .stf-search-wrap input:focus { border-color: var(--stf-brass); box-shadow: 0 0 0 3px rgba(173,127,53,.16); }
-        .stf-search-wrap .stf-search-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--stf-ink-soft); }
-
-        .stf-filter-btn { padding: 10px 22px; border-radius: 8px; border: none; background: var(--stf-forest); color: #fff; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background .15s, transform .15s; }
-        .stf-filter-btn:hover { background: var(--stf-forest-dark); transform: translateY(-1px); }
-
-        .stf-export-row { display: flex; gap: 8px; margin-top: 18px; border-top: 1px solid var(--stf-line); padding-top: 16px; flex-wrap: wrap; align-items: center; }
-        .stf-export-label { font-family: var(--stf-font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--stf-brass); font-weight: 600; margin-right: 6px; display: flex; align-items: center; gap: 6px; }
-        .stf-export-label::before { content: ''; width: 14px; height: 1px; background: var(--stf-brass); display: inline-block; }
-        .stf-export-btn { padding: 8px 14px; font-size: 13px; display: flex; align-items: center; gap: 7px; border-radius: 8px; border: 1.5px solid var(--stf-line); background: #fff; color: var(--stf-forest-dark); font-weight: 600; cursor: pointer; transition: all .15s; }
-        .stf-export-btn:hover { border-color: var(--stf-brass); background: var(--stf-brass-soft); }
-      `}</style>
-
-      {/* Filter Card marked with 'no-print' class */}
-      <div className="card mm-card no-print stf-toolbar-scope stf-toolbar-card">
-        <div className="mm-filters stf-toolbar-filters">
-
-          {/* Per Page dropdown */}
-          <select
-            value={perPage}
-            onChange={e => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}
-            className="stf-toolbar-select mono"
+      <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8 no-print">
+        
+        {/* Page Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">Directory</span>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Staff &amp; Teachers Directory</h1>
+            <p className="text-sm text-slate-500 mt-1">কর্মচারী, শিক্ষক ও স্টাফদের তথ্য, ফিল্টারিং ও পোর্টাল অ্যাক্সেস পরিচালনা করুন।</p>
+          </div>
+          <Link
+            href={route('admin.staff.create')}
+            className="w-full sm:w-auto inline-flex justify-center items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md shadow-indigo-500/20 active:scale-95"
           >
-            <option value="10">10 / Page</option>
-            <option value="20">20 / Page</option>
-            <option value="50">50 / Page</option>
-            <option value="all">Show All</option>
-          </select>
+            <Icon name="plus" className="w-4 h-4" /> Add New Staff
+          </Link>
+        </div>
 
-          {/* Search Field */}
-          <div className="search stf-search-wrap">
-            <input
-              placeholder="Search ID, Name, Phone..."
-              value={search}
-              onChange={handleSearchChange}
-              onKeyDown={e => e.key === 'Enter' && applyFilters()}
-            />
-            <Icon name="search" className="stf-search-icon" />
+        {/* Unified Modern Toolbar */}
+        <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
+            
+            {/* Per Page */}
+            <select
+              value={perPage}
+              onChange={e => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}
+              className="appearance-none bg-none pr-3 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer text-center font-mono"
+              style={{ backgroundImage: 'none' }}
+            >
+              <option value="10">10 / Page</option>
+              <option value="20">20 / Page</option>
+              <option value="50">50 / Page</option>
+              <option value="all">All</option>
+            </select>
+
+            <div className="hidden sm:block w-px h-6 bg-slate-200"></div>
+
+            {/* Department Filter */}
+            <select 
+              value={departmentId} 
+              onChange={e => setDepartmentId(e.target.value)}
+              className="w-full sm:w-44 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
+            >
+              <option value="">All Departments</option>
+              {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+            </select>
+
+            {/* Designation Filter */}
+            <select 
+              value={designationId} 
+              onChange={e => setDesignationId(e.target.value)}
+              className="w-full sm:w-44 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
+            >
+              <option value="">All Designations</option>
+              {designations.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+            </select>
+
+            {/* Search Input */}
+            <div className="relative flex-1 min-w-[200px] sm:w-64">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Icon name="search" className="w-4 h-4 text-slate-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search ID, Name, Phone..."
+                value={search}
+                onChange={handleSearchChange}
+                onKeyDown={e => e.key === 'Enter' && applyFilters()}
+                className="block w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+              />
+            </div>
+
+            {/* Apply Button */}
+            <button
+              onClick={() => applyFilters()}
+              className="w-full sm:w-auto px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
+            >
+              Filter
+            </button>
           </div>
 
-          {/* Department selector */}
-          <select
-            value={departmentId}
-            onChange={e => setDepartmentId(e.target.value)}
-            className="stf-toolbar-select"
-          >
-            <option value="">All Departments</option>
-            {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-          </select>
-
-          {/* Designation selector */}
-          <select
-            value={designationId}
-            onChange={e => setDesignationId(e.target.value)}
-            className="stf-toolbar-select"
-          >
-            <option value="">All Designations</option>
-            {designations.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-          </select>
-
-          <button className="btn btn-outline stf-filter-btn" onClick={() => applyFilters()}>
-            Filter
-          </button>
+          {/* Export Actions */}
+          <div className="flex items-center justify-end gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-xl w-full xl:w-auto shadow-sm shrink-0 ml-auto">
+            <button onClick={copyToClipboard} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Copy to Clipboard">
+              Copy
+            </button>
+            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+            <button onClick={exportToCSV} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-emerald-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export CSV">
+              CSV
+            </button>
+            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+            <button onClick={() => alert('Backend Excel plugin needed')} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-green-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export Excel">
+              Excel
+            </button>
+            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+            <button onClick={() => alert('Backend PDF plugin needed')} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-rose-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export PDF">
+              PDF
+            </button>
+            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+            <button onClick={handlePrint} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-amber-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Print List">
+              Print
+            </button>
+          </div>
         </div>
 
-        {/* Export Buttons */}
-        <div className="stf-export-row">
-          <span className="stf-export-label">Export</span>
-          <button className="btn btn-outline stf-export-btn" onClick={copyToClipboard}>
-            <Icon name="copy" /> Copy Table
-          </button>
-          <button className="btn btn-outline stf-export-btn" onClick={exportToCSV}>
-            <Icon name="excel" /> CSV / Excel
-          </button>
-          <button className="btn btn-outline stf-export-btn" onClick={handlePrint}>
-            <Icon name="print" /> PDF / Print
-          </button>
-        </div>
-      </div>
-
-      {/* Table Section */}
-      <div className="card mm-card" style={{ background: '#fff', borderRadius: '12px', overflow: 'hidden' }}>
-        <div className="mm-table-wrap" style={{ overflowX: 'auto' }}>
-          <table className="mm-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-            <thead style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
-              <tr>
-                <th style={{ padding: '15px' }}>SL</th>
-                <th style={{ padding: '15px' }}>EMP ID</th>
-                <th style={{ padding: '15px' }}>Staff Profile</th>
-                <th style={{ padding: '15px' }}>Department &amp; Role</th>
-                <th style={{ padding: '15px' }}>Contact</th>
-                <th className="no-print" style={{ padding: '15px', textAlign: 'center' }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {staff.data.length === 0 && (
-                <tr>
-                  <td colSpan={6} style={{ padding: '30px', textAlign: 'center', color: '#64748b' }}>
-                    কোনো স্টাফ ডেটা পাওয়া যায়নি।
-                  </td>
+        {/* Main Table Card */}
+        <div className="bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 print-table-wrapper">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50/50">
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider w-16">SL</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">EMP ID</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Staff Profile</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Department &amp; Role</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Contact</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right no-print">Actions</th>
                 </tr>
-              )}
-              {staff.data.map((s, index) => (
-                <tr key={s.id} style={{ borderBottom: '1px solid #e2e8f0', transition: 'background-color 0.2s' }}>
-                  <td style={{ padding: '15px' }}>{(staff.current_page - 1) * staff.per_page + index + 1}</td>
-                  <td style={{ padding: '15px' }}><strong>{s.staff_id_no}</strong></td>
-                  <td style={{ padding: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <img
-                      src={s.photo ? `/storage/${s.photo}` : '/images/default-avatar.png'}
-                      alt="Staff"
-                      style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
-                    />
-                    <div>
-                      {s.first_name} {s.last_name || ''}
-                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginTop: '4px' }}>
-                        <span style={{ fontSize: '11px', padding: '2px 6px', borderRadius: '4px', background: s.is_active ? '#dcfce7' : '#fee2e2', color: s.is_active ? '#166534' : '#991b1b', fontWeight: '500' }}>
-                          {s.is_active ? 'Active' : 'Inactive'}
-                        </span>
-                        {s.user_id && (
-                          <span style={{ fontSize: '11px', padding: '2px 6px', borderRadius: '4px', background: '#e0e7ff', color: '#3730a3', fontWeight: '500' }} title="Has Portal Access">
-                            Portal Access
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </td>
-                  <td style={{ padding: '15px' }}>
-                    <div style={{ fontWeight: '500' }}>{s.designation?.name}</div>
-                    <small style={{ color: '#64748b' }}>{s.department?.name}</small>
-                  </td>
-                  <td style={{ padding: '15px' }}>
-                    <div style={{ fontWeight: '500' }}>{s.phone}</div>
-                    <small style={{ color: '#64748b' }}>{s.email || 'N/A'}</small>
-                  </td>
-                  <td className="no-print" style={{ padding: '15px' }}>
-                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                      {/* View Details Button */}
-                      <button
-                        onClick={() => setViewingItem(s)}
-                        title="View Profile"
-                        style={{ padding: '6px', color: '#4f46e5', background: '#f5f3ff', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-                      >
-                        <Icon name="eye" />
-                      </button>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {staff.data.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
+                      কোনো স্টাফ ডেটা পাওয়া যায়নি।
+                    </td>
+                  </tr>
+                ) : (
+                  staff.data.map((s, index) => (
+                    <tr key={s.id} className="hover:bg-slate-50/60 transition-colors">
+                      <td className="px-6 py-4 text-sm font-semibold text-slate-500">
+                        {(staff.current_page - 1) * staff.per_page + index + 1}
+                      </td>
+                      <td className="px-6 py-4 font-mono font-bold text-slate-700 text-sm">
+                        {s.staff_id_no}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={s.photo ? `/storage/${s.photo}` : '/images/default-avatar.png'}
+                            alt="Staff"
+                            className="w-10 h-10 rounded-full object-cover border border-slate-200 shrink-0"
+                          />
+                          <div>
+                            <span className="text-sm font-bold text-slate-900 block">{s.first_name} {s.last_name || ''}</span>
+                            <div className="flex flex-wrap gap-1.5 mt-1">
+                              <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide ${s.is_active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}`}>
+                                {s.is_active ? 'Active' : 'Inactive'}
+                              </span>
+                              {s.user_id && (
+                                <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide bg-indigo-50 text-indigo-700 border border-indigo-200" title="Has Portal Access">
+                                  Portal Access
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-bold text-slate-800 block">{s.designation?.name}</span>
+                        <span className="text-xs text-slate-500 font-medium block mt-0.5">{s.department?.name}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-semibold text-slate-800 block">{s.phone}</span>
+                        <span className="text-xs text-slate-500 block mt-0.5">{s.email || 'N/A'}</span>
+                      </td>
+                      <td className="px-6 py-4 text-right no-print">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => setViewingItem(s)}
+                            className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                            title="View Profile"
+                          >
+                            <Icon name="eye" className="w-4 h-4" />
+                          </button>
+                          <Link
+                            href={route('admin.staff.edit', s.id)}
+                            className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Edit Staff"
+                          >
+                            <Icon name="edit" className="w-4 h-4" />
+                          </Link>
+                          <button
+                            onClick={() => setDeletingItem(s)}
+                            className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                            title="Delete Staff"
+                          >
+                            <Icon name="trash" className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
 
-                      {/* Edit Button */}
-                      <Link
-                        href={route('admin.staff.edit', s.id)}
-                        title="Edit Staff"
-                        style={{ padding: '6px', color: '#3b82f6', background: '#eff6ff', borderRadius: '6px', display: 'flex', alignItems: 'center' }}
-                      >
-                        <Icon name="edit" />
-                      </Link>
-
-                      {/* Delete Button */}
-                      <button
-                        onClick={() => setDeletingItem(s)}
-                        title="Delete Staff"
-                        style={{ padding: '6px', color: '#ef4444', background: '#fef2f2', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-                      >
-                        <Icon name="trash" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="no-print" style={{ padding: '20px', borderTop: '1px solid #f1f5f9' }}>
-          <Pagination meta={staff} />
+          <div className="no-print border-t border-slate-100 bg-white px-6 py-4 rounded-b-2xl">
+            <Pagination meta={staff} />
+          </div>
         </div>
       </div>
 

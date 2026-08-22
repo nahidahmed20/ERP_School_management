@@ -14,7 +14,6 @@ export default function Index({ date, staffs, attendances }) {
     attendances: []
   });
 
-  // ১. ডেট এবং হাজিরা লিস্ট দুটোকেই প্রপ্সের সাথে সিঙ্ক রাখুন (Bug Fix)
   useEffect(() => {
     const initializedAttendances = staffs.map(staff => {
       const existingAtt = attendances[staff.id];
@@ -27,18 +26,17 @@ export default function Index({ date, staffs, attendances }) {
       };
     });
 
-    // এখানে date এবং attendances একসাথে সেট করুন
     setData(prev => ({
       ...prev,
       date: date,
       attendances: initializedAttendances
     }));
-  }, [staffs, attendances, date]); // Dependency-তে date যুক্ত করা হয়েছে
+  }, [staffs, attendances, date]);
 
   // Flash Message
   useEffect(() => {
-    if (flash?.success) Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: flash.success, showConfirmButton: false, timer: 3000 });
-    if (flash?.error) Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: flash.error, showConfirmButton: false, timer: 4000 });
+    if (flash?.success) Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: flash.success, showConfirmButton: false, timer: 3000, timerProgressBar: true });
+    if (flash?.error) Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: flash.error, showConfirmButton: false, timer: 4000, timerProgressBar: true });
   }, [flash]);
 
   const handleDateChange = (e) => {
@@ -51,7 +49,6 @@ export default function Index({ date, staffs, attendances }) {
     const updatedAttendances = [...data.attendances];
     updatedAttendances[index][field] = value;
 
-    // UX Improvement: Absent সিলেক্ট করলে টাইম ফিল্ডগুলো ফাঁকা করে দেওয়া
     if (field === 'status' && value === 'absent') {
       updatedAttendances[index]['in_time'] = '';
       updatedAttendances[index]['out_time'] = '';
@@ -70,22 +67,41 @@ export default function Index({ date, staffs, attendances }) {
     post(route('admin.staff-attendance.store'));
   };
 
+  // Status Button Style Helper
+  const getStatusButtonStyle = (currentStatus, statusVal) => {
+    const isSelected = currentStatus === statusVal;
+    switch(statusVal) {
+      case 'present':
+        return isSelected ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-500/20' : 'bg-white text-emerald-600 border-emerald-200 hover:bg-emerald-50';
+      case 'absent':
+        return isSelected ? 'bg-rose-600 text-white border-rose-600 shadow-md shadow-rose-500/20' : 'bg-white text-rose-600 border-rose-200 hover:bg-rose-50';
+      case 'late':
+        return isSelected ? 'bg-amber-500 text-white border-amber-500 shadow-md shadow-amber-500/20' : 'bg-white text-amber-600 border-amber-200 hover:bg-amber-50';
+      case 'half_day':
+        return isSelected ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20' : 'bg-white text-blue-600 border-blue-200 hover:bg-blue-50';
+      default:
+        return 'bg-white text-slate-700 border-slate-200';
+    }
+  };
+
   return (
     <AuthenticatedLayout
       header={
-        <div className="page-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <span className="eyebrow">HR & Administration</span>
-            <h1>Daily Staff Attendance</h1>
-            <p className="desc">Take or update daily attendance for teachers and staff.</p>
+            <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase bg-indigo-50 border border-indigo-100 px-2.5 py-1 rounded-md">HR & Administration</span>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Daily Staff Attendance</h1>
+            <p className="text-sm text-slate-500 mt-1">শিক্ষক ও কর্মচারীদের প্রতিদিনের উপস্থিতি রেকর্ড করুন।</p>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: '#fff', padding: '8px 16px', borderRadius: '8px', border: '1px solid #cbd5e1', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-            <Icon name="calendar" style={{ color: '#4f46e5' }} />
+          
+          {/* Date Picker Pill */}
+          <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm">
+            <Icon name="calendar" className="w-4 h-4 text-indigo-600" />
             <input
               type="date"
               value={selectedDate}
               onChange={handleDateChange}
-              style={{ border: 'none', outline: 'none', fontSize: '15px', fontWeight: '600', color: '#1e293b', background: 'transparent', cursor: 'pointer' }}
+              className="text-sm font-bold text-slate-800 bg-transparent outline-none cursor-pointer font-mono"
             />
           </div>
         </div>
@@ -93,150 +109,153 @@ export default function Index({ date, staffs, attendances }) {
     >
       <Head title="Staff Attendance" />
 
-      <div className="card mm-card" style={{ background: '#fff', borderRadius: '12px', overflow: 'hidden', padding: '0' }}>
+      <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8">
+        
+        {/* Main Attendance Card */}
+        <div className="bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 overflow-hidden">
 
-        {/* Actions Bar */}
-        <div style={{ padding: '20px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc' }}>
-          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-            <span style={{ fontSize: '14px', fontWeight: '600', color: '#475569' }}>Total Staff: {staffs.length}</span>
-            <button type="button" onClick={markAllPresent} style={{ background: '#dcfce7', color: '#16a34a', border: '1px solid #bbf7d0', padding: '6px 12px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Icon name="check" /> Mark All Present
-            </button>
+          {/* Actions Bar */}
+          <div className="px-6 py-4 bg-slate-50/70 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-bold text-slate-700">Total Staff: <span className="text-indigo-600">{staffs.length}</span></span>
+              <button 
+                type="button" 
+                onClick={markAllPresent} 
+                className="px-3.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold transition-colors shadow-sm flex items-center gap-1.5"
+              >
+                <Icon name="check" className="w-3.5 h-3.5" /> Mark All Present
+              </button>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-4 text-xs font-bold">
+              <span className="text-emerald-600">P = Present</span>
+              <span className="text-rose-600">A = Absent</span>
+              <span className="text-amber-600">L = Late</span>
+              <span className="text-blue-600">HD = Half Day</span>
+            </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '12px', fontSize: '13px', fontWeight: '600' }}>
-            <span style={{ color: '#16a34a' }}>P = Present</span>
-            <span style={{ color: '#dc2626' }}>A = Absent</span>
-            <span style={{ color: '#ea580c' }}>L = Late</span>
-            <span style={{ color: '#2563eb' }}>HD = Half Day</span>
-          </div>
-        </div>
+          <form onSubmit={submit}>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50/50">
+                    <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider w-16">SL</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Staff Info</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Attendance Status <span className="text-rose-500">*</span></th>
+                    <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Time In</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Time Out</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Note / Reason</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {staffs.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
+                        কোনো অ্যাক্টিভ স্টাফ পাওয়া যায়নি।
+                      </td>
+                    </tr>
+                  ) : (
+                    staffs.map((staff, index) => {
+                      const attState = data.attendances[index];
+                      if (!attState) return null;
 
-        <form onSubmit={submit}>
-          <div className="mm-table-wrap" style={{ overflowX: 'auto' }}>
-            <table className="mm-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-              <thead style={{ background: '#f1f5f9', borderBottom: '2px solid #e2e8f0' }}>
-                <tr>
-                  <th style={{ padding: '15px' }}>SL</th>
-                  <th style={{ padding: '15px' }}>Staff Info</th>
-                  <th style={{ padding: '15px' }}>Attendance Status <span style={{color: 'red'}}>*</span></th>
-                  <th style={{ padding: '15px' }}>Time In</th>
-                  <th style={{ padding: '15px' }}>Time Out</th>
-                  <th style={{ padding: '15px' }}>Note / Reason</th>
-                </tr>
-              </thead>
-              <tbody>
-                {staffs.length === 0 ? (
-                  <tr><td colSpan={6} style={{ padding: '30px', textAlign: 'center', color: '#64748b' }}>কোনো অ্যাক্টিভ স্টাফ পাওয়া যায়নি।</td></tr>
-                ) : (
-                  staffs.map((staff, index) => {
-                    const attState = data.attendances[index];
-                    if (!attState) return null;
+                      const isAbsent = attState.status === 'absent';
 
-                    const isAbsent = attState.status === 'absent';
+                      return (
+                        <tr key={staff.id} className="hover:bg-slate-50/60 transition-colors">
+                          <td className="px-6 py-4 text-sm font-semibold text-slate-500">
+                            {index + 1}
+                          </td>
 
-                    return (
-                      <tr key={staff.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                        <td style={{ padding: '15px' }}>{index + 1}</td>
-                        <td style={{ padding: '15px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <img src={staff.photo ? `/storage/${staff.photo}` : '/images/default-avatar.png'} style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover' }} />
-                            <div>
-                              <div style={{ fontWeight: '700', color: '#1e293b' }}>{staff.first_name} {staff.last_name || ''}</div>
-                              <div style={{ fontSize: '12px', color: '#64748b' }}>{staff.designation?.name} • ID: {staff.staff_id_no}</div>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <img 
+                                src={staff.photo ? `/storage/${staff.photo}` : '/images/default-avatar.png'} 
+                                alt="Staff" 
+                                className="w-10 h-10 rounded-full object-cover border border-slate-200 shrink-0" 
+                              />
+                              <div>
+                                <span className="text-sm font-bold text-slate-900 block">{staff.first_name} {staff.last_name || ''}</span>
+                                <span className="text-xs text-slate-500 font-medium block mt-0.5">{staff.designation?.name} • ID: {staff.staff_id_no}</span>
+                              </div>
                             </div>
-                          </div>
-                        </td>
+                          </td>
 
-                        {/* Status Radio Buttons */}
-                        <td style={{ padding: '15px' }}>
-                          <div style={{ display: 'flex', gap: '8px' }}>
-                            {['present', 'absent', 'late', 'half_day'].map(statusVal => (
-                              <label key={statusVal} style={{
-                                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '36px', height: '36px', borderRadius: '8px', border: '1px solid', fontWeight: '700', fontSize: '14px', transition: 'all 0.2s',
-                                ...(attState.status === statusVal
-                                  ? { background: statusVal === 'present' ? '#16a34a' : statusVal === 'absent' ? '#dc2626' : statusVal === 'late' ? '#ea580c' : '#2563eb', color: '#fff', borderColor: 'transparent' }
-                                  : { background: '#f8fafc', color: '#64748b', borderColor: '#cbd5e1' })
-                              }}>
-                                <input
-                                  type="radio"
-                                  name={`status_${staff.id}`}
-                                  value={statusVal}
-                                  checked={attState.status === statusVal}
-                                  onChange={(e) => handleAttendanceChange(index, 'status', e.target.value)}
-                                  style={{ display: 'none' }}
-                                />
-                                {statusVal === 'present' ? 'P' : statusVal === 'absent' ? 'A' : statusVal === 'late' ? 'L' : 'HD'}
-                              </label>
-                            ))}
-                          </div>
-                        </td>
+                          {/* Status Buttons */}
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-1.5">
+                              {[
+                                { value: 'present', label: 'P', title: 'Present' },
+                                { value: 'absent', label: 'A', title: 'Absent' },
+                                { value: 'late', label: 'L', title: 'Late' },
+                                { value: 'half_day', label: 'HD', title: 'Half Day' }
+                              ].map(opt => (
+                                <button
+                                  key={opt.value}
+                                  type="button"
+                                  title={opt.title}
+                                  onClick={() => handleAttendanceChange(index, 'status', opt.value)}
+                                  className={`w-9 h-9 flex items-center justify-center rounded-xl text-xs font-bold border transition-all ${getStatusButtonStyle(attState.status, opt.value)}`}
+                                >
+                                  {opt.label}
+                                </button>
+                              ))}
+                            </div>
+                          </td>
 
-                        <td style={{ padding: '15px' }}>
-                          <input
-                            type="time"
-                            lang="en-US"
-                            value={attState.in_time}
-                            disabled={isAbsent}
-                            onChange={(e) => handleAttendanceChange(index, 'in_time', e.target.value)}
-                            style={{
-                              padding: '8px 12px',
-                              border: '1px solid #cbd5e1',
-                              borderRadius: '6px',
-                              outline: 'none',
-                              width: '120px',
-                              background: isAbsent ? '#f1f5f9' : '#fff',
-                              cursor: isAbsent ? 'not-allowed' : 'text'
-                            }}
-                          />
-                        </td>
+                          <td className="px-6 py-4">
+                            <input
+                              type="time"
+                              lang="en-US"
+                              value={attState.in_time}
+                              disabled={isAbsent}
+                              onChange={(e) => handleAttendanceChange(index, 'in_time', e.target.value)}
+                              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:ring-2 focus:ring-indigo-500 outline-none transition-all w-32 disabled:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                            />
+                          </td>
 
-                        <td style={{ padding: '15px' }}>
-                          <input
-                            type="time"
-                            lang="en-US"
-                            value={attState.out_time}
-                            disabled={isAbsent}
-                            onChange={(e) => handleAttendanceChange(index, 'out_time', e.target.value)}
-                            style={{
-                              padding: '8px 12px',
-                              border: '1px solid #cbd5e1',
-                              borderRadius: '6px',
-                              outline: 'none',
-                              width: '120px',
-                              background: isAbsent ? '#f1f5f9' : '#fff',
-                              cursor: isAbsent ? 'not-allowed' : 'text'
-                            }}
-                          />
-                        </td>
+                          <td className="px-6 py-4">
+                            <input
+                              type="time"
+                              lang="en-US"
+                              value={attState.out_time}
+                              disabled={isAbsent}
+                              onChange={(e) => handleAttendanceChange(index, 'out_time', e.target.value)}
+                              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:ring-2 focus:ring-indigo-500 outline-none transition-all w-32 disabled:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                            />
+                          </td>
 
-                        {/* Note */}
-                        <td style={{ padding: '15px' }}>
-                          <input
-                            type="text"
-                            placeholder="Reason (if late/absent)"
-                            value={attState.note}
-                            onChange={(e) => handleAttendanceChange(index, 'note', e.target.value)}
-                            style={{ padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', outline: 'none', width: '100%', minWidth: '150px' }}
-                          />
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
+                          <td className="px-6 py-4">
+                            <input
+                              type="text"
+                              placeholder="Reason (if late/absent)"
+                              value={attState.note}
+                              onChange={(e) => handleAttendanceChange(index, 'note', e.target.value)}
+                              className="block w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                            />
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
 
-          <div style={{ padding: '20px', background: '#f8fafc', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end' }}>
-            <button type="submit" disabled={processing || staffs.length === 0} style={{ background: '#4f46e5', color: '#fff', padding: '12px 32px', fontSize: '15px', fontWeight: '700', border: 'none', borderRadius: '8px', cursor: (processing || staffs.length === 0) ? 'not-allowed' : 'pointer', opacity: (processing || staffs.length === 0) ? 0.7 : 1, display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <Icon name="save" />
-              {processing ? 'Saving Attendance...' : 'Save Attendance'}
-            </button>
-          </div>
-        </form>
+            <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end">
+              <button 
+                type="submit" 
+                disabled={processing || staffs.length === 0} 
+                className="flex items-center gap-2 px-8 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md shadow-indigo-500/20 disabled:opacity-70 disabled:cursor-not-allowed active:scale-95"
+              >
+                <Icon name="save" className="w-4 h-4" />
+                {processing ? 'Saving Attendance...' : 'Save Attendance'}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-
     </AuthenticatedLayout>
   );
 }

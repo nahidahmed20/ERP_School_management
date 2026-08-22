@@ -9,7 +9,7 @@ export default function SettingFormModal({ item, groups, campuses, activeCampusI
   const isSuperAdmin = auth?.user?.role === 'super_admin' || auth?.user?.roles?.some(r => r.name === 'Super Admin');
 
   const { data, setData, post, put, processing, errors, reset } = useForm({
-    campus_id: item?.campus_id ?? activeCampusId, // ডিফল্টভাবে বর্তমান ক্যাম্পাস
+    campus_id: item?.campus_id ?? activeCampusId,
     group: item?.group ?? (groups[0] ?? 'general'),
     key: item?.key ?? '',
     value: item?.value ?? '',
@@ -28,101 +28,193 @@ export default function SettingFormModal({ item, groups, campuses, activeCampusI
     if (isEdit) {
       put(route('admin.general.update', item.id), options);
     } else {
-      post(route('admin.general.store'), options); // রাউট নেম চেক করে নিবেন (.store আছে কি না)
+      post(route('admin.general.store'), options); 
     }
   }
 
+  // Determine if value field needs full width
+  const isFullWidthValue = data.type === 'textarea' || data.type === 'json';
+
   return (
-    <div className="mm-modal-overlay" onClick={onClose}>
-      <div className="mm-modal mm-modal-lg" onClick={(e) => e.stopPropagation()}>
-        <div className="mm-modal-head">
-          <h3>{isEdit ? 'Edit Setting' : 'Add Setting'}</h3>
-          <button className="icon-btn" onClick={onClose}>
-            <Icon name="close" />
+    <div 
+      className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 transition-opacity animate-in fade-in duration-200"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-white rounded-2xl w-full max-w-3xl max-h-[90vh] shadow-2xl overflow-hidden transform transition-all flex flex-col ring-1 ring-slate-900/5 animate-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Modal Header */}
+        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
+          <div>
+            <h3 className="text-xl font-bold text-slate-900">
+              {isEdit ? 'Edit System Setting' : 'Add New Setting'}
+            </h3>
+            <p className="text-sm text-slate-500 mt-1">Configure global key-value parameters.</p>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors bg-slate-100">
+            <Icon name="close" className="w-4 h-4" />
           </button>
         </div>
 
-        <form onSubmit={submit} className="mm-form">
-          <div className="mm-form-grid">
-
-            {/* --- Campus Selection --- */}
-            <label style={{ gridColumn: '1 / -1' }}>
-              Assign to Campus
-              <select 
-                value={data.campus_id || ''} 
-                onChange={(e) => setData('campus_id', e.target.value)}
-                disabled={!isSuperAdmin} // লোকাল এডমিন ক্যাম্পাস চেঞ্জ করতে পারবে না
-              >
-                <option value="" disabled>Select Campus</option>
-                {campuses?.map(campus => (
-                  <option key={campus.id} value={campus.id}>{campus.name}</option>
-                ))}
-              </select>
-              {errors.campus_id && <em>{errors.campus_id}</em>}
-            </label>
-
-            <label>
-              Group
-              <input list="setting-groups" value={data.group} onChange={(e) => setData('group', e.target.value)} />
-              <datalist id="setting-groups">
-                {groups.map((g) => <option key={g} value={g} />)}
-              </datalist>
-            </label>
-
-            <label>
-              Type
-              <select value={data.type} onChange={(e) => setData('type', e.target.value)}>
-                {TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-              </select>
-            </label>
-
-            <label>
-              Key
-              <input value={data.key} onChange={(e) => setData('key', e.target.value)} disabled={isEdit} />
-              {errors.key && <em>{errors.key}</em>}
-            </label>
-
-            <label>
-              Label
-              <input value={data.label} onChange={(e) => setData('label', e.target.value)} />
-              {errors.label && <em>{errors.label}</em>}
-            </label>
-
-            <label style={{ gridColumn: (data.type === 'textarea' || data.type === 'json') ? '1 / -1' : 'auto' }}>
-              Value
-              {data.type === 'boolean' ? (
-                <select value={data.value} onChange={(e) => setData('value', e.target.value)}>
-                  <option value="1">True</option>
-                  <option value="0">False</option>
+        {/* Form Body */}
+        <form onSubmit={submit} className="flex flex-col flex-1 overflow-hidden">
+          <div className="p-6 overflow-y-auto space-y-5 flex-1">
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              
+              {/* Campus Selection */}
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Assign to Campus</label>
+                <select 
+                  value={data.campus_id || ''} 
+                  onChange={(e) => setData('campus_id', e.target.value)}
+                  disabled={!isSuperAdmin}
+                  className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  <option value="" disabled>Select Campus</option>
+                  {campuses?.map(campus => (
+                    <option key={campus.id} value={campus.id}>{campus.name}</option>
+                  ))}
                 </select>
-              ) : data.type === 'textarea' || data.type === 'json' ? (
-                <textarea rows="4" value={data.value} onChange={(e) => setData('value', e.target.value)} />
-              ) : (
-                <input value={data.value} onChange={(e) => setData('value', e.target.value)} />
-              )}
-            </label>
+                {errors.campus_id && <p className="text-rose-500 text-xs mt-1">{errors.campus_id}</p>}
+              </div>
 
-            <label style={{ gridColumn: '1 / -1' }}>
-              Description
-              <textarea rows="2" value={data.description} onChange={(e) => setData('description', e.target.value)} />
-            </label>
+              {/* Group */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Setting Group</label>
+                <input 
+                  list="setting-groups" 
+                  value={data.group} 
+                  onChange={(e) => setData('group', e.target.value)} 
+                  placeholder="e.g. general, mail, payment"
+                  className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                />
+                <datalist id="setting-groups">
+                  {groups.map((g) => <option key={g} value={g} />)}
+                </datalist>
+                {errors.group && <p className="text-rose-500 text-xs mt-1">{errors.group}</p>}
+              </div>
 
-            <label>
-              Order
-              <input type="number" value={data.order} onChange={(e) => setData('order', e.target.value)} />
-            </label>
+              {/* Type */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Data Type</label>
+                <select 
+                  value={data.type} 
+                  onChange={(e) => setData('type', e.target.value)}
+                  className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer capitalize"
+                >
+                  {TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
 
-            <label className="mm-checkbox">
-              <input type="checkbox" checked={data.is_active} onChange={(e) => setData('is_active', e.target.checked)} />
-              Active
-            </label>
+              {/* Key */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Key (Unique Identifier) <span className="text-rose-500">*</span></label>
+                <input 
+                  value={data.key} 
+                  onChange={(e) => setData('key', e.target.value)} 
+                  disabled={isEdit} 
+                  placeholder="e.g. site_name"
+                  className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-mono disabled:opacity-60 disabled:cursor-not-allowed"
+                />
+                {errors.key && <p className="text-rose-500 text-xs mt-1">{errors.key}</p>}
+              </div>
 
+              {/* Label */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Display Label</label>
+                <input 
+                  value={data.label} 
+                  onChange={(e) => setData('label', e.target.value)} 
+                  placeholder="e.g. Website Name"
+                  className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                />
+                {errors.label && <p className="text-rose-500 text-xs mt-1">{errors.label}</p>}
+              </div>
+
+              {/* Dynamic Value Input */}
+              <div className={isFullWidthValue ? 'sm:col-span-2' : ''}>
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Value</label>
+                {data.type === 'boolean' ? (
+                  <select 
+                    value={data.value} 
+                    onChange={(e) => setData('value', e.target.value)}
+                    className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
+                  >
+                    <option value="1">True / Enabled</option>
+                    <option value="0">False / Disabled</option>
+                  </select>
+                ) : isFullWidthValue ? (
+                  <textarea 
+                    rows="4" 
+                    value={data.value} 
+                    onChange={(e) => setData('value', e.target.value)} 
+                    placeholder={data.type === 'json' ? '{"key": "value"}' : 'Enter text...'}
+                    className={`block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 outline-none transition-all ${data.type === 'json' ? 'font-mono' : ''}`}
+                  />
+                ) : (
+                  <input 
+                    type={data.type === 'number' ? 'number' : 'text'}
+                    value={data.value} 
+                    onChange={(e) => setData('value', e.target.value)} 
+                    placeholder="Enter value..."
+                    className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                  />
+                )}
+                {errors.value && <p className="text-rose-500 text-xs mt-1">{errors.value}</p>}
+              </div>
+
+              {/* Description */}
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Description</label>
+                <textarea 
+                  rows="2" 
+                  value={data.description} 
+                  onChange={(e) => setData('description', e.target.value)} 
+                  placeholder="Optional description for this setting..."
+                  className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 outline-none transition-all resize-none"
+                />
+              </div>
+
+              {/* Order & Active Status */}
+              <div className="sm:col-span-2 flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-slate-100">
+                <div className="flex items-center gap-4">
+                  <label className="block text-sm font-semibold text-slate-700 whitespace-nowrap">Display Order</label>
+                  <input 
+                    type="number" 
+                    value={data.order} 
+                    onChange={(e) => setData('order', e.target.value)} 
+                    className="block w-24 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-center"
+                  />
+                </div>
+
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <div className="relative flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={data.is_active}
+                      onChange={(e) => setData('is_active', e.target.checked)}
+                      className="peer appearance-none w-5 h-5 border-2 border-slate-300 rounded focus:ring-0 checked:bg-indigo-600 checked:border-indigo-600 cursor-pointer transition-colors"
+                    />
+                    <svg className="absolute w-3.5 h-3.5 top-[3px] left-[3px] text-white pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span className="text-sm font-semibold text-slate-700 group-hover:text-slate-900 transition-colors">Setting is Active</span>
+                </label>
+              </div>
+
+            </div>
           </div>
 
-          <div className="mm-modal-foot mt-2">
-            <button type="button" className="btn btn-outline" onClick={onClose}>Cancel</button>
-            <button type="submit" className="btn" disabled={processing}>
-              {processing ? 'Saving...' : (isEdit ? 'Update' : 'Save')}
+          {/* Modal Footer */}
+          <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-end gap-3 shrink-0">
+            <button type="button" onClick={onClose} disabled={processing} className="px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 hover:text-slate-800 rounded-xl transition-all shadow-sm">
+              Cancel
+            </button>
+            <button type="submit" disabled={processing} className="flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md shadow-indigo-500/20 disabled:opacity-70 disabled:cursor-not-allowed active:scale-95">
+              {processing ? 'Saving...' : (isEdit ? 'Update Setting' : 'Save Setting')}
             </button>
           </div>
         </form>

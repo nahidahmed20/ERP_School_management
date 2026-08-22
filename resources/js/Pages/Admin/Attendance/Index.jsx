@@ -7,9 +7,9 @@ import Swal from 'sweetalert2';
 export default function Index({ classes, students, filters }) {
   const { flash } = usePage().props;
 
-  const [classId, setClassId] = useState(filters.class_id);
-  const [sectionId, setSectionId] = useState(filters.section_id);
-  const [attendanceDate, setAttendanceDate] = useState(filters.date);
+  const [classId, setClassId] = useState(filters.class_id ?? '');
+  const [sectionId, setSectionId] = useState(filters.section_id ?? '');
+  const [attendanceDate, setAttendanceDate] = useState(filters.date ?? new Date().toISOString().split('T')[0]);
 
   const { data, setData, post, processing } = useForm({
     class_id: classId,
@@ -38,13 +38,13 @@ export default function Index({ classes, students, filters }) {
   }, [students]);
 
   useEffect(() => {
-    if (flash?.success) Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: flash.success, showConfirmButton: false, timer: 3000 });
-    if (flash?.error) Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: flash.error, showConfirmButton: false, timer: 4000 });
+    if (flash?.success) Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: flash.success, showConfirmButton: false, timer: 3000, timerProgressBar: true });
+    if (flash?.error) Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: flash.error, showConfirmButton: false, timer: 4000, timerProgressBar: true });
   }, [flash]);
 
   const fetchStudents = (e) => {
     e.preventDefault();
-    if (!classId) return Swal.fire({ icon: 'warning', title: 'Oops', text: 'দয়া করে ক্লাস সিলেক্ট করুন!' });
+    if (!classId) return Swal.fire({ icon: 'warning', title: 'Oops', text: 'দয়া করে ক্লাস সিলেক্ট করুন!', customClass: { popup: 'rounded-2xl' } });
     
     router.get(route('admin.student-attendance.index'), {
       class_id: classId,
@@ -77,9 +77,9 @@ export default function Index({ classes, students, filters }) {
     post(route('admin.student-attendance.store'));
   };
 
- const handleSendAbsentSms = () => {
+  const handleSendAbsentSms = () => {
     if (data.selected_students.length === 0) {
-      return Swal.fire({ icon: 'warning', title: 'Oops!', text: 'দয়া করে কমপক্ষে ১ জন স্টুডেন্ট সিলেক্ট করুন!' });
+      return Swal.fire({ icon: 'warning', title: 'Oops!', text: 'দয়া করে কমপক্ষে ১ জন স্টুডেন্ট সিলেক্ট করুন!', customClass: { popup: 'rounded-2xl' } });
     }
 
     const selectedDate = attendanceDate || new Date().toISOString().split('T')[0]; 
@@ -114,199 +114,217 @@ export default function Index({ classes, students, filters }) {
 
   const selectedClass = classes.find(c => c.id == classId);
 
-  // Status Badge Colors
-  const getStatusColor = (status, currentStatus) => {
+  // Status Badge Colors for Buttons
+  const getStatusStyle = (status, currentStatus) => {
     const isSelected = status === currentStatus;
     switch(status) {
-      case 'present': return isSelected ? { bg: '#16a34a', text: '#fff', border: '#16a34a' } : { bg: '#fff', text: '#16a34a', border: '#16a34a' };
-      case 'absent': return isSelected ? { bg: '#dc2626', text: '#fff', border: '#dc2626' } : { bg: '#fff', text: '#dc2626', border: '#dc2626' };
-      case 'late': return isSelected ? { bg: '#d97706', text: '#fff', border: '#d97706' } : { bg: '#fff', text: '#d97706', border: '#d97706' };
-      case 'half_day': return isSelected ? { bg: '#2563eb', text: '#fff', border: '#2563eb' } : { bg: '#fff', text: '#2563eb', border: '#2563eb' };
-      default: return { bg: '#fff', text: '#000', border: '#ccc' };
+      case 'present': 
+        return isSelected ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-500/20' : 'bg-white text-emerald-600 border-emerald-200 hover:bg-emerald-50';
+      case 'absent': 
+        return isSelected ? 'bg-rose-600 text-white border-rose-600 shadow-md shadow-rose-500/20' : 'bg-white text-rose-600 border-rose-200 hover:bg-rose-50';
+      case 'late': 
+        return isSelected ? 'bg-amber-500 text-white border-amber-500 shadow-md shadow-amber-500/20' : 'bg-white text-amber-600 border-amber-200 hover:bg-amber-50';
+      case 'half_day': 
+        return isSelected ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20' : 'bg-white text-blue-600 border-blue-200 hover:bg-blue-50';
+      default: 
+        return 'bg-white text-slate-700 border-slate-200';
     }
   };
 
   return (
-    
-    
-    <AuthenticatedLayout 
-      header={
-        <div className="page-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-          <div>
-            <h1 style={{ margin: 0 }}>Daily Attendance</h1>
-            <p style={{ margin: 0, color: '#64748b', fontSize: '14px' }}>শিক্ষার্থীদের প্রতিদিনের উপস্থিতি ও অনুপস্থিতির রেকর্ড রাখুন।</p>
-          </div>
-          
-          {/* 🆕 Send Absent SMS Button */}
-          <button 
-            onClick={handleSendAbsentSms}
-            style={{ 
-              display: 'flex', alignItems: 'center', gap: '8px', 
-              padding: '10px 20px', background: '#e11d48', color: '#fff', 
-              borderRadius: '8px', fontWeight: 'bold', border: 'none', 
-              cursor: 'pointer', boxShadow: '0 4px 6px -1px rgba(225, 29, 72, 0.2)' 
-            }}
-          >
-            <Icon name="mail" style={{ width: '18px', height: '18px' }} />
-            Send Absent SMS
-          </button>
-        </div>
-      }
-    >
-
+    <AuthenticatedLayout>
       <Head title="Student Attendance" />
 
-      {/* Filter Form */}
-      <div className="card mm-card" style={{ padding: '24px', borderRadius: '12px', marginBottom: '24px', borderTop: '4px solid #0f172a' }}>
-        <form onSubmit={fetchStudents} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', alignItems: 'end' }}>
+      <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8">
+        
+        {/* Page Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600' }}>Attendance Date *</label>
-            <input type="date" value={attendanceDate} onChange={e => setAttendanceDate(e.target.value)} required style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1' }} />
-          </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600' }}>Class *</label>
-            <select value={classId} onChange={e => { setClassId(e.target.value); setSectionId(''); }} required style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1' }}>
-              <option value="">-- Select Class --</option>
-              {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-          </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600' }}>Section</label>
-            <select value={sectionId} onChange={e => setSectionId(e.target.value)} disabled={!classId} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1' }}>
-              <option value="">-- All Sections --</option>
-              {selectedClass?.sections?.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
-          </div>
-          <button type="submit" className="btn" style={{ padding: '10px', background: '#0f172a', color: '#fff', borderRadius: '6px' }}>Fetch Students</button>
-        </form>
-      </div>
-
-      {/* Attendance Form */}
-      {students && students.length > 0 && (
-        <form onSubmit={submitAttendance} className="card mm-card" style={{ padding: '0', borderRadius: '12px', overflow: 'hidden' }}>
-          <div style={{ padding: '20px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ margin: 0, fontSize: '16px' }}>Student List (Total: {students.length})</h3>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button type="button" onClick={() => markAll('present')} style={{ padding: '6px 12px', background: '#dcfce7', color: '#16a34a', border: '1px solid #16a34a', borderRadius: '6px', fontSize: '13px', cursor: 'pointer', fontWeight: '600' }}>Mark All Present</button>
-              <button type="button" onClick={() => markAll('absent')} style={{ padding: '6px 12px', background: '#fef2f2', color: '#dc2626', border: '1px solid #dc2626', borderRadius: '6px', fontSize: '13px', cursor: 'pointer', fontWeight: '600' }}>Mark All Absent</button>
-            </div>
-          </div>
-
-          <div style={{ overflowX: 'auto' }}>
-            <table className="mm-table" style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ background: '#fff', borderBottom: '2px solid #e2e8f0' }}>
-                  
-                  {/* 🆕 Select All Checkbox */}
-                  <th style={{ padding: '15px', width: '50px', textAlign: 'center' }}>
-                    <input 
-                      type="checkbox" 
-                      title="Select All"
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setData('selected_students', students.map(s => s.id));
-                        } else {
-                          setData('selected_students', []);
-                        }
-                      }}
-                      checked={data.selected_students?.length === students.length && students.length > 0}
-                      style={{ cursor: 'pointer', width: '18px', height: '18px', accentColor: '#4f46e5' }}
-                    />
-                  </th>
-
-                  <th style={{ padding: '15px' }}>Roll / Adm</th>
-                  <th style={{ padding: '15px' }}>Student Name</th>
-                  <th style={{ padding: '15px', minWidth: '280px' }}>Attendance Status</th>
-                  <th style={{ padding: '15px' }}>Remarks</th>
-                </tr>
-              </thead>
-              
-              <tbody>
-                {students.map((student, index) => {
-                  const currentAtt = data.attendances.find(a => a.student_id === student.id);
-                  if (!currentAtt) return null;
-
-                  const isChecked = data.selected_students?.includes(student.id) || false;
-
-                  return (
-                    <tr key={student.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                      
-                      <td style={{ padding: '15px', textAlign: 'center' }}>
-                        <input 
-                          type="checkbox"
-                          checked={isChecked}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setData('selected_students', [...(data.selected_students || []), student.id]);
-                            } else {
-                              setData('selected_students', (data.selected_students || []).filter(id => id !== student.id));
-                            }
-                          }}
-                          style={{ cursor: 'pointer', width: '18px', height: '18px', accentColor: '#4f46e5' }}
-                        />
-                      </td>
-
-                      <td style={{ padding: '15px', color: '#64748b' }}>
-                        <span style={{ fontWeight: 'bold', color: '#0f172a' }}>{student.current_enrollment?.roll_no || '--'}</span> <br/>
-                        <span style={{ fontSize: '12px' }}>{student.admission_no}</span>
-                      </td>
-                      
-                      <td style={{ padding: '15px', fontWeight: '600' }}>
-                        {student.first_name} {student.last_name}
-                      </td>
-                      
-                      <td style={{ padding: '15px' }}>
-                        <div style={{ display: 'flex', gap: '6px' }}>
-                          {[
-                            { value: 'present', label: 'P', title: 'Present' },
-                            { value: 'absent', label: 'A', title: 'Absent' },
-                            { value: 'late', label: 'L', title: 'Late' },
-                            { value: 'half_day', label: 'HD', title: 'Half Day' }
-                          ].map(opt => {
-                            const colors = getStatusColor(opt.value, currentAtt.status);
-                            return (
-                              <button
-                                key={opt.value}
-                                type="button"
-                                title={opt.title}
-                                onClick={() => handleStatusChange(student.id, opt.value)}
-                                style={{
-                                  width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                  background: colors.bg, color: colors.text, border: `1px solid ${colors.border}`,
-                                  borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s'
-                                }}
-                              >
-                                {opt.label}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </td>
-                      
-                      <td style={{ padding: '15px' }}>
-                        <input 
-                          type="text" 
-                          placeholder="Reason..." 
-                          value={currentAtt.remarks} 
-                          onChange={(e) => handleRemarksChange(student.id, e.target.value)}
-                          style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '13px' }}
-                        />
-                      </td>
-                      
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+            <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">Attendance</span>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Daily Attendance</h1>
+            <p className="text-sm text-slate-500 mt-1">শিক্ষার্থীদের প্রতিদিনের উপস্থিতি ও অনুপস্থিতির রেকর্ড রাখুন।</p>
           </div>
           
-          <div style={{ padding: '20px', background: '#f8fafc', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end' }}>
-            <button type="submit" disabled={processing} className="btn" style={{ padding: '12px 30px', background: '#4f46e5', color: '#fff', borderRadius: '8px', fontWeight: '700', fontSize: '15px' }}>
-              {processing ? 'Saving...' : 'Save Attendance'}
+          <button 
+            onClick={handleSendAbsentSms}
+            className="w-full sm:w-auto inline-flex justify-center items-center gap-2 bg-rose-600 hover:bg-rose-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md shadow-rose-500/20 active:scale-95"
+          >
+            <Icon name="mail" className="w-4 h-4" /> Send Absent SMS
+          </button>
+        </div>
+
+        {/* Filter Card */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 border-t-4 border-t-slate-900">
+          <form onSubmit={fetchStudents} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 items-end">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">Attendance Date <span className="text-rose-500">*</span></label>
+              <input 
+                type="date" 
+                value={attendanceDate} 
+                onChange={e => setAttendanceDate(e.target.value)} 
+                className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                required 
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">Class <span className="text-rose-500">*</span></label>
+              <select 
+                value={classId} 
+                onChange={e => { setClassId(e.target.value); setSectionId(''); }} 
+                className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
+                required
+              >
+                <option value="">-- Select Class --</option>
+                {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">Section</label>
+              <select 
+                value={sectionId} 
+                onChange={e => setSectionId(e.target.value)} 
+                disabled={!classId} 
+                className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer disabled:bg-slate-100 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <option value="">-- All Sections --</option>
+                {selectedClass?.sections?.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+            </div>
+            <button 
+              type="submit" 
+              className="w-full px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 h-[42px]"
+            >
+              <Icon name="search" className="w-4 h-4" /> Fetch Students
             </button>
-          </div>
-        </form>
-      )}
+          </form>
+        </div>
+
+        {/* Attendance Form & Table */}
+        {students && students.length > 0 && (
+          <form onSubmit={submitAttendance} className="bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 overflow-hidden">
+            <div className="px-6 py-4 bg-slate-50/70 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <h3 className="text-base font-bold text-slate-900">Student List <span className="text-indigo-600">(Total: {students.length})</span></h3>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <button type="button" onClick={() => markAll('present')} className="flex-1 sm:flex-none px-3.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold transition-colors shadow-sm">
+                  Mark All Present
+                </button>
+                <button type="button" onClick={() => markAll('absent')} className="flex-1 sm:flex-none px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-bold transition-colors shadow-sm">
+                  Mark All Absent
+                </button>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50/50">
+                    <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider w-14 text-center">
+                      <input 
+                        type="checkbox" 
+                        title="Select All"
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setData('selected_students', students.map(s => s.id));
+                          } else {
+                            setData('selected_students', []);
+                          }
+                        }}
+                        checked={data.selected_students?.length === students.length && students.length > 0}
+                        className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 cursor-pointer"
+                      />
+                    </th>
+                    <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Roll / Adm</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Student Name</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Attendance Status</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Remarks</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {students.map((student) => {
+                    const currentAtt = data.attendances.find(a => a.student_id === student.id);
+                    if (!currentAtt) return null;
+
+                    const isChecked = data.selected_students?.includes(student.id) || false;
+
+                    return (
+                      <tr key={student.id} className="hover:bg-slate-50/60 transition-colors">
+                        
+                        <td className="px-6 py-4 text-center">
+                          <input 
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setData('selected_students', [...(data.selected_students || []), student.id]);
+                              } else {
+                                setData('selected_students', (data.selected_students || []).filter(id => id !== student.id));
+                              }
+                            }}
+                            className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 cursor-pointer"
+                          />
+                        </td>
+
+                        <td className="px-6 py-4">
+                          <span className="text-sm font-bold text-slate-900 block">{student.current_enrollment?.roll_no || '--'}</span>
+                          <span className="text-xs font-medium text-slate-500">{student.admission_no}</span>
+                        </td>
+                        
+                        <td className="px-6 py-4">
+                          <span className="text-sm font-bold text-slate-900">{student.first_name} {student.last_name}</span>
+                        </td>
+                        
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-1.5">
+                            {[
+                              { value: 'present', label: 'P', title: 'Present' },
+                              { value: 'absent', label: 'A', title: 'Absent' },
+                              { value: 'late', label: 'L', title: 'Late' },
+                              { value: 'half_day', label: 'HD', title: 'Half Day' }
+                            ].map(opt => {
+                              return (
+                                <button
+                                  key={opt.value}
+                                  type="button"
+                                  title={opt.title}
+                                  onClick={() => handleStatusChange(student.id, opt.value)}
+                                  className={`w-9 h-9 flex items-center justify-center rounded-xl text-xs font-bold border transition-all ${getStatusStyle(opt.value, currentAtt.status)}`}
+                                >
+                                  {opt.label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </td>
+                        
+                        <td className="px-6 py-4">
+                          <input 
+                            type="text" 
+                            placeholder="Reason / Remarks..." 
+                            value={currentAtt.remarks} 
+                            onChange={(e) => handleRemarksChange(student.id, e.target.value)}
+                            className="block w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                          />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            
+            <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end">
+              <button 
+                type="submit" 
+                disabled={processing} 
+                className="flex items-center gap-2 px-8 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md shadow-indigo-500/20 disabled:opacity-70 disabled:cursor-not-allowed active:scale-95"
+              >
+                <Icon name="check-circle" className="w-4 h-4" />
+                {processing ? 'Saving...' : 'Save Attendance'}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
     </AuthenticatedLayout>
   );
 }

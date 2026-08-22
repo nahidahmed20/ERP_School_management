@@ -275,7 +275,7 @@ export default function Index({ students, classes, filters }) {
 
       <div className="print-title">Students Directory - {new Date().toLocaleDateString('en-GB')}</div>
 
-      <div className="max-w-7xl mx-auto space-y-6 sm:px-6 lg:px-8 py-8 no-print">
+      <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8 no-print">
 
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -292,11 +292,28 @@ export default function Index({ students, classes, filters }) {
         </div>
 
         {/* Unified Modern Toolbar */}
-        {/* Unified Modern Toolbar */}
         <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col lg:flex-row items-center justify-between gap-4">
 
-          {/* Left Group: Search & Filters */}
+          {/* Left Group: Search & Filters & Per Page */}
           <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
+
+            {/* Per Page (Moved to left and arrow icon hidden) */}
+            <select
+              value={perPage}
+              onChange={e => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}
+              className="appearance-none bg-none pr-3 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer text-center"
+              style={{ backgroundImage: 'none' }}
+            >
+              <option value="10">10 / Page</option>
+              <option value="25">25 / Page</option>
+              <option value="50">50 / Page</option>
+              <option value="100">100 / Page</option>
+              <option value="500">500 / Page</option>
+              <option value="all">All</option>
+            </select>
+
+            {/* Divider (Hidden on Mobile) */}
+            <div className="hidden sm:block w-px h-6 bg-slate-200"></div>
 
             {/* Search */}
             <div className="relative w-full sm:w-64">
@@ -314,9 +331,6 @@ export default function Index({ students, classes, filters }) {
                 className="block w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
               />
             </div>
-
-            {/* Divider (Hidden on Mobile) */}
-            <div className="hidden sm:block w-px h-6 bg-slate-200"></div>
 
             {/* Class Filter */}
             <select
@@ -339,7 +353,7 @@ export default function Index({ students, classes, filters }) {
               {selectedClass?.sections?.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
 
-            {/* Apply Button - Made bold and Indigo */}
+            {/* Apply Button */}
             <button
               onClick={() => applyFilters()}
               className="w-full sm:w-auto px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
@@ -348,19 +362,8 @@ export default function Index({ students, classes, filters }) {
             </button>
           </div>
 
-          {/* Right Group: Per Page & Actions */}
-          <div className="flex items-center gap-3 w-full lg:w-auto justify-between lg:justify-end border-t lg:border-none border-slate-100 pt-3 lg:pt-0">
-
-            <select
-            value={perPage}
-            onChange={e => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}
-            className="appearance-none py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
-            >
-            <option value="10">10 / Page</option>
-            <option value="20">20 / Page</option>
-            <option value="50">50 / Page</option>
-            </select>
-
+          {/* Right Group: Actions ONLY */}
+          <div className="flex items-center gap-3 w-full lg:w-auto justify-end border-t lg:border-none border-slate-100 pt-3 lg:pt-0">
             {/* Icons - Uses explicit SVGs now */}
             <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-xl shrink-0">
               <button onClick={copyToClipboard} className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-white hover:shadow-sm rounded-lg transition-all" title="Copy Table">

@@ -6,23 +6,48 @@ export default function Sidebar({ mobileOpen = false }) {
   const { url, props } = usePage();
   const navigation = props.navigation ?? [];
 
-  // Helper to safely get the route name whether it comes as 'route' or 'route_name'
+  // Helper to safely get route name
   const getRoute = (item) => item?.route_name || item?.route || null;
 
-  function isActive(routeName) {
+  // ১. নির্দিষ্ট Child Menu Active করার জন্য (Exact Match)
+  function isChildActive(routeName) {
     if (!routeName) return false;
     try {
-      return route().current(routeName) || route().current(routeName + '.*');
+      // এক্সাক্ট রাউট ম্যাচ
+      if (route().current(routeName)) return true;
+
+      // যদি এডিট বা শো পেজ হয় (admin.students.edit), তবে শুধু 'Student List' (admin.students.index) সিলেক্ট হবে
+      if (
+        (route().current('admin.students.edit') || route().current('admin.students.show')) &&
+        routeName === 'admin.students.index'
+      ) {
+        return true;
+      }
+
+      return false;
     } catch {
-      return url.startsWith('/' + routeName.replaceAll('.', '/'));
+      return url === '/' + routeName.replaceAll('.', '/');
     }
+  }
+
+  // ২. Parent Menu ওপেন বা হাইলাইট করার জন্য
+  function isParentActive(item) {
+    if (!item.children || item.children.length === 0) {
+      return isChildActive(getRoute(item));
+    }
+    
+    // যদি চাইল্ডের কোনো একটা অ্যাক্টিভ থাকে অথবা বর্তমান রাউটের গ্রুপ ম্যাচ করে
+    return item.children.some(child => {
+      const childRoute = getRoute(child);
+      return isChildActive(childRoute) || (childRoute && route().current(childRoute.split('.').slice(0, 2).join('.') + '.*'));
+    });
   }
 
   const [openKeys, setOpenKeys] = useState(() => {
     const initialKeys = new Set();
     navigation.forEach(group => {
       group.items?.forEach(item => {
-        if (item.children?.some(child => isActive(getRoute(child)))) {
+        if (isParentActive(item)) {
           initialKeys.add(item.key);
         }
       });
@@ -34,7 +59,7 @@ export default function Sidebar({ mobileOpen = false }) {
   useEffect(() => {
     navigation.forEach(group => {
       group.items?.forEach(item => {
-        if (item.children?.some(child => isActive(getRoute(child)))) {
+        if (isParentActive(item)) {
           setOpenKeys(prev => new Set(prev).add(item.key));
         }
       });
@@ -44,11 +69,9 @@ export default function Sidebar({ mobileOpen = false }) {
   function toggle(key) {
     setOpenKeys(prev => {
       const next = new Set();
-
       if (!prev.has(key)) {
         next.add(key);
       }
-
       return next;
     });
   }
@@ -95,14 +118,14 @@ export default function Sidebar({ mobileOpen = false }) {
           <div className="nav-group" key={group.label}>
             <div className="nav-label">{group.label}</div>
             {group.items?.map(item => {
-              const isParentActive = item.children?.some(child => isActive(getRoute(child)));
+              const hasActiveChildren = isParentActive(item);
               const isOpen = openKeys.has(item.key);
 
               return item.children?.length ? (
                 <div className="nav-parent" key={item.key}>
                   <button
                     type="button"
-                    className={`nav-item nav-toggle ${isOpen ? 'open' : ''} ${isParentActive ? 'active' : ''}`}
+                    className={`nav-item nav-toggle ${isOpen ? 'open' : ''} ${hasActiveChildren ? 'active' : ''}`}
                     onClick={() => toggle(item.key)}
                     aria-expanded={isOpen}
                   >
@@ -122,11 +145,13 @@ export default function Sidebar({ mobileOpen = false }) {
                   >
                     {item.children.map(child => {
                       const childRoute = getRoute(child);
+                      const active = isChildActive(childRoute);
+
                       return (
                         <Link
                           key={child.key || childRoute}
                           href={hrefFor(child)}
-                          className={`nav-subitem ${isActive(childRoute) ? 'active' : ''}`}
+                          className={`nav-subitem ${active ? 'active' : ''}`}
                         >
                           <span className="dot" />
                           <span>{child.label}</span>
@@ -139,7 +164,7 @@ export default function Sidebar({ mobileOpen = false }) {
                 <Link
                   key={item.key || getRoute(item)}
                   href={hrefFor(item)}
-                  className={`nav-item ${isActive(getRoute(item)) ? 'active' : ''}`}
+                  className={`nav-item ${isChildActive(getRoute(item)) ? 'active' : ''}`}
                 >
                   <Icon name={item.icon} />
                   <span>{item.label}</span>

@@ -149,7 +149,7 @@ export default function Edit({ student, classes, campuses, categories, houses })
           font-family: 'Inter', -apple-system, sans-serif;
           background: var(--bg-main);
           color: var(--text-main);
-          max-width: 1200px;
+          max-width: 1600px;
           margin: 0 auto;
           padding: 32px 24px 64px;
         }

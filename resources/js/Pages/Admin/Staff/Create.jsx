@@ -5,7 +5,7 @@ import Swal from 'sweetalert2';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 const CheckMark = () => (
-  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="20 6 9 17 4 12" />
   </svg>
 );
@@ -45,8 +45,8 @@ export default function Create({ departments, designations, roles }) {
   const [photoPreview, setPhotoPreview] = useState(null);
 
   useEffect(() => {
-    if (flash?.error) Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: flash.error, showConfirmButton: false, timer: 4000 });
-    if (flash?.success) Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: flash.success, showConfirmButton: false, timer: 4000 });
+    if (flash?.error) Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: flash.error, showConfirmButton: false, timer: 4000, timerProgressBar: true });
+    if (flash?.success) Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: flash.success, showConfirmButton: false, timer: 4000, timerProgressBar: true });
   }, [flash]);
 
   const handlePhotoChange = (e) => {
@@ -62,15 +62,14 @@ export default function Create({ departments, designations, roles }) {
     post(route('admin.staff.store'), { forceFormData: true });
   };
 
-  // --- Registry index rail: tracks real completion state per section, not decoration ---
   const employmentComplete = !!(data.department_id && data.designation_id && data.joining_date && data.basic_salary);
   const personalComplete = !!(data.first_name && data.date_of_birth && data.gender);
   const contactComplete = !!(data.phone && data.present_address && data.permanent_address);
 
   const sections = useMemo(() => ([
-    { id: 'section-employment', numeral: 'I', label: 'Employment', complete: employmentComplete },
-    { id: 'section-personal', numeral: 'II', label: 'Personal', complete: personalComplete },
-    { id: 'section-contact', numeral: 'III', label: 'Contact', complete: contactComplete },
+    { id: 'section-employment', numeral: '01', label: 'Employment', complete: employmentComplete },
+    { id: 'section-personal', numeral: '02', label: 'Personal', complete: personalComplete },
+    { id: 'section-contact', numeral: '03', label: 'Contact', complete: contactComplete },
   ]), [employmentComplete, personalComplete, contactComplete]);
 
   const [activeSection, setActiveSection] = useState('section-employment');
@@ -97,335 +96,271 @@ export default function Create({ departments, designations, roles }) {
     ? new Date(data.joining_date + 'T00:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
     : '—';
 
+  const inputClass = "block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all";
+  const labelClass = "block text-sm font-semibold text-slate-700 mb-1.5";
+
   return (
     <AuthenticatedLayout
       header={
-        <div className="page-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '24px', flexWrap: 'wrap', marginBottom: '0px', fontFamily: "'Public Sans', -apple-system, BlinkMacSystemFont, sans-serif" }}>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <span style={{ fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: '11px', letterSpacing: '0.14em', textTransform: 'uppercase', color: '#AD7F35', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ width: '18px', height: '1px', background: '#AD7F35', display: 'inline-block' }} /> Personnel Register
-            </span>
-            <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '30px', fontWeight: 600, color: '#142720', margin: '8px 0 0', letterSpacing: '-0.01em' }}>New Staff Enrollment</h1>
+            <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase bg-indigo-50 border border-indigo-100 px-2.5 py-1 rounded-md">Personnel Register</span>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">New Staff Enrollment</h1>
+            <p className="text-sm text-slate-500 mt-1">নতুন শিক্ষক বা কর্মচারীর তথ্য পূরণ করে সিস্টেমে যুক্ত করুন।</p>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
-            <div style={{ fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: '12.5px', color: '#21402F', border: '1px solid #21402F', borderRadius: '8px', padding: '9px 16px', display: 'flex', flexDirection: 'column', gap: '2px', background: '#fff', minWidth: '150px' }}>
-              <b style={{ fontSize: '10.5px', letterSpacing: '0.08em', color: '#56647B', textTransform: 'uppercase', fontFamily: "'Public Sans', sans-serif", fontWeight: 600 }}>Joining Date</b>
-              {formattedJoiningDate}
+          <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+            <div className="bg-white border border-slate-200 px-4 py-2 rounded-xl text-xs font-semibold shadow-sm">
+              <span className="block text-[10px] text-slate-400 uppercase tracking-wider font-bold">Joining Date</span>
+              <strong className="text-slate-800 font-mono text-sm">{formattedJoiningDate}</strong>
             </div>
-            <Link href={route('admin.staff.index')} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#fff', color: '#142720', border: '1px solid #DCE2D8', padding: '11px 18px', borderRadius: '8px', textDecoration: 'none', fontWeight: 600, fontSize: '14px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
-              <Icon name="list" /> Staff Directory
+            <Link href={route('admin.staff.index')} className="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm">
+              <Icon name="list" className="w-4 h-4 text-slate-500" /> Staff Directory
             </Link>
           </div>
         </div>
       }
     >
-      <Head title="New Admission | Staff">
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-      </Head>
+      <Head title="New Admission | Staff" />
 
-      <style>{`
-        .stf-scope {
-          --stf-ink: #16213A; --stf-ink-soft: #56647B; --stf-forest: #21402F; --stf-forest-dark: #142720;
-          --stf-brass: #AD7F35; --stf-brass-soft: #F1E4C8; --stf-mist: #EEF1EA; --stf-paper: #FFFFFF;
-          --stf-brick: #A6402C; --stf-line: #DCE2D8; --stf-radius: 14px;
-          --stf-font-display: 'Fraunces', Georgia, serif; --stf-font-body: 'Public Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-          --stf-font-mono: 'JetBrains Mono', ui-monospace, monospace;
-          font-family: var(--stf-font-body); background: var(--stf-mist); color: var(--stf-ink);
-          max-width: 1400px; margin: 0 auto; padding: 28px 24px 56px;
-        }
-        .stf-scope *, .stf-scope *::before, .stf-scope *::after { box-sizing: border-box; }
-
-        .stf-layout { display:grid; grid-template-columns: 88px 1fr; gap:24px; align-items:start; }
-        @media (max-width: 860px) { .stf-layout { grid-template-columns: 1fr; } .stf-rail { display:none; } }
-
-        .stf-rail { position:sticky; top:20px; display:flex; flex-direction:column; }
-        .stf-rail-track { position:relative; }
-        .stf-rail-track::before { content:''; position:absolute; left:19px; top:6px; bottom:6px; width:1px; background: var(--stf-line); }
-        .stf-rail-item { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; gap:6px; padding:16px 0; background:none; border:none; cursor:pointer; width:100%; }
-        .stf-rail-numeral { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family: var(--stf-font-display); font-size:16px; font-weight:600; background: var(--stf-paper); border:1.5px solid var(--stf-line); color: var(--stf-ink-soft); transition: all .2s; }
-        .stf-rail-item.active .stf-rail-numeral { border-color: var(--stf-forest); color: var(--stf-forest); box-shadow: 0 0 0 4px var(--stf-mist); }
-        .stf-rail-item.complete .stf-rail-numeral { background: var(--stf-forest); border-color: var(--stf-forest); color:#fff; }
-        .stf-rail-label { font-size:9.5px; letter-spacing:0.06em; text-transform:uppercase; color: var(--stf-ink-soft); font-weight:700; text-align:center; }
-        .stf-rail-item.active .stf-rail-label { color: var(--stf-forest-dark); }
-
-        .stf-card { background: var(--stf-paper); border-radius: var(--stf-radius); padding:32px; margin-bottom:24px; border:1px solid var(--stf-line); box-shadow: 0 1px 2px rgba(20,39,32,0.05); scroll-margin-top:24px; }
-        @media (prefers-reduced-motion: no-preference) { .stf-card { animation: stf-rise .45s ease both; } }
-        @keyframes stf-rise { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform:none; } }
-
-        .stf-section-title { font-family: var(--stf-font-display); font-size:20px; font-weight:600; color: var(--stf-forest-dark); display:flex; align-items:center; gap:12px; margin:0 0 24px; padding-bottom:16px; border-bottom:1px solid var(--stf-line); }
-        .stf-icon-chip { width:36px; height:36px; border-radius:9px; display:flex; align-items:center; justify-content:center; background: var(--stf-brass-soft); color: var(--stf-brass); flex-shrink:0; }
-        .stf-icon-chip.forest { background: var(--stf-forest); color:#fff; }
-        .stf-icon-chip.brick { background: #F3DCD5; color: var(--stf-brick); }
-
-        .stf-toggle-row { display:flex; gap:20px; margin-bottom:24px; flex-wrap:wrap; align-items:center; }
-        .stf-toggle { display:flex; align-items:center; gap:10px; padding:11px 16px; border-radius:9px; border:1px solid var(--stf-line); background: var(--stf-mist); font-size:13.5px; font-weight:600; color: var(--stf-ink-soft); cursor:pointer; transition: all .15s; height:fit-content; }
-        .stf-toggle.on { background: var(--stf-forest); border-color: var(--stf-forest); color:#fff; }
-        .stf-toggle input { accent-color: var(--stf-brass); width:16px; height:16px; }
-        .stf-role-field { min-width:250px; }
-
-        .stf-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:20px; }
-        .stf-field { display:flex; flex-direction:column; gap:6px; }
-        .stf-field.span-2 { grid-column: 1 / -1; }
-        .stf-label { font-size:12.5px; font-weight:600; color: var(--stf-ink-soft); letter-spacing:0.01em; }
-        .stf-req { color: var(--stf-brick); margin-left:2px; }
-
-        .stf-input { width:100%; padding:10px 13px; font-size:14.5px; font-family: var(--stf-font-body); border:1.5px solid var(--stf-line); border-radius:8px; background:#fff; color: var(--stf-ink); outline:none; transition: border-color .15s, box-shadow .15s; min-height:42px; }
-        .stf-input:focus-visible, .stf-input:focus { border-color: var(--stf-brass); box-shadow: 0 0 0 3px rgba(173,127,53,0.16); }
-        .stf-input.mono { font-family: var(--stf-font-mono); letter-spacing:0.02em; }
-        .stf-input-error { border-color: var(--stf-brick) !important; }
-        textarea.stf-input { resize:vertical; min-height:72px; line-height:1.5; font-family: var(--stf-font-body); }
-        .stf-error-text { color: var(--stf-brick); font-size:11.5px; margin-top:2px; }
-
-        .stf-photo-row { display:flex; align-items:center; gap:24px; margin-bottom:32px; background: var(--stf-mist); padding:20px; border-radius:12px; }
-        .stf-id-frame {
-          width:104px; height:104px; border-radius:6px; position:relative; background:#fff; flex-shrink:0;
-          display:flex; align-items:center; justify-content:center; overflow:hidden;
-          background-image:
-            linear-gradient(var(--stf-brass), var(--stf-brass)), linear-gradient(var(--stf-brass), var(--stf-brass)),
-            linear-gradient(var(--stf-brass), var(--stf-brass)), linear-gradient(var(--stf-brass), var(--stf-brass)),
-            linear-gradient(var(--stf-brass), var(--stf-brass)), linear-gradient(var(--stf-brass), var(--stf-brass)),
-            linear-gradient(var(--stf-brass), var(--stf-brass)), linear-gradient(var(--stf-brass), var(--stf-brass));
-          background-repeat:no-repeat;
-          background-size: 16px 2px, 2px 16px, 16px 2px, 2px 16px, 16px 2px, 2px 16px, 16px 2px, 2px 16px;
-          background-position: 0 0, 0 0, 100% 0, 100% 0, 0 100%, 0 100%, 100% 100%, 100% 100%;
-        }
-        .stf-id-frame img { width:100%; height:100%; object-fit:cover; position:relative; z-index:1; }
-        .stf-id-frame input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; z-index:2; }
-        .stf-camera-hint { color: var(--stf-ink-soft); }
-        .stf-photo-copy h4 { margin:0 0 6px; font-family: var(--stf-font-display); font-size:16px; font-weight:600; color: var(--stf-forest-dark); }
-        .stf-photo-copy p { margin:0; font-size:13px; color: var(--stf-ink-soft); line-height:1.55; }
-
-        .stf-footer { display:flex; justify-content:flex-end; align-items:center; gap:20px; padding:20px 4px 4px; }
-        .stf-cancel { color: var(--stf-ink-soft); font-weight:600; text-decoration:none; font-size:14px; }
-        .stf-cancel:hover { color: var(--stf-ink); }
-        .stf-submit { background: linear-gradient(135deg, var(--stf-forest), var(--stf-forest-dark)); color:#fff; padding:14px 28px; font-size:15px; font-weight:700; border:none; border-radius:9px; cursor:pointer; display:flex; align-items:center; gap:10px; box-shadow: 0 6px 16px -4px rgba(20,39,32,0.4); transition: transform .15s, box-shadow .15s; }
-        .stf-submit:hover:not(:disabled) { transform: translateY(-1px); }
-        .stf-submit:disabled { opacity:.65; cursor:not-allowed; box-shadow:none; transform:none; }
-        .stf-seal { width:20px; height:20px; border-radius:50%; background: var(--stf-brass); display:flex; align-items:center; justify-content:center; flex-shrink:0; color:#fff; }
-      `}</style>
-
-      <div className="stf-scope">
-
-        <p style={{ fontSize: '14px', color: '#56647B', margin: '4px 0 28px', fontFamily: "'Public Sans', sans-serif" }}>
-          Complete all three sections below to file a new staff record.
-        </p>
-
+      <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8">
+        
         <form onSubmit={submit}>
-          <div className="stf-layout">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
-            <nav className="stf-rail">
-              <div className="stf-rail-track">
+            {/* Sidebar Rail / Progress Navigation */}
+            <div className="hidden lg:block lg:col-span-3 sticky top-8">
+              <nav className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-2 ring-1 ring-slate-900/5">
                 {sections.map(s => (
                   <button
                     key={s.id}
                     type="button"
                     onClick={() => scrollToSection(s.id)}
-                    className={`stf-rail-item ${activeSection === s.id ? 'active' : ''} ${s.complete ? 'complete' : ''}`}
+                    className={`w-full flex items-center gap-3.5 p-3 rounded-xl text-left transition-all ${activeSection === s.id ? 'bg-indigo-50 border border-indigo-100 text-indigo-900' : 'hover:bg-slate-50 text-slate-600 border border-transparent'}`}
                   >
-                    <span className="stf-rail-numeral">{s.complete ? <CheckMark /> : s.numeral}</span>
-                    <span className="stf-rail-label">{s.label}</span>
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold transition-all shrink-0 ${s.complete ? 'bg-emerald-600 text-white shadow-md shadow-emerald-500/20' : activeSection === s.id ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20' : 'bg-slate-100 text-slate-500'}`}>
+                      {s.complete ? <CheckMark /> : s.numeral}
+                    </div>
+                    <div>
+                      <span className="block text-sm font-bold leading-tight">{s.label}</span>
+                      <span className="block text-[11px] text-slate-400 mt-0.5">Section {s.numeral}</span>
+                    </div>
                   </button>
                 ))}
-              </div>
-            </nav>
+              </nav>
+            </div>
 
-            <div>
+            {/* Form Content */}
+            <div className="w-full lg:col-span-9 space-y-6">
+              
               {/* 1. Employment Details */}
-              <div id="section-employment" ref={el => sectionRefs.current['section-employment'] = el} className="stf-card">
-                <h3 className="stf-section-title">
-                  <span className="stf-icon-chip"><Icon name="briefcase" /></span>
-                  Employment Details
-                </h3>
+              <div id="section-employment" ref={el => sectionRefs.current['section-employment'] = el} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-7 scroll-mt-8 ring-1 ring-slate-900/5">
+                <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 border border-indigo-100">
+                    <Icon name="briefcase" className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-900">Employment Details</h3>
+                </div>
 
-                <div className="stf-toggle-row">
-                  <label className={`stf-toggle ${data.create_user_account ? 'on' : ''}`}>
-                    <input type="checkbox" checked={data.create_user_account} onChange={e => setData('create_user_account', e.target.checked)} />
-                    Create Login Portal Account for this Staff
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6 p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <input 
+                      type="checkbox" 
+                      checked={data.create_user_account} 
+                      onChange={e => setData('create_user_account', e.target.checked)} 
+                      className="w-5 h-5 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 cursor-pointer"
+                    />
+                    <span className="text-sm font-semibold text-slate-800">Create Login Portal Account for this Staff</span>
                   </label>
 
                   {data.create_user_account && (
-                    <div className="stf-field stf-role-field">
-                      <select className={`stf-input ${errors.role_name ? 'stf-input-error' : ''}`} value={data.role_name} onChange={e => setData('role_name', e.target.value)} required={data.create_user_account}>
-                        <option value="">-- Select System Role --</option>
+                    <div className="w-full sm:w-72">
+                      <select value={data.role_name} onChange={e => setData('role_name', e.target.value)} required={data.create_user_account} className={inputClass}>
+                        <option value="" disabled>-- Select System Role --</option>
                         {roles?.map(role => <option key={role.id} value={role.name}>{role.name}</option>)}
                       </select>
-                      {errors.role_name && <span className="stf-error-text">{errors.role_name}</span>}
+                      {errors.role_name && <p className="text-rose-500 text-xs mt-1">{errors.role_name}</p>}
                     </div>
                   )}
                 </div>
 
-                <div className="stf-grid">
-                  <div className="stf-field">
-                    <label className="stf-label">Department <span className="stf-req">*</span></label>
-                    <select className={`stf-input ${errors.department_id ? 'stf-input-error' : ''}`} value={data.department_id} onChange={e => setData('department_id', e.target.value)} required>
-                      <option value="">-- Select Department --</option>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div>
+                    <label className={labelClass}>Department <span className="text-rose-500">*</span></label>
+                    <select className={inputClass} value={data.department_id} onChange={e => setData('department_id', e.target.value)} required>
+                      <option value="" disabled>-- Select Department --</option>
                       {departments?.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                     </select>
-                    {errors.department_id && <span className="stf-error-text">{errors.department_id}</span>}
+                    {errors.department_id && <p className="text-rose-500 text-xs mt-1">{errors.department_id}</p>}
                   </div>
 
-                  <div className="stf-field">
-                    <label className="stf-label">Designation <span className="stf-req">*</span></label>
-                    <select className={`stf-input ${errors.designation_id ? 'stf-input-error' : ''}`} value={data.designation_id} onChange={e => setData('designation_id', e.target.value)} required>
-                      <option value="">-- Select Designation --</option>
+                  <div>
+                    <label className={labelClass}>Designation <span className="text-rose-500">*</span></label>
+                    <select className={inputClass} value={data.designation_id} onChange={e => setData('designation_id', e.target.value)} required>
+                      <option value="" disabled>-- Select Designation --</option>
                       {designations?.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                     </select>
-                    {errors.designation_id && <span className="stf-error-text">{errors.designation_id}</span>}
+                    {errors.designation_id && <p className="text-rose-500 text-xs mt-1">{errors.designation_id}</p>}
                   </div>
 
-                  <div className="stf-field">
-                    <label className="stf-label">Joining Date <span className="stf-req">*</span></label>
-                    <input className={`stf-input mono ${errors.joining_date ? 'stf-input-error' : ''}`} type="date" value={data.joining_date} onChange={e => setData('joining_date', e.target.value)} required />
-                    {errors.joining_date && <span className="stf-error-text">{errors.joining_date}</span>}
+                  <div>
+                    <label className={labelClass}>Joining Date <span className="text-rose-500">*</span></label>
+                    <input className={`${inputClass} font-mono`} type="date" value={data.joining_date} onChange={e => setData('joining_date', e.target.value)} required />
+                    {errors.joining_date && <p className="text-rose-500 text-xs mt-1">{errors.joining_date}</p>}
                   </div>
 
-                  <div className="stf-field">
-                    <label className="stf-label">Basic Salary (Monthly) <span className="stf-req">*</span></label>
-                    <input className={`stf-input mono ${errors.basic_salary ? 'stf-input-error' : ''}`} type="number" step="0.01" min="0" placeholder="e.g. 25000" value={data.basic_salary} onChange={e => setData('basic_salary', e.target.value)} required />
-                    {errors.basic_salary && <span className="stf-error-text">{errors.basic_salary}</span>}
+                  <div>
+                    <label className={labelClass}>Basic Salary (Monthly) <span className="text-rose-500">*</span></label>
+                    <input className={`${inputClass} font-mono`} type="number" step="0.01" min="0" placeholder="e.g. 25000" value={data.basic_salary} onChange={e => setData('basic_salary', e.target.value)} required />
+                    {errors.basic_salary && <p className="text-rose-500 text-xs mt-1">{errors.basic_salary}</p>}
                   </div>
                 </div>
               </div>
 
               {/* 2. Personal Information */}
-              <div id="section-personal" ref={el => sectionRefs.current['section-personal'] = el} className="stf-card">
-                <h3 className="stf-section-title">
-                  <span className="stf-icon-chip forest"><Icon name="user" /></span>
-                  Staff Personal Information
-                </h3>
-
-                <div className="stf-photo-row">
-                  <div className="stf-id-frame">
-                    {photoPreview ? (
-                      <img src={photoPreview} alt="Preview" />
-                    ) : (
-                      <Icon name="camera" className="stf-camera-hint" style={{ fontSize: '26px' }} />
-                    )}
-                    <input type="file" accept="image/*" onChange={handlePhotoChange} title="Click to upload profile photo" />
+              <div id="section-personal" ref={el => sectionRefs.current['section-personal'] = el} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-7 scroll-mt-8 ring-1 ring-slate-900/5">
+                <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100">
+                    <Icon name="user" className="w-5 h-5" />
                   </div>
-                  <div className="stf-photo-copy">
-                    <h4>Staff Profile Photo</h4>
-                    <p>Click the frame to upload an image.<br />Recommended size: 300×300px. Max size: 2MB.</p>
-                    {errors.photo && <span className="stf-error-text">{errors.photo}</span>}
+                  <h3 className="text-lg font-bold text-slate-900">Staff Personal Information</h3>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-5 p-5 bg-slate-50 rounded-2xl border border-slate-200 mb-6">
+                  <div className="relative w-24 h-24 rounded-2xl bg-white border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden shrink-0 shadow-sm hover:border-indigo-500 transition-colors cursor-pointer group">
+                    {photoPreview ? (
+                      <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <Icon name="camera" className="w-8 h-8 text-slate-400 group-hover:text-indigo-600 transition-colors" />
+                    )}
+                    <input type="file" accept="image/*" onChange={handlePhotoChange} className="absolute inset-0 opacity-0 cursor-pointer" title="Click to upload profile photo" />
+                  </div>
+                  <div className="text-center sm:text-left">
+                    <h4 className="text-base font-bold text-slate-900 mb-1">Staff Profile Photo</h4>
+                    <p className="text-xs text-slate-500 leading-relaxed">Click the frame to upload an image.<br />Recommended size: 300×300px. Max size: 2MB.</p>
+                    {errors.photo && <p className="text-rose-500 text-xs mt-1">{errors.photo}</p>}
                   </div>
                 </div>
 
-                <div className="stf-grid">
-                  <div className="stf-field">
-                    <label className="stf-label">First Name <span className="stf-req">*</span></label>
-                    <input className={`stf-input ${errors.first_name ? 'stf-input-error' : ''}`} placeholder="e.g. John" type="text" value={data.first_name} onChange={e => setData('first_name', e.target.value)} required />
-                    {errors.first_name && <span className="stf-error-text">{errors.first_name}</span>}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div>
+                    <label className={labelClass}>First Name <span className="text-rose-500">*</span></label>
+                    <input className={inputClass} placeholder="e.g. John" type="text" value={data.first_name} onChange={e => setData('first_name', e.target.value)} required />
+                    {errors.first_name && <p className="text-rose-500 text-xs mt-1">{errors.first_name}</p>}
                   </div>
-                  <div className="stf-field">
-                    <label className="stf-label">Last Name</label>
-                    <input className="stf-input" placeholder="e.g. Doe" type="text" value={data.last_name} onChange={e => setData('last_name', e.target.value)} />
-                    {errors.last_name && <span className="stf-error-text">{errors.last_name}</span>}
+                  <div>
+                    <label className={labelClass}>Last Name</label>
+                    <input className={inputClass} placeholder="e.g. Doe" type="text" value={data.last_name} onChange={e => setData('last_name', e.target.value)} />
+                    {errors.last_name && <p className="text-rose-500 text-xs mt-1">{errors.last_name}</p>}
                   </div>
-                  <div className="stf-field">
-                    <label className="stf-label">Father's Name</label>
-                    <input className="stf-input" type="text" value={data.father_name} onChange={e => setData('father_name', e.target.value)} />
-                    {errors.father_name && <span className="stf-error-text">{errors.father_name}</span>}
+                  <div>
+                    <label className={labelClass}>Father's Name</label>
+                    <input className={inputClass} type="text" value={data.father_name} onChange={e => setData('father_name', e.target.value)} />
+                    {errors.father_name && <p className="text-rose-500 text-xs mt-1">{errors.father_name}</p>}
                   </div>
-                  <div className="stf-field">
-                    <label className="stf-label">Mother's Name</label>
-                    <input className="stf-input" type="text" value={data.mother_name} onChange={e => setData('mother_name', e.target.value)} />
-                    {errors.mother_name && <span className="stf-error-text">{errors.mother_name}</span>}
+                  <div>
+                    <label className={labelClass}>Mother's Name</label>
+                    <input className={inputClass} type="text" value={data.mother_name} onChange={e => setData('mother_name', e.target.value)} />
+                    {errors.mother_name && <p className="text-rose-500 text-xs mt-1">{errors.mother_name}</p>}
                   </div>
-                  <div className="stf-field">
-                    <label className="stf-label">Date of Birth <span className="stf-req">*</span></label>
-                    <input className={`stf-input mono ${errors.date_of_birth ? 'stf-input-error' : ''}`} type="date" value={data.date_of_birth} onChange={e => setData('date_of_birth', e.target.value)} required />
-                    {errors.date_of_birth && <span className="stf-error-text">{errors.date_of_birth}</span>}
+                  <div>
+                    <label className={labelClass}>Date of Birth <span className="text-rose-500">*</span></label>
+                    <input className={`${inputClass} font-mono`} type="date" value={data.date_of_birth} onChange={e => setData('date_of_birth', e.target.value)} required />
+                    {errors.date_of_birth && <p className="text-rose-500 text-xs mt-1">{errors.date_of_birth}</p>}
                   </div>
-                  <div className="stf-field">
-                    <label className="stf-label">Gender <span className="stf-req">*</span></label>
-                    <select className={`stf-input ${errors.gender ? 'stf-input-error' : ''}`} value={data.gender} onChange={e => setData('gender', e.target.value)} required>
-                      <option value="">-- Select Gender --</option>
+                  <div>
+                    <label className={labelClass}>Gender <span className="text-rose-500">*</span></label>
+                    <select className={inputClass} value={data.gender} onChange={e => setData('gender', e.target.value)} required>
+                      <option value="" disabled>-- Select Gender --</option>
                       <option value="male">Male</option>
                       <option value="female">Female</option>
                       <option value="other">Other</option>
                     </select>
-                    {errors.gender && <span className="stf-error-text">{errors.gender}</span>}
+                    {errors.gender && <p className="text-rose-500 text-xs mt-1">{errors.gender}</p>}
                   </div>
-                  <div className="stf-field">
-                    <label className="stf-label">Blood Group</label>
-                    <select className="stf-input" value={data.blood_group} onChange={e => setData('blood_group', e.target.value)}>
+                  <div>
+                    <label className={labelClass}>Blood Group</label>
+                    <select className={inputClass} value={data.blood_group} onChange={e => setData('blood_group', e.target.value)}>
                       <option value="">-- Select Blood Group --</option>
                       <option value="A+">A+</option><option value="O+">O+</option><option value="B+">B+</option><option value="AB+">AB+</option>
                       <option value="A-">A-</option><option value="O-">O-</option><option value="B-">B-</option><option value="AB-">AB-</option>
                     </select>
-                    {errors.blood_group && <span className="stf-error-text">{errors.blood_group}</span>}
+                    {errors.blood_group && <p className="text-rose-500 text-xs mt-1">{errors.blood_group}</p>}
                   </div>
-                  <div className="stf-field">
-                    <label className="stf-label">Marital Status</label>
-                    <select className="stf-input" value={data.marital_status} onChange={e => setData('marital_status', e.target.value)}>
+                  <div>
+                    <label className={labelClass}>Marital Status</label>
+                    <select className={inputClass} value={data.marital_status} onChange={e => setData('marital_status', e.target.value)}>
                       <option value="">-- Select --</option>
                       <option value="Single">Single</option>
                       <option value="Married">Married</option>
                       <option value="Divorced">Divorced</option>
                     </select>
-                    {errors.marital_status && <span className="stf-error-text">{errors.marital_status}</span>}
+                    {errors.marital_status && <p className="text-rose-500 text-xs mt-1">{errors.marital_status}</p>}
                   </div>
                 </div>
               </div>
 
               {/* 3. Contact & Qualifications */}
-              <div id="section-contact" ref={el => sectionRefs.current['section-contact'] = el} className="stf-card">
-                <h3 className="stf-section-title">
-                  <span className="stf-icon-chip brick"><Icon name="phone" /></span>
-                  Contact &amp; Qualifications
-                </h3>
+              <div id="section-contact" ref={el => sectionRefs.current['section-contact'] = el} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-7 scroll-mt-8 ring-1 ring-slate-900/5">
+                <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+                  <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 border border-amber-100">
+                    <Icon name="phone" className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-900">Contact &amp; Qualifications</h3>
+                </div>
 
-                <div className="stf-grid">
-                  <div className="stf-field">
-                    <label className="stf-label">Phone Number <span className="stf-req">*</span></label>
-                    <input className={`stf-input mono ${errors.phone ? 'stf-input-error' : ''}`} type="text" placeholder="01XXXXXXXXX" value={data.phone} onChange={e => setData('phone', e.target.value)} required />
-                    {errors.phone && <span className="stf-error-text">{errors.phone}</span>}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div>
+                    <label className={labelClass}>Phone Number <span className="text-rose-500">*</span></label>
+                    <input className={`${inputClass} font-mono`} type="text" placeholder="01XXXXXXXXX" value={data.phone} onChange={e => setData('phone', e.target.value)} required />
+                    {errors.phone && <p className="text-rose-500 text-xs mt-1">{errors.phone}</p>}
                   </div>
-                  <div className="stf-field">
-                    <label className="stf-label">Emergency Contact</label>
-                    <input className="stf-input mono" type="text" placeholder="01XXXXXXXXX" value={data.emergency_phone} onChange={e => setData('emergency_phone', e.target.value)} />
-                    {errors.emergency_phone && <span className="stf-error-text">{errors.emergency_phone}</span>}
+                  <div>
+                    <label className={labelClass}>Emergency Contact</label>
+                    <input className={`${inputClass} font-mono`} type="text" placeholder="01XXXXXXXXX" value={data.emergency_phone} onChange={e => setData('emergency_phone', e.target.value)} />
+                    {errors.emergency_phone && <p className="text-rose-500 text-xs mt-1">{errors.emergency_phone}</p>}
                   </div>
-                  <div className="stf-field">
-                    <label className="stf-label">Email Address</label>
-                    <input className="stf-input" type="email" placeholder="example@gmail.com" value={data.email} onChange={e => setData('email', e.target.value)} />
-                    {errors.email && <span className="stf-error-text">{errors.email}</span>}
-                  </div>
-
-                  <div className="stf-field span-2">
-                    <label className="stf-label">Educational Qualifications</label>
-                    <input className="stf-input" type="text" placeholder="e.g. B.Sc in Computer Science, B.Ed" value={data.qualification} onChange={e => setData('qualification', e.target.value)} />
-                    {errors.qualification && <span className="stf-error-text">{errors.qualification}</span>}
+                  <div className="sm:col-span-2">
+                    <label className={labelClass}>Email Address</label>
+                    <input className={inputClass} type="email" placeholder="example@gmail.com" value={data.email} onChange={e => setData('email', e.target.value)} />
+                    {errors.email && <p className="text-rose-500 text-xs mt-1">{errors.email}</p>}
                   </div>
 
-                  <div className="stf-field span-2">
-                    <label className="stf-label">Work Experience</label>
-                    <input className="stf-input" type="text" placeholder="e.g. 5 Years as Math Teacher" value={data.experience} onChange={e => setData('experience', e.target.value)} />
-                    {errors.experience && <span className="stf-error-text">{errors.experience}</span>}
+                  <div className="sm:col-span-2">
+                    <label className={labelClass}>Educational Qualifications</label>
+                    <input className={inputClass} type="text" placeholder="e.g. B.Sc in Computer Science, B.Ed" value={data.qualification} onChange={e => setData('qualification', e.target.value)} />
+                    {errors.qualification && <p className="text-rose-500 text-xs mt-1">{errors.qualification}</p>}
                   </div>
 
-                  <div className="stf-field span-2">
-                    <label className="stf-label">Present Address <span className="stf-req">*</span></label>
-                    <textarea className={`stf-input ${errors.present_address ? 'stf-input-error' : ''}`} style={{ minHeight: '80px' }} placeholder="Enter full present address..." value={data.present_address} onChange={e => setData('present_address', e.target.value)} required />
-                    {errors.present_address && <span className="stf-error-text">{errors.present_address}</span>}
+                  <div className="sm:col-span-2">
+                    <label className={labelClass}>Work Experience</label>
+                    <input className={inputClass} type="text" placeholder="e.g. 5 Years as Math Teacher" value={data.experience} onChange={e => setData('experience', e.target.value)} />
+                    {errors.experience && <p className="text-rose-500 text-xs mt-1">{errors.experience}</p>}
                   </div>
-                  <div className="stf-field span-2">
-                    <label className="stf-label">Permanent Address <span className="stf-req">*</span></label>
-                    <textarea className={`stf-input ${errors.permanent_address ? 'stf-input-error' : ''}`} style={{ minHeight: '80px' }} placeholder="Enter full permanent address..." value={data.permanent_address} onChange={e => setData('permanent_address', e.target.value)} required />
-                    {errors.permanent_address && <span className="stf-error-text">{errors.permanent_address}</span>}
+
+                  <div className="sm:col-span-2">
+                    <label className={labelClass}>Present Address <span className="text-rose-500">*</span></label>
+                    <textarea rows="3" className={`${inputClass} resize-none`} placeholder="Enter full present address..." value={data.present_address} onChange={e => setData('present_address', e.target.value)} required />
+                    {errors.present_address && <p className="text-rose-500 text-xs mt-1">{errors.present_address}</p>}
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className={labelClass}>Permanent Address <span className="text-rose-500">*</span></label>
+                    <textarea rows="3" className={`${inputClass} resize-none`} placeholder="Enter full permanent address..." value={data.permanent_address} onChange={e => setData('permanent_address', e.target.value)} required />
+                    {errors.permanent_address && <p className="text-rose-500 text-xs mt-1">{errors.permanent_address}</p>}
                   </div>
                 </div>
               </div>
 
-              <div className="stf-footer">
-                <Link href={route('admin.staff.index')} className="stf-cancel">Cancel</Link>
-                <button type="submit" className="stf-submit" disabled={processing}>
-                  <span className="stf-seal"><CheckMark /></span>
+              {/* Footer Actions */}
+              <div className="flex items-center justify-end gap-3 pt-4">
+                <Link href={route('admin.staff.index')} className="px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-all shadow-sm">
+                  Cancel
+                </Link>
+                <button type="submit" disabled={processing} className="flex items-center gap-2 px-7 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md shadow-indigo-500/20 disabled:opacity-70 active:scale-95">
+                  <CheckMark />
                   {processing ? 'Processing Registration...' : 'Save Staff Record'}
                 </button>
               </div>
+
             </div>
           </div>
         </form>

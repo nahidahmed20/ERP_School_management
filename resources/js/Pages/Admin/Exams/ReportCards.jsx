@@ -32,130 +32,135 @@ export default function ReportCards({ exams, classes, students, reportCard, filt
   };
 
   const selectedClass = classes?.find(c => c.id == data.class_id);
+  const inputClass = "block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed";
+  const labelClass = "block text-sm font-semibold text-slate-700 mb-1.5";
 
   return (
-    <AuthenticatedLayout header={
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider bg-indigo-100 px-2 py-1 rounded-md">Examinations</span>
-          <h1 className="text-2xl font-extrabold text-gray-900 mt-2">Student Report Card / Marksheet</h1>
+    <AuthenticatedLayout
+      header={
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase bg-indigo-50 border border-indigo-100 px-2.5 py-1 rounded-md">Examinations</span>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Student Report Card / Marksheet</h1>
+            <p className="text-sm text-slate-500 mt-1">শিক্ষার্থীদের পরীক্ষার ফলাফল এবং একাডেমিক ট্রান্সক্রিপ্ট তৈরি করুন।</p>
+          </div>
+          {reportCard && (
+            <button onClick={handlePrint} className="no-print inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md shadow-indigo-500/20 active:scale-95">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+              </svg>
+              Print Marksheet
+            </button>
+          )}
         </div>
-        {reportCard && (
-          <button onClick={handlePrint} className="no-print flex items-center gap-2 py-2 px-5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md transition-all">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-            </svg>
-            Print Marksheet
-          </button>
-        )}
-      </div>
-    }>
+      }
+    >
       <Head title="Report Cards" />
 
-      <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8">
 
-        {/* 🎛️ Updated Filter Section */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 no-print">
-          <form onSubmit={searchReportCard} className="flex flex-wrap gap-5 items-end">
+        {/* 🎛️ Filter Section */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 no-print border-t-4 border-t-indigo-600">
+          <form onSubmit={searchReportCard} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 items-end">
             
-            <div className="flex-1 min-w-[180px]">
-              <label className="text-sm font-bold text-gray-700">Exam *</label>
-              <select value={data.exam_id} onChange={e => setData('exam_id', e.target.value)} required className="w-full mt-1 rounded-lg border-gray-300 bg-gray-50 focus:bg-white shadow-sm focus:ring-2 focus:ring-indigo-500 sm:text-sm py-2.5">
-                <option value="">-- Select Exam --</option>
+            <div>
+              <label className={labelClass}>Exam <span className="text-rose-500">*</span></label>
+              <select value={data.exam_id} onChange={e => setData('exam_id', e.target.value)} required className={inputClass}>
+                <option value="" disabled>-- Select Exam --</option>
                 {exams?.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
               </select>
             </div>
 
-            <div className="flex-1 min-w-[180px]">
-              <label className="text-sm font-bold text-gray-700">Class *</label>
-              <select value={data.class_id} onChange={handleClassChange} required className="w-full mt-1 rounded-lg border-gray-300 bg-gray-50 focus:bg-white shadow-sm focus:ring-2 focus:ring-indigo-500 sm:text-sm py-2.5">
-                <option value="">-- Select Class --</option>
+            <div>
+              <label className={labelClass}>Class <span className="text-rose-500">*</span></label>
+              <select value={data.class_id} onChange={handleClassChange} required className={inputClass}>
+                <option value="" disabled>-- Select Class --</option>
                 {classes?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
 
-            <div className="flex-1 min-w-[180px]">
-              <label className="text-sm font-bold text-gray-700">Section</label>
-              <select value={data.section_id} onChange={handleSectionChange} disabled={!data.class_id} className="w-full mt-1 rounded-lg border-gray-300 bg-gray-50 focus:bg-white shadow-sm focus:ring-2 focus:ring-indigo-500 sm:text-sm py-2.5 disabled:opacity-50">
+            <div>
+              <label className={labelClass}>Section</label>
+              <select value={data.section_id} onChange={handleSectionChange} disabled={!data.class_id} className={inputClass}>
                 <option value="">-- All Sections --</option>
                 {selectedClass?.sections?.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </div>
 
-            <div className="flex-1 min-w-[220px]">
-              <label className="text-sm font-bold text-gray-700">Student *</label>
-              <select value={data.student_id} onChange={e => setData('student_id', e.target.value)} required disabled={!data.class_id} className="w-full mt-1 rounded-lg border-gray-300 bg-gray-50 focus:bg-white shadow-sm focus:ring-2 focus:ring-indigo-500 sm:text-sm py-2.5 disabled:opacity-50">
-                <option value="">-- Select Student --</option>
+            <div>
+              <label className={labelClass}>Student <span className="text-rose-500">*</span></label>
+              <select value={data.student_id} onChange={e => setData('student_id', e.target.value)} required disabled={!data.class_id} className={inputClass}>
+                <option value="" disabled>-- Select Student --</option>
                 {students?.map(s => <option key={s.id} value={s.id}>{s.first_name} {s.last_name} (Adm: {s.admission_no})</option>)}
               </select>
             </div>
 
-            <div className="flex-shrink-0">
-              <button type="submit" disabled={processing} className="px-6 py-2.5 rounded-lg shadow-md text-sm font-bold text-white bg-slate-900 hover:bg-slate-800 transition-all flex items-center gap-2 whitespace-nowrap">
-                <Icon name="search" className="w-4 h-4" /> Generate Report Card
+            <div>
+              <button type="submit" disabled={processing} className="w-full px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md shadow-indigo-500/20 active:scale-95 flex items-center justify-center gap-2 h-[42px] disabled:opacity-70">
+                <Icon name="search" className="w-4 h-4" /> {processing ? 'Loading...' : 'Generate Report Card'}
               </button>
             </div>
             
           </form>
         </div>
 
-        {/* 📄 Compact & Elegant Official Marksheet Area */}
+        {/* 📄 Official Marksheet Area */}
         {reportCard && (
-          <div className="printable-area max-w-4xl mx-auto bg-white rounded-2xl shadow-md border border-gray-200 p-8 sm:p-10 space-y-6 relative overflow-hidden">
+          <div className="printable-area max-w-4xl mx-auto bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 p-8 sm:p-10 space-y-6 relative overflow-hidden">
             
             {/* School Header */}
-            <div className="text-center border-b border-gray-100 pb-5 space-y-1">
+            <div className="text-center border-b border-slate-100 pb-5 space-y-1">
               <h2 className="text-2xl font-black text-slate-900 tracking-wide">IDEAL SCHOOL & COLLEGE</h2>
-              <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Main Campus, Dhaka • Academic Transcript</p>
+              <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">Main Campus, Dhaka • Academic Transcript</p>
               <div className="inline-block bg-indigo-50 text-indigo-700 font-extrabold px-3 py-1 rounded-full text-xs mt-2 border border-indigo-100">
                 Official Academic Report Card
               </div>
             </div>
 
             {/* Student Info Compact Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 p-4 rounded-xl border border-gray-100 text-xs">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs">
               <div>
-                <span className="text-gray-400 block font-bold uppercase">Student Name</span>
-                <span className="font-extrabold text-gray-900 text-sm">{reportCard.student.first_name} {reportCard.student.last_name}</span>
+                <span className="text-slate-400 block font-bold uppercase mb-0.5">Student Name</span>
+                <span className="font-bold text-slate-900 text-sm">{reportCard.student.first_name} {reportCard.student.last_name}</span>
               </div>
               <div>
-                <span className="text-gray-400 block font-bold uppercase">Admission No</span>
-                <span className="font-bold text-gray-700 text-sm">{reportCard.student.admission_no}</span>
+                <span className="text-slate-400 block font-bold uppercase mb-0.5">Admission No</span>
+                <span className="font-semibold text-slate-700 text-sm">{reportCard.student.admission_no}</span>
               </div>
               <div>
-                <span className="text-gray-400 block font-bold uppercase">Class & Section</span>
-                <span className="font-bold text-gray-700 text-sm">{reportCard.student.current_enrollment?.school_class?.name} ({reportCard.student.current_enrollment?.section?.name || 'General'})</span>
+                <span className="text-slate-400 block font-bold uppercase mb-0.5">Class & Section</span>
+                <span className="font-semibold text-slate-700 text-sm">{reportCard.student.current_enrollment?.school_class?.name} ({reportCard.student.current_enrollment?.section?.name || 'General'})</span>
               </div>
               <div>
-                <span className="text-gray-400 block font-bold uppercase">Roll No</span>
-                <span className="font-bold text-gray-700 text-sm">{reportCard.student.current_enrollment?.roll_no || '--'}</span>
+                <span className="text-slate-400 block font-bold uppercase mb-0.5">Roll No</span>
+                <span className="font-semibold text-slate-700 text-sm">{reportCard.student.current_enrollment?.roll_no || '--'}</span>
               </div>
             </div>
 
             {/* Marks Table */}
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-xl overflow-hidden text-sm">
-                <thead className="bg-slate-100">
-                  <tr>
-                    <th className="px-5 py-3 text-left font-extrabold text-slate-600 uppercase text-xs">Subject Name</th>
-                    <th className="px-5 py-3 text-center font-extrabold text-slate-600 uppercase text-xs">Marks Obtained</th>
-                    <th className="px-5 py-3 text-center font-extrabold text-slate-600 uppercase text-xs">Letter Grade</th>
-                    <th className="px-5 py-3 text-center font-extrabold text-slate-600 uppercase text-xs">Grade Point</th>
-                    <th className="px-5 py-3 text-left font-extrabold text-slate-600 uppercase text-xs">Remarks</th>
+              <table className="w-full text-left border-collapse border border-slate-200 rounded-xl overflow-hidden text-sm">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200">
+                    <th className="px-5 py-3.5 font-bold text-slate-600 uppercase text-xs">Subject Name</th>
+                    <th className="px-5 py-3.5 text-center font-bold text-slate-600 uppercase text-xs">Marks Obtained</th>
+                    <th className="px-5 py-3.5 text-center font-bold text-slate-600 uppercase text-xs">Letter Grade</th>
+                    <th className="px-5 py-3.5 text-center font-bold text-slate-600 uppercase text-xs">Grade Point</th>
+                    <th className="px-5 py-3.5 font-bold text-slate-600 uppercase text-xs">Remarks</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-100">
+                <tbody className="divide-y divide-slate-100 bg-white">
                   {reportCard.marks.map((m) => (
-                    <tr key={m.id}>
-                      <td className="px-5 py-3 font-bold text-gray-800 border-b border-gray-50">{m.subject?.name}</td>
-                      <td className="px-5 py-3 text-center font-extrabold text-indigo-600 border-b border-gray-50">{m.marks_obtained ?? '--'}</td>
-                      <td className="px-5 py-3 text-center border-b border-gray-50">
-                        <span className={`px-2 py-0.5 rounded text-xs font-black ${m.grade === 'F' ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                    <tr key={m.id} className="hover:bg-slate-50/50">
+                      <td className="px-5 py-3 font-semibold text-slate-800">{m.subject?.name}</td>
+                      <td className="px-5 py-3 text-center font-bold text-indigo-600">{m.marks_obtained ?? '--'}</td>
+                      <td className="px-5 py-3 text-center">
+                        <span className={`inline-block px-2.5 py-0.5 rounded text-xs font-bold ${m.grade === 'F' ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}`}>
                           {m.grade || '--'}
                         </span>
                       </td>
-                      <td className="px-5 py-3 text-center font-bold text-gray-700 border-b border-gray-50">{m.grade_point ?? '--'}</td>
-                      <td className="px-5 py-3 text-gray-400 italic text-xs border-b border-gray-50">{m.note || '--'}</td>
+                      <td className="px-5 py-3 text-center font-semibold text-slate-700">{m.grade_point ?? '--'}</td>
+                      <td className="px-5 py-3 text-slate-400 italic text-xs">{m.note || '—'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -174,17 +179,17 @@ export default function ReportCards({ exams, classes, students, reportCard, filt
               </div>
               <div className="text-center sm:text-right">
                 <div className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Final Status</div>
-                <div className={`text-sm font-black px-2.5 py-0.5 rounded ${reportCard.status === 'Passed' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}`}>
+                <div className={`text-xs font-bold px-3 py-1 rounded-lg mt-0.5 inline-block ${reportCard.status === 'Passed' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}`}>
                   {reportCard.status} ({reportCard.letter_grade})
                 </div>
               </div>
             </div>
 
             {/* Signature Area */}
-            <div className="pt-16 flex justify-between items-center text-center text-xs font-bold text-gray-500">
-              <div className="border-t-2 border-gray-300 pt-2 px-6">Class Teacher</div>
-              <div className="border-t-2 border-gray-300 pt-2 px-6">Controller of Exams</div>
-              <div className="border-t-2 border-gray-300 pt-2 px-6">Principal</div>
+            <div className="pt-16 flex justify-between items-center text-center text-xs font-semibold text-slate-500">
+              <div className="border-t-2 border-slate-300 pt-2 px-6">Class Teacher</div>
+              <div className="border-t-2 border-slate-300 pt-2 px-6">Controller of Exams</div>
+              <div className="border-t-2 border-slate-300 pt-2 px-6">Principal</div>
             </div>
 
           </div>

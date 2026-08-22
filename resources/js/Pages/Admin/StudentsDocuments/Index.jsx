@@ -21,14 +21,15 @@ export default function Index({ student, filters }) {
 
   useEffect(() => {
     if (flash?.success) {
-      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: flash.success, showConfirmButton: false, timer: 3000 });
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: flash.success, showConfirmButton: false, timer: 3000, timerProgressBar: true });
       reset('document_type', 'file', 'remarks');
       clearErrors();
       // Reset file input element visually
-      document.getElementById('fileUpload').value = '';
+      const fileInput = document.getElementById('fileUpload');
+      if (fileInput) fileInput.value = '';
     }
     if (flash?.error) {
-      Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: flash.error, showConfirmButton: false, timer: 4000 });
+      Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: flash.error, showConfirmButton: false, timer: 4000, timerProgressBar: true });
     }
   }, [flash, pageErrors]);
 
@@ -44,129 +45,214 @@ export default function Index({ student, filters }) {
   };
 
   const handleDelete = (docId) => {
-    if(confirm('আপনি কি নিশ্চিত যে এই ফাইলটি মুছে ফেলতে চান?')) {
-      router.delete(route('admin.students.documents.destroy', docId));
-    }
+    Swal.fire({
+      title: 'Are you sure?',
+      text: "এই ডকুমেন্টটি ডিলিট করতে চান? এটি আর রিকভার করা সম্ভব নয়!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#e11d48',
+      cancelButtonColor: '#94a3b8',
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'Cancel',
+      customClass: { popup: 'rounded-2xl' }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        router.delete(route('admin.students.documents.destroy', docId));
+      }
+    });
   };
 
   return (
-    <AuthenticatedLayout
-      header={
-        <div className="page-head">
-          <div>
-            <span className="eyebrow">Students</span>
-            <h1>Student Documents</h1>
-            <p className="desc">শিক্ষার্থীদের জন্ম নিবন্ধন, ছাড়পত্র ও অন্যান্য প্রয়োজনীয় কাগজপত্র সংরক্ষণ করুন।</p>
-          </div>
-        </div>
-      }
-    >
+    <AuthenticatedLayout>
       <Head title="Student Documents" />
 
-      {/* Step 1: Search Student */}
-      <div className="card mm-card" style={{ background: '#fff', padding: '24px', borderRadius: '12px', marginBottom: '24px', borderTop: '4px solid #0f172a' }}>
-        <form onSubmit={searchStudent} style={{ display: 'flex', gap: '16px', alignItems: 'flex-end' }}>
-          <div style={{ flex: '1', maxWidth: '400px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600' }}>Student Admission Number *</label>
-            <div className="search" style={{ position: 'relative' }}>
-              <Icon name="search" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-              <input
-                type="text"
-                placeholder="e.g. STU-2025-0001"
-                value={admissionNo}
-                onChange={e => setAdmissionNo(e.target.value)}
-                style={{ width: '100%', padding: '12px 12px 12px 40px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
-                required
-              />
-            </div>
+      <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8">
+        
+        {/* Page Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">Students</span>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Student Documents</h1>
+            <p className="text-sm text-slate-500 mt-1">শিক্ষার্থীদের জন্ম নিবন্ধন, ছাড়পত্র ও অন্যান্য প্রয়োজনীয় কাগজপত্র সংরক্ষণ করুন।</p>
           </div>
-          <button type="submit" className="btn" style={{ padding: '12px 24px', background: '#0f172a', color: '#fff' }}>Search</button>
-        </form>
-      </div>
-
-      {/* Step 2: Student Profile & Documents */}
-      {student && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
-          
-          {/* Left Column: Upload Form */}
-          <div className="card mm-card" style={{ background: '#fff', padding: '24px', borderRadius: '12px', borderTop: '4px solid #4f46e5' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid #eee' }}>
-               <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: '#e0e7ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5', fontSize: '20px', fontWeight: 'bold' }}>
-                  {student.first_name[0]}
-               </div>
-               <div>
-                 <h3 style={{ margin: 0, fontSize: '16px' }}>{student.first_name} {student.last_name || ''}</h3>
-                 <div style={{ fontSize: '12px', color: '#64748b' }}>Class: {student.current_enrollment?.school_class?.name} | Adm: {student.admission_no}</div>
-               </div>
-            </div>
-
-            <h4 style={{ marginBottom: '16px', fontSize: '15px' }}>Upload New Document</h4>
-            <form onSubmit={handleUpload} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px' }}>Document Type *</label>
-                <select value={data.document_type} onChange={e => setData('document_type', e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ccc' }} required>
-                  <option value="">-- Select Type --</option>
-                  <option value="Birth Certificate">Birth Certificate</option>
-                  <option value="Transfer Certificate">Transfer Certificate (TC)</option>
-                  <option value="Parent NID">Parent NID</option>
-                  <option value="Medical Report">Medical Report</option>
-                  <option value="Other">Other</option>
-                </select>
-                {errors.document_type && <div style={{color:'red', fontSize:'12px'}}>{errors.document_type}</div>}
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px' }}>Select File (PDF, JPG, PNG) *</label>
-                <input id="fileUpload" type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={e => setData('file', e.target.files[0])} style={{ width: '100%', padding: '8px', border: '1px dashed #94a3b8', borderRadius: '6px', background: '#f8fafc' }} required />
-                {errors.file && <div style={{color:'red', fontSize:'12px'}}>{errors.file}</div>}
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px' }}>Remarks (Optional)</label>
-                <input type="text" value={data.remarks} onChange={e => setData('remarks', e.target.value)} placeholder="Any notes..." style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ccc' }} />
-              </div>
-
-              <button type="submit" disabled={processing} className="btn" style={{ background: '#16a34a', color: '#fff', width: '100%', padding: '12px' }}>
-                {processing ? 'Uploading...' : 'Upload Document'}
-              </button>
-            </form>
-          </div>
-
-          {/* Right Column: Uploaded Documents List */}
-          <div className="card mm-card" style={{ background: '#f8fafc', padding: '24px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-            <h4 style={{ margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px', color: '#334155' }}>
-              <Icon name="folder" /> Uploaded Documents ({student.documents?.length || 0})
-            </h4>
-
-            {student.documents?.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {student.documents.map(doc => (
-                  <div key={doc.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', padding: '12px 16px', border: '1px solid #cbd5e1', borderRadius: '8px' }}>
-                    <div>
-                      <strong style={{ fontSize: '14px', color: '#0f172a' }}>{doc.document_type}</strong>
-                      <div style={{ fontSize: '12px', color: '#64748b' }}>{doc.remarks || 'No remarks'}</div>
-                    </div>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <a href={`/storage/${doc.file_path}`} target="_blank" rel="noreferrer" className="btn btn-outline" style={{ padding: '6px 10px', fontSize: '12px' }}>
-                        View
-                      </a>
-                      <button onClick={() => handleDelete(doc.id)} className="btn btn-outline" style={{ padding: '6px 10px', fontSize: '12px', color: '#dc2626', borderColor: '#fca5a5' }}>
-                        <Icon name="trash" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div style={{ textAlign: 'center', padding: '30px', color: '#94a3b8', border: '2px dashed #cbd5e1', borderRadius: '8px' }}>
-                No documents uploaded yet.
-              </div>
-            )}
-          </div>
-
         </div>
-      )}
 
+        {/* Step 1: Search Student Card */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 border-t-4 border-t-indigo-600">
+          <form onSubmit={searchStudent} className="flex flex-col sm:flex-row gap-4 items-end">
+            <div className="flex-1 w-full max-w-md">
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Student Admission Number <span className="text-rose-500">*</span></label>
+              <div className="relative w-full">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                  <Icon name="search" className="w-4 h-4 text-slate-400" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="e.g. STU-2025-0001"
+                  value={admissionNo}
+                  onChange={e => setAdmissionNo(e.target.value)}
+                  className="block w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-mono"
+                  required
+                />
+              </div>
+            </div>
+            <button 
+              type="submit" 
+              className="w-full sm:w-auto px-8 py-3 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md active:scale-95 flex justify-center items-center gap-2"
+            >
+              Search Student
+            </button>
+          </form>
+        </div>
+
+        {/* Step 2: Student Profile & Documents */}
+        {student && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            {/* Left Column: Upload Form (Takes up 5 columns) */}
+            <div className="lg:col-span-5 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 border-t-4 border-t-emerald-500 flex flex-col h-max">
+              
+              {/* Profile Snippet */}
+              <div className="flex items-center gap-4 mb-6 pb-6 border-b border-slate-100">
+                <div className="w-14 h-14 rounded-full bg-indigo-50 border-2 border-white shadow-sm flex items-center justify-center text-indigo-600 text-xl font-bold font-serif shrink-0">
+                  {student.first_name?.charAt(0)}
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">{student.first_name} {student.last_name || ''}</h3>
+                  <div className="text-sm font-medium text-slate-500 mt-0.5 flex flex-wrap items-center gap-2">
+                    <span>Class: <strong className="text-slate-700">{student.current_enrollment?.school_class?.name || 'N/A'}</strong></span>
+                    <span className="w-1 h-1 rounded-full bg-slate-300"></span>
+                    <span>Adm: <strong className="text-slate-700 font-mono">{student.admission_no}</strong></span>
+                  </div>
+                </div>
+              </div>
+
+              <h4 className="text-base font-bold text-slate-800 mb-4">Upload New Document</h4>
+              
+              <form onSubmit={handleUpload} className="flex flex-col gap-4 flex-1">
+                {/* Document Type */}
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">Document Type <span className="text-rose-500">*</span></label>
+                  <select 
+                    value={data.document_type} 
+                    onChange={e => setData('document_type', e.target.value)} 
+                    className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer" 
+                    required
+                  >
+                    <option value="" disabled>-- Select Type --</option>
+                    <option value="Birth Certificate">Birth Certificate</option>
+                    <option value="Transfer Certificate">Transfer Certificate (TC)</option>
+                    <option value="Parent NID">Parent NID</option>
+                    <option value="Medical Report">Medical Report</option>
+                    <option value="Other">Other</option>
+                  </select>
+                  {errors.document_type && <p className="text-rose-500 text-xs font-medium mt-1">{errors.document_type}</p>}
+                </div>
+
+                {/* File Input */}
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">Select File (PDF, JPG, PNG) <span className="text-rose-500">*</span></label>
+                  <input 
+                    id="fileUpload" 
+                    type="file" 
+                    accept=".pdf,.jpg,.jpeg,.png" 
+                    onChange={e => setData('file', e.target.files[0])} 
+                    className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition-all border border-slate-200 rounded-xl bg-slate-50 cursor-pointer" 
+                    required 
+                  />
+                  {errors.file && <p className="text-rose-500 text-xs font-medium mt-1">{errors.file}</p>}
+                </div>
+
+                {/* Remarks */}
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">Remarks <span className="text-slate-400 font-normal">(Optional)</span></label>
+                  <input 
+                    type="text" 
+                    value={data.remarks} 
+                    onChange={e => setData('remarks', e.target.value)} 
+                    placeholder="Add a short note about this file..." 
+                    className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" 
+                  />
+                </div>
+
+                {/* Submit Button */}
+                <button 
+                  type="submit" 
+                  disabled={processing || !data.file || !data.document_type} 
+                  className="mt-auto w-full flex justify-center items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md shadow-emerald-500/20 disabled:opacity-70 disabled:cursor-not-allowed active:scale-95"
+                >
+                  {processing ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="upload" className="w-4 h-4" /> Upload Document
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+
+            {/* Right Column: Uploaded Documents List (Takes up 7 columns) */}
+            <div className="lg:col-span-7 bg-slate-50 p-6 rounded-2xl border border-slate-200 shadow-inner">
+              <div className="flex items-center justify-between mb-5">
+                <h4 className="flex items-center gap-2 text-base font-bold text-slate-800">
+                  <Icon name="folder" className="w-5 h-5 text-indigo-500" /> Uploaded Documents
+                </h4>
+                <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-lg text-xs font-bold">
+                  {student.documents?.length || 0} Files
+                </span>
+              </div>
+
+              {student.documents?.length > 0 ? (
+                <div className="flex flex-col gap-3">
+                  {student.documents.map(doc => (
+                    <div key={doc.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 border border-slate-200 rounded-xl shadow-sm transition-all hover:border-indigo-200 hover:shadow">
+                      <div>
+                        <strong className="text-sm font-bold text-slate-900 block mb-0.5">{doc.document_type}</strong>
+                        <div className="text-xs font-medium text-slate-500">
+                          {doc.remarks || <span className="italic text-slate-400">No remarks provided</span>}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <a 
+                          href={`/storage/${doc.file_path}`} 
+                          target="_blank" 
+                          rel="noreferrer" 
+                          className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors border border-indigo-100"
+                        >
+                          <Icon name="eye" className="w-3.5 h-3.5" /> View
+                        </a>
+                        <button 
+                          onClick={() => handleDelete(doc.id)} 
+                          className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg transition-colors border border-rose-100"
+                        >
+                          <Icon name="trash" className="w-3.5 h-3.5" /> Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 px-4 border-2 border-dashed border-slate-300 rounded-xl bg-white text-center">
+                  <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-3">
+                    <Icon name="file" className="w-8 h-8 text-slate-300" />
+                  </div>
+                  <h5 className="text-sm font-bold text-slate-700">No documents found</h5>
+                  <p className="text-xs text-slate-500 mt-1 max-w-xs">You haven't uploaded any documents for this student yet. Use the form to upload.</p>
+                </div>
+              )}
+            </div>
+
+          </div>
+        )}
+
+      </div>
     </AuthenticatedLayout>
   );
 }
