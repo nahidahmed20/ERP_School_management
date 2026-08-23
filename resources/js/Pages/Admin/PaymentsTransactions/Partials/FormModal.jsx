@@ -4,7 +4,7 @@ import Icon from '@/Components/Icons';
 export default function FormModal({ item, gateways, onClose }) {
   const isEdit = !!item;
 
-  const { data, setData, post, put, processing, errors } = useForm({
+  const { data, setData, post, put, processing, errors, reset } = useForm({
     payment_gateway_id: item?.payment_gateway_id || '',
     transaction_id: item?.transaction_id || '',
     reference_no: item?.reference_no || '',
@@ -20,91 +20,152 @@ export default function FormModal({ item, gateways, onClose }) {
     e.preventDefault();
     if (isEdit) {
       put(route('admin.payments.transactions.update', item.id), {
-        onSuccess: () => onClose(),
+        onSuccess: () => { reset(); onClose(); },
       });
     } else {
       post(route('admin.payments.transactions.store'), {
-        onSuccess: () => onClose(),
+        onSuccess: () => { reset(); onClose(); },
       });
     }
   };
 
+  const inputClass = "block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all";
+  const labelClass = "block text-sm font-semibold text-slate-700 mb-1.5";
+
   return (
     <div className="mm-modal-overlay" onClick={onClose}>
-      <div className="mm-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="mm-modal-head">
-          <h3>{isEdit ? 'Edit Transaction' : 'Add Manual Transaction'}</h3>
-          <button className="icon-btn" onClick={onClose}><Icon name="close" /></button>
+      <div 
+        className="mm-modal" 
+        onClick={(e) => e.stopPropagation()}
+        style={{ padding: 0, overflow: 'hidden', maxWidth: '800px', width: '100%' }}
+      >
+        {/* Header */}
+        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
+          <div>
+            <h3 className="text-xl font-bold text-slate-900">{isEdit ? 'Edit Transaction' : 'Add Manual Transaction'}</h3>
+            <p className="text-sm text-slate-500 mt-1">Configure transaction details and payment status.</p>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors bg-white border border-slate-200 shadow-sm">
+            <Icon name="close" className="w-4 h-4" />
+          </button>
         </div>
-        <form onSubmit={handleSubmit} className="mm-form">
-          <div className="mm-form-grid" style={{ gridTemplateColumns: '1fr' }}>
+
+        {/* Form Body */}
+        <form onSubmit={handleSubmit} className="flex flex-col max-h-[80vh]">
+          <div className="p-6 overflow-y-auto space-y-5 flex-1">
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <label>
-                <span>Transaction ID *</span>
-                <input value={data.transaction_id} onChange={(e) => setData('transaction_id', e.target.value)} placeholder="e.g. TXN123456" required />
-                {errors.transaction_id && <em style={{color: 'red'}}>{errors.transaction_id}</em>}
-              </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              
+              <div>
+                <label className={labelClass}>Transaction ID <span className="text-rose-500">*</span></label>
+                <input 
+                  value={data.transaction_id} 
+                  onChange={(e) => setData('transaction_id', e.target.value)} 
+                  placeholder="e.g. TXN123456" 
+                  className={`${inputClass} font-mono`} 
+                  required 
+                  autoFocus
+                />
+                {errors.transaction_id && <p className="text-rose-500 text-xs mt-1">{errors.transaction_id}</p>}
+              </div>
 
-              <label>
-                <span>Reference No / Invoice</span>
-                <input value={data.reference_no} onChange={(e) => setData('reference_no', e.target.value)} placeholder="e.g. INV-001" />
-              </label>
-            </div>
+              <div>
+                <label className={labelClass}>Reference No / Invoice</label>
+                <input 
+                  value={data.reference_no} 
+                  onChange={(e) => setData('reference_no', e.target.value)} 
+                  placeholder="e.g. INV-001" 
+                  className={`${inputClass} font-mono`} 
+                />
+              </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <label>
-                <span>Gateway (Optional)</span>
-                <select value={data.payment_gateway_id} onChange={(e) => setData('payment_gateway_id', e.target.value)}>
+              <div>
+                <label className={labelClass}>Gateway <span className="text-slate-400 font-normal">(Optional)</span></label>
+                <select value={data.payment_gateway_id} onChange={(e) => setData('payment_gateway_id', e.target.value)} className={inputClass}>
                   <option value="">-- Manual / No Gateway --</option>
                   {gateways.map(gw => (
                     <option key={gw.id} value={gw.id}>{gw.name}</option>
                   ))}
                 </select>
-              </label>
-              
-              <label>
-                <span>Payment Method</span>
-                <input value={data.payment_method} onChange={(e) => setData('payment_method', e.target.value)} placeholder="e.g. Cash, Card, Mobile" />
-              </label>
+              </div>
+
+              <div>
+                <label className={labelClass}>Payment Method</label>
+                <input 
+                  value={data.payment_method} 
+                  onChange={(e) => setData('payment_method', e.target.value)} 
+                  placeholder="e.g. Cash, Card, Mobile" 
+                  className={inputClass} 
+                />
+              </div>
+
+              <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-5 p-5 bg-slate-50 border border-slate-200 rounded-2xl">
+                <div>
+                  <label className={labelClass}>Amount <span className="text-rose-500">*</span></label>
+                  <input 
+                    type="number" 
+                    step="0.01" 
+                    value={data.amount} 
+                    onChange={(e) => setData('amount', e.target.value)} 
+                    required 
+                    className={`${inputClass} font-mono font-bold text-emerald-600 bg-white`} 
+                  />
+                </div>
+
+                <div>
+                  <label className={labelClass}>Currency</label>
+                  <input 
+                    value={data.currency} 
+                    onChange={(e) => setData('currency', e.target.value)} 
+                    className={`${inputClass} font-mono bg-white`} 
+                  />
+                </div>
+
+                <div>
+                  <label className={labelClass}>Status <span className="text-rose-500">*</span></label>
+                  <select value={data.status} onChange={(e) => setData('status', e.target.value)} required className={`${inputClass} bg-white`}>
+                    <option value="Pending">Pending</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Failed">Failed</option>
+                    <option value="Refunded">Refunded</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className={labelClass}>Transaction Date <span className="text-rose-500">*</span></label>
+                <input 
+                  type="date" 
+                  value={data.transaction_date} 
+                  onChange={(e) => setData('transaction_date', e.target.value)} 
+                  required 
+                  className={`${inputClass} font-mono`} 
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className={labelClass}>Notes / Reason</label>
+                <textarea 
+                  rows="2" 
+                  value={data.note} 
+                  onChange={(e) => setData('note', e.target.value)} 
+                  placeholder="অতিরিক্ত কোনো তথ্য বা নোট..." 
+                  className={`${inputClass} resize-none`} 
+                />
+              </div>
+
             </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
-              <label>
-                <span>Amount *</span>
-                <input type="number" step="0.01" value={data.amount} onChange={(e) => setData('amount', e.target.value)} required />
-              </label>
-
-              <label>
-                <span>Currency</span>
-                <input value={data.currency} onChange={(e) => setData('currency', e.target.value)} />
-              </label>
-
-              <label>
-                <span>Status *</span>
-                <select value={data.status} onChange={(e) => setData('status', e.target.value)} required>
-                  <option value="Pending">Pending</option>
-                  <option value="Completed">Completed</option>
-                  <option value="Failed">Failed</option>
-                  <option value="Refunded">Refunded</option>
-                </select>
-              </label>
-            </div>
-
-            <label>
-              <span>Transaction Date *</span>
-              <input type="date" value={data.transaction_date} onChange={(e) => setData('transaction_date', e.target.value)} required />
-            </label>
-
-            <label>
-              <span>Notes / Reason</span>
-              <textarea rows="2" value={data.note} onChange={(e) => setData('note', e.target.value)} placeholder="অতিরিক্ত কোনো তথ্য বা নোট..." />
-            </label>
-
           </div>
-          <div className="mm-modal-foot mt-4">
-            <button type="button" className="btn btn-outline" onClick={onClose} disabled={processing}>Cancel</button>
-            <button type="submit" className="btn" disabled={processing}>{processing ? 'Saving...' : 'Save Transaction'}</button>
+
+          {/* Footer */}
+          <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-end gap-3 shrink-0 rounded-b-2xl">
+            <button type="button" onClick={onClose} disabled={processing} className="px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-all shadow-sm">
+              Cancel
+            </button>
+            <button type="submit" disabled={processing} className="flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md shadow-indigo-500/20 disabled:opacity-70 active:scale-95">
+              <Icon name="save" className="w-4 h-4" />
+              {processing ? 'Saving...' : 'Save Transaction'}
+            </button>
           </div>
         </form>
       </div>

@@ -1,10 +1,10 @@
-import { useForm } from '@inertiajs/react';
+import { useForm, router } from '@inertiajs/react';
 import Icon from '@/Components/Icons';
 
 export default function FormModal({ item, assets, onClose }) {
   const isEdit = !!item;
 
-  const { data, setData, post, put, processing, errors } = useForm({
+  const { data, setData, post, put, processing, errors, reset } = useForm({
     asset_id: item?.asset_id || '',
     title: item?.title || '',
     maintenance_type: item?.maintenance_type || 'Repair',
@@ -19,100 +19,161 @@ export default function FormModal({ item, assets, onClose }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (isEdit) {
-      put(route('admin.purchase.asset-maintenance.update', item.id), { onSuccess: () => onClose() });
+      put(route('admin.purchase.asset-maintenance.update', item.id), { 
+        onSuccess: () => { reset(); onClose(); } 
+      });
     } else {
-      post(route('admin.purchase.asset-maintenance.store'), { onSuccess: () => onClose() });
+      post(route('admin.purchase.asset-maintenance.store'), { 
+        onSuccess: () => { reset(); onClose(); } 
+      });
     }
   };
 
+  const inputClass = "block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all";
+  const labelClass = "block text-sm font-semibold text-slate-700 mb-1.5";
+
   return (
     <div className="mm-modal-overlay" onClick={onClose}>
-      <div className="mm-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="mm-modal-head">
-          <h3>{isEdit ? 'Edit Maintenance Task' : 'Add Maintenance Task'}</h3>
-          <button className="icon-btn" onClick={onClose}><Icon name="close" /></button>
+      <div 
+        className="mm-modal" 
+        onClick={(e) => e.stopPropagation()}
+        style={{ padding: 0, overflow: 'hidden', maxWidth: '800px', width: '100%' }}
+      >
+        {/* Header */}
+        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
+          <div>
+            <h3 className="text-xl font-bold text-slate-900">{isEdit ? 'Edit Maintenance Task' : 'Add Maintenance Task'}</h3>
+            <p className="text-sm text-slate-500 mt-1">Record asset repair, servicing, or upgrade details.</p>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors bg-white border border-slate-200 shadow-sm">
+            <Icon name="close" className="w-4 h-4" />
+          </button>
         </div>
-        <form onSubmit={handleSubmit} className="mm-form">
-          <div className="mm-form-grid" style={{ gridTemplateColumns: '1fr' }}>
 
-            <label>
-              <span>Select Asset *</span>
-              <select value={data.asset_id} onChange={(e) => setData('asset_id', e.target.value)} required>
-                <option value="">-- অ্যাসেট সিলেক্ট করুন --</option>
-                {assets.map(asset => (
-                  <option key={asset.id} value={asset.id}>{asset.name}</option>
-                ))}
-              </select>
-              {errors.asset_id && <em>{errors.asset_id}</em>}
-            </label>
+        {/* Form Body */}
+        <form onSubmit={handleSubmit} className="flex flex-col max-h-[80vh]">
+          <div className="p-6 overflow-y-auto space-y-5 flex-1">
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              
+              <div className="sm:col-span-2">
+                <label className={labelClass}>Select Asset <span className="text-rose-500">*</span></label>
+                <select 
+                  value={data.asset_id} 
+                  onChange={(e) => setData('asset_id', e.target.value)} 
+                  required 
+                  className={inputClass}
+                >
+                  <option value="" disabled>-- অ্যাসেট সিলেক্ট করুন --</option>
+                  {assets.map(asset => (
+                    <option key={asset.id} value={asset.id}>{asset.name}</option>
+                  ))}
+                </select>
+                {errors.asset_id && <p className="text-rose-500 text-xs mt-1">{errors.asset_id}</p>}
+              </div>
 
-            <label>
-              <span>Task Title *</span>
-              <input value={data.title} onChange={(e) => setData('title', e.target.value)} placeholder="e.g. AC Gas Refill, RAM Upgrade" required />
-              {errors.title && <em>{errors.title}</em>}
-            </label>
+              <div className="sm:col-span-2">
+                <label className={labelClass}>Task Title <span className="text-rose-500">*</span></label>
+                <input 
+                  value={data.title} 
+                  onChange={(e) => setData('title', e.target.value)} 
+                  placeholder="e.g. AC Gas Refill, RAM Upgrade" 
+                  required 
+                  className={inputClass} 
+                  autoFocus
+                />
+                {errors.title && <p className="text-rose-500 text-xs mt-1">{errors.title}</p>}
+              </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <label>
-                <span>Maintenance Type *</span>
-                <select value={data.maintenance_type} onChange={(e) => setData('maintenance_type', e.target.value)} required>
+              <div>
+                <label className={labelClass}>Maintenance Type <span className="text-rose-500">*</span></label>
+                <select value={data.maintenance_type} onChange={(e) => setData('maintenance_type', e.target.value)} required className={`${inputClass} bg-white`}>
                   <option value="Repair">Repair (মেরামত)</option>
                   <option value="Servicing">Servicing (সার্ভিসিং)</option>
                   <option value="Upgrade">Upgrade (আপগ্রেড)</option>
                 </select>
-              </label>
+              </div>
 
-              <label>
-                <span>Estimated / Actual Cost *</span>
-                <input type="number" step="0.01" value={data.cost} onChange={(e) => setData('cost', e.target.value)} placeholder="0.00" required />
-              </label>
-            </div>
+              <div>
+                <label className={labelClass}>Estimated / Actual Cost <span className="text-rose-500">*</span></label>
+                <input 
+                  type="number" 
+                  step="0.01" 
+                  value={data.cost} 
+                  onChange={(e) => setData('cost', e.target.value)} 
+                  placeholder="0.00" 
+                  required 
+                  className={`${inputClass} font-mono text-lg font-bold text-rose-600 bg-white`} 
+                />
+              </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <label>
-                <span>Service Provider (Optional)</span>
-                <input value={data.service_provider} onChange={(e) => setData('service_provider', e.target.value)} placeholder="Shop name or technician" />
-              </label>
+              <div>
+                <label className={labelClass}>Service Provider <span className="text-slate-400 font-normal">(Optional)</span></label>
+                <input 
+                  value={data.service_provider} 
+                  onChange={(e) => setData('service_provider', e.target.value)} 
+                  placeholder="Shop name or technician" 
+                  className={inputClass} 
+                />
+              </div>
 
-              <label>
-                <span>Status *</span>
-                <select value={data.status} onChange={(e) => setData('status', e.target.value)} required>
+              <div>
+                <label className={labelClass}>Status <span className="text-rose-500">*</span></label>
+                <select value={data.status} onChange={(e) => setData('status', e.target.value)} required className={`${inputClass} bg-white`}>
                   <option value="Pending">Pending</option>
                   <option value="In Progress">In Progress</option>
                   <option value="Completed">Completed</option>
                   <option value="Cancelled">Cancelled</option>
                 </select>
-              </label>
-            </div>
+              </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <label>
-                <span>Start Date *</span>
-                <input type="date" value={data.start_date} onChange={(e) => setData('start_date', e.target.value)} required />
-                {errors.start_date && <em style={{color: 'red'}}>{errors.start_date}</em>}
-              </label>
+              <div>
+                <label className={labelClass}>Start Date <span className="text-rose-500">*</span></label>
+                <input 
+                  type="date" 
+                  value={data.start_date} 
+                  onChange={(e) => setData('start_date', e.target.value)} 
+                  required 
+                  className={`${inputClass} font-mono`} 
+                />
+                {errors.start_date && <p className="text-rose-500 text-xs mt-1">{errors.start_date}</p>}
+              </div>
 
-              <label>
-                <span>End Date (Optional)</span>
+              <div>
+                <label className={labelClass}>End Date <span className="text-slate-400 font-normal">(Optional)</span></label>
                 <input
                   type="date"
                   value={data.end_date}
                   onChange={(e) => setData('end_date', e.target.value)}
-                  min={data.start_date}
+                  min={data.start_date} 
+                  className={`${inputClass} font-mono`} 
                 />
-                {errors.end_date && <em style={{color: 'red'}}>{errors.end_date}</em>}
-              </label>
+                {errors.end_date && <p className="text-rose-500 text-xs mt-1">{errors.end_date}</p>}
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className={labelClass}>Details / Issue Description</label>
+                <textarea 
+                  rows="3" 
+                  value={data.details} 
+                  onChange={(e) => setData('details', e.target.value)} 
+                  placeholder="সমস্যার বিস্তারিত বর্ণনা বা কী কাজ করা হয়েছে..." 
+                  className={`${inputClass} resize-none`} 
+                />
+              </div>
+
             </div>
-
-            <label>
-              <span>Details / Issue Description</span>
-              <textarea rows="2" value={data.details} onChange={(e) => setData('details', e.target.value)} placeholder="সমস্যার বিস্তারিত বর্ণনা বা কী কাজ করা হয়েছে..." />
-            </label>
-
           </div>
-          <div className="mm-modal-foot mt-4">
-            <button type="button" className="btn btn-outline" onClick={onClose} disabled={processing}>Cancel</button>
-            <button type="submit" className="btn" disabled={processing}>{processing ? 'Saving...' : 'Save Record'}</button>
+
+          {/* Footer */}
+          <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-end gap-3 shrink-0 rounded-b-2xl">
+            <button type="button" onClick={onClose} disabled={processing} className="px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-all shadow-sm">
+              Cancel
+            </button>
+            <button type="submit" disabled={processing} className="flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md shadow-indigo-500/20 disabled:opacity-70 active:scale-95">
+              <Icon name="save" className="w-4 h-4" />
+              {processing ? 'Saving...' : 'Save Record'}
+            </button>
           </div>
         </form>
       </div>

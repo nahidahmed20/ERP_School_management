@@ -6,7 +6,6 @@ export default function AssetFormModal({ item, users, campuses, activeCampusId, 
   const { auth } = usePage().props;
   const isSuperAdmin = auth?.user?.role === 'super_admin' || auth?.user?.roles?.some(r => r.name === 'Super Admin');
 
-  // ইউনিক ট্যাগ জেনারেট করা (ডিফল্ট)
   const defaultTag = `AST-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
   const { data, setData, post, put, processing, errors, reset } = useForm({
@@ -22,7 +21,6 @@ export default function AssetFormModal({ item, users, campuses, activeCampusId, 
     note: item?.note ?? '',
   });
 
-  // যদি কাউকে অ্যাসাইন করা হয়, তাহলে অটোমেটিক স্ট্যাটাস 'Assigned' হয়ে যাবে
   const handleAssigneeChange = (e) => {
     const userId = e.target.value;
     setData(data => ({
@@ -39,98 +37,157 @@ export default function AssetFormModal({ item, users, campuses, activeCampusId, 
     else post(route('admin.purchase.assets.store'), options);
   }
 
+  const inputClass = "block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all";
+  const labelClass = "block text-sm font-semibold text-slate-700 mb-1.5";
+
   return (
     <div className="mm-modal-overlay" onClick={onClose}>
-      <div className="mm-modal mm-modal-lg" onClick={(e) => e.stopPropagation()}>
-        <div className="mm-modal-head">
-          <h3>{isEdit ? 'Edit Asset Record' : 'Register New Asset'}</h3>
-          <button className="icon-btn" onClick={onClose}><Icon name="close" /></button>
+      <div 
+        className="mm-modal" 
+        onClick={(e) => e.stopPropagation()}
+        style={{ padding: 0, overflow: 'hidden', maxWidth: '800px', width: '100%' }}
+      >
+        {/* Header */}
+        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
+          <div>
+            <h3 className="text-xl font-bold text-slate-900">{isEdit ? 'Edit Asset Record' : 'Register New Asset'}</h3>
+            <p className="text-sm text-slate-500 mt-1">Configure asset details, status and assignments.</p>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors bg-white border border-slate-200 shadow-sm">
+            <Icon name="close" className="w-4 h-4" />
+          </button>
         </div>
 
-        <form onSubmit={submit} className="mm-form">
-          <div className="mm-form-grid">
+        {/* Form Body */}
+        <form onSubmit={submit} className="flex flex-col max-h-[80vh]">
+          <div className="p-6 overflow-y-auto space-y-5 flex-1">
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              
+              <div className="sm:col-span-2">
+                <label className={labelClass}>Campus <span className="text-rose-500">*</span></label>
+                <select 
+                  value={data.campus_id || ''} 
+                  onChange={(e) => setData('campus_id', e.target.value)} 
+                  disabled={!isSuperAdmin} 
+                  required 
+                  className={`${inputClass} ${!isSuperAdmin ? 'bg-slate-100 opacity-70' : 'bg-white'}`}
+                >
+                  <option value="" disabled>Select Campus</option>
+                  {campuses?.map(campus => <option key={campus.id} value={campus.id}>{campus.name}</option>)}
+                </select>
+                {errors.campus_id && <p className="text-rose-500 text-xs mt-1">{errors.campus_id}</p>}
+              </div>
 
-            <label style={{ gridColumn: '1 / -1' }}>
-              <span>Campus *</span>
-              <select value={data.campus_id || ''} onChange={(e) => setData('campus_id', e.target.value)} disabled={!isSuperAdmin} required>
-                <option value="" disabled>Select Campus</option>
-                {campuses?.map(campus => <option key={campus.id} value={campus.id}>{campus.name}</option>)}
-              </select>
-              {errors.campus_id && <em>{errors.campus_id}</em>}
-            </label>
-
-            <label>
-              <span>Asset Tag / Barcode *</span>
-              <input value={data.asset_tag} onChange={(e) => setData('asset_tag', e.target.value)} required placeholder="e.g. AST-2026-0001" />
-              {errors.asset_tag && <em>{errors.asset_tag}</em>}
-            </label>
-
-            <label>
-                <span>Asset Name *</span>
-                <input
-                    value={data.name}
-                    onChange={(e) => setData('name', e.target.value)}
-                    autoFocus
-                    required
-                    placeholder='e.g. Dell Monitor 24"'
+              <div>
+                <label className={labelClass}>Asset Tag / Barcode <span className="text-rose-500">*</span></label>
+                <input 
+                  value={data.asset_tag} 
+                  onChange={(e) => setData('asset_tag', e.target.value)} 
+                  required 
+                  placeholder="e.g. AST-2026-0001" 
+                  className={`${inputClass} font-mono`} 
                 />
-                {errors.name && <em>{errors.name}</em>}
-            </label>
+                {errors.asset_tag && <p className="text-rose-500 text-xs mt-1">{errors.asset_tag}</p>}
+              </div>
 
-            <label>
-              <span>Category</span>
-              <select value={data.category} onChange={(e) => setData('category', e.target.value)}>
-                <option value="Electronics">Electronics / IT</option>
-                <option value="Furniture">Furniture</option>
-                <option value="Vehicles">Vehicles</option>
-                <option value="Others">Others</option>
-              </select>
-            </label>
+              <div>
+                <label className={labelClass}>Asset Name <span className="text-rose-500">*</span></label>
+                <input
+                  value={data.name}
+                  onChange={(e) => setData('name', e.target.value)}
+                  autoFocus
+                  required
+                  placeholder='e.g. Dell Monitor 24"'
+                  className={inputClass}
+                />
+                {errors.name && <p className="text-rose-500 text-xs mt-1">{errors.name}</p>}
+              </div>
 
-            <label>
-              <span>Current Status *</span>
-              <select value={data.status} onChange={(e) => setData('status', e.target.value)} required>
-                <option value="Available">Available (In Store)</option>
-                <option value="Assigned">Assigned (In Use)</option>
-                <option value="Maintenance">Maintenance / Repair</option>
-                <option value="Damaged">Damaged</option>
-                <option value="Lost">Lost</option>
-              </select>
-            </label>
+              <div>
+                <label className={labelClass}>Category</label>
+                <select value={data.category} onChange={(e) => setData('category', e.target.value)} className={`${inputClass} bg-white`}>
+                  <option value="Electronics">Electronics / IT</option>
+                  <option value="Furniture">Furniture</option>
+                  <option value="Vehicles">Vehicles</option>
+                  <option value="Others">Others</option>
+                </select>
+              </div>
 
-            <label style={{ gridColumn: '1 / -1' }}>
-              <span>Assign To (Staff/User)</span>
-              <select value={data.assigned_to} onChange={handleAssigneeChange}>
-                <option value="">-- Keep Unassigned --</option>
-                {users?.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
-              </select>
-            </label>
+              <div>
+                <label className={labelClass}>Current Status <span className="text-rose-500">*</span></label>
+                <select value={data.status} onChange={(e) => setData('status', e.target.value)} required className={`${inputClass} bg-white`}>
+                  <option value="Available">Available (In Store)</option>
+                  <option value="Assigned">Assigned (In Use)</option>
+                  <option value="Maintenance">Maintenance / Repair</option>
+                  <option value="Damaged">Damaged</option>
+                  <option value="Lost">Lost</option>
+                </select>
+              </div>
 
-            <label>
-              <span>Location / Room</span>
-              <input value={data.location} onChange={(e) => setData('location', e.target.value)} placeholder="e.g. Lab-01, Principal Room" />
-            </label>
+              <div className="sm:col-span-2">
+                <label className={labelClass}>Assign To (Staff/User)</label>
+                <select value={data.assigned_to} onChange={handleAssigneeChange} className={`${inputClass} bg-indigo-50/30 border-indigo-200`}>
+                  <option value="">-- Keep Unassigned --</option>
+                  {users?.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                </select>
+              </div>
 
-            <label>
-              <span>Purchase Date</span>
-              <input type="date" value={data.purchase_date || ''} onChange={(e) => setData('purchase_date', e.target.value)} />
-            </label>
+              <div>
+                <label className={labelClass}>Location / Room</label>
+                <input 
+                  value={data.location} 
+                  onChange={(e) => setData('location', e.target.value)} 
+                  placeholder="e.g. Lab-01, Principal Room" 
+                  className={inputClass} 
+                />
+              </div>
 
-            <label style={{ gridColumn: '1 / -1' }}>
-              <span>Cost (৳)</span>
-              <input type="number" value={data.cost} onChange={(e) => setData('cost', e.target.value)} min="0" step="0.01" />
-            </label>
+              <div>
+                <label className={labelClass}>Purchase Date</label>
+                <input 
+                  type="date" 
+                  value={data.purchase_date || ''} 
+                  onChange={(e) => setData('purchase_date', e.target.value)} 
+                  className={`${inputClass} font-mono`} 
+                />
+              </div>
 
-            <label style={{ gridColumn: '1 / -1' }}>
-              <span>Additional Notes</span>
-              <textarea rows="2" value={data.note} onChange={(e) => setData('note', e.target.value)} placeholder="Condition, serial numbers, etc..." />
-            </label>
+              <div className="sm:col-span-2">
+                <label className={labelClass}>Cost (৳)</label>
+                <input 
+                  type="number" 
+                  value={data.cost} 
+                  onChange={(e) => setData('cost', e.target.value)} 
+                  min="0" 
+                  step="0.01" 
+                  className={`${inputClass} font-mono text-emerald-600 font-bold`} 
+                />
+              </div>
 
+              <div className="sm:col-span-2">
+                <label className={labelClass}>Additional Notes</label>
+                <textarea 
+                  rows="3" 
+                  value={data.note} 
+                  onChange={(e) => setData('note', e.target.value)} 
+                  placeholder="Condition, serial numbers, etc..." 
+                  className={`${inputClass} resize-none`} 
+                />
+              </div>
+
+            </div>
           </div>
 
-          <div className="mm-modal-foot mt-2">
-            <button type="button" className="btn btn-outline" onClick={onClose} disabled={processing}>Cancel</button>
-            <button type="submit" className="btn" disabled={processing}>{processing ? 'Saving...' : (isEdit ? 'Update Asset' : 'Register Asset')}</button>
+          {/* Footer */}
+          <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-end gap-3 shrink-0 rounded-b-2xl">
+            <button type="button" onClick={onClose} disabled={processing} className="px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-all shadow-sm">
+              Cancel
+            </button>
+            <button type="submit" disabled={processing} className="flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md shadow-indigo-500/20 disabled:opacity-70 active:scale-95">
+              <Icon name="save" className="w-4 h-4" />
+              {processing ? 'Saving...' : (isEdit ? 'Update Asset' : 'Register Asset')}
+            </button>
           </div>
         </form>
       </div>

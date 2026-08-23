@@ -14,6 +14,7 @@ export default function Index({ applicants, jobPosts, filters }) {
   const [search, setSearch] = useState(filters.search ?? '');
   const [statusFilter, setStatusFilter] = useState(filters.status ?? '');
   const [jobPostFilter, setJobPostFilter] = useState(filters.job_post_id ?? '');
+  const [perPage, setPerPage] = useState(filters.per_page ?? '10');
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
@@ -22,25 +23,28 @@ export default function Index({ applicants, jobPosts, filters }) {
 
   useEffect(() => {
     if (flash?.success) {
-      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: flash.success, showConfirmButton: false, timer: 3000 });
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: flash.success, showConfirmButton: false, timer: 3000, timerProgressBar: true });
       setFormOpen(false);
     }
   }, [flash]);
 
-  const applyFilters = () => {
+  const applyFilters = (overrides = {}) => {
     router.get(route('admin.recruitment.applicants.index'), { 
-      search, status: statusFilter, job_post_id: jobPostFilter 
-    }, { preserveState: true });
+      search, status: statusFilter, job_post_id: jobPostFilter, per_page: perPage, ...overrides 
+    }, { preserveState: true, replace: true });
   };
-
 
   const handleStatusChange = (id, newStatus) => {
     router.patch(route('admin.recruitment.applicants.update-status', id), {
       status: newStatus
     }, {
       preserveScroll: true, 
+      onSuccess: () => {
+        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Status updated successfully!', showConfirmButton: false, timer: 2000 });
+      }
     });
   };
+
   const handleDeleteConfirm = () => {
     if (deleteId) {
       router.delete(route('admin.recruitment.applicants.destroy', deleteId), {
@@ -51,128 +55,267 @@ export default function Index({ applicants, jobPosts, filters }) {
 
   const getStatusBadge = (status) => {
     switch(status) {
-      case 'Hired': return { bg: '#dcfce7', text: '#15803d' };
-      case 'Shortlisted': return { bg: '#dbeafe', text: '#1d4ed8' };
-      case 'Interviewed': return { bg: '#fef3c7', text: '#d97706' };
-      case 'Rejected': return { bg: '#fee2e2', text: '#b91c1c' };
-      default: return { bg: '#f1f5f9', text: '#475569' }; // Pending
+      case 'Hired': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      case 'Shortlisted': return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'Interviewed': return 'bg-amber-50 text-amber-700 border-amber-200';
+      case 'Rejected': return 'bg-rose-50 text-rose-700 border-rose-200';
+      default: return 'bg-slate-100 text-slate-700 border-slate-200'; // Pending
     }
   };
 
+  // --- Export Functions ---
+  const handlePrint = () => window.print();
+
+  const exportToCSV = () => {
+    if (!applicants.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
+    const headers = ['Applicant Name', 'Phone', 'Applied For', 'Date', 'Status'];
+    const rows = applicants.data.map(item => [
+      item.name || 'N/A', 
+      item.phone || 'N/A', 
+      item.job_post?.title || 'N/A', 
+      item.applied_date || 'N/A', 
+      item.status || 'Pending'
+    ]);
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows.map(e => e.map(val => `"${val}"`).join(','))].join('\n');
+    const link = document.createElement("a");
+    link.setAttribute("href", encodeURI(csvContent));
+    link.setAttribute("download", `Applicants_List_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const copyToClipboard = () => {
+    if (!applicants.data.length) return;
+    let text = "Name\tPhone\tApplied For\tDate\tStatus\n";
+    applicants.data.forEach(item => {
+      text += `${item.name}\t${item.phone}\t${item.job_post?.title}\t${item.applied_date}\t${item.status}\n`;
+    });
+    navigator.clipboard.writeText(text);
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Data copied to clipboard!', showConfirmButton: false, timer: 2000 });
+  };
+
   return (
-    <AuthenticatedLayout
-      header={
-        <div className="page-head">
+    <AuthenticatedLayout>
+      <Head title="Applicants" />
+
+      {/* Print Specific CSS */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @media print {
+          nav, aside, header, .no-print, button, a, select, input { display: none !important; }
+          body, html { background: #f8fafc !important; }
+          .print-table-wrapper { width: 100% !important; border: none !important; box-shadow: none !important; }
+          .print-title { display: block !important; font-size: 24px !important; font-weight: bold !important; margin-bottom: 20px !important; }
+        }
+        @media screen { .print-title { display: none; } }
+      `}} />
+
+      <div className="print-title">Applicants Directory - {new Date().toLocaleDateString('en-GB')}</div>
+
+      <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8 no-print">
+        
+        {/* Page Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <span className="eyebrow">Recruitment</span>
-            <h1>Applicants</h1>
-            <p className="desc">চাকরিপ্রার্থীদের আবেদন এবং সিভি পরিচালনা করুন।</p>
+            <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">Recruitment</span>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Applicants</h1>
+            <p className="text-sm text-slate-500 mt-1">চাকরিপ্রার্থীদের আবেদন এবং সিভি পরিচালনা করুন।</p>
           </div>
-          <div className="mm-head-actions">
-            <button className="btn" onClick={() => { setEditingItem(null); setFormOpen(true); }}>
-              <Icon name="plus" /> Add Applicant
+          <button
+            onClick={() => { setEditingItem(null); setFormOpen(true); }}
+            className="w-full sm:w-auto inline-flex justify-center items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md shadow-indigo-500/20 active:scale-95"
+          >
+            <Icon name="plus" className="w-4 h-4" /> Add Applicant
+          </button>
+        </div>
+
+        {/* Unified Modern Toolbar */}
+        <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
+            
+            {/* Per Page */}
+            <select
+              value={perPage}
+              onChange={e => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}
+              className="appearance-none bg-none pr-3 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer text-center font-mono"
+              style={{ backgroundImage: 'none' }}
+            >
+              <option value="10">10 / Page</option>
+              <option value="20">20 / Page</option>
+              <option value="50">50 / Page</option>
+              <option value="all">All</option>
+            </select>
+
+            <div className="hidden sm:block w-px h-6 bg-slate-200"></div>
+
+            {/* Job Post Filter */}
+            <select 
+              value={jobPostFilter} 
+              onChange={(e) => { setJobPostFilter(e.target.value); applyFilters({ job_post_id: e.target.value }); }}
+              className="w-full sm:w-48 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer truncate"
+            >
+              <option value="">All Job Posts</option>
+              {jobPosts.map(job => (
+                <option key={job.id} value={job.id}>{job.title}</option>
+              ))}
+            </select>
+
+            {/* Status Filter */}
+            <select 
+              value={statusFilter} 
+              onChange={(e) => { setStatusFilter(e.target.value); applyFilters({ status: e.target.value }); }}
+              className="w-full sm:w-36 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
+            >
+              <option value="">All Statuses</option>
+              <option value="Pending">Pending</option>
+              <option value="Shortlisted">Shortlisted</option>
+              <option value="Interviewed">Interviewed</option>
+              <option value="Hired">Hired</option>
+              <option value="Rejected">Rejected</option>
+            </select>
+
+            {/* Search Input */}
+            <div className="relative flex-1 min-w-[200px] sm:w-64">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Icon name="search" className="w-4 h-4 text-slate-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search name, phone or email..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
+                className="block w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+              />
+            </div>
+
+            {/* Apply Button */}
+            <button
+              onClick={() => applyFilters()}
+              className="w-full sm:w-auto px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
+            >
+              Filter
+            </button>
+          </div>
+
+          {/* Export Actions */}
+          <div className="flex items-center justify-end gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-xl w-full xl:w-auto shadow-sm shrink-0 ml-auto">
+            <button onClick={copyToClipboard} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Copy to Clipboard">
+              Copy
+            </button>
+            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+            <button onClick={exportToCSV} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-emerald-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export CSV">
+              CSV
+            </button>
+            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+            <button onClick={() => alert('Backend Excel plugin needed')} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-green-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export Excel">
+              Excel
+            </button>
+            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+            <button onClick={() => alert('Backend PDF plugin needed')} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-rose-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export PDF">
+              PDF
+            </button>
+            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+            <button onClick={handlePrint} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-amber-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Print List">
+              Print
             </button>
           </div>
         </div>
-      }
-    >
-      <Head title="Applicants" />
 
-      <div className="card mm-card">
-        <div className="mm-filters" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          <div className="search">
-            <Icon name="search" />
-            <input placeholder="Search name, phone or email..." value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && applyFilters()} />
+        {/* Main Table Card */}
+        <div className="bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 print-table-wrapper">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50/50">
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Applicant Info</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Applied For</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Date</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Resume</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right no-print">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {applicants.data.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
+                      <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-3 border border-slate-100">
+                        <Icon name="users" className="w-8 h-8 text-slate-300" />
+                      </div>
+                      <p className="text-sm font-semibold text-slate-600">No applicants found</p>
+                      <p className="text-xs text-slate-400 mt-1">Try adjusting filters or searching again</p>
+                    </td>
+                  </tr>
+                ) : (
+                  applicants.data.map((item) => (
+                    <tr key={item.id} className="hover:bg-slate-50/60 transition-colors">
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-bold text-slate-900 block">{item.name}</span>
+                        <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium font-mono mt-0.5">
+                          {item.phone}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="inline-flex px-2.5 py-1 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-lg text-xs font-bold truncate max-w-[200px]">
+                          {item.job_post?.title || 'Unknown Post'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm font-semibold text-slate-600">
+                        {item.applied_date}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        {item.resume ? (
+                          <a
+                            href={`/storage/${item.resume}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg transition-colors border border-slate-200"
+                          >
+                            <Icon name="download" className="w-3 h-3" /> CV
+                          </a>
+                        ) : (
+                          <span className="text-xs text-slate-400 italic">N/A</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        {/* Inline Status Updater */}
+                        <select
+                          value={item.status}
+                          onChange={(e) => handleStatusChange(item.id, e.target.value)}
+                          className={`inline-flex px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide uppercase border outline-none cursor-pointer transition-colors ${getStatusBadge(item.status)} focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500`}
+                        >
+                          <option value="Pending">Pending</option>
+                          <option value="Shortlisted">Shortlisted</option>
+                          <option value="Interviewed">Interviewed</option>
+                          <option value="Hired">Hired</option>
+                          <option value="Rejected">Rejected</option>
+                        </select>
+                      </td>
+                      <td className="px-6 py-4 text-right no-print">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button onClick={() => setShowItem(item)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="View Details">
+                            <Icon name="eye" className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => { setEditingItem(item); setFormOpen(true); }} className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Edit Applicant">
+                            <Icon name="edit" className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => setDeleteId(item.id)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Delete Applicant">
+                            <Icon name="trash" className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
 
-          <select value={jobPostFilter} onChange={(e) => { setJobPostFilter(e.target.value); applyFilters(); }}>
-            <option value="">All Job Posts</option>
-            {jobPosts.map(job => (
-              <option key={job.id} value={job.id}>{job.title}</option>
-            ))}
-          </select>
-
-          <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); applyFilters(); }}>
-            <option value="">All Status</option>
-            <option value="Pending">Pending</option>
-            <option value="Shortlisted">Shortlisted</option>
-            <option value="Interviewed">Interviewed</option>
-            <option value="Hired">Hired</option>
-            <option value="Rejected">Rejected</option>
-          </select>
-
-          <button className="btn btn-outline" onClick={applyFilters}>Filter</button>
+          <div className="no-print border-t border-slate-100 bg-white px-6 py-4 rounded-b-2xl">
+            <Pagination meta={applicants} />
+          </div>
         </div>
-
-        <div className="mm-table-wrap">
-          <table className="mm-table">
-            <thead>
-              <tr>
-                <th>Applicant Info</th>
-                <th>Applied For</th>
-                <th>Date</th>
-                <th>Resume</th>
-                <th>Status</th>
-                <th className="mm-actions-col">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {applicants.data.length === 0 && (
-                <tr><td colSpan={6} className="mm-empty">কোনো আবেদনকারী পাওয়া যায়নি।</td></tr>
-              )}
-              {applicants.data.map((item) => (
-                <tr key={item.id}>
-                  <td>
-                    <strong style={{ color: '#0f172a' }}>{item.name}</strong>
-                    <div style={{ fontSize: '12px', color: '#64748b' }}>{item.phone}</div>
-                  </td>
-                  <td><span className="badge">{item.job_post?.title}</span></td>
-                  <td>{item.applied_date}</td>
-                  <td>
-                    {item.resume ? (
-                      <a href={`/storage/${item.resume}`} target="_blank" rel="noreferrer" className="btn btn-outline" style={{ padding: '4px 8px', fontSize: '12px' }}>
-                        <Icon name="download" style={{fontSize: '12px'}}/> View CV
-                      </a>
-                    ) : (
-                      <span style={{ fontSize: '12px', color: '#94a3b8' }}>N/A</span>
-                    )}
-                  </td>
-                  <td>
-                    <select
-                      value={item.status}
-                      onChange={(e) => handleStatusChange(item.id, e.target.value)}
-                      style={{ 
-                        backgroundColor: getStatusBadge(item.status).bg, 
-                        color: getStatusBadge(item.status).text, 
-                        padding: '4px 10px', 
-                        borderRadius: '20px', 
-                        fontSize: '12px', 
-                        fontWeight: 'bold',
-                        border: '1px solid transparent',
-                        cursor: 'pointer',
-                        outline: 'none'
-                      }}
-                    >
-                      <option value="Pending">Pending</option>
-                      <option value="Shortlisted">Shortlisted</option>
-                      <option value="Interviewed">Interviewed</option>
-                      <option value="Hired">Hired</option>
-                      <option value="Rejected">Rejected</option>
-                    </select>
-                  </td>
-                  <td>
-                    <div className="mm-row-actions">
-                      <button className="icon-btn" title="View" onClick={() => setShowItem(item)}><Icon name="eye" /></button>
-                      <button className="icon-btn" title="Edit" onClick={() => { setEditingItem(item); setFormOpen(true); }}><Icon name="edit" /></button>
-                      <button className="icon-btn icon-btn-danger" title="Delete" onClick={() => setDeleteId(item.id)}><Icon name="trash" /></button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <Pagination meta={applicants} />
       </div>
 
       {formOpen && <FormModal item={editingItem} jobPosts={jobPosts} onClose={() => setFormOpen(false)} />}
@@ -188,7 +331,6 @@ export default function Index({ applicants, jobPosts, filters }) {
           message="আপনি কি নিশ্চিত যে এই আবেদনকারীর তথ্য মুছে ফেলতে চান?"
         />
       )}
-      
     </AuthenticatedLayout>
   );
 }

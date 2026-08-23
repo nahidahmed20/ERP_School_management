@@ -20,7 +20,7 @@ export default function Index({ student, filters }) {
     remarks: ''
   });
 
-  // 1. FIXED: Update student_id in form state when student prop changes
+  // Update student_id in form state when student prop changes
   useEffect(() => {
     if (student?.id) {
       setData('student_id', student.id);
@@ -30,12 +30,12 @@ export default function Index({ student, filters }) {
   // --- Beautiful Error & Success Handling ---
   useEffect(() => {
     if (flash?.success) {
-      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: flash.success, showConfirmButton: false, timer: 3000 });
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: flash.success, showConfirmButton: false, timer: 3000, timerProgressBar: true });
       reset('amount_paid', 'transaction_id', 'remarks', 'fee_assignment_id');
       clearErrors();
     }
     if (flash?.error) {
-      Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: flash.error, showConfirmButton: false, timer: 4000 });
+      Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: flash.error, showConfirmButton: false, timer: 4000, timerProgressBar: true });
     }
 
     if (Object.keys(pageErrors).length > 0) {
@@ -47,7 +47,8 @@ export default function Index({ student, filters }) {
         background: '#fef2f2',
         color: '#991b1b',
         showConfirmButton: false,
-        timer: 4000
+        timer: 4000,
+        timerProgressBar: true
       });
     }
   }, [flash, pageErrors]);
@@ -55,7 +56,7 @@ export default function Index({ student, filters }) {
   const searchStudent = (e) => {
     e.preventDefault();
     if (!admissionNo) return;
-    router.get(route('admin.fees.payments'), { admission_no: admissionNo }, { preserveState: true });
+    router.get(route('admin.fees.payments.create'), { search: admissionNo }, { preserveState: true });
   };
 
   const handlePaymentSubmit = (e) => {
@@ -78,180 +79,264 @@ export default function Index({ student, filters }) {
     }
   };
 
+  // Shared Design Classes
+  const labelClass = "block text-sm font-semibold text-slate-700 mb-1.5";
+  const inputClass = "block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all";
+
   return (
-    <AuthenticatedLayout
-      header={
-        <div className="page-head">
-          <div>
-            <span className="eyebrow">Finance & Accounts</span>
-            <h1>Receive Payment</h1>
-            <p className="desc">শিক্ষার্থীর অ্যাডমিশন নম্বর দিয়ে বকেয়া ফি খুঁজুন এবং পেমেন্ট রিসিভ করুন।</p>
-          </div>
-        </div>
-      }
-    >
+    <AuthenticatedLayout>
       <Head title="Receive Payment" />
 
-      {/* Step 1: Search Student */}
-      <div className="card mm-card" style={{ background: '#fff', padding: '24px', borderRadius: '12px', marginBottom: '24px', borderTop: '4px solid #0f172a' }}>
-        <form onSubmit={searchStudent} style={{ display: 'flex', gap: '16px', alignItems: 'flex-end' }}>
-          <div style={{ flex: '1', maxWidth: '400px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: '#1e293b' }}>
-              Student Admission Number <span style={{color:'#ef4444'}}>*</span>
-            </label>
-            <div className="search" style={{ position: 'relative' }}>
-              <Icon name="search" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-              <input
-                type="text"
-                placeholder="e.g. STU-2025-0001"
-                value={admissionNo}
-                onChange={e => setAdmissionNo(e.target.value)}
-                style={{ width: '100%', padding: '12px 12px 12px 40px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '15px' }}
-                required
-              />
-            </div>
-          </div>
-          <button type="submit" className="btn" style={{ padding: '12px 24px', background: '#0f172a', color: '#fff', borderRadius: '8px', fontWeight: '600' }}>
-            Search Details
-          </button>
-        </form>
-      </div>
-
-      {/* Step 2: Student Details & Payment Form */}
-      {student && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
-
-          {/* Left Column: Student Profile & Pending Fees */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            {/* Profile Info */}
-            <div className="card mm-card" style={{ background: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', borderBottom: '1px solid #e2e8f0', paddingBottom: '16px', marginBottom: '16px' }}>
-                <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: '#e0e7ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5', fontSize: '24px', fontWeight: 'bold' }}>
-                  {student.first_name[0]}
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 4px 0', fontSize: '18px', color: '#0f172a' }}>{student.first_name} {student.last_name || ''}</h3>
-                  <div style={{ fontSize: '13px', color: '#64748b' }}>Class: {student.current_enrollment?.school_class?.name} | Roll: {student.current_enrollment?.roll_no}</div>
-                </div>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', color: '#334155' }}>
-                <div><strong>Guardian:</strong> {student.guardian?.father_name} ({student.guardian?.father_phone})</div>
-                <div><strong>Admission:</strong> {student.admission_no}</div>
-              </div>
-            </div>
-
-            {/* Pending Fees List */}
-            <div className="card mm-card" style={{ background: '#fff', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-              <h4 style={{ margin: '0 0 16px 0', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Icon name="warning" /> Pending Fees
-              </h4>
-              {student.fee_assignments?.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {student.fee_assignments.map(assign => {
-                    const totalAmount = assign.fee_group?.fee_types?.reduce((sum, item) => sum + Number(item.amount), 0) || 0;
-                    return (
-                      <div key={assign.id} style={{ padding: '12px', borderRadius: '8px', border: '1px dashed #f87171', background: '#fef2f2', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div>
-                          <strong style={{ display: 'block', color: '#991b1b', fontSize: '14px' }}>{assign.fee_group?.name}</strong>
-                          <span style={{ fontSize: '12px', color: '#b91c1c' }}>Due: {assign.due_date}</span>
-                        </div>
-                        <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#dc2626' }}>৳ {totalAmount}</div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div style={{ padding: '16px', background: '#f0fdf4', color: '#16a34a', borderRadius: '8px', textAlign: 'center', fontWeight: '600' }}>
-                  এই শিক্ষার্থীর কোনো বকেয়া ফি নেই!
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Right Column: Payment Receive Form */}
-          <div className="card mm-card" style={{ background: '#fff', padding: '24px', borderRadius: '12px', borderTop: '4px solid #4f46e5', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}>
-            <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', color: '#1e293b', borderBottom: '1px solid #f1f5f9', paddingBottom: '12px' }}>
-              Process Payment
-            </h3>
-
-            <form onSubmit={handlePaymentSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {/* Select Fee */}
-              <div>
-                <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600' }}>Select Fee to Pay <span style={{color:'red'}}>*</span></label>
-                <select
-                  value={data.fee_assignment_id}
-                  onChange={handleFeeSelect}
-                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: errors.fee_assignment_id ? '1px solid #ef4444' : '1px solid #cbd5e1', background: '#f8fafc' }}
-                >
-                  <option value="">-- বকেয়া ফি সিলেক্ট করুন --</option>
-                  {student.fee_assignments?.map(assign => (
-                    <option key={assign.id} value={assign.id}>{assign.fee_group?.name}</option>
-                  ))}
-                </select>
-                {errors.fee_assignment_id && <div style={{ color: '#dc2626', fontSize: '12px', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '4px', background: '#fef2f2', padding: '4px 8px', borderRadius: '4px' }}><Icon name="warning" style={{ fontSize: '12px' }}/> {errors.fee_assignment_id}</div>}
-              </div>
-
-              {/* Amount & Date */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600' }}>Amount Paid (৳) <span style={{color:'red'}}>*</span></label>
-                  <input
-                    type="number"
-                    value={data.amount_paid}
-                    onChange={e => setData('amount_paid', e.target.value)}
-                    placeholder="e.g. 500"
-                    style={{ width: '100%', padding: '12px', borderRadius: '8px', border: errors.amount_paid ? '1px solid #ef4444' : '1px solid #cbd5e1', fontSize: '16px', fontWeight: 'bold', color: '#16a34a' }}
-                  />
-                  {errors.amount_paid && <div style={{ color: '#dc2626', fontSize: '12px', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '4px', background: '#fef2f2', padding: '4px 8px', borderRadius: '4px' }}><Icon name="warning" style={{ fontSize: '12px' }}/> {errors.amount_paid}</div>}
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600' }}>Payment Date <span style={{color:'red'}}>*</span></label>
-                  <input
-                    type="date"
-                    value={data.payment_date}
-                    onChange={e => setData('payment_date', e.target.value)}
-                    style={{ width: '100%', padding: '12px', borderRadius: '8px', border: errors.payment_date ? '1px solid #ef4444' : '1px solid #cbd5e1' }}
-                  />
-                </div>
-              </div>
-
-              {/* Payment Method */}
-              <div>
-                <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600' }}>Payment Method <span style={{color:'red'}}>*</span></label>
-                <div style={{ display: 'flex', gap: '12px' }}>
-                  {['Cash', 'Bank', 'Bkash/Nagad'].map(method => (
-                    <label key={method} style={{ flex: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px', background: data.payment_method === method ? '#e0e7ff' : '#f8fafc', border: data.payment_method === method ? '2px solid #4f46e5' : '1px solid #cbd5e1', borderRadius: '8px', cursor: 'pointer', fontWeight: data.payment_method === method ? '700' : '500', color: data.payment_method === method ? '#4f46e5' : '#475569', transition: 'all 0.2s' }}>
-                      <input type="radio" name="method" value={method} checked={data.payment_method === method} onChange={e => setData('payment_method', e.target.value)} style={{ display: 'none' }} />
-                      {method}
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* Transaction ID & Remarks */}
-              {data.payment_method !== 'Cash' && (
-                <div>
-                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600' }}>Transaction / Check ID</label>
-                  <input type="text" value={data.transaction_id} onChange={e => setData('transaction_id', e.target.value)} placeholder="Enter TrxID" style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
-                </div>
-              )}
-
-              <div>
-                <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600' }}>Remarks (Optional)</label>
-                <textarea rows="2" value={data.remarks} onChange={e => setData('remarks', e.target.value)} placeholder="Any notes regarding this payment..." style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
-              </div>
-
-              {/* Submit Button */}
-              <div style={{ marginTop: '12px' }}>
-                <button type="submit" disabled={processing || student.fee_assignments?.length === 0} className="btn" style={{textAlign: 'center', display: 'flex', justifyContent: 'center',alignItems: 'center', width: '100%', padding: '14px', background: '#16a34a', color: '#fff', borderRadius: '8px', fontWeight: '700', fontSize: '16px', border: 'none', boxShadow: '0 4px 6px -1px rgba(22, 163, 74, 0.4)' }}>
-                  {processing ? 'Processing Payment...' : 'Collect Payment & Save'}
-                </button>
-              </div>
-            </form>
+      <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8">
+        
+        {/* Page Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
+          <div>
+            <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">Finance &amp; Accounts</span>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Receive Payment</h1>
+            <p className="text-sm text-slate-500 mt-1">শিক্ষার্থীর অ্যাডমিশন নম্বর দিয়ে বকেয়া ফি খুঁজুন এবং পেমেন্ট রিসিভ করুন।</p>
           </div>
         </div>
-      )}
 
+        {/* Step 1: Search Student */}
+        <div className="relative bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 overflow-hidden">
+          <div className="absolute left-0 top-0 h-full w-1 bg-slate-800" />
+          
+          <div className="flex items-center gap-3 mb-5">
+            <span className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0 border border-slate-200">
+              <Icon name="search" className="w-5 h-5" />
+            </span>
+            <h3 className="text-lg font-bold text-slate-900">১. শিক্ষার্থী খুঁজুন</h3>
+          </div>
+
+          <form onSubmit={searchStudent} className="flex flex-col sm:flex-row items-end gap-4 max-w-2xl">
+            <div className="w-full">
+              <label className={labelClass}>Student Admission Number <span className="text-rose-500">*</span></label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Icon name="search" className="w-4 h-4 text-slate-400" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="e.g. STU-2025-0001"
+                  value={admissionNo}
+                  onChange={e => setAdmissionNo(e.target.value)}
+                  className="block w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-[15px] font-mono focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                  required
+                />
+              </div>
+            </div>
+            <button 
+              type="submit" 
+              className="w-full sm:w-auto px-8 py-3 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold shadow-md active:scale-95 transition-all shrink-0"
+            >
+              Search Details
+            </button>
+          </form>
+        </div>
+
+        {/* Step 2: Student Details & Payment Form */}
+        {student && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            {/* Left Column: Student Profile & Pending Fees */}
+            <div className="lg:col-span-5 space-y-6">
+              
+              {/* Profile Card */}
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <div className="flex items-center gap-4 border-b border-slate-100 pb-5 mb-5">
+                  <div className="w-16 h-16 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 text-2xl font-bold border border-indigo-100 shrink-0">
+                    {student.first_name[0]}
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-900">{student.first_name} {student.last_name || ''}</h3>
+                    <div className="text-sm font-medium text-slate-500 mt-1">
+                      Class: {student.current_enrollment?.school_class?.name} | Roll: {student.current_enrollment?.roll_no}
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-3 text-sm text-slate-700">
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Guardian:</span>
+                    <span className="font-semibold">{student.guardian?.father_name} <br/> <span className="font-mono text-xs">{student.guardian?.father_phone}</span></span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Admission No:</span>
+                    <span className="font-bold font-mono text-indigo-700">#{student.admission_no}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Pending Fees List */}
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <h4 className="text-base font-bold text-rose-600 flex items-center gap-2 mb-5">
+                  <Icon name="warning" className="w-5 h-5" /> Pending Fees
+                </h4>
+                
+                {student.fee_assignments?.length > 0 ? (
+                  <div className="space-y-3">
+                    {student.fee_assignments.map(assign => {
+                      const totalAmount = assign.fee_group?.fee_types?.reduce((sum, item) => sum + Number(item.amount), 0) || 0;
+                      return (
+                        <div key={assign.id} className="p-4 rounded-xl border border-rose-200 bg-rose-50 flex justify-between items-center gap-4">
+                          <div>
+                            <strong className="block text-sm font-bold text-rose-800">{assign.fee_group?.name}</strong>
+                            <span className="text-xs font-semibold text-rose-600/80 mt-0.5 block">Due: {assign.due_date}</span>
+                          </div>
+                          <div className="text-lg font-black text-rose-600 font-mono">
+                            ৳{totalAmount}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="p-5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-center font-bold text-sm">
+                    এই শিক্ষার্থীর কোনো বকেয়া ফি নেই!
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Right Column: Payment Receive Form */}
+            <div className="lg:col-span-7">
+              <div className="relative bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 overflow-hidden">
+                <div className="absolute left-0 top-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-indigo-600" />
+                
+                <h3 className="text-xl font-bold text-slate-900 border-b border-slate-100 pb-4 mb-6">
+                  ২. Process Payment
+                </h3>
+
+                <form onSubmit={handlePaymentSubmit} className="space-y-5">
+                  
+                  {/* Select Fee */}
+                  <div>
+                    <label className={labelClass}>Select Fee to Pay <span className="text-rose-500">*</span></label>
+                    <select
+                      value={data.fee_assignment_id}
+                      onChange={handleFeeSelect}
+                      className={`${inputClass} ${errors.fee_assignment_id ? 'border-rose-500 ring-rose-200' : ''}`}
+                    >
+                      <option value="">-- বকেয়া ফি সিলেক্ট করুন --</option>
+                      {student.fee_assignments?.map(assign => (
+                        <option key={assign.id} value={assign.id}>{assign.fee_group?.name}</option>
+                      ))}
+                    </select>
+                    {errors.fee_assignment_id && (
+                      <p className="flex items-center gap-1.5 mt-1.5 text-xs font-semibold text-rose-600 bg-rose-50 px-2.5 py-1.5 rounded-lg w-max">
+                        <Icon name="warning" className="w-3.5 h-3.5" /> {errors.fee_assignment_id}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Amount & Date */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div>
+                      <label className={labelClass}>Amount Paid (৳) <span className="text-rose-500">*</span></label>
+                      <input
+                        type="number"
+                        value={data.amount_paid}
+                        onChange={e => setData('amount_paid', e.target.value)}
+                        placeholder="e.g. 500"
+                        className={`${inputClass} font-mono text-lg font-bold text-emerald-600 ${errors.amount_paid ? 'border-rose-500 ring-rose-200' : ''}`}
+                      />
+                      {errors.amount_paid && (
+                        <p className="flex items-center gap-1.5 mt-1.5 text-xs font-semibold text-rose-600 bg-rose-50 px-2.5 py-1.5 rounded-lg w-max">
+                          <Icon name="warning" className="w-3.5 h-3.5" /> {errors.amount_paid}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <label className={labelClass}>Payment Date <span className="text-rose-500">*</span></label>
+                      <input
+                        type="date"
+                        value={data.payment_date}
+                        onChange={e => setData('payment_date', e.target.value)}
+                        className={`${inputClass} font-mono ${errors.payment_date ? 'border-rose-500 ring-rose-200' : ''}`}
+                      />
+                      {errors.payment_date && (
+                        <p className="flex items-center gap-1.5 mt-1.5 text-xs font-semibold text-rose-600 bg-rose-50 px-2.5 py-1.5 rounded-lg w-max">
+                          <Icon name="warning" className="w-3.5 h-3.5" /> {errors.payment_date}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Payment Method - Radio Cards */}
+                  <div>
+                    <label className={labelClass}>Payment Method <span className="text-rose-500">*</span></label>
+                    <div className="grid grid-cols-3 gap-3">
+                      {['Cash', 'Bank', 'Bkash/Nagad'].map(method => (
+                        <label 
+                          key={method} 
+                          className={`flex items-center justify-center gap-2 p-3 rounded-xl border cursor-pointer font-bold text-sm transition-all ${
+                            data.payment_method === method 
+                              ? 'bg-indigo-50 border-indigo-500 text-indigo-700 shadow-sm ring-1 ring-indigo-500/20' 
+                              : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'
+                          }`}
+                        >
+                          <input 
+                            type="radio" 
+                            name="method" 
+                            value={method} 
+                            checked={data.payment_method === method} 
+                            onChange={e => setData('payment_method', e.target.value)} 
+                            className="hidden" 
+                          />
+                          {method}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Transaction ID & Remarks */}
+                  {data.payment_method !== 'Cash' && (
+                    <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                      <label className={labelClass}>Transaction / Check ID</label>
+                      <input 
+                        type="text" 
+                        value={data.transaction_id} 
+                        onChange={e => setData('transaction_id', e.target.value)} 
+                        placeholder="Enter TrxID" 
+                        className={`${inputClass} font-mono`} 
+                      />
+                    </div>
+                  )}
+
+                  <div>
+                    <label className={labelClass}>Remarks (Optional)</label>
+                    <textarea 
+                      rows="2" 
+                      value={data.remarks} 
+                      onChange={e => setData('remarks', e.target.value)} 
+                      placeholder="Any notes regarding this payment..." 
+                      className={`${inputClass} resize-none`} 
+                    />
+                  </div>
+
+                  {/* Submit Button */}
+                  <div className="pt-2">
+                    <button 
+                      type="submit" 
+                      disabled={processing || student.fee_assignments?.length === 0} 
+                      className={`w-full py-3.5 rounded-xl font-bold text-[15px] flex items-center justify-center gap-2 transition-all active:scale-[0.98] ${
+                        processing || student.fee_assignments?.length === 0
+                          ? 'bg-slate-300 text-white cursor-not-allowed shadow-none'
+                          : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/30'
+                      }`}
+                    >
+                      <Icon name="check" className="w-5 h-5" />
+                      {processing ? 'Processing Payment...' : 'Collect Payment & Save'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+          </div>
+        )}
+
+      </div>
     </AuthenticatedLayout>
   );
 }

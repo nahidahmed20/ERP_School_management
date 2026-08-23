@@ -5,61 +5,80 @@ export default function ShowModal({ item, onClose }) {
 
   return (
     <div className="mm-modal-overlay" onClick={onClose}>
-      <div className="mm-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="mm-modal-head">
-          <h3>Gateway Credentials</h3>
-          <button className="icon-btn" onClick={onClose}><Icon name="close" /></button>
+      <div 
+        className="mm-modal" 
+        onClick={(e) => e.stopPropagation()} 
+        style={{ padding: 0, overflow: 'hidden', maxWidth: '600px', width: '100%' }}
+      >
+        {/* Header */}
+        <div className="bg-slate-50 px-6 py-5 border-b border-slate-100 flex items-center justify-between shrink-0">
+          <div>
+            <h3 className="text-xl font-bold text-slate-900">Gateway Credentials</h3>
+            <p className="text-sm text-slate-500 mt-0.5">Integration keys and webhook details.</p>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors bg-white border border-slate-200 shadow-sm">
+            <Icon name="close" className="w-4 h-4" />
+          </button>
         </div>
         
-        <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {/* Body */}
+        <div className="p-6 space-y-6 overflow-y-auto max-h-[75vh]">
           
-          <div style={{ display: 'flex', gap: '20px', alignItems: 'center', paddingBottom: '16px', borderBottom: '1px solid #e2e8f0' }}>
+          <div className="flex items-center gap-4 border-b border-slate-100 pb-5">
             {item.logo ? (
-                <img src={`/storage/${item.logo}`} alt={item.name} style={{ width: '60px', height: '60px', objectFit: 'contain' }} />
+              <div className="w-16 h-16 bg-white rounded-xl border border-slate-200 p-2 flex items-center justify-center shrink-0 shadow-sm">
+                <img src={`/storage/${item.logo}`} alt={item.name} className="max-w-full max-h-full object-contain" />
+              </div>
             ) : (
-                <div style={{ width: '60px', height: '60px', background: '#e2e8f0', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Icon name="card" style={{ fontSize: '24px' }} />
-                </div>
+              <div className="w-16 h-16 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center border border-slate-200 shrink-0">
+                <Icon name="card" className="w-8 h-8" />
+              </div>
             )}
             <div>
-              <div style={{ fontSize: '18px', fontWeight: '700', color: '#0f172a' }}>{item.name}</div>
-              <div style={{ fontSize: '13px', color: '#64748b', marginTop: '2px' }}>Slug: {item.slug}</div>
+              <h3 className="text-xl font-bold text-slate-900">{item.name}</h3>
+              <div className="text-sm text-slate-500 mt-1 font-mono">slug: {item.slug}</div>
             </div>
-            <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-              <div style={{ fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase', color: item.mode === 'live' ? '#b91c1c' : '#d97706' }}>
+            <div className="ml-auto text-right">
+              <span className={`inline-block px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest border mb-1.5 ${item.mode === 'live' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
                 {item.mode} MODE
-              </div>
-              <div style={{ fontSize: '13px', fontWeight: 'bold', color: item.is_active ? '#15803d' : '#64748b', marginTop: '4px' }}>
+              </span>
+              <div className={`text-sm font-bold flex items-center justify-end gap-1.5 ${item.is_active ? 'text-emerald-600' : 'text-slate-500'}`}>
+                <div className={`w-2 h-2 rounded-full ${item.is_active ? 'bg-emerald-500' : 'bg-slate-400'}`}></div>
                 {item.is_active ? 'Active' : 'Inactive'}
               </div>
             </div>
           </div>
 
-          <div>
-            <div style={{ fontSize: '12px', color: '#64748b' }}>API Key / Store ID</div>
-            <div style={{ fontSize: '14px', fontFamily: 'monospace', color: '#0f172a', background: '#f1f5f9', padding: '8px', borderRadius: '4px', marginTop: '4px' }}>
-              {item.api_key || 'Not provided'}
+          <div className="space-y-4">
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+              <span className="block font-bold text-slate-400 uppercase text-[11px] mb-1.5 tracking-wider">API Key / Store ID</span>
+              <div className="font-mono text-sm text-slate-800 break-all bg-white p-2.5 rounded-lg border border-slate-200 shadow-sm">
+                {item.api_key || <span className="text-slate-400 italic">Not provided</span>}
+              </div>
             </div>
-          </div>
 
-          <div>
-            <div style={{ fontSize: '12px', color: '#64748b' }}>API Secret / Password</div>
-            <div style={{ fontSize: '14px', fontFamily: 'monospace', color: '#0f172a', background: '#f1f5f9', padding: '8px', borderRadius: '4px', marginTop: '4px' }}>
-              {item.api_secret ? '************************' : 'Not provided'}
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+              <span className="block font-bold text-slate-400 uppercase text-[11px] mb-1.5 tracking-wider">API Secret / Password</span>
+              <div className="font-mono text-sm text-slate-800 break-all bg-white p-2.5 rounded-lg border border-slate-200 shadow-sm">
+                {item.api_secret ? '********************************' : <span className="text-slate-400 italic">Not provided</span>}
+              </div>
             </div>
-          </div>
 
-          <div>
-            <div style={{ fontSize: '12px', color: '#64748b' }}>Webhook Secret</div>
-            <div style={{ fontSize: '14px', fontFamily: 'monospace', color: '#0f172a', background: '#f1f5f9', padding: '8px', borderRadius: '4px', marginTop: '4px' }}>
-              {item.webhook_secret ? '************************' : 'Not provided'}
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+              <span className="block font-bold text-slate-400 uppercase text-[11px] mb-1.5 tracking-wider">Webhook Secret</span>
+              <div className="font-mono text-sm text-slate-800 break-all bg-white p-2.5 rounded-lg border border-slate-200 shadow-sm">
+                {item.webhook_secret ? '********************************' : <span className="text-slate-400 italic">Not provided</span>}
+              </div>
             </div>
           </div>
 
         </div>
 
-        <div className="mm-modal-foot mt-2">
-          <button type="button" className="btn btn-outline" onClick={onClose}>Close</button>
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-end rounded-b-2xl">
+          <button type="button" className="px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 rounded-xl transition-all shadow-sm" onClick={onClose}>
+            Close
+          </button>
         </div>
       </div>
     </div>

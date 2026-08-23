@@ -5,58 +5,81 @@ export default function ShowModal({ item, onClose }) {
 
   return (
     <div className="mm-modal-overlay" onClick={onClose}>
-      <div className="mm-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="mm-modal-head">
-          <h3>Assignment Details</h3>
-          <button className="icon-btn" onClick={onClose}><Icon name="close" /></button>
+      <div 
+        className="mm-modal" 
+        onClick={(e) => e.stopPropagation()} 
+        style={{ padding: 0, overflow: 'hidden', maxWidth: '600px', width: '100%' }}
+      >
+        {/* Header */}
+        <div className="bg-slate-50 px-6 py-5 border-b border-slate-100 flex items-center justify-between shrink-0">
+          <div>
+            <h3 className="text-xl font-bold text-slate-900">Assignment Details</h3>
+            <p className="text-sm text-slate-500 mt-0.5">Asset allocation history and condition.</p>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors bg-white border border-slate-200 shadow-sm">
+            <Icon name="close" className="w-4 h-4" />
+          </button>
         </div>
-
-        <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-
-          <div style={{ display: 'flex', gap: '20px', alignItems: 'center', paddingBottom: '16px', borderBottom: '1px solid #e2e8f0' }}>
-            <div style={{ width: '50px', height: '50px', background: '#e2e8f0', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Icon name="box" style={{ fontSize: '24px', color: '#64748b' }} />
+        
+        {/* Body */}
+        <div className="p-6 space-y-6 overflow-y-auto max-h-[75vh]">
+          
+          <div className="flex flex-col sm:flex-row gap-5 border-b border-slate-100 pb-5">
+            <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center shrink-0 border border-slate-200 shadow-sm">
+              <Icon name="box" className="w-8 h-8 text-slate-400" />
             </div>
-            <div>
-              <div style={{ fontSize: '18px', fontWeight: '700', color: '#0f172a' }}>{item.asset?.name}</div>
-              <div style={{ fontSize: '14px', color: '#1d4ed8', fontWeight: '500', marginTop: '2px' }}>Assigned to: {item.assignee_name}</div>
-            </div>
-            <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-              <div style={{ fontSize: '13px', fontWeight: 'bold', color: item.status === 'Returned' ? '#15803d' : (item.status === 'Assigned' ? '#1d4ed8' : '#b91c1c'), marginTop: '4px', textTransform: 'uppercase' }}>
-                {item.status}
+            
+            <div className="flex-1">
+              <h3 className="text-xl font-bold text-slate-900">{item.asset?.name}</h3>
+              <div className="text-sm font-semibold text-indigo-700 mt-1 flex items-center gap-1.5">
+                <Icon name="user" className="w-4 h-4" /> Assigned to: {item.assignee_name}
               </div>
+            </div>
+
+            <div className="text-left sm:text-right mt-2 sm:mt-0">
+              <span className={`inline-flex px-3 py-1 rounded-md text-[11px] font-bold tracking-wide uppercase border ${
+                item.status === 'Returned' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                item.status === 'Damaged' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                item.status === 'Lost' ? 'bg-rose-50 text-rose-700 border-rose-200' :
+                'bg-indigo-50 text-indigo-700 border-indigo-200'
+              }`}>
+                {item.status}
+              </span>
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '20px' }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '12px', color: '#64748b' }}>Assigned Date</div>
-              <div style={{ fontSize: '14px', fontWeight: '500' }}>{item.assigned_date}</div>
+          <div className="grid grid-cols-2 gap-5 text-sm">
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+              <span className="block font-bold text-slate-400 uppercase text-xs mb-1">Assigned Date</span>
+              <span className="font-semibold text-slate-800 font-mono">{item.assigned_date}</span>
             </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '12px', color: '#64748b' }}>Due Date</div>
-              <div style={{ fontSize: '14px', fontWeight: '500' }}>{item.due_date || 'No due date'}</div>
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+              <span className="block font-bold text-slate-400 uppercase text-xs mb-1">Due Date</span>
+              <span className="font-medium text-slate-800 font-mono">{item.due_date || 'No due date'}</span>
             </div>
           </div>
 
           {item.returned_date && (
-            <div>
-                <div style={{ fontSize: '12px', color: '#64748b' }}>Returned Date</div>
-                <div style={{ fontSize: '14px', fontWeight: '500', color: '#15803d' }}>{item.returned_date}</div>
+            <div className="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100 text-sm">
+              <span className="block font-bold text-emerald-600/70 uppercase text-xs mb-1">Returned Date</span>
+              <span className="font-bold text-emerald-700 font-mono">{item.returned_date}</span>
             </div>
           )}
 
           <div>
-            <div style={{ fontSize: '12px', color: '#64748b' }}>Notes / Condition</div>
-            <div style={{ fontSize: '14px', color: '#334155', background: '#f1f5f9', padding: '12px', borderRadius: '6px', minHeight: '50px', whiteSpace: 'pre-wrap' }}>
-              {item.note || 'No notes provided.'}
+            <span className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 px-1">Notes / Condition</span>
+            <div className="text-sm text-slate-700 bg-slate-50/50 border border-slate-200 p-4 rounded-xl min-h-[60px] whitespace-pre-wrap leading-relaxed">
+              {item.note || <span className="text-slate-400 italic">No notes provided.</span>}
             </div>
           </div>
 
         </div>
 
-        <div className="mm-modal-foot mt-2">
-          <button type="button" className="btn btn-outline" onClick={onClose}>Close</button>
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-end rounded-b-2xl">
+          <button type="button" className="px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 rounded-xl transition-all shadow-sm" onClick={onClose}>
+            Close
+          </button>
         </div>
       </div>
     </div>

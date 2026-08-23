@@ -1,342 +1,431 @@
 import { useState, useEffect } from 'react';
-import { Head, useForm, router } from '@inertiajs/react';
+import { Head, router, usePage, useForm } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import Icon from '@/Components/Icons';
+import Pagination from '@/Components/Pagination';
 import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
+import Swal from 'sweetalert2';
 
-// Lightweight inline icons (no external icon package required)
-const Icon = {
-    Search: (p) => (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}>
-            <circle cx="11" cy="11" r="7" /><path d="m21 21-4.35-4.35" />
-        </svg>
-    ),
-    Plus: (p) => (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...p}>
-            <path d="M12 5v14M5 12h14" />
-        </svg>
-    ),
-    Phone: (p) => (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}>
-            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
-        </svg>
-    ),
-    LogIn: (p) => (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}>
-            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3" />
-        </svg>
-    ),
-    LogOut: (p) => (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}>
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
-        </svg>
-    ),
-    Pencil: (p) => (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}>
-            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-        </svg>
-    ),
-    Trash2: (p) => (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}>
-            <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14ZM10 11v6M14 11v6" />
-        </svg>
-    ),
-    Users: (p) => (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}>
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-        </svg>
-    ),
-    X: (p) => (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}>
-            <path d="M18 6 6 18M6 6l12 12" />
-        </svg>
-    ),
+// --- Safe Inline SVG Icons for Stats ---
+const StatIcon = {
+  Users: () => (
+    <svg fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-6 h-6">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+    </svg>
+  ),
+  LogIn: () => (
+    <svg fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-6 h-6">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+    </svg>
+  ),
+  LogOut: () => (
+    <svg fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-6 h-6">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+    </svg>
+  )
 };
 
 export default function VisitorBook({ visitors, filters }) {
-    const [showModal, setShowModal] = useState(false);
-    const [editMode, setEditMode] = useState(false);
-    const [itemToDelete, setItemToDelete] = useState(null);
-    const [searchTerm, setSearchTerm] = useState(filters?.search || '');
+  const { flash } = usePage().props;
 
-    const { data, setData, post, put, processing, reset } = useForm({
-        id: '', name: '', phone: '', purpose: '', person_to_meet: '',
-        visit_date: new Date().toISOString().split('T')[0], in_time: '', out_time: ''
+  const [search, setSearch] = useState(filters?.search || '');
+  const [perPage, setPerPage] = useState(filters?.per_page || '10');
+
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
+  const [deletingItem, setDeletingItem] = useState(null);
+
+  useEffect(() => {
+    if (flash?.success) {
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: flash.success, showConfirmButton: false, timer: 3000, timerProgressBar: true });
+    }
+    if (flash?.error) {
+      Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: flash.error, showConfirmButton: false, timer: 4000, timerProgressBar: true });
+    }
+  }, [flash]);
+
+  const applyFilters = (overrides = {}) => {
+    router.get(route('admin.frontoffice.visitors.index'), {
+      search, per_page: perPage, ...overrides
+    }, { preserveState: true, replace: true });
+  };
+
+  const initials = (name) => (name || '')
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(w => w[0])
+    .join('')
+    .toUpperCase();
+
+  const checkedInCount = visitors.data.filter(v => !v.out_time).length;
+  const checkedOutCount = visitors.data.length - checkedInCount;
+
+  // --- Export Functions ---
+  const handlePrint = () => window.print();
+
+  const exportToCSV = () => {
+    if (!visitors.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
+    const headers = ['Visitor Name', 'Phone', 'Purpose', 'Person to Meet', 'Date', 'In Time', 'Out Time'];
+    const rows = visitors.data.map(item => [
+      item.name || 'N/A', 
+      item.phone || 'N/A', 
+      item.purpose || 'N/A', 
+      item.person_to_meet || 'N/A', 
+      item.visit_date || 'N/A', 
+      item.in_time || 'N/A', 
+      item.out_time || 'N/A'
+    ]);
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows.map(e => e.map(val => `"${val}"`).join(','))].join('\n');
+    const link = document.createElement("a");
+    link.setAttribute("href", encodeURI(csvContent));
+    link.setAttribute("download", `Visitor_Logs_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const copyToClipboard = () => {
+    if (!visitors.data.length) return;
+    let text = "Visitor Name\tPhone\tPurpose\tDate\tIn\tOut\n";
+    visitors.data.forEach(item => {
+      text += `${item.name}\t${item.phone}\t${item.purpose}\t${item.visit_date}\t${item.in_time}\t${item.out_time || 'N/A'}\n`;
     });
+    navigator.clipboard.writeText(text);
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Data copied to clipboard!', showConfirmButton: false, timer: 2000 });
+  };
 
-    // Search functionality
-    useEffect(() => {
-        const delayDebounceFn = setTimeout(() => {
-            router.get(route('admin.frontoffice.visitors.index'), { search: searchTerm }, { preserveState: true, preserveScroll: true });
-        }, 500);
-        return () => clearTimeout(delayDebounceFn);
-    }, [searchTerm]);
+  return (
+    <AuthenticatedLayout>
+      <Head title="Visitor Book" />
 
-    const openAddModal = () => {
-        reset(); setEditMode(false); setShowModal(true);
-    };
-
-    const openEditModal = (visitor) => {
-        setData({
-            id: visitor.id, name: visitor.name, phone: visitor.phone || '',
-            purpose: visitor.purpose, person_to_meet: visitor.person_to_meet || '',
-            visit_date: visitor.visit_date, in_time: visitor.in_time, out_time: visitor.out_time || ''
-        });
-        setEditMode(true); setShowModal(true);
-    };
-
-    const submit = (e) => {
-        e.preventDefault();
-        const routeName = editMode ? route('admin.frontoffice.visitors.update', data.id) : route('admin.frontoffice.visitors.store');
-
-        if (editMode) {
-            put(routeName, { onSuccess: () => { setShowModal(false); reset(); } });
-        } else {
-            post(routeName, { onSuccess: () => { setShowModal(false); reset(); } });
+      {/* Print Specific CSS */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @media print {
+          nav, aside, header, .no-print, button, a, select, input { display: none !important; }
+          body, html { background: #f8fafc !important; }
+          .print-table-wrapper { width: 100% !important; border: none !important; box-shadow: none !important; }
+          .print-title { display: block !important; font-size: 24px !important; font-weight: bold !important; margin-bottom: 20px !important; }
         }
-    };
+        @media screen { .print-title { display: none; } }
+      `}} />
 
-    const confirmDelete = () => {
-        router.delete(route('admin.frontoffice.visitors.destroy', itemToDelete.id), {
-            onSuccess: () => setItemToDelete(null),
-        });
-    };
+      <div className="print-title">Visitor Log Book - {new Date().toLocaleDateString('en-GB')}</div>
 
-    const goToPage = (url) => {
-        if (!url) return;
-        router.get(url, { search: searchTerm }, { preserveState: true, preserveScroll: true });
-    };
+      <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8 no-print">
+        
+        {/* Page Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">Front Office</span>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Visitor Book</h1>
+            <p className="text-sm text-slate-500 mt-1">ক্যাম্পাসে আগত ভিজিটরদের তথ্য এবং ইন/আউট টাইম ট্র্যাক করুন।</p>
+          </div>
+          <button
+            onClick={() => { setEditingItem(null); setFormOpen(true); }}
+            className="w-full sm:w-auto inline-flex justify-center items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md shadow-indigo-500/20 active:scale-95"
+          >
+            <Icon name="plus" className="w-4 h-4" /> Add Visitor
+          </button>
+        </div>
 
-    const initials = (name) => (name || '')
-        .split(' ')
-        .filter(Boolean)
-        .slice(0, 2)
-        .map(w => w[0])
-        .join('')
-        .toUpperCase();
+        {/* Stat Strip */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 border border-indigo-100">
+              <StatIcon.Users />
+            </div>
+            <div>
+              <h4 className="text-2xl font-bold text-slate-900">{visitors.total ?? visitors.data.length}</h4>
+              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">Total Visitors</p>
+            </div>
+          </div>
+          <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100">
+              <StatIcon.LogIn />
+            </div>
+            <div>
+              <h4 className="text-2xl font-bold text-slate-900">{checkedInCount}</h4>
+              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">Currently In</p>
+            </div>
+          </div>
+          <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center shrink-0 border border-rose-100">
+              <StatIcon.LogOut />
+            </div>
+            <div>
+              <h4 className="text-2xl font-bold text-slate-900">{checkedOutCount}</h4>
+              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">Checked Out</p>
+            </div>
+          </div>
+        </div>
 
-    const checkedInCount = visitors.data.filter(v => !v.out_time).length;
-    const checkedOutCount = visitors.data.length - checkedInCount;
+        {/* Unified Modern Toolbar */}
+        <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
+            
+            {/* Per Page */}
+            <select
+              value={perPage}
+              onChange={e => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}
+              className="appearance-none bg-none pr-3 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer text-center font-mono"
+              style={{ backgroundImage: 'none' }}
+            >
+              <option value="10">10 / Page</option>
+              <option value="20">20 / Page</option>
+              <option value="50">50 / Page</option>
+              <option value="all">All</option>
+            </select>
 
-    return (
-        <AuthenticatedLayout header={<h2 className="font-semibold text-xl text-gray-800">Visitor Book</h2>}>
-            <Head title="Visitor Book" />
+            <div className="hidden sm:block w-px h-6 bg-slate-200"></div>
 
-            <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
-
-                {/* Stat strip */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
-                        <div className="h-11 w-11 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
-                            <Icon.Users className="h-5 w-5 text-indigo-600" />
-                        </div>
-                        <div>
-                            <div className="text-2xl font-bold text-gray-900 leading-tight">{visitors.total ?? visitors.data.length}</div>
-                            <div className="text-xs text-gray-500 font-medium">Total Visitors</div>
-                        </div>
-                    </div>
-                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
-                        <div className="h-11 w-11 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
-                            <Icon.LogIn className="h-5 w-5 text-emerald-600" />
-                        </div>
-                        <div>
-                            <div className="text-2xl font-bold text-gray-900 leading-tight">{checkedInCount}</div>
-                            <div className="text-xs text-gray-500 font-medium">Currently In</div>
-                        </div>
-                    </div>
-                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
-                        <div className="h-11 w-11 rounded-lg bg-rose-50 flex items-center justify-center flex-shrink-0">
-                            <Icon.LogOut className="h-5 w-5 text-rose-500" />
-                        </div>
-                        <div>
-                            <div className="text-2xl font-bold text-gray-900 leading-tight">{checkedOutCount}</div>
-                            <div className="text-xs text-gray-500 font-medium">Checked Out</div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Main card */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-6 border-b border-gray-100">
-                        <div>
-                            <h3 className="text-lg font-bold text-gray-900">Visitor Logs</h3>
-                            <p className="text-sm text-gray-500 mt-0.5">Track everyone coming in and out of the front office</p>
-                        </div>
-                        <div className="flex gap-3 w-full md:w-auto">
-                            <div className="relative w-full md:w-64">
-                                <Icon.Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                <input
-                                    type="text"
-                                    placeholder="Search by name, phone..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full rounded-lg border-gray-300 shadow-sm text-sm pl-9 focus:border-indigo-500 focus:ring-indigo-500"
-                                />
-                            </div>
-                            <button
-                                onClick={openAddModal}
-                                className="inline-flex items-center gap-1.5 bg-indigo-600 whitespace-nowrap text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-indigo-700 transition-colors"
-                            >
-                                <Icon.Plus className="h-4 w-4" /> Add Visitor
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="bg-gray-50/70 text-gray-500 text-xs uppercase tracking-wide border-b border-gray-100">
-                                    <th className="p-4 font-semibold">Visitor</th>
-                                    <th className="p-4 font-semibold">Purpose & Person</th>
-                                    <th className="p-4 font-semibold">Time</th>
-                                    <th className="p-4 font-semibold text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-50">
-                                {visitors.data.length === 0 && (
-                                    <tr>
-                                        <td colSpan={4} className="p-12 text-center">
-                                            <Icon.Users className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                                            <p className="text-sm font-medium text-gray-500">No visitors found</p>
-                                            <p className="text-xs text-gray-400 mt-1">Try a different search, or add a new visitor</p>
-                                        </td>
-                                    </tr>
-                                )}
-                                {visitors.data.map((visitor) => (
-                                    <tr key={visitor.id} className="hover:bg-gray-50/60 transition-colors">
-                                        <td className="p-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="h-9 w-9 rounded-full bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center flex-shrink-0">
-                                                    {initials(visitor.name)}
-                                                </div>
-                                                <div>
-                                                    <div className="font-bold text-gray-800">{visitor.name}</div>
-                                                    <div className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
-                                                        <Icon.Phone className="h-3 w-3" /> {visitor.phone || 'N/A'}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="p-4">
-                                            <div className="text-sm text-gray-800 font-medium">{visitor.purpose}</div>
-                                            <div className="text-xs text-indigo-600 mt-0.5">To meet: {visitor.person_to_meet || '--'}</div>
-                                        </td>
-                                        <td className="p-4 text-sm">
-                                            <div className="text-gray-700 font-medium">{visitor.visit_date}</div>
-                                            <div className="flex items-center gap-2 mt-1">
-                                                <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
-                                                    In {visitor.in_time}
-                                                </span>
-                                                {visitor.out_time && (
-                                                    <span className="inline-flex items-center gap-1 text-xs font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full">
-                                                        Out {visitor.out_time}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </td>
-                                        <td className="p-4">
-                                            <div className="flex items-center justify-end gap-1">
-                                                <button
-                                                    onClick={() => openEditModal(visitor)}
-                                                    className="p-2 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
-                                                    title="Edit"
-                                                >
-                                                    <Icon.Pencil className="h-4 w-4" />
-                                                </button>
-                                                <button
-                                                    onClick={() => setItemToDelete(visitor)}
-                                                    className="p-2 rounded-lg text-gray-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                                                    title="Delete"
-                                                >
-                                                    <Icon.Trash2 className="h-4 w-4" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {/* Pagination (Laravel paginator links) */}
-                    {Array.isArray(visitors.links) && visitors.links.length > 3 && (
-                        <div className="flex flex-wrap gap-1 items-center justify-end p-4 border-t border-gray-100">
-                            {visitors.links.map((link, i) => (
-                                <button
-                                    key={i}
-                                    disabled={!link.url}
-                                    onClick={() => goToPage(link.url)}
-                                    dangerouslySetInnerHTML={{ __html: link.label }}
-                                    className={`min-w-[2.25rem] h-9 px-2 rounded-lg text-xs font-bold flex items-center justify-center transition-colors ${
-                                        link.active
-                                            ? 'bg-indigo-600 text-white'
-                                            : link.url
-                                                ? 'text-gray-600 hover:bg-gray-100'
-                                                : 'text-gray-300 cursor-not-allowed'
-                                    }`}
-                                />
-                            ))}
-                        </div>
-                    )}
-                </div>
+            {/* Search Input */}
+            <div className="relative flex-1 min-w-[200px] sm:w-64">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Icon name="search" className="w-4 h-4 text-slate-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search by name, phone..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
+                className="block w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+              />
             </div>
 
-            {/* Modal */}
-            {showModal && (
-                <div className="fixed inset-0 z-40 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4">
-                    <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl">
-                        <div className="flex items-center justify-between p-6 border-b border-gray-100">
-                            <h3 className="text-lg font-bold text-gray-900">{editMode ? 'Edit Visitor' : 'Add New Visitor'}</h3>
-                            <button onClick={() => setShowModal(false)} className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors">
-                                <Icon.X className="h-5 w-5" />
-                            </button>
-                        </div>
-                        <form onSubmit={submit} className="p-6 space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Visitor Name *</label>
-                                    <input type="text" value={data.name} onChange={e => setData('name', e.target.value)} className="w-full rounded-lg border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500" required />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                                    <input type="text" value={data.phone} onChange={e => setData('phone', e.target.value)} className="w-full rounded-lg border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500" />
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Purpose *</label>
-                                    <input type="text" value={data.purpose} onChange={e => setData('purpose', e.target.value)} className="w-full rounded-lg border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500" required />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Person to Meet</label>
-                                    <input type="text" value={data.person_to_meet} onChange={e => setData('person_to_meet', e.target.value)} className="w-full rounded-lg border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500" />
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-3 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
-                                    <input type="date" value={data.visit_date} onChange={e => setData('visit_date', e.target.value)} className="w-full rounded-lg border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500" required />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">In Time *</label>
-                                    <input type="time" value={data.in_time} onChange={e => setData('in_time', e.target.value)} className="w-full rounded-lg border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500" required />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Out Time</label>
-                                    <input type="time" value={data.out_time} onChange={e => setData('out_time', e.target.value)} className="w-full rounded-lg border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500" />
-                                </div>
-                            </div>
-                            <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
-                                <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 bg-gray-100 rounded-lg text-gray-700 font-bold text-sm hover:bg-gray-200 transition-colors">Cancel</button>
-                                <button type="submit" disabled={processing} className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-bold text-sm hover:bg-indigo-700 disabled:opacity-50 transition-colors">
-                                    {editMode ? 'Update' : 'Save'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+            {/* Apply Button */}
+            <button
+              onClick={() => applyFilters()}
+              className="w-full sm:w-auto px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
+            >
+              Search
+            </button>
+          </div>
 
-            {itemToDelete && <ConfirmDeleteModal item={{ name: itemToDelete.name }} onCancel={() => setItemToDelete(null)} onConfirm={confirmDelete} />}
-        </AuthenticatedLayout>
-    );
+          {/* Export Actions */}
+          <div className="flex items-center justify-end gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-xl w-full xl:w-auto shadow-sm shrink-0 ml-auto">
+            <button onClick={copyToClipboard} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Copy to Clipboard">
+              Copy
+            </button>
+            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+            <button onClick={exportToCSV} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-emerald-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export CSV">
+              CSV
+            </button>
+            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+            <button onClick={() => alert('Backend Excel plugin needed')} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-green-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export Excel">
+              Excel
+            </button>
+            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+            <button onClick={() => alert('Backend PDF plugin needed')} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-rose-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export PDF">
+              PDF
+            </button>
+            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+            <button onClick={handlePrint} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-amber-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Print List">
+              Print
+            </button>
+          </div>
+        </div>
+
+        {/* Main Table Card */}
+        <div className="bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 print-table-wrapper">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50/50">
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Visitor</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Purpose &amp; Person</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Time</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right no-print">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {visitors.data.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-12 text-center text-slate-500">
+                      <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-3 border border-slate-100">
+                        <Icon name="users" className="w-8 h-8 text-slate-300" />
+                      </div>
+                      <p className="text-sm font-semibold text-slate-600">No visitors found</p>
+                      <p className="text-xs text-slate-400 mt-1">Try a different search, or add a new visitor</p>
+                    </td>
+                  </tr>
+                ) : (
+                  visitors.data.map((visitor) => (
+                    <tr key={visitor.id} className="hover:bg-slate-50/60 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-indigo-50 text-indigo-600 font-bold text-xs flex items-center justify-center border border-indigo-100 shrink-0">
+                            {initials(visitor.name)}
+                          </div>
+                          <div>
+                            <span className="text-sm font-bold text-slate-900 block">{visitor.name}</span>
+                            <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium mt-0.5">
+                              <Icon name="phone" className="w-3 h-3" /> {visitor.phone || 'N/A'}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-semibold text-slate-800 block">{visitor.purpose}</span>
+                        <span className="text-xs text-indigo-600 font-medium mt-0.5 block">To meet: {visitor.person_to_meet || '--'}</span>
+                      </td>
+                      <td className="px-6 py-4 text-sm">
+                        <span className="font-semibold text-slate-700 block">{visitor.visit_date}</span>
+                        <div className="flex items-center gap-2 mt-1.5">
+                          <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            In {visitor.in_time}
+                          </span>
+                          {visitor.out_time && (
+                            <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide bg-rose-50 text-rose-700 border border-rose-200">
+                              Out {visitor.out_time}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-right no-print">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button onClick={() => { setEditingItem(visitor); setFormOpen(true); }} className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Edit Log">
+                            <Icon name="edit" className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => setDeletingItem(visitor)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Delete Log">
+                            <Icon name="trash" className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="no-print border-t border-slate-100 bg-white px-6 py-4 rounded-b-2xl">
+            <Pagination meta={visitors} />
+          </div>
+        </div>
+      </div>
+
+      {formOpen && <VisitorFormModal item={editingItem} onClose={() => setFormOpen(false)} />}
+      
+      {deletingItem && (
+        <ConfirmDeleteModal 
+          item={{ name: deletingItem.name }} 
+          message="Are you sure you want to delete this visitor log?"
+          onCancel={() => setDeletingItem(null)} 
+          onConfirm={() => {
+            router.delete(route('admin.frontoffice.visitors.destroy', deletingItem.id), { onSuccess: () => setDeletingItem(null) });
+          }} 
+        />
+      )}
+    </AuthenticatedLayout>
+  );
+}
+
+// --- Visitor Form Modal Component ---
+function VisitorFormModal({ item, onClose }) {
+  const isEdit = !!item;
+
+  const { data, setData, post, put, processing, reset, errors } = useForm({
+    name: item?.name ?? '',
+    phone: item?.phone ?? '',
+    purpose: item?.purpose ?? '',
+    person_to_meet: item?.person_to_meet ?? '',
+    visit_date: item?.visit_date ?? new Date().toISOString().split('T')[0],
+    in_time: item?.in_time ?? '',
+    out_time: item?.out_time ?? '',
+  });
+
+  function submit(e) {
+    e.preventDefault();
+    const options = { onSuccess: () => { reset(); onClose(); } };
+    if (isEdit) put(route('admin.frontoffice.visitors.update', item.id), options);
+    else post(route('admin.frontoffice.visitors.store'), options);
+  }
+
+  const inputClass = "block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all";
+  const labelClass = "block text-sm font-semibold text-slate-700 mb-1.5";
+
+  return (
+    <div 
+      className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 transition-opacity animate-in fade-in duration-200"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-white rounded-2xl w-full max-w-xl max-h-[90vh] shadow-2xl overflow-hidden transform transition-all flex flex-col ring-1 ring-slate-900/5 animate-in zoom-in-95 duration-200"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
+          <div>
+            <h3 className="text-xl font-bold text-slate-900">{isEdit ? 'Edit Visitor' : 'Add New Visitor'}</h3>
+            <p className="text-sm text-slate-500 mt-1">Log details for the campus visitor.</p>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors bg-slate-100">
+            <Icon name="close" className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Form Body */}
+        <form onSubmit={submit} className="flex flex-col flex-1 overflow-hidden">
+          <div className="p-6 overflow-y-auto space-y-5 flex-1">
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              
+              <div>
+                <label className={labelClass}>Visitor Name <span className="text-rose-500">*</span></label>
+                <input type="text" value={data.name} onChange={e => setData('name', e.target.value)} required placeholder="e.g. John Doe" className={inputClass} autoFocus />
+                {errors.name && <p className="text-rose-500 text-xs mt-1">{errors.name}</p>}
+              </div>
+
+              <div>
+                <label className={labelClass}>Phone</label>
+                <input type="text" value={data.phone} onChange={e => setData('phone', e.target.value)} placeholder="01XXXXXXXXX" className={`${inputClass} font-mono`} />
+                {errors.phone && <p className="text-rose-500 text-xs mt-1">{errors.phone}</p>}
+              </div>
+
+              <div>
+                <label className={labelClass}>Purpose <span className="text-rose-500">*</span></label>
+                <input type="text" value={data.purpose} onChange={e => setData('purpose', e.target.value)} required placeholder="e.g. Meeting Principal" className={inputClass} />
+                {errors.purpose && <p className="text-rose-500 text-xs mt-1">{errors.purpose}</p>}
+              </div>
+
+              <div>
+                <label className={labelClass}>Person to Meet</label>
+                <input type="text" value={data.person_to_meet} onChange={e => setData('person_to_meet', e.target.value)} placeholder="e.g. Mr. Rahim" className={inputClass} />
+                {errors.person_to_meet && <p className="text-rose-500 text-xs mt-1">{errors.person_to_meet}</p>}
+              </div>
+
+              <div className="sm:col-span-2 bg-slate-50 p-5 rounded-2xl border border-slate-200 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className={labelClass}>Date <span className="text-rose-500">*</span></label>
+                  <input type="date" value={data.visit_date} onChange={e => setData('visit_date', e.target.value)} required className={`${inputClass} font-mono`} />
+                </div>
+                <div>
+                  <label className={labelClass}>In Time <span className="text-rose-500">*</span></label>
+                  <input type="time" value={data.in_time} onChange={e => setData('in_time', e.target.value)} required className={`${inputClass} font-mono border-emerald-200`} />
+                </div>
+                <div>
+                  <label className={labelClass}>Out Time</label>
+                  <input type="time" value={data.out_time} onChange={e => setData('out_time', e.target.value)} className={`${inputClass} font-mono border-rose-200`} />
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-end gap-3 shrink-0">
+            <button type="button" onClick={onClose} disabled={processing} className="px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-all shadow-sm">
+              Cancel
+            </button>
+            <button type="submit" disabled={processing} className="flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md shadow-indigo-500/20 disabled:opacity-70 active:scale-95">
+              <Icon name="save" className="w-4 h-4" />
+              {processing ? 'Saving...' : 'Save Visitor'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 }

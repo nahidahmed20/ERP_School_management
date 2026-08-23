@@ -5,65 +5,88 @@ export default function ShowModal({ item, onClose }) {
 
   return (
     <div className="mm-modal-overlay" onClick={onClose}>
-      <div className="mm-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="mm-modal-head">
-          <h3>Maintenance Details</h3>
-          <button className="icon-btn" onClick={onClose}><Icon name="close" /></button>
+      <div 
+        className="mm-modal" 
+        onClick={(e) => e.stopPropagation()} 
+        style={{ padding: 0, overflow: 'hidden', maxWidth: '600px', width: '100%' }}
+      >
+        {/* Header */}
+        <div className="bg-slate-50 px-6 py-5 border-b border-slate-100 flex items-center justify-between shrink-0">
+          <div>
+            <h3 className="text-xl font-bold text-slate-900">Maintenance Details</h3>
+            <p className="text-sm text-slate-500 mt-0.5">Asset repair or servicing overview.</p>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors bg-white border border-slate-200 shadow-sm">
+            <Icon name="close" className="w-4 h-4" />
+          </button>
         </div>
-
-        <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-
-          <div style={{ display: 'flex', gap: '20px', alignItems: 'center', paddingBottom: '16px', borderBottom: '1px solid #e2e8f0' }}>
-            <div style={{ width: '50px', height: '50px', background: '#e2e8f0', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Icon name="settings" style={{ fontSize: '24px', color: '#64748b' }} />
+        
+        {/* Body */}
+        <div className="p-6 space-y-6 overflow-y-auto max-h-[75vh]">
+          
+          <div className="flex flex-col sm:flex-row gap-5 border-b border-slate-100 pb-5">
+            <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center shrink-0 border border-slate-200 shadow-sm">
+              <Icon name="settings" className="w-8 h-8 text-slate-400" />
             </div>
-            <div>
-              <div style={{ fontSize: '18px', fontWeight: '700', color: '#0f172a' }}>{item.title}</div>
-              <div style={{ fontSize: '14px', color: '#1d4ed8', fontWeight: '500', marginTop: '2px' }}>Asset: {item.asset?.name}</div>
-            </div>
-            <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-              <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#b91c1c' }}>
-                {item.cost} BDT
+            
+            <div className="flex-1">
+              <h3 className="text-xl font-bold text-slate-900">{item.title}</h3>
+              <div className="text-sm font-semibold text-indigo-700 mt-1 flex items-center gap-1.5">
+                <Icon name="box" className="w-4 h-4" /> Asset: {item.asset?.name}
               </div>
-              <div style={{ fontSize: '12px', fontWeight: 'bold', color: item.status === 'Completed' ? '#15803d' : (item.status === 'In Progress' ? '#1d4ed8' : '#d97706'), marginTop: '4px', textTransform: 'uppercase' }}>
+            </div>
+
+            <div className="text-left sm:text-right mt-2 sm:mt-0">
+              <div className="text-2xl font-black text-rose-600 font-mono tracking-tight">
+                {item.cost} <span className="text-sm text-rose-400">BDT</span>
+              </div>
+              <span className={`inline-flex px-3 py-1 mt-1.5 rounded-md text-[11px] font-bold tracking-wide uppercase border ${
+                item.status === 'Completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                item.status === 'In Progress' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
+                item.status === 'Cancelled' ? 'bg-rose-50 text-rose-700 border-rose-200' :
+                'bg-amber-50 text-amber-700 border-amber-200'
+              }`}>
                 {item.status}
-              </div>
+              </span>
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '20px' }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '12px', color: '#64748b' }}>Maintenance Type</div>
-              <div style={{ fontSize: '14px', fontWeight: '500' }}>{item.maintenance_type}</div>
+          <div className="grid grid-cols-2 gap-5 text-sm">
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+              <span className="block font-bold text-slate-400 uppercase text-xs mb-1">Maintenance Type</span>
+              <span className="font-semibold text-slate-800">{item.maintenance_type}</span>
             </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '12px', color: '#64748b' }}>Service Provider</div>
-              <div style={{ fontSize: '14px', fontWeight: '500' }}>{item.service_provider || 'In-house'}</div>
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+              <span className="block font-bold text-slate-400 uppercase text-xs mb-1">Service Provider</span>
+              <span className="font-medium text-slate-800">{item.service_provider || 'In-house'}</span>
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '20px' }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '12px', color: '#64748b' }}>Start Date</div>
-              <div style={{ fontSize: '14px', fontWeight: '500' }}>{item.start_date}</div>
+          <div className="grid grid-cols-2 gap-5 text-sm">
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+              <span className="block font-bold text-slate-400 uppercase text-xs mb-1">Start Date</span>
+              <span className="font-semibold text-slate-800 font-mono">{item.start_date}</span>
             </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '12px', color: '#64748b' }}>End Date</div>
-              <div style={{ fontSize: '14px', fontWeight: '500' }}>{item.end_date || 'Ongoing'}</div>
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+              <span className="block font-bold text-slate-400 uppercase text-xs mb-1">End Date</span>
+              <span className="font-medium text-slate-800 font-mono">{item.end_date || 'Ongoing'}</span>
             </div>
           </div>
 
           <div>
-            <div style={{ fontSize: '12px', color: '#64748b' }}>Task Details / Notes</div>
-            <div style={{ fontSize: '14px', color: '#334155', background: '#f1f5f9', padding: '12px', borderRadius: '6px', minHeight: '50px', whiteSpace: 'pre-wrap' }}>
-              {item.details || 'No details provided.'}
+            <span className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 px-1">Task Details / Notes</span>
+            <div className="text-sm text-slate-700 bg-slate-50/50 border border-slate-200 p-4 rounded-xl min-h-[60px] whitespace-pre-wrap leading-relaxed">
+              {item.details || <span className="text-slate-400 italic">No details provided.</span>}
             </div>
           </div>
 
         </div>
 
-        <div className="mm-modal-foot mt-2">
-          <button type="button" className="btn btn-outline" onClick={onClose}>Close</button>
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-end rounded-b-2xl">
+          <button type="button" className="px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 rounded-xl transition-all shadow-sm" onClick={onClose}>
+            Close
+          </button>
         </div>
       </div>
     </div>

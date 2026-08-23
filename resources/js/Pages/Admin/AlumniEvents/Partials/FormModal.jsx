@@ -4,7 +4,7 @@ import Icon from '@/Components/Icons';
 export default function FormModal({ item, onClose }) {
   const isEdit = !!item;
 
-  const { data, setData, post, processing, errors } = useForm({
+  const { data, setData, post, processing, errors, reset } = useForm({
     title: item?.title || '',
     date: item?.date || '',
     time: item?.time || '',
@@ -21,74 +21,134 @@ export default function FormModal({ item, onClose }) {
         ...data,
         _method: 'PUT',
       }, {
-        onSuccess: () => onClose(),
+        onSuccess: () => { reset(); onClose(); },
       });
     } else {
       post(route('admin.alumni.events.store'), {
-        onSuccess: () => onClose(),
+        onSuccess: () => { reset(); onClose(); },
       });
     }
   };
 
+  const inputClass = "block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all";
+  const labelClass = "block text-sm font-semibold text-slate-700 mb-1.5";
+
   return (
     <div className="mm-modal-overlay" onClick={onClose}>
-      <div className="mm-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="mm-modal-head">
-          <h3>{isEdit ? 'Edit Event' : 'Create New Event'}</h3>
-          <button className="icon-btn" onClick={onClose}><Icon name="close" /></button>
+      <div 
+        className="mm-modal" 
+        onClick={(e) => e.stopPropagation()}
+        style={{ padding: 0, overflow: 'hidden', maxWidth: '800px', width: '100%' }}
+      >
+        {/* Header */}
+        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
+          <div>
+            <h3 className="text-xl font-bold text-slate-900">{isEdit ? 'Edit Event' : 'Create New Event'}</h3>
+            <p className="text-sm text-slate-500 mt-1">Configure alumni event and reunion details.</p>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors bg-white border border-slate-200 shadow-sm">
+            <Icon name="close" className="w-4 h-4" />
+          </button>
         </div>
-        <form onSubmit={handleSubmit} className="mm-form">
-          <div className="mm-form-grid" style={{ gridTemplateColumns: '1fr' }}>
 
-            <label>
-              <span>Event Title *</span>
-              <input value={data.title} onChange={(e) => setData('title', e.target.value)} placeholder="e.g. Grand Reunion 2026" required />
-              {errors.title && <em>{errors.title}</em>}
-            </label>
+        {/* Form Body */}
+        <form onSubmit={handleSubmit} className="flex flex-col max-h-[80vh]" encType="multipart/form-data">
+          <div className="p-6 overflow-y-auto space-y-5 flex-1">
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              
+              <div className="sm:col-span-2">
+                <label className={labelClass}>Event Title <span className="text-rose-500">*</span></label>
+                <input 
+                  value={data.title} 
+                  onChange={(e) => setData('title', e.target.value)} 
+                  placeholder="e.g. Grand Reunion 2026" 
+                  className={inputClass} 
+                  required 
+                  autoFocus
+                />
+                {errors.title && <p className="text-rose-500 text-xs mt-1">{errors.title}</p>}
+              </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <label>
-                <span>Date *</span>
-                <input type="date" value={data.date} onChange={(e) => setData('date', e.target.value)} required />
-              </label>
+              <div>
+                <label className={labelClass}>Date <span className="text-rose-500">*</span></label>
+                <input 
+                  type="date" 
+                  value={data.date} 
+                  onChange={(e) => setData('date', e.target.value)} 
+                  className={`${inputClass} font-mono`} 
+                  required 
+                />
+              </div>
 
-              <label>
-                <span>Time *</span>
-                <input type="time" value={data.time} onChange={(e) => setData('time', e.target.value)} required />
-              </label>
-            </div>
+              <div>
+                <label className={labelClass}>Time <span className="text-rose-500">*</span></label>
+                <input 
+                  type="time" 
+                  value={data.time} 
+                  onChange={(e) => setData('time', e.target.value)} 
+                  className={`${inputClass} font-mono`} 
+                  required 
+                />
+              </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <label>
-                <span>Location / Venue</span>
-                <input value={data.location} onChange={(e) => setData('location', e.target.value)} placeholder="e.g. School Auditorium" />
-              </label>
+              <div>
+                <label className={labelClass}>Location / Venue</label>
+                <input 
+                  value={data.location} 
+                  onChange={(e) => setData('location', e.target.value)} 
+                  placeholder="e.g. School Auditorium" 
+                  className={inputClass} 
+                />
+              </div>
 
-              <label>
-                <span>Status *</span>
-                <select value={data.status} onChange={(e) => setData('status', e.target.value)} required>
+              <div>
+                <label className={labelClass}>Status <span className="text-rose-500">*</span></label>
+                <select value={data.status} onChange={(e) => setData('status', e.target.value)} required className={inputClass}>
                   <option value="Upcoming">Upcoming</option>
                   <option value="Completed">Completed</option>
                   <option value="Cancelled">Cancelled</option>
                 </select>
-              </label>
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className={labelClass}>Event Description</label>
+                <textarea 
+                  rows="3" 
+                  value={data.description} 
+                  onChange={(e) => setData('description', e.target.value)} 
+                  placeholder="ইভেন্টের বিস্তারিত তথ্য..." 
+                  className={`${inputClass} resize-none`} 
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className={labelClass}>Cover Photo / Banner <span className="text-slate-400 font-normal">(Optional)</span></label>
+                <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-slate-300 border-dashed rounded-xl cursor-pointer bg-slate-50 hover:bg-slate-100 hover:border-indigo-400 transition-colors">
+                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                    <Icon name="upload" className="w-6 h-6 text-slate-400 mb-1" />
+                    <p className="text-sm text-slate-500 font-semibold">{data.cover_photo ? data.cover_photo.name : 'Click to select image or drag and drop'}</p>
+                  </div>
+                  <input type="file" onChange={(e) => setData('cover_photo', e.target.files[0])} accept=".jpg,.jpeg,.png" className="hidden" />
+                </label>
+                {isEdit && !data.cover_photo && (
+                  <p className="text-xs text-slate-500 mt-1.5 italic">Leave empty to keep the current banner.</p>
+                )}
+                {errors.cover_photo && <p className="text-rose-500 text-xs mt-1">{errors.cover_photo}</p>}
+              </div>
+
             </div>
-
-            <label>
-              <span>Event Description</span>
-              <textarea rows="3" value={data.description} onChange={(e) => setData('description', e.target.value)} placeholder="ইভেন্টের বিস্তারিত তথ্য..." />
-            </label>
-
-            <label>
-              <span>Cover Photo / Banner (Optional)</span>
-              <input type="file" onChange={(e) => setData('cover_photo', e.target.files[0])} style={{ padding: '7px', background: '#f8fafc', border: '1px dashed #cbd5e1' }} accept=".jpg,.jpeg,.png" />
-              {errors.cover_photo && <em>{errors.cover_photo}</em>}
-            </label>
-
           </div>
-          <div className="mm-modal-foot mt-4">
-            <button type="button" className="btn btn-outline" onClick={onClose} disabled={processing}>Cancel</button>
-            <button type="submit" className="btn" disabled={processing}>{processing ? 'Saving...' : 'Save Event'}</button>
+
+          {/* Footer */}
+          <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-end gap-3 shrink-0 rounded-b-2xl">
+            <button type="button" onClick={onClose} disabled={processing} className="px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-all shadow-sm">
+              Cancel
+            </button>
+            <button type="submit" disabled={processing} className="flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md shadow-indigo-500/20 disabled:opacity-70 active:scale-95">
+              <Icon name="save" className="w-4 h-4" />
+              {processing ? 'Saving...' : 'Save Event'}
+            </button>
           </div>
         </form>
       </div>
