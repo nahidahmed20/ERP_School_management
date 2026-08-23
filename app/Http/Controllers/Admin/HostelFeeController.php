@@ -33,7 +33,7 @@ class HostelFeeController extends Controller
 
         return Inertia::render('Admin/Campus/Hostel/Fees/Index', [
             'fees' => $fees,
-            'students' => Student::where('is_active', true)->select('id', 'first_name', 'last_name', 'admission_no')->get(),
+            'students' => Student::where('status', 1)->select('id', 'first_name', 'last_name', 'admission_no')->get(),
             'rooms' => HostelRoom::select('id', 'room_number', 'hostel_name')->get(),
             'filters' => [
                 'search' => $request->get('search', ''),
@@ -63,7 +63,7 @@ class HostelFeeController extends Controller
     public function update(Request $request, $id)
     {
         $fee = HostelFee::findOrFail($id);
-        
+
         $validated = $request->validate([
             'student_id' => 'required|exists:students,id',
             'hostel_room_id' => 'nullable|exists:hostel_rooms,id',

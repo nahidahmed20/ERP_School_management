@@ -179,4 +179,39 @@ class SaleController extends Controller
             'cart.*.unit_price' => 'required|numeric|min:0',
         ]);
     }
+
+    public function report(Request $request)
+    {
+        $query = Sale::with('items.product', 'seller');
+
+        // Date range filter
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('created_at', [
+                $request->start_date . ' 00:00:00',
+                $request->end_date . ' 23:59:59'
+            ]);
+        }
+
+        // Payment method filter
+        if ($request->filled('payment_method')) {
+            $query->where('payment_method', $request->payment_method);
+        }
+
+        $sales = $query->latest()->get();
+
+        // Summary calculations
+        $summary = [
+            'total_sales' => $sales->sum('total_amount'),
+            'total_paid' => $sales->sum('paid_amount'),
+            'total_due' => $sales->sum('due_amount'),
+            'total_discount' => $sales->sum('discount'),
+            'total_invoices' => $sales->count(),
+        ];
+
+        return Inertia::render('Admin/Sales/Reports/Index', [
+            'sales' => $sales,
+            'summary' => $summary,
+            'filters' => $request->only(['start_date', 'end_date', 'payment_method']),
+        ]);
+    }
 }

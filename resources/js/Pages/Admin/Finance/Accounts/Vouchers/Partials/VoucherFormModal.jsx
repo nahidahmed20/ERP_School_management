@@ -35,54 +35,56 @@ export default function VoucherFormModal({ accounts, onClose }) {
   const notice = getVoucherNotice();
 
   return (
-    <div className="mm-modal-overlay" onClick={onClose}>
-      <div 
-        className="mm-modal" 
-        onClick={e => e.stopPropagation()} 
-        style={{ padding: 0, overflow: 'hidden', maxWidth: '42rem', width: '100%' }}
+    // Responsive Overlay
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm" onClick={onClose}>
+
+      {/* Responsive Modal Box */}
+      <div
+        className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+        onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
+        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0 rounded-t-2xl">
           <div>
             <h3 className="text-xl font-bold text-slate-900">Create Accounting Voucher</h3>
             <p className="text-sm text-slate-500 mt-1">Post a new transaction into the ledger.</p>
           </div>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors bg-white border border-slate-200 shadow-sm">
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors bg-white border border-slate-200 shadow-sm shrink-0">
             <Icon name="close" className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Form Body */}
+        {/* Form Body (Scrollable) */}
         <form onSubmit={submit} className="flex flex-col flex-1 overflow-hidden">
-          <div className="p-6 overflow-y-auto space-y-6 flex-1">
-            
+          <div className="p-6 overflow-y-auto space-y-6 flex-1 custom-scrollbar">
+
             {/* Helper Notice */}
-            <div className={`p-4 rounded-xl border flex gap-3 text-sm leading-relaxed ${notice.color}`}>
+            <div className={`p-4 rounded-xl border flex items-start gap-3 text-sm leading-relaxed ${notice.color}`}>
               <Icon name="info" className="w-5 h-5 shrink-0 mt-0.5" />
               <div>
-                <strong>{data.voucher_type} Rule:</strong> {notice.text}
+                <strong className="block sm:inline">{data.voucher_type} Rule:</strong> {notice.text}
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              
+
               <div>
                 <label className={labelClass}>Voucher Date <span className="text-rose-500">*</span></label>
-                <input 
-                  type="date" 
-                  value={data.date} 
-                  onChange={e => setData('date', e.target.value)} 
-                  required 
-                  className={`${inputClass} font-mono`} 
+                <input
+                  type="date"
+                  value={data.date}
+                  onChange={e => setData('date', e.target.value)}
+                  required
+                  className={`${inputClass} font-mono`}
                 />
               </div>
 
               <div>
                 <label className={labelClass}>Voucher Type <span className="text-rose-500">*</span></label>
-                <select 
-                  value={data.voucher_type} 
-                  onChange={e => setData('voucher_type', e.target.value)} 
-                  required 
+                <select
+                  value={data.voucher_type}
+                  onChange={e => setData('voucher_type', e.target.value)}
+                  required
                   className={inputClass}
                 >
                   <option value="Payment">Payment Voucher</option>
@@ -94,10 +96,10 @@ export default function VoucherFormModal({ accounts, onClose }) {
 
               <div className="sm:col-span-2">
                 <label className={labelClass}>Debit Account (DR) <span className="text-rose-500">*</span></label>
-                <select 
-                  value={data.debit_account_id} 
-                  onChange={e => setData('debit_account_id', e.target.value)} 
-                  required 
+                <select
+                  value={data.debit_account_id}
+                  onChange={e => setData('debit_account_id', e.target.value)}
+                  required
                   className={`${inputClass} border-indigo-200 bg-indigo-50/30`}
                 >
                   <option value="" disabled>-- Select Debit Account --</option>
@@ -110,10 +112,10 @@ export default function VoucherFormModal({ accounts, onClose }) {
 
               <div className="sm:col-span-2">
                 <label className={labelClass}>Credit Account (CR) <span className="text-rose-500">*</span></label>
-                <select 
-                  value={data.credit_account_id} 
-                  onChange={e => setData('credit_account_id', e.target.value)} 
-                  required 
+                <select
+                  value={data.credit_account_id}
+                  onChange={e => setData('credit_account_id', e.target.value)}
+                  required
                   className={`${inputClass} border-amber-200 bg-amber-50/30`}
                 >
                   <option value="" disabled>-- Select Credit Account --</option>
@@ -126,13 +128,13 @@ export default function VoucherFormModal({ accounts, onClose }) {
 
               <div className="sm:col-span-2">
                 <label className={labelClass}>Amount (৳) <span className="text-rose-500">*</span></label>
-                <input 
-                  type="number" 
-                  step="0.01" 
-                  value={data.amount} 
-                  onChange={e => setData('amount', e.target.value)} 
-                  required 
-                  placeholder="e.g. 5000.00" 
+                <input
+                  type="number"
+                  step="0.01"
+                  value={data.amount}
+                  onChange={e => setData('amount', e.target.value)}
+                  required
+                  placeholder="e.g. 5000.00"
                   className={`${inputClass} font-mono text-lg font-bold text-emerald-600`}
                 />
                 {errors.amount && <p className="text-rose-500 text-xs mt-1">{errors.amount}</p>}
@@ -140,11 +142,11 @@ export default function VoucherFormModal({ accounts, onClose }) {
 
               <div className="sm:col-span-2">
                 <label className={labelClass}>Narration / Description</label>
-                <textarea 
-                  rows="2" 
-                  value={data.description} 
-                  onChange={e => setData('description', e.target.value)} 
-                  placeholder="Transaction details or cheque number..." 
+                <textarea
+                  rows="2"
+                  value={data.description}
+                  onChange={e => setData('description', e.target.value)}
+                  placeholder="Transaction details or cheque number..."
                   className={`${inputClass} resize-none`}
                 />
               </div>
@@ -152,12 +154,12 @@ export default function VoucherFormModal({ accounts, onClose }) {
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-end gap-3 shrink-0 rounded-b-2xl">
-            <button type="button" onClick={onClose} disabled={processing} className="px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-all shadow-sm">
+          {/* Footer - Stacked on Mobile, Row on Desktop */}
+          <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex flex-col-reverse sm:flex-row items-center justify-end gap-3 shrink-0 rounded-b-2xl">
+            <button type="button" onClick={onClose} disabled={processing} className="w-full sm:w-auto px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-all shadow-sm">
               Cancel
             </button>
-            <button type="submit" disabled={processing} className="flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md shadow-indigo-500/20 disabled:opacity-70 active:scale-95">
+            <button type="submit" disabled={processing} className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md shadow-indigo-500/20 disabled:opacity-70 active:scale-95">
               <Icon name="check" className="w-4 h-4" />
               {processing ? 'Posting...' : 'Post Voucher'}
             </button>

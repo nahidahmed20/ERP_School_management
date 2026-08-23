@@ -1,291 +1,157 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Head, Link } from '@inertiajs/react';
 import Icon from '@/Components/Icons';
 
 export default function Invoice({ sale }) {
-
-  // পেজ লোড হওয়ার পর অটোমেটিক প্রিন্ট ডায়লগ ওপেন করতে চাইলে নিচের লাইনটি আনকমেন্ট করতে পারেন
-  // useEffect(() => { window.print(); }, []);
-
   const handlePrint = () => {
-      window.print();
+    window.print();
   };
 
   const isDue = sale.due_amount > 0;
 
-  // Barcode pattern derived from the actual invoice number, so every invoice's
-  // "code" is genuinely its own — not a random decoration.
   const code = String(sale.invoice_number || 'INVOICE');
   const barcodeWidths = Array.from(code).map(ch => (ch.charCodeAt(0) % 4) + 1);
-  const Barcode = ({ tone = 'dark' }) => (
-    <span className={`barcode-mark ${tone === 'light' ? 'barcode-mark--light' : ''}`} aria-hidden="true">
-      {barcodeWidths.map((w, i) => <span key={i} style={{ width: `${w}px` }} />)}
+  const Barcode = () => (
+    <span className="inline-flex items-end gap-0.5 h-4" aria-hidden="true">
+      {barcodeWidths.map((w, i) => <span key={i} style={{ width: `${w}px` }} className="block h-full bg-slate-900" />)}
     </span>
   );
 
   return (
-    <div className="invoice-wrapper">
+    <div className="min-h-screen bg-slate-100 py-10 px-4 font-sans text-slate-900">
       <Head title={`Invoice - ${sale.invoice_number}`} />
 
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap');
-
-        .invoice-wrapper {
-          --paper: #FBFBF8;
-          --page-bg: #ECEEE6;
-          --ink: #1E2A22;
-          --ink-soft: #445044;
-          --muted: #77806F;
-          --accent: #E2984A;
-          --accent-dark: #B96F1F;
-          --stamp-red: #BE4438;
-          --stamp-green: #2C6E4E;
-          --line: #DBD9CB;
-          background: var(--page-bg);
-          min-height: 100vh;
-          padding: 40px 20px;
-          font-family: 'Inter', system-ui, sans-serif;
-          color: var(--ink);
-        }
-
-        .no-print { max-width: 800px; margin: 0 auto 20px; display: flex; justify-content: space-between; align-items: center; }
-        .ghost-link {
-          display: inline-flex; align-items: center; gap: 7px;
-          color: var(--muted); font-size: 14px; font-weight: 600; text-decoration: none;
-          border: 1px solid var(--line); background: var(--paper);
-          padding: 10px 16px; border-radius: 6px; transition: all 0.15s ease;
-        }
-        .ghost-link:hover { color: var(--ink); border-color: var(--accent-dark); }
-        .print-btn {
-          display: inline-flex; align-items: center; gap: 8px;
-          background: var(--ink); color: var(--accent); border: none;
-          font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 13.5px;
-          letter-spacing: 0.03em; text-transform: uppercase;
-          padding: 11px 20px; border-radius: 6px; cursor: pointer; transition: all 0.15s ease;
-        }
-        .print-btn:hover { background: #14201A; transform: translateY(-1px); }
-
-        .receipt-tear {
-          max-width: 800px; margin: 0 auto; height: 12px;
-          background:
-            linear-gradient(135deg, var(--paper) 25%, transparent 25.5%) 0 0 / 14px 14px repeat-x,
-            linear-gradient(225deg, var(--paper) 25%, transparent 25.5%) 0 0 / 14px 14px repeat-x;
-        }
-        .receipt-tear-bottom { transform: rotate(180deg); }
-
-        .invoice-paper {
-          max-width: 800px; margin: 0 auto; background: var(--paper);
-          padding: 44px 44px 36px; position: relative; overflow: hidden;
-          border-left: 1px solid var(--line); border-right: 1px solid var(--line);
-        }
-
-        .barcode-mark { display: inline-flex; align-items: flex-end; gap: 2px; height: 16px; }
-        .barcode-mark span { display: block; height: 100%; background: var(--ink); }
-
-        .status-badge {
-          display: inline-flex; align-items: center; gap: 5px;
-          font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 10.5px;
-          text-transform: uppercase; letter-spacing: 0.1em;
-          padding: 4px 10px; border-radius: 999px;
-          border: 1px solid var(--stamp-red); color: var(--stamp-red); background: rgba(190,68,56,0.07);
-          -webkit-print-color-adjust: exact; print-color-adjust: exact;
-        }
-        .status-badge.paid { border-color: var(--stamp-green); color: var(--stamp-green); background: rgba(44,110,78,0.07); }
-
-        .inv-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px dashed var(--line); padding-bottom: 22px; margin-bottom: 28px; }
-        .inv-company { margin: 0 0 6px 0; color: var(--ink); font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 700; }
-        .inv-address { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
-        .inv-eyebrow { font-family: 'Space Grotesk', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 8px; justify-content: flex-end; margin-bottom: 8px; }
-        .inv-number { font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700; color: var(--ink); text-align: right; }
-        .inv-date { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: var(--muted); text-align: right; margin-top: 4px; }
-
-        .stub-row { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 28px; }
-        .stub-card { border: 1px dashed var(--line); border-radius: 6px; padding: 16px 18px; width: 100%; }
-        .stub-label { margin: 0 0 8px 0; color: var(--muted); font-family: 'Space Grotesk', sans-serif; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.12em; }
-        .stub-name { font-size: 15px; color: var(--ink); font-weight: 700; display: block; }
-        .stub-line { color: var(--ink-soft); font-size: 13px; margin-top: 5px; display: block; }
-        .status-paid { color: var(--stamp-green); font-weight: 700; }
-        .status-due { color: var(--stamp-red); font-weight: 700; }
-
-        .inv-table { width: 100%; border-collapse: collapse; margin-bottom: 26px; }
-        .inv-table thead tr { background: var(--ink); color: var(--paper); }
-        .inv-table th { padding: 11px 14px; text-align: left; font-family: 'Space Grotesk', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
-        .inv-table td { padding: 13px 14px; border-bottom: 1px dashed var(--line); vertical-align: top; }
-        .inv-table tbody tr:last-child td { border-bottom: none; }
-        .inv-item-name { color: var(--ink); font-weight: 700; font-size: 14px; display: block; }
-        .inv-item-meta { font-size: 11.5px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
-        .num-cell { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
-
-        .inv-summary { display: flex; justify-content: flex-end; }
-        .inv-summary-box { width: 340px; }
-        .sum-row { display: flex; justify-content: space-between; padding: 7px 4px; color: var(--ink-soft); font-size: 14px; }
-        .sum-row .num-cell { color: var(--ink-soft); font-weight: 600; }
-        .sum-row.discount { color: var(--stamp-red); }
-        .sum-row.discount .num-cell { color: var(--stamp-red); }
-
-        .grand-total {
-          display: flex; justify-content: space-between; align-items: center;
-          background: var(--ink); border-radius: 6px; padding: 15px 18px; margin: 8px 0 12px;
-          -webkit-print-color-adjust: exact; print-color-adjust: exact;
-        }
-        .grand-total-label { font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #9AA592; }
-        .grand-total-value { font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 700; color: var(--accent); }
-
-        .sum-row.due { border-top: 1px dashed var(--line); margin-top: 6px; padding-top: 12px; color: var(--stamp-red); font-weight: 700; }
-        .sum-row.due .num-cell { color: var(--stamp-red); }
-
-        .inv-footer { margin-top: 44px; padding-top: 20px; border-top: 1px dashed var(--line); text-align: center; }
-        .inv-thanks { margin: 0 0 6px 0; color: var(--ink); font-family: 'Space Grotesk', sans-serif; font-size: 17px; font-weight: 700; }
-        .inv-note { margin: 0; color: var(--muted); font-size: 13px; }
-        .inv-signrow { display: flex; justify-content: space-between; margin-top: 56px; padding: 0 30px; }
-        .inv-sign { border-top: 1px dotted var(--line); width: 160px; padding-top: 6px; font-size: 11.5px; color: var(--muted); font-family: 'JetBrains Mono', monospace; text-align: center; }
-
-        @media print {
-          body { background: white !important; margin: 0; padding: 0; }
-          .invoice-wrapper { padding: 0 !important; background: white !important; }
-          .no-print, .receipt-tear { display: none !important; }
-          .invoice-paper { box-shadow: none !important; margin: 0 !important; max-width: 100% !important; border: none !important; padding: 20px !important; }
-          .inv-table thead tr { background: white !important; color: var(--ink) !important; border-bottom: 2px solid var(--ink) !important; }
-          .grand-total { background: white !important; border: 2px solid var(--ink) !important; }
-          .grand-total-value { color: var(--ink) !important; }
-          .grand-total-label { color: var(--muted) !important; }
-        }
-      `}</style>
-
       {/* --- Action Buttons (Hidden in Print) --- */}
-      <div className="no-print">
-          <Link href={route('admin.sales.index')} className="ghost-link">
-              <Icon name="arrow-left" style={{ fontSize: '13px' }} /> Back to Sales
-          </Link>
-          <button onClick={handlePrint} className="print-btn">
-              <Icon name="printer" style={{ fontSize: '16px' }} /> Print Invoice
-          </button>
+      <div className="max-w-3xl mx-auto mb-6 flex justify-between items-center no-print">
+        <Link href={route('admin.sales.index')} className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 text-sm font-semibold bg-white border border-slate-200 px-4 py-2.5 rounded-xl shadow-sm transition-all">
+          <Icon name="arrow-left" className="w-4 h-4" /> Back to Sales
+        </Link>
+        <button onClick={handlePrint} className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-amber-400 font-bold text-sm px-6 py-2.5 rounded-xl shadow-md transition-all">
+          <Icon name="printer" className="w-4 h-4" /> Print Invoice
+        </button>
       </div>
-
-      <div className="receipt-tear" />
 
       {/* --- Invoice Paper --- */}
-      <div className="invoice-paper">
+      <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl border border-slate-200 p-8 sm:p-12 relative overflow-hidden print:shadow-none print:border-none print:p-0">
 
-          {/* Header Section */}
-          <div className="inv-header">
-              <div>
-                  {/* আপনি চাইলে এখানে <img> ট্যাগ দিয়ে স্কুলের/প্রতিষ্ঠানের লোগো দিতে পারেন */}
-                  <h1 className="inv-company">Your School/Company Name</h1>
-                  <p className="inv-address">123 Education Street, City Name, 1200</p>
-                  <p className="inv-address">Phone: +880 1234 567890 &nbsp;·&nbsp; Email: info@yourschool.com</p>
-              </div>
-              <div>
-                  <div className="inv-eyebrow"><Icon name="receipt" style={{ fontSize: '13px' }} /> Invoice</div>
-                  <Barcode />
-                  <div className="inv-number" style={{ marginTop: '6px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
-                      {sale.invoice_number}
-                      <span className={`status-badge ${!isDue ? 'paid' : ''}`}>
-                          <Icon name={isDue ? 'alert-circle' : 'check-circle'} style={{ fontSize: '11px' }} />
-                          {isDue ? 'Due' : 'Paid'}
-                      </span>
-                  </div>
-                  <div className="inv-date">
-                      {new Date(sale.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                  </div>
-              </div>
+        {/* Header Section */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 border-b border-dashed border-slate-200 pb-8 mb-8">
+          <div>
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Your School/Company Name</h1>
+            <p className="text-xs text-slate-500 mt-1 leading-relaxed">123 Education Street, City Name, 1200</p>
+            <p className="text-xs text-slate-500 mt-0.5">Phone: +880 1234 567890 &nbsp;·&nbsp; Email: info@yourschool.com</p>
           </div>
-
-          {/* Customer & Seller Info */}
-          <div className="stub-row">
-              <div className="stub-card">
-                  <h4 className="stub-label">Billed To</h4>
-                  <strong className="stub-name">{sale.customer_name}</strong>
-                  {sale.customer_phone && <span className="stub-line">Phone: {sale.customer_phone}</span>}
-              </div>
-              <div className="stub-card">
-                  <h4 className="stub-label">Payment Info</h4>
-                  <span className="stub-line" style={{ marginTop: 0 }}><strong>Method:</strong> {sale.payment_method}</span>
-                  <span className="stub-line"><strong>Cashier:</strong> {sale.seller?.name || 'Admin'}</span>
-                  <span className="stub-line">
-                      <strong>Status:</strong>{' '}
-                      <span className={isDue ? 'status-due' : 'status-paid'}>{isDue ? 'Due' : 'Paid'}</span>
-                  </span>
-              </div>
+          <div className="text-left sm:text-right">
+            <div className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center sm:justify-end gap-2 mb-2">
+              <Icon name="receipt" className="w-4 h-4" /> Invoice
+            </div>
+            <Barcode />
+            <div className="text-lg font-black font-mono text-slate-900 mt-1 flex items-center sm:justify-end gap-3">
+              {sale.invoice_number}
+              <span className={`inline-flex px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${
+                !isDue ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'
+              }`}>
+                {!isDue ? 'Paid' : 'Due'}
+              </span>
+            </div>
+            <div className="text-xs text-slate-500 font-mono mt-1">
+              {new Date(sale.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+            </div>
           </div>
+        </div>
 
-          {/* Itemized Table */}
-          <table className="inv-table">
-              <thead>
-                  <tr>
-                      <th style={{ width: '6%' }}>#</th>
-                      <th style={{ width: '44%' }}>Item Description</th>
-                      <th style={{ width: '12%', textAlign: 'center' }}>Qty</th>
-                      <th style={{ width: '18%', textAlign: 'right' }}>Unit Price</th>
-                      <th style={{ width: '20%', textAlign: 'right' }}>Total</th>
-                  </tr>
-              </thead>
-              <tbody>
-                  {sale.items?.map((item, index) => (
-                      <tr key={item.id}>
-                          <td className="num-cell" style={{ color: 'var(--muted)' }}>{index + 1}</td>
-                          <td>
-                              <span className="inv-item-name">{item.product?.name}</span>
-                              <span className="inv-item-meta">
-                                  {item.product?.item_code && `Code: ${item.product.item_code}`}
-                                  {item.size && ` · Size: ${item.size}`}
-                                  {item.color && ` · Color: ${item.color}`}
-                              </span>
-                          </td>
-                          <td className="num-cell" style={{ textAlign: 'center', fontWeight: 700 }}>{item.quantity}</td>
-                          <td className="num-cell" style={{ textAlign: 'right' }}>৳ {Number(item.unit_price).toFixed(2)}</td>
-                          <td className="num-cell" style={{ textAlign: 'right', fontWeight: 700 }}>৳ {Number(item.subtotal).toFixed(2)}</td>
-                      </tr>
-                  ))}
-              </tbody>
+        {/* Customer & Payment Info */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-8">
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+            <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Billed To</h4>
+            <strong className="text-base font-bold text-slate-900 block">{sale.customer_name}</strong>
+            {sale.customer_phone && <span className="text-xs text-slate-600 block mt-1 font-mono">Phone: {sale.customer_phone}</span>}
+          </div>
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+            <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Payment Info</h4>
+            <div className="text-xs text-slate-700 space-y-1">
+              <div><strong>Method:</strong> {sale.payment_method}</div>
+              <div><strong>Cashier:</strong> {sale.seller?.name || 'Admin'}</div>
+              <div><strong>Status:</strong> <span className={isDue ? 'text-rose-600 font-bold' : 'text-emerald-600 font-bold'}>{isDue ? 'Due' : 'Paid'}</span></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Itemized Table */}
+        <div className="overflow-x-auto mb-8">
+          <table className="w-full text-left border-collapse text-sm">
+            <thead>
+              <tr className="bg-slate-900 text-white text-xs uppercase tracking-wider font-semibold">
+                <th className="px-4 py-3.5 rounded-l-xl">#</th>
+                <th className="px-4 py-3.5">Item Description</th>
+                <th className="px-4 py-3.5 text-center">Qty</th>
+                <th className="px-4 py-3.5 text-right">Unit Price</th>
+                <th className="px-4 py-3.5 text-right rounded-r-xl">Total</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {sale.items?.map((item, index) => (
+                <tr key={item.id} className="hover:bg-slate-50/50">
+                  <td className="px-4 py-3.5 font-mono text-slate-400 text-xs">{index + 1}</td>
+                  <td className="px-4 py-3.5">
+                    <span className="font-bold text-slate-900 block">{item.product?.name}</span>
+                    <span className="text-xs text-slate-500 font-mono">
+                      {item.product?.item_code && `Code: ${item.product.item_code}`}
+                      {item.size && ` · Size: ${item.size}`}
+                      {item.color && ` · Color: ${item.color}`}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3.5 text-center font-bold font-mono text-slate-800">{item.quantity}</td>
+                  <td className="px-4 py-3.5 text-right font-mono text-slate-700">৳ {Number(item.unit_price).toFixed(2)}</td>
+                  <td className="px-4 py-3.5 text-right font-black font-mono text-slate-900">৳ {Number(item.subtotal).toFixed(2)}</td>
+                </tr>
+              ))}
+            </tbody>
           </table>
+        </div>
 
-          {/* Summary Section */}
-          <div className="inv-summary">
-              <div className="inv-summary-box">
-                  <div className="sum-row">
-                      <span>Subtotal</span>
-                      <span className="num-cell">৳ {Number(sale.subtotal).toFixed(2)}</span>
-                  </div>
-                  {sale.discount > 0 && (
-                      <div className="sum-row discount">
-                          <span>Discount</span>
-                          <span className="num-cell">− ৳ {Number(sale.discount).toFixed(2)}</span>
-                      </div>
-                  )}
-
-                  <div className="grand-total">
-                      <span className="grand-total-label">Grand Total</span>
-                      <span className="grand-total-value">৳ {Number(sale.total_amount).toFixed(2)}</span>
-                  </div>
-
-                  <div className="sum-row">
-                      <span>Paid Amount</span>
-                      <span className="num-cell">৳ {Number(sale.paid_amount).toFixed(2)}</span>
-                  </div>
-                  {isDue && (
-                      <div className="sum-row due">
-                          <span>Due Amount</span>
-                          <span className="num-cell">৳ {Number(sale.due_amount).toFixed(2)}</span>
-                      </div>
-                  )}
+        {/* Summary Section */}
+        <div className="flex justify-end mb-12">
+          <div className="w-full sm:w-80 space-y-2.5 text-sm">
+            <div className="flex justify-between text-slate-600 px-2">
+              <span>Subtotal</span>
+              <span className="font-mono font-bold text-slate-900">৳ {Number(sale.subtotal).toFixed(2)}</span>
+            </div>
+            {sale.discount > 0 && (
+              <div className="flex justify-between text-rose-600 px-2">
+                <span>Discount</span>
+                <span className="font-mono font-bold">− ৳ {Number(sale.discount).toFixed(2)}</span>
               </div>
-          </div>
-
-          {/* Footer Area */}
-          <div className="inv-footer">
-              <h3 className="inv-thanks">Thank you for your purchase!</h3>
-              <p className="inv-note">If you have any questions about this invoice, please contact our support.</p>
-
-              <div className="inv-signrow">
-                  <div className="inv-sign">Customer Signature</div>
-                  <div className="inv-sign">Authorized Signature</div>
+            )}
+            <div className="bg-slate-900 text-white rounded-xl p-4 flex justify-between items-center shadow-md">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Grand Total</span>
+              <span className="text-xl font-black text-amber-400 font-mono">৳ {Number(sale.total_amount).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-slate-600 px-2 pt-1">
+              <span>Paid Amount</span>
+              <span className="font-mono font-bold text-slate-900">৳ {Number(sale.paid_amount).toFixed(2)}</span>
+            </div>
+            {isDue && (
+              <div className="flex justify-between text-rose-600 font-bold px-2 pt-1 border-t border-dashed border-slate-200">
+                <span>Due Amount</span>
+                <span className="font-mono">৳ {Number(sale.due_amount).toFixed(2)}</span>
               </div>
+            )}
           </div>
+        </div>
+
+        {/* Footer */}
+        <div className="border-t border-dashed border-slate-200 pt-8 text-center space-y-1">
+          <h3 className="text-base font-bold text-slate-900">Thank you for your purchase!</h3>
+          <p className="text-xs text-slate-500">If you have any questions about this invoice, please contact our support.</p>
+
+          <div className="flex justify-between items-center mt-16 px-6">
+            <div className="border-t border-dotted border-slate-400 w-40 pt-2 text-xs text-slate-500 font-mono">Customer Signature</div>
+            <div className="border-t border-dotted border-slate-400 w-40 pt-2 text-xs text-slate-500 font-mono">Authorized Signature</div>
+          </div>
+        </div>
 
       </div>
-
-      <div className="receipt-tear receipt-tear-bottom" />
     </div>
   );
 }

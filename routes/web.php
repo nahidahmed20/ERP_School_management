@@ -345,6 +345,7 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
     });
 
     Route::get('sales/{sale}/invoice', [SaleController::class, 'invoice'])->name('sales.invoice');
+    Route::get('/sales/reports', [SaleController::class, 'index'])->name('sales.reports.index');
     Route::resource('sales', SaleController::class);
 
     Route::prefix('cafeteria')->name('cafeteria.')->group(function () {

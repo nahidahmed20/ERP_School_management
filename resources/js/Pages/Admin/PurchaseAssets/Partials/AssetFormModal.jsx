@@ -41,36 +41,38 @@ export default function AssetFormModal({ item, users, campuses, activeCampusId, 
   const labelClass = "block text-sm font-semibold text-slate-700 mb-1.5";
 
   return (
-    <div className="mm-modal-overlay" onClick={onClose}>
-      <div 
-        className="mm-modal" 
+    // Responsive Overlay
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm" onClick={onClose}>
+
+      {/* Responsive Modal Box */}
+      <div
+        className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
-        style={{ padding: 0, overflow: 'hidden', maxWidth: '800px', width: '100%' }}
       >
         {/* Header */}
-        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
+        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0 rounded-t-2xl">
           <div>
             <h3 className="text-xl font-bold text-slate-900">{isEdit ? 'Edit Asset Record' : 'Register New Asset'}</h3>
             <p className="text-sm text-slate-500 mt-1">Configure asset details, status and assignments.</p>
           </div>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors bg-white border border-slate-200 shadow-sm">
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors bg-white border border-slate-200 shadow-sm shrink-0">
             <Icon name="close" className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Form Body */}
-        <form onSubmit={submit} className="flex flex-col max-h-[80vh]">
-          <div className="p-6 overflow-y-auto space-y-5 flex-1">
-            
+        {/* Form Body (Scrollable) */}
+        <form onSubmit={submit} className="flex flex-col flex-1 overflow-hidden">
+          <div className="p-6 overflow-y-auto space-y-5 flex-1 custom-scrollbar">
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              
+
               <div className="sm:col-span-2">
                 <label className={labelClass}>Campus <span className="text-rose-500">*</span></label>
-                <select 
-                  value={data.campus_id || ''} 
-                  onChange={(e) => setData('campus_id', e.target.value)} 
-                  disabled={!isSuperAdmin} 
-                  required 
+                <select
+                  value={data.campus_id || ''}
+                  onChange={(e) => setData('campus_id', e.target.value)}
+                  disabled={!isSuperAdmin}
+                  required
                   className={`${inputClass} ${!isSuperAdmin ? 'bg-slate-100 opacity-70' : 'bg-white'}`}
                 >
                   <option value="" disabled>Select Campus</option>
@@ -81,12 +83,12 @@ export default function AssetFormModal({ item, users, campuses, activeCampusId, 
 
               <div>
                 <label className={labelClass}>Asset Tag / Barcode <span className="text-rose-500">*</span></label>
-                <input 
-                  value={data.asset_tag} 
-                  onChange={(e) => setData('asset_tag', e.target.value)} 
-                  required 
-                  placeholder="e.g. AST-2026-0001" 
-                  className={`${inputClass} font-mono`} 
+                <input
+                  value={data.asset_tag}
+                  onChange={(e) => setData('asset_tag', e.target.value)}
+                  required
+                  placeholder="e.g. AST-2026-0001"
+                  className={`${inputClass} font-mono`}
                 />
                 {errors.asset_tag && <p className="text-rose-500 text-xs mt-1">{errors.asset_tag}</p>}
               </div>
@@ -135,56 +137,56 @@ export default function AssetFormModal({ item, users, campuses, activeCampusId, 
 
               <div>
                 <label className={labelClass}>Location / Room</label>
-                <input 
-                  value={data.location} 
-                  onChange={(e) => setData('location', e.target.value)} 
-                  placeholder="e.g. Lab-01, Principal Room" 
-                  className={inputClass} 
+                <input
+                  value={data.location}
+                  onChange={(e) => setData('location', e.target.value)}
+                  placeholder="e.g. Lab-01, Principal Room"
+                  className={inputClass}
                 />
               </div>
 
               <div>
                 <label className={labelClass}>Purchase Date</label>
-                <input 
-                  type="date" 
-                  value={data.purchase_date || ''} 
-                  onChange={(e) => setData('purchase_date', e.target.value)} 
-                  className={`${inputClass} font-mono`} 
+                <input
+                  type="date"
+                  value={data.purchase_date || ''}
+                  onChange={(e) => setData('purchase_date', e.target.value)}
+                  className={`${inputClass} font-mono`}
                 />
               </div>
 
               <div className="sm:col-span-2">
                 <label className={labelClass}>Cost (৳)</label>
-                <input 
-                  type="number" 
-                  value={data.cost} 
-                  onChange={(e) => setData('cost', e.target.value)} 
-                  min="0" 
-                  step="0.01" 
-                  className={`${inputClass} font-mono text-emerald-600 font-bold`} 
+                <input
+                  type="number"
+                  value={data.cost}
+                  onChange={(e) => setData('cost', e.target.value)}
+                  min="0"
+                  step="0.01"
+                  className={`${inputClass} font-mono text-emerald-600 font-bold`}
                 />
               </div>
 
               <div className="sm:col-span-2">
                 <label className={labelClass}>Additional Notes</label>
-                <textarea 
-                  rows="3" 
-                  value={data.note} 
-                  onChange={(e) => setData('note', e.target.value)} 
-                  placeholder="Condition, serial numbers, etc..." 
-                  className={`${inputClass} resize-none`} 
+                <textarea
+                  rows="3"
+                  value={data.note}
+                  onChange={(e) => setData('note', e.target.value)}
+                  placeholder="Condition, serial numbers, etc..."
+                  className={`${inputClass} resize-none`}
                 />
               </div>
 
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-end gap-3 shrink-0 rounded-b-2xl">
-            <button type="button" onClick={onClose} disabled={processing} className="px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-all shadow-sm">
+          {/* Footer - Stacked on Mobile, Row on Desktop */}
+          <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex flex-col-reverse sm:flex-row items-center justify-end gap-3 shrink-0 rounded-b-2xl">
+            <button type="button" onClick={onClose} disabled={processing} className="w-full sm:w-auto px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-all shadow-sm">
               Cancel
             </button>
-            <button type="submit" disabled={processing} className="flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md shadow-indigo-500/20 disabled:opacity-70 active:scale-95">
+            <button type="submit" disabled={processing} className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md shadow-indigo-500/20 disabled:opacity-70 active:scale-95">
               <Icon name="save" className="w-4 h-4" />
               {processing ? 'Saving...' : (isEdit ? 'Update Asset' : 'Register Asset')}
             </button>

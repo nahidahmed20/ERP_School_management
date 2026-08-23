@@ -1,4 +1,4 @@
-import { useForm } from '@inertiajs/react';
+import { useForm, router } from '@inertiajs/react';
 import Icon from '@/Components/Icons';
 
 export default function FormModal({ item, onClose }) {
@@ -18,7 +18,7 @@ export default function FormModal({ item, onClose }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     const routeName = isEdit ? route('admin.frontoffice.postal.update', item.id) : route('admin.frontoffice.postal.store');
-    
+
     post(routeName, {
       forceFormData: true,
       onSuccess: () => { reset(); onClose(); },
@@ -29,14 +29,13 @@ export default function FormModal({ item, onClose }) {
   const labelClass = "block text-sm font-semibold text-slate-700 mb-1.5";
 
   return (
-    <div className="mm-modal-overlay" onClick={onClose}>
-      <div 
-        className="mm-modal" 
+    <div className="mm-modal-overlay flex items-center justify-center p-4 z-50" onClick={onClose}>
+      <div
+        className="mm-modal w-full max-w-2xl bg-white rounded-2xl shadow-xl flex flex-col"
         onClick={(e) => e.stopPropagation()}
-        style={{ padding: 0, overflow: 'hidden', maxWidth: '36rem', width: '100%' }}
       >
         {/* Header */}
-        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0 rounded-t-2xl">
           <div>
             <h3 className="text-xl font-bold text-slate-900">{isEdit ? 'Edit Postal Record' : 'Add Postal Record'}</h3>
             <p className="text-sm text-slate-500 mt-1">Log details of received or dispatched documents.</p>
@@ -48,10 +47,10 @@ export default function FormModal({ item, onClose }) {
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="flex flex-col max-h-[80vh]" encType="multipart/form-data">
-          <div className="p-6 overflow-y-auto space-y-5">
-            
+          <div className="p-6 overflow-y-auto space-y-5 flex-1">
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              
+
               <div>
                 <label className={labelClass}>Type (Dispatch / Receive) <span className="text-rose-500">*</span></label>
                 <select value={data.type} onChange={(e) => setData('type', e.target.value)} required className={inputClass}>
@@ -63,59 +62,59 @@ export default function FormModal({ item, onClose }) {
 
               <div>
                 <label className={labelClass}>Reference / Tracking No</label>
-                <input 
-                  value={data.reference_no} 
-                  onChange={(e) => setData('reference_no', e.target.value)} 
-                  placeholder="e.g. TRK123456" 
-                  className={`${inputClass} font-mono`} 
+                <input
+                  value={data.reference_no}
+                  onChange={(e) => setData('reference_no', e.target.value)}
+                  placeholder="e.g. TRK123456"
+                  className={`${inputClass} font-mono`}
                 />
                 {errors.reference_no && <p className="text-rose-500 text-xs mt-1">{errors.reference_no}</p>}
               </div>
 
               <div>
                 <label className={labelClass}>Title / To / From <span className="text-rose-500">*</span></label>
-                <input 
-                  value={data.title} 
-                  onChange={(e) => setData('title', e.target.value)} 
-                  placeholder="কার কাছ থেকে এসেছে / কাকে পাঠানো হচ্ছে" 
-                  className={inputClass} 
-                  required 
+                <input
+                  value={data.title}
+                  onChange={(e) => setData('title', e.target.value)}
+                  placeholder="কার কাছ থেকে এসেছে / কাকে পাঠানো হচ্ছে"
+                  className={inputClass}
+                  required
                 />
                 {errors.title && <p className="text-rose-500 text-xs mt-1">{errors.title}</p>}
               </div>
 
               <div>
                 <label className={labelClass}>Date <span className="text-rose-500">*</span></label>
-                <input 
-                  type="date" 
-                  value={data.date} 
-                  onChange={(e) => setData('date', e.target.value)} 
-                  className={`${inputClass} font-mono`} 
-                  required 
+                <input
+                  type="date"
+                  value={data.date}
+                  onChange={(e) => setData('date', e.target.value)}
+                  className={`${inputClass} font-mono`}
+                  required
                 />
                 {errors.date && <p className="text-rose-500 text-xs mt-1">{errors.date}</p>}
               </div>
 
               <div className="sm:col-span-2">
                 <label className={labelClass}>Address</label>
-                <textarea 
-                  rows="2" 
-                  value={data.address} 
-                  onChange={(e) => setData('address', e.target.value)} 
-                  placeholder="ঠিকানা..." 
-                  className={`${inputClass} resize-none`} 
+                <textarea
+                  rows="2"
+                  value={data.address}
+                  onChange={(e) => setData('address', e.target.value)}
+                  placeholder="ঠিকানা..."
+                  className={`${inputClass} resize-none`}
                 />
                 {errors.address && <p className="text-rose-500 text-xs mt-1">{errors.address}</p>}
               </div>
 
               <div className="sm:col-span-2">
                 <label className={labelClass}>Note / Description</label>
-                <textarea 
-                  rows="2" 
-                  value={data.note} 
-                  onChange={(e) => setData('note', e.target.value)} 
-                  placeholder="বিস্তারিত..." 
-                  className={`${inputClass} resize-none`} 
+                <textarea
+                  rows="2"
+                  value={data.note}
+                  onChange={(e) => setData('note', e.target.value)}
+                  placeholder="বিস্তারিত..."
+                  className={`${inputClass} resize-none`}
                 />
                 {errors.note && <p className="text-rose-500 text-xs mt-1">{errors.note}</p>}
               </div>

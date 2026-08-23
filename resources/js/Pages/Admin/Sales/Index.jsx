@@ -18,7 +18,7 @@ export default function Index({ sales, filters }) {
 
   useEffect(() => {
     if (flash?.success) {
-      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: flash.success, showConfirmButton: false, timer: 3000 });
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: flash.success, showConfirmButton: false, timer: 3000, timerProgressBar: true });
     }
   }, [flash]);
 
@@ -26,102 +26,242 @@ export default function Index({ sales, filters }) {
     router.get(route('admin.sales.index'), { search, per_page: perPage, ...overrides }, { preserveState: true, replace: true });
   }
 
+  // --- Export Functions ---
+  const handlePrint = () => window.print();
+
+  const exportToCSV = () => {
+    if (!sales.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
+    const headers = ['Invoice Number', 'Customer Name', 'Phone', 'Date', 'Total Amount', 'Due Amount'];
+    const rows = sales.data.map(item => [
+      item.invoice_number || 'N/A',
+      item.customer_name || 'N/A',
+      item.customer_phone || 'N/A',
+      new Date(item.created_at).toLocaleDateString(),
+      item.total_amount || '0',
+      item.due_amount || '0'
+    ]);
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows.map(e => e.map(val => `"${val}"`).join(','))].join('\n');
+    const link = document.createElement("a");
+    link.setAttribute("href", encodeURI(csvContent));
+    link.setAttribute("download", `Sales_History_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const copyToClipboard = () => {
+    if (!sales.data.length) return;
+    let text = "Invoice Number\tCustomer Name\tPhone\tDate\tTotal\tDue\n";
+    sales.data.forEach(item => {
+      text += `${item.invoice_number}\t${item.customer_name}\t${item.customer_phone || '-'}\t${new Date(item.created_at).toLocaleDateString()}\t${item.total_amount}\t${item.due_amount}\n`;
+    });
+    navigator.clipboard.writeText(text);
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Data copied to clipboard!', showConfirmButton: false, timer: 2000 });
+  };
+
   return (
-    <AuthenticatedLayout
-      header={
-        <div className="page-head">
-          <div>
-            <span className="eyebrow">Sales & POS</span>
-            <h1>Sales History</h1>
-          </div>
-          <div className="mm-head-actions">
-            <Link href={route('admin.sales.create')} className="btn" style={{ background: '#16a34a', borderColor: '#16a34a' }}>
-              <Icon name="monitor" /> Open POS
-            </Link>
-          </div>
-        </div>
-      }
-    >
+    <AuthenticatedLayout>
       <Head title="Sales History" />
 
-      <div className="card mm-card">
-        <div className="mm-filters" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          <select value={perPage} onChange={(e) => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}>
-            <option value="10">10 / page</option>
-            <option value="50">50 / page</option>
-            <option value="all">Show All</option>
-          </select>
+      {/* Print Specific CSS */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @media print {
+          nav, aside, header, .no-print, button, a, select, input { display: none !important; }
+          body, html { background: #f8fafc !important; }
+          .print-table-wrapper { width: 100% !important; border: none !important; box-shadow: none !important; }
+          .print-title { display: block !important; font-size: 24px !important; font-weight: bold !important; margin-bottom: 20px !important; }
+        }
+        @media screen { .print-title { display: none; } }
+      `}} />
 
-          <div className="search">
-            <Icon name="search" />
-            <input placeholder="Search Invoice or Customer..." value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && applyFilters()} />
+      <div className="print-title">Sales History Directory - {new Date().toLocaleDateString('en-GB')}</div>
+
+      <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8 no-print">
+
+        {/* Page Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">Sales &amp; POS</span>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Sales History</h1>
+            <p className="text-sm text-slate-500 mt-1">সকল বিক্রয় ও ইনভয়েসের তালিকা এবং হিস্ট্রি।</p>
+          </div>
+          <Link
+            href={route('admin.sales.create')}
+            className="w-full sm:w-auto inline-flex justify-center items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md shadow-emerald-500/20 active:scale-95"
+          >
+            <Icon name="monitor" className="w-4 h-4" /> Open POS
+          </Link>
+        </div>
+
+        {/* Unified Modern Toolbar */}
+        <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
+
+            {/* Per Page */}
+            <select
+              value={perPage}
+              onChange={e => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}
+              className="appearance-none bg-none pr-3 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer text-center font-mono"
+              style={{ backgroundImage: 'none' }}
+            >
+              <option value="10">10 / Page</option>
+              <option value="20">20 / Page</option>
+              <option value="50">50 / Page</option>
+              <option value="all">All</option>
+            </select>
+
+            <div className="hidden sm:block w-px h-6 bg-slate-200"></div>
+
+            {/* Search Input */}
+            <div className="relative flex-1 min-w-[200px] sm:w-80">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Icon name="search" className="w-4 h-4 text-slate-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search Invoice or Customer..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
+                className="block w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+              />
+            </div>
+
+            {/* Apply Button */}
+            <button
+              onClick={() => applyFilters()}
+              className="w-full sm:w-auto px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
+            >
+              Search
+            </button>
           </div>
 
-          <button className="btn btn-outline" onClick={() => applyFilters()}>Filter</button>
+          {/* Export Actions */}
+          <div className="flex items-center justify-end gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-xl w-full xl:w-auto shadow-sm shrink-0 ml-auto">
+            <button onClick={copyToClipboard} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Copy to Clipboard">
+              Copy
+            </button>
+            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+            <button onClick={exportToCSV} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-emerald-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export CSV">
+              CSV
+            </button>
+            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+            <button onClick={() => alert('Backend Excel plugin needed')} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-green-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export Excel">
+              Excel
+            </button>
+            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+            <button onClick={() => alert('Backend PDF plugin needed')} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-rose-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export PDF">
+              PDF
+            </button>
+            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+            <button onClick={handlePrint} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-amber-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Print List">
+              Print
+            </button>
+          </div>
         </div>
 
-        <div className="mm-table-wrap">
-          <table className="mm-table">
-            <thead>
-              <tr>
-                <th style={{ width: '60px' }}>SL</th>
-                <th>Invoice</th>
-                <th>Customer</th>
-                <th>Date</th>
-                <th>Total</th>
-                <th>Due</th>
-                <th className="mm-actions-col">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sales.data.length === 0 && (
-                <tr><td colSpan={6} className="mm-empty">কোনো সেলস রেকর্ড পাওয়া যায়নি।</td></tr>
-              )}
-              {sales.data.map((sale, index) => (
-                <tr key={sale.id}>
-                <td style={{ color: '#64748b', fontWeight: 500 }}>
-                    {(sales.from ?? 1) + index}
-                  </td>
-                  <td>
-                    <div className="mm-label-cell">
-                      <Icon name="receipt" className="mm-row-icon" />
-                      <strong style={{ color: '#111827' }}>{sale.invoice_number}</strong>
-                    </div>
-                  </td>
-                  <td>
-                    <div style={{ fontWeight: 500 }}>{sale.customer_name}</div>
-                    <div style={{ fontSize: '12px', color: '#64748b' }}>{sale.customer_phone || '-'}</div>
-                  </td>
-                  <td>{new Date(sale.created_at).toLocaleDateString()}</td>
-                  <td><strong style={{ color: '#16a34a' }}>৳ {Number(sale.total_amount).toFixed(2)}</strong></td>
-                  <td>
-                    {sale.due_amount > 0
-                      ? <strong style={{ color: '#b91c1c' }}>৳ {Number(sale.due_amount).toFixed(2)}</strong>
-                      : <span style={{ color: '#15803d', fontSize: '12px', fontWeight: 'bold' }}>Paid</span>}
-                  </td>
-                  <td>
-                    <div className="mm-row-actions">
-                      <button className="icon-btn" title="View" onClick={() => setViewingItem(sale)}><Icon name="eye" /></button>
-                      <Link href={route('admin.sales.invoice', sale.id)} className="icon-btn" title="Print Invoice" target="_blank">
-                          <Icon name="printer" />
-                      </Link>
-                      <Link href={route('admin.sales.edit', sale.id)} className="icon-btn" title="Edit"><Icon name="edit" /></Link>
-                      <button className="icon-btn icon-btn-danger" title="Delete" onClick={() => setDeletingItem(sale)}><Icon name="trash" /></button>
-                    </div>
-                  </td>
+        {/* Main Table Card */}
+        <div className="bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 print-table-wrapper">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50/50">
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider w-16">SL</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Invoice</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Customer</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Date</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Total</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Due / Status</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right no-print">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {sales.data.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-12 text-center text-slate-500">
+                      <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-3 border border-slate-100">
+                        <Icon name="receipt" className="w-8 h-8 text-slate-300" />
+                      </div>
+                      <p className="text-sm font-semibold text-slate-600">কোনো সেলস রেকর্ড পাওয়া যায়নি</p>
+                      <p className="text-xs text-slate-400 mt-1">Open POS terminal to create a new sale</p>
+                    </td>
+                  </tr>
+                ) : (
+                  sales.data.map((sale, index) => (
+                    <tr key={sale.id} className="hover:bg-slate-50/60 transition-colors">
+                      <td className="px-6 py-4 text-sm font-medium text-slate-500 font-mono">
+                        {(sales.from ?? 1) + index}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100 shrink-0">
+                            <Icon name="receipt" className="w-5 h-5" />
+                          </div>
+                          <span className="text-sm font-bold text-slate-900 font-mono">{sale.invoice_number}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm font-bold text-slate-900">{sale.customer_name}</div>
+                        <div className="text-xs text-slate-500 font-mono mt-0.5">{sale.customer_phone || '—'}</div>
+                      </td>
+                      <td className="px-6 py-4 text-sm font-semibold text-slate-600 font-mono">
+                        {new Date(sale.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <span className="text-sm font-black text-emerald-700 font-mono">
+                          ৳ {Number(sale.total_amount).toFixed(2)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        {sale.due_amount > 0 ? (
+                          <span className="inline-flex px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide uppercase bg-rose-50 text-rose-700 border border-rose-200">
+                            Due: ৳ {Number(sale.due_amount).toFixed(2)}
+                          </span>
+                        ) : (
+                          <span className="inline-flex px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            Paid
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-right no-print">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button onClick={() => setViewingItem(sale)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="View Details">
+                            <Icon name="eye" className="w-4 h-4" />
+                          </button>
+                          <Link href={route('admin.sales.invoice', sale.id)} target="_blank" rel="noreferrer" className="p-2 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors" title="Print Invoice">
+                            <Icon name="printer" className="w-4 h-4" />
+                          </Link>
+                          <Link href={route('admin.sales.edit', sale.id)} className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Edit Sale">
+                            <Icon name="edit" className="w-4 h-4" />
+                          </Link>
+                          <button onClick={() => setDeletingItem(sale)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Delete Sale">
+                            <Icon name="trash" className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="no-print border-t border-slate-100 bg-white px-6 py-4 rounded-b-2xl">
+            <Pagination meta={sales} />
+          </div>
         </div>
-        <Pagination meta={sales} />
       </div>
 
       {viewingItem && <SaleShowModal sale={viewingItem} onClose={() => setViewingItem(null)} />}
+
       {deletingItem && (
-        <ConfirmDeleteModal item={{ name: `Invoice ${deletingItem.invoice_number}` }} onCancel={() => setDeletingItem(null)} onConfirm={() => {
+        <ConfirmDeleteModal
+          item={{ name: `Invoice ${deletingItem.invoice_number}` }}
+          onCancel={() => setDeletingItem(null)}
+          onConfirm={() => {
             router.delete(route('admin.sales.destroy', deletingItem.id), { onSuccess: () => setDeletingItem(null) });
-        }} />
+          }}
+        />
       )}
     </AuthenticatedLayout>
   );

@@ -3,9 +3,9 @@ import { Head, router, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
 import Pagination from '@/Components/Pagination';
-import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 import FormModal from './Partials/FormModal';
 import ShowModal from './Partials/ShowModal';
+import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 import Swal from 'sweetalert2';
 
 export default function Index({ records, filters }) {
@@ -51,10 +51,10 @@ export default function Index({ records, filters }) {
     if (!records.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
     const headers = ['Title / To / From', 'Reference No', 'Type', 'Date', 'Address'];
     const rows = records.data.map(item => [
-      item.title || 'N/A', 
-      item.reference_no || 'N/A', 
-      item.type || 'N/A', 
-      item.date || 'N/A', 
+      item.title || 'N/A',
+      item.reference_no || 'N/A',
+      item.type || 'N/A',
+      item.date || 'N/A',
       item.address || 'N/A'
     ]);
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows.map(e => e.map(val => `"${val}"`).join(','))].join('\n');
@@ -94,7 +94,7 @@ export default function Index({ records, filters }) {
       <div className="print-title">Postal Dispatch / Receive - {new Date().toLocaleDateString('en-GB')}</div>
 
       <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8 no-print">
-        
+
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
@@ -113,7 +113,7 @@ export default function Index({ records, filters }) {
         {/* Unified Modern Toolbar */}
         <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-            
+
             {/* Per Page */}
             <select
               value={perPage}
@@ -130,8 +130,8 @@ export default function Index({ records, filters }) {
             <div className="hidden sm:block w-px h-6 bg-slate-200"></div>
 
             {/* Type Filter */}
-            <select 
-              value={typeFilter} 
+            <select
+              value={typeFilter}
               onChange={(e) => { setTypeFilter(e.target.value); applyFilters({ type: e.target.value }); }}
               className="w-full sm:w-48 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
             >
@@ -218,8 +218,8 @@ export default function Index({ records, filters }) {
                     <tr key={item.id} className="hover:bg-slate-50/60 transition-colors">
                       <td className="px-6 py-4">
                         <span className="text-sm font-bold text-slate-900 block">{item.title}</span>
-                        <span className="text-xs text-slate-500 font-medium block mt-0.5">
-                          {item.address ? (item.address.length > 35 ? item.address.substring(0,35)+'...' : item.address) : '--'}
+                        <span className="text-xs text-slate-500 font-medium block mt-0.5 max-w-[200px] truncate">
+                          {item.address ? item.address : '--'}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm font-mono font-semibold text-slate-700">

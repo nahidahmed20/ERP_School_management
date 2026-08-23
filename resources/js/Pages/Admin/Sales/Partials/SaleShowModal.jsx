@@ -5,111 +5,134 @@ export default function SaleShowModal({ sale, onClose }) {
   if (!sale) return null;
 
   return (
-    <div className="mm-modal-overlay" onClick={onClose}>
-      <div className="mm-modal mm-modal-lg" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '900px' }}>
-        <div className="mm-modal-head">
-          <h3>Sale Details - {sale.invoice_number}</h3>
-          <button className="icon-btn" onClick={onClose}><Icon name="close" /></button>
+    // Responsive Overlay
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm" onClick={onClose}>
+
+      {/* Responsive Modal Box */}
+      <div
+        className="w-full max-w-4xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="bg-slate-50 px-6 py-5 border-b border-slate-100 flex items-center justify-between shrink-0 rounded-t-2xl">
+          <div>
+            <h3 className="text-xl font-bold text-slate-900">Sale Details - <span className="font-mono text-indigo-600">{sale.invoice_number}</span></h3>
+            <p className="text-sm text-slate-500 mt-0.5">Overview of purchased items and payment details.</p>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors bg-white border border-slate-200 shadow-sm shrink-0">
+            <Icon name="close" className="w-4 h-4" />
+          </button>
         </div>
 
-        <div className="mm-modal-body" style={{ padding: '20px', maxHeight: '75vh', overflowY: 'auto' }}>
+        {/* Body (Scrollable) */}
+        <div className="p-6 space-y-6 overflow-y-auto flex-1 custom-scrollbar">
 
           {/* Top Info Section */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #e2e8f0' }}>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100 text-sm">
             <div>
-                <div style={{ fontSize: '12px', color: '#64748b' }}>Customer</div>
-                <strong style={{ fontSize: '16px', color: '#0f172a' }}>{sale.customer_name}</strong>
-                {sale.customer_phone && <div style={{ fontSize: '13px', color: '#475569' }}>{sale.customer_phone}</div>}
+              <span className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Customer</span>
+              <strong className="text-slate-900 block truncate" title={sale.customer_name}>{sale.customer_name}</strong>
+              {sale.customer_phone && <span className="text-xs text-slate-500 font-mono">{sale.customer_phone}</span>}
             </div>
             <div>
-                <div style={{ fontSize: '12px', color: '#64748b' }}>Date & Time</div>
-                <strong style={{ fontSize: '16px', color: '#0f172a' }}>{new Date(sale.created_at).toLocaleString()}</strong>
+              <span className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Date &amp; Time</span>
+              <strong className="text-slate-900 block font-mono text-xs">{new Date(sale.created_at).toLocaleString()}</strong>
             </div>
             <div>
-                <div style={{ fontSize: '12px', color: '#64748b' }}>Sold By</div>
-                <strong style={{ fontSize: '16px', color: '#0f172a' }}>{sale.seller?.name || 'Admin'}</strong>
+              <span className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Sold By</span>
+              <strong className="text-slate-900 block">{sale.seller?.name || 'Admin'}</strong>
             </div>
-            <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '12px', color: '#64748b' }}>Payment Status</div>
-                <span style={{
-                  padding: '4px 12px',
-                  background: sale.due_amount > 0 ? '#fee2e2' : '#dcfce7',
-                  color: sale.due_amount > 0 ? '#b91c1c' : '#15803d',
-                  borderRadius: '20px',
-                  fontWeight: 'bold',
-                  fontSize: '13px'
-                }}>
-                  {sale.due_amount > 0 ? 'Due' : 'Paid'} ({sale.payment_method})
-                </span>
+            <div>
+              <span className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Payment Status</span>
+              <span className={`inline-flex px-2.5 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider border ${
+                sale.due_amount > 0 ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+              }`}>
+                {sale.due_amount > 0 ? 'Due' : 'Paid'} ({sale.payment_method})
+              </span>
             </div>
           </div>
 
           {/* Sold Items Table */}
-          <h4 style={{ marginBottom: '12px', color: '#334155' }}>Items Sold</h4>
-          <table className="mm-table" style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
-              <thead style={{ background: '#f8fafc', textAlign: 'left' }}>
-                  <tr>
-                      <th style={{ padding: '10px 15px', borderBottom: '1px solid #e2e8f0', width: '40%' }}>Product</th>
-                      <th style={{ padding: '10px 15px', borderBottom: '1px solid #e2e8f0', width: '20%' }}>Variant</th>
-                      <th style={{ padding: '10px 15px', borderBottom: '1px solid #e2e8f0', width: '10%' }}>Qty</th>
-                      <th style={{ padding: '10px 15px', borderBottom: '1px solid #e2e8f0', width: '15%' }}>Price</th>
-                      <th style={{ padding: '10px 15px', borderBottom: '1px solid #e2e8f0', textAlign: 'right', width: '15%' }}>Subtotal</th>
+          <div>
+            <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-3">Items Sold</h4>
+            <div className="overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
+              <table className="w-full text-left border-collapse text-sm">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-[11px] tracking-wider font-semibold">
+                    <th className="px-4 py-3">Product Detail</th>
+                    <th className="px-4 py-3">Variant</th>
+                    <th className="px-4 py-3">Qty</th>
+                    <th className="px-4 py-3">Unit Price</th>
+                    <th className="px-4 py-3 text-right">Subtotal</th>
                   </tr>
-              </thead>
-              <tbody>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
                   {sale.items?.map(item => (
-                      <tr key={item.id}>
-                          <td style={{ padding: '10px 15px', borderBottom: '1px solid #e2e8f0' }}>
-                              <div style={{ fontWeight: 600, color: '#0f172a' }}>{item.product?.name}</div>
-                              {item.product?.item_code && <div style={{ fontSize: '12px', color: '#4f46e5' }}>{item.product.item_code}</div>}
-                          </td>
-                          <td style={{ padding: '10px 15px', borderBottom: '1px solid #e2e8f0', fontSize: '13px' }}>
-                              {item.size && <div>Size: <strong>{item.size}</strong></div>}
-                              {item.color && <div>Color: <strong>{item.color}</strong></div>}
-                              {(!item.size && !item.color) && '-'}
-                          </td>
-                          <td style={{ padding: '10px 15px', borderBottom: '1px solid #e2e8f0', fontWeight: 'bold' }}>{item.quantity}</td>
-                          <td style={{ padding: '10px 15px', borderBottom: '1px solid #e2e8f0' }}>৳ {Number(item.unit_price).toFixed(2)}</td>
-                          <td style={{ padding: '10px 15px', borderBottom: '1px solid #e2e8f0', textAlign: 'right', fontWeight: 'bold' }}>৳ {Number(item.subtotal).toFixed(2)}</td>
-                      </tr>
+                    <tr key={item.id} className="hover:bg-slate-50/50">
+                      <td className="px-4 py-3">
+                        <div className="font-bold text-slate-900">{item.product?.name}</div>
+                        {item.product?.item_code && <div className="text-[11px] font-mono text-indigo-600 mt-0.5">Code: {item.product.item_code}</div>}
+                      </td>
+                      <td className="px-4 py-3 text-xs text-slate-600 space-y-0.5">
+                        {item.size && <div>Size: <span className="font-semibold text-slate-900">{item.size}</span></div>}
+                        {item.color && <div>Color: <span className="font-semibold text-slate-900">{item.color}</span></div>}
+                        {(!item.size && !item.color) && <span className="italic text-slate-400">—</span>}
+                      </td>
+                      <td className="px-4 py-3 font-semibold text-slate-700 font-mono">
+                        {item.quantity}
+                      </td>
+                      <td className="px-4 py-3 font-mono text-slate-700">
+                        ৳ {Number(item.unit_price).toFixed(2)}
+                      </td>
+                      <td className="px-4 py-3 text-right font-bold text-slate-900 font-mono">
+                        ৳ {Number(item.subtotal).toFixed(2)}
+                      </td>
+                    </tr>
                   ))}
-              </tbody>
-          </table>
+                  {(!sale.items || sale.items.length === 0) && (
+                    <tr><td colSpan="5" className="text-center py-8 text-slate-400 italic">No items found</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
 
           {/* Payment Summary */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
-             <div style={{ width: '300px', background: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                     <span style={{ color: '#64748b' }}>Subtotal:</span>
-                     <strong>৳ {Number(sale.subtotal).toFixed(2)}</strong>
-                 </div>
-                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', color: '#b91c1c' }}>
-                     <span>Discount:</span>
-                     <strong>- ৳ {Number(sale.discount).toFixed(2)}</strong>
-                 </div>
-                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #cbd5e1', fontSize: '16px' }}>
-                     <span style={{ color: '#0f172a', fontWeight: 'bold' }}>Total:</span>
-                     <strong style={{ color: '#16a34a' }}>৳ {Number(sale.total_amount).toFixed(2)}</strong>
-                 </div>
-                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                     <span style={{ color: '#64748b' }}>Paid Amount:</span>
-                     <strong>৳ {Number(sale.paid_amount).toFixed(2)}</strong>
-                 </div>
-                 <div style={{ display: 'flex', justifyContent: 'space-between', color: '#b91c1c' }}>
-                     <span>Due Amount:</span>
-                     <strong>৳ {Number(sale.due_amount).toFixed(2)}</strong>
-                 </div>
-             </div>
+          <div className="flex justify-end">
+            <div className="w-full sm:w-80 bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-2.5 text-sm shadow-sm">
+              <div className="flex justify-between text-slate-600">
+                <span>Subtotal:</span>
+                <span className="font-mono font-bold text-slate-900">৳ {Number(sale.subtotal).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-rose-600">
+                <span>Discount:</span>
+                <span className="font-mono font-bold">− ৳ {Number(sale.discount).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between items-center text-base pt-2 border-t border-slate-200">
+                <span className="font-bold text-slate-900">Total:</span>
+                <span className="font-black text-emerald-600 font-mono text-lg">৳ {Number(sale.total_amount).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-slate-600 pt-1">
+                <span>Paid Amount:</span>
+                <span className="font-mono font-bold text-slate-900">৳ {Number(sale.paid_amount).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-rose-600 font-bold pt-1 border-t border-dashed border-slate-200">
+                <span>Due Amount:</span>
+                <span className="font-mono">৳ {Number(sale.due_amount).toFixed(2)}</span>
+              </div>
+            </div>
           </div>
 
         </div>
 
-        {/* Modal Footer with Print Button */}
-        <div className="mm-modal-foot mt-2" style={{ padding: '15px 20px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between' }}>
-          <a href={route('admin.sales.invoice', sale.id)} target="_blank" rel="noreferrer" className="btn" style={{ background: '#4f46e5', borderColor: '#4f46e5', color: '#fff', display: 'inline-flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-              <Icon name="printer" /> Print Invoice
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between rounded-b-2xl shrink-0">
+          <a href={route('admin.sales.invoice', sale.id)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold transition-all shadow-sm">
+            <Icon name="printer" className="w-4 h-4" /> Print Invoice
           </a>
-          <button type="button" className="btn btn-outline" onClick={onClose}>Close</button>
+          <button type="button" className="px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 rounded-xl transition-all shadow-sm" onClick={onClose}>
+            Close
+          </button>
         </div>
       </div>
     </div>
