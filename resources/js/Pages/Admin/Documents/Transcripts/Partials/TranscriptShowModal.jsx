@@ -5,84 +5,127 @@ export default function TranscriptShowModal({ item, onClose }) {
   if (!item) return null;
 
   return (
-    <div className="mm-modal-overlay" onClick={onClose}>
-      <div className="mm-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '800px', width: '95%' }}>
-        <div className="mm-modal-head">
-          <h3>Transcript Preview: {item.title}</h3>
-          <button className="icon-btn" onClick={onClose}><Icon name="close" /></button>
+    // Responsive Overlay
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
+      
+      {/* Responsive Modal Box */}
+      <div 
+        className="w-full max-w-4xl bg-slate-100 rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden transform transition-all animate-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Modal Header */}
+        <div className="px-6 py-5 border-b border-slate-200 flex justify-between items-center bg-white shrink-0 rounded-t-2xl shadow-sm z-10">
+          <div>
+            <h3 className="text-xl font-bold text-slate-900">Transcript Preview</h3>
+            <p className="text-sm font-semibold text-indigo-600 mt-0.5">{item.title}</p>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors bg-slate-50 border border-slate-200 shadow-sm shrink-0">
+            <Icon name="close" className="w-4 h-4" />
+          </button>
         </div>
-
-        <div className="mm-modal-body" style={{ padding: '20px', background: '#cbd5e1', display: 'flex', justifyContent: 'center' }}>
-
+        
+        {/* Modal Body (Scrollable Preview Area) */}
+        <div className="p-6 overflow-y-auto flex-1 flex justify-center items-center custom-scrollbar">
+          
           {/* A4 Paper Simulation */}
-          <div style={{
-            width: '100%',
-            maxWidth: '650px',
-            background: '#fff',
-            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
-            padding: '40px',
-            fontFamily: 'Arial, sans-serif',
-            color: '#0f172a'
-          }}>
+          <div className="w-full max-w-[700px] bg-white relative shadow-xl border border-slate-200 flex flex-col font-sans text-slate-900 p-8 sm:p-12 aspect-[1/1.414]">
+            
+            {/* Watermark Overlay (If any) */}
+            {item.watermark_image && (
+              <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.06] flex items-center justify-center">
+                <img src={`/storage/${item.watermark_image}`} alt="Watermark" className="w-[60%] h-[60%] object-contain" />
+              </div>
+            )}
+
             {/* Header */}
-            <div style={{ textAlign: 'center', borderBottom: '2px solid #1e293b', paddingBottom: '15px', marginBottom: '20px' }}>
-              <h1 style={{ margin: '0 0 5px 0', fontSize: '24px', fontWeight: 'bold', textTransform: 'uppercase' }}>Academic Transcript</h1>
-              <h3 style={{ margin: 0, fontSize: '16px', color: '#475569' }}>{item.header_text || 'Official Record of Student Progress'}</h3>
+            <div className="w-full text-center border-b-[3px] border-slate-800 pb-4 mb-6 z-10">
+              <h1 className="m-0 text-2xl sm:text-3xl font-black uppercase tracking-wide text-slate-900">{item.title || 'Academic Transcript'}</h1>
+              <h3 className="m-0 text-sm sm:text-base text-slate-600 mt-2 font-semibold tracking-wider">{item.header_text || 'Official Record of Student Progress'}</h3>
             </div>
 
-            {/* Student Info */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '13px', marginBottom: '20px' }}>
-              <div><strong>Student Name:</strong> [ Student Name ]</div>
-              <div><strong>Student ID:</strong> [ ID Number ]</div>
-              <div><strong>Class/Program:</strong> [ Class Name ]</div>
-              <div><strong>Grading System:</strong> {item.grading_system}</div>
+            {/* Student Info Dummy */}
+            <div className="w-full grid grid-cols-2 gap-y-3 gap-x-6 text-xs sm:text-sm mb-6 z-10 font-medium">
+              <div><span className="font-bold text-slate-500 uppercase text-[10px] tracking-wider block mb-0.5">Student Name</span> <span className="text-slate-900 font-bold">[ Student Name ]</span></div>
+              <div><span className="font-bold text-slate-500 uppercase text-[10px] tracking-wider block mb-0.5">Student ID</span> <span className="text-slate-900 font-bold">[ ID Number ]</span></div>
+              <div><span className="font-bold text-slate-500 uppercase text-[10px] tracking-wider block mb-0.5">Class / Program</span> <span className="text-slate-900 font-bold">[ Class Name ]</span></div>
+              <div><span className="font-bold text-slate-500 uppercase text-[10px] tracking-wider block mb-0.5">Grading System</span> <span className="text-indigo-700 font-bold bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">{item.grading_system}</span></div>
             </div>
 
             {/* Mock Grades Table */}
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', marginBottom: '20px' }}>
+            <table className="w-full border-collapse text-xs sm:text-sm mb-6 z-10 shadow-sm border border-slate-300">
               <thead>
-                <tr style={{ background: '#f1f5f9' }}>
-                  <th style={{ border: '1px solid #cbd5e1', padding: '8px', textAlign: 'left' }}>Subject</th>
-                  <th style={{ border: '1px solid #cbd5e1', padding: '8px', textAlign: 'center' }}>Marks</th>
-                  <th style={{ border: '1px solid #cbd5e1', padding: '8px', textAlign: 'center' }}>Grade</th>
-                  <th style={{ border: '1px solid #cbd5e1', padding: '8px', textAlign: 'center' }}>GPA</th>
+                <tr className="bg-slate-100">
+                  <th className="border border-slate-300 p-2.5 text-left text-slate-700 font-bold uppercase tracking-wider text-[11px]">Subject</th>
+                  <th className="border border-slate-300 p-2.5 text-center text-slate-700 font-bold uppercase tracking-wider text-[11px] w-20">Marks</th>
+                  <th className="border border-slate-300 p-2.5 text-center text-slate-700 font-bold uppercase tracking-wider text-[11px] w-20">Grade</th>
+                  <th className="border border-slate-300 p-2.5 text-center text-slate-700 font-bold uppercase tracking-wider text-[11px] w-20">GPA</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td style={{ border: '1px solid #cbd5e1', padding: '8px' }}>Mathematics</td>
-                  <td style={{ border: '1px solid #cbd5e1', padding: '8px', textAlign: 'center' }}>85</td>
-                  <td style={{ border: '1px solid #cbd5e1', padding: '8px', textAlign: 'center' }}>A+</td>
-                  <td style={{ border: '1px solid #cbd5e1', padding: '8px', textAlign: 'center' }}>5.0</td>
+                  <td className="border border-slate-300 p-2.5 font-semibold text-slate-800">Mathematics</td>
+                  <td className="border border-slate-300 p-2.5 text-center font-mono">85</td>
+                  <td className="border border-slate-300 p-2.5 text-center font-bold text-emerald-700 bg-emerald-50/50">A+</td>
+                  <td className="border border-slate-300 p-2.5 text-center font-bold font-mono">5.0</td>
                 </tr>
                 <tr>
-                  <td style={{ border: '1px solid #cbd5e1', padding: '8px' }}>English</td>
-                  <td style={{ border: '1px solid #cbd5e1', padding: '8px', textAlign: 'center' }}>78</td>
-                  <td style={{ border: '1px solid #cbd5e1', padding: '8px', textAlign: 'center' }}>A</td>
-                  <td style={{ border: '1px solid #cbd5e1', padding: '8px', textAlign: 'center' }}>4.0</td>
+                  <td className="border border-slate-300 p-2.5 font-semibold text-slate-800">English Language</td>
+                  <td className="border border-slate-300 p-2.5 text-center font-mono">78</td>
+                  <td className="border border-slate-300 p-2.5 text-center font-bold text-emerald-600 bg-emerald-50/30">A</td>
+                  <td className="border border-slate-300 p-2.5 text-center font-bold font-mono">4.0</td>
+                </tr>
+                <tr>
+                  <td className="border border-slate-300 p-2.5 font-semibold text-slate-800">Physics</td>
+                  <td className="border border-slate-300 p-2.5 text-center font-mono">92</td>
+                  <td className="border border-slate-300 p-2.5 text-center font-bold text-emerald-700 bg-emerald-50/50">A+</td>
+                  <td className="border border-slate-300 p-2.5 text-center font-bold font-mono">5.0</td>
                 </tr>
               </tbody>
             </table>
 
-            <div style={{ textAlign: 'right', fontWeight: 'bold', fontSize: '14px', marginBottom: '40px' }}>
-              CGPA / Total: [ Calculated Value ]
+            <div className="w-full flex justify-end z-10 mb-12">
+              <div className="bg-slate-800 text-white px-6 py-2 rounded shadow flex items-center gap-4">
+                <span className="text-xs uppercase tracking-widest font-bold text-slate-300">CGPA / Total</span>
+                <span className="text-xl font-black font-mono">[ Value ]</span>
+              </div>
             </div>
 
-            {/* Footer */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '50px', fontSize: '12px' }}>
-              <div style={{ borderTop: '1px solid #0f172a', paddingTop: '5px', width: '150px', textAlign: 'center' }}>Prepared By</div>
-              <div style={{ borderTop: '1px solid #0f172a', paddingTop: '5px', width: '150px', textAlign: 'center' }}>Head of Institution</div>
+            {/* Signatures & Footer */}
+            <div className="w-full flex justify-between items-end mt-auto z-10">
+              {/* Left Empty Signature space */}
+              <div className="w-[150px] text-center">
+                <div className="border-t-[1.5px] border-slate-800 pt-1.5 text-[11px] font-bold text-slate-700 uppercase tracking-wider">Prepared By</div>
+              </div>
+
+              {/* Right Configurable Signature */}
+              <div className="w-[180px] text-center flex flex-col items-center">
+                {item.authorized_signature_image ? (
+                  <img src={`/storage/${item.authorized_signature_image}`} alt="Sig" className="h-10 object-contain mb-2" />
+                ) : (
+                  <div className="h-10 mb-2"></div>
+                )}
+                <div className="border-t-[1.5px] border-slate-800 pt-1.5 text-[11px] font-bold text-slate-900 w-full uppercase tracking-wider">
+                  {item.authorized_signature_title || 'Authorized Signature'}
+                </div>
+              </div>
             </div>
-            <div style={{ textAlign: 'center', marginTop: '30px', fontSize: '11px', color: '#64748b' }}>
+
+            <div className="w-full text-center mt-10 text-[10px] text-slate-500 border-t border-dashed border-slate-300 pt-3 z-10 font-semibold tracking-wide">
               {item.footer_text || 'This transcript is invalid without the official seal and signature.'}
             </div>
 
           </div>
+
         </div>
 
-        <div className="mm-modal-foot mt-2" style={{ padding: '15px 20px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-          <button className="btn btn-outline" onClick={() => window.print()}><Icon name="printer" /> Print Demo</button>
-          <button className="btn" onClick={onClose}>Close</button>
+        {/* Modal Footer */}
+        <div className="px-6 py-4 border-t border-slate-200 bg-white flex flex-col-reverse sm:flex-row items-center justify-end gap-3 rounded-b-2xl shrink-0 z-10 shadow-sm">
+          <button type="button" className="w-full sm:w-auto px-6 py-2.5 text-sm font-bold text-slate-600 bg-slate-100 border border-slate-200 hover:bg-slate-200 rounded-xl transition-all shadow-sm active:scale-95" onClick={onClose}>
+            Close
+          </button>
+          <button type="button" className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md shadow-indigo-500/20 active:scale-95" onClick={() => window.print()}>
+            <Icon name="printer" className="w-4 h-4" /> Print Demo
+          </button>
         </div>
       </div>
     </div>

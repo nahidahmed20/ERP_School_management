@@ -33,134 +33,147 @@ export default function EventFormModal({ item, classrooms, activeCampusId, onClo
     }
   }
 
-  const styles = {
-    card: { background: '#f8fafc', padding: '20px', border: '1px solid #e2e8f0', borderRadius: '10px', marginBottom: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' },
-    grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '20px' },
-    label: { display: 'block', fontSize: '13px', fontWeight: '600', color: '#475569', marginBottom: '8px', letterSpacing: '0.3px' },
-    select: { width: '100%', padding: '10px 14px', fontSize: '14px', color: '#1e293b', border: '1px solid #cbd5e1', borderRadius: '6px', backgroundColor: '#fff', cursor: 'pointer', outline: 'none', transition: 'border-color 0.2s ease', boxSizing: 'border-box' },
-    input: { width: '100%', padding: '10px 14px', fontSize: '14px', color: '#1e293b', border: '1px solid #cbd5e1', borderRadius: '6px', backgroundColor: '#fff', outline: 'none', transition: 'border-color 0.2s ease', boxSizing: 'border-box', fontFamily: 'inherit' },
-    error: { fontSize: '12px', color: '#ef4444', marginTop: '6px', display: 'block' }
-  };
-
-  const typeOptions = [
-    { value: 'Event', color: '#16a34a' },
-    { value: 'Meeting', color: '#2563eb' },
-    { value: 'Holiday', color: '#dc2626' },
-    { value: 'Other', color: '#64748b' },
-  ];
+  const inputClass = "block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all";
+  const labelClass = "block text-sm font-semibold text-slate-700 mb-1.5";
 
   return (
-    <div className="mm-modal-overlay" onClick={onClose} style={{ display: 'flex', alignItems: 'center', justifyItems: 'center' }}>
-      <div className="mm-modal mm-modal-lg" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '700px', width: '100%', margin: '0 auto' }}>
-        <div className="mm-modal-head" style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '15px', marginBottom: '20px' }}>
-          <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1e293b', margin: 0 }}>
-            {isEdit ? 'Edit Event / Meeting' : 'Add Event / Meeting'}
-          </h3>
-          <button type="button" className="icon-btn" onClick={onClose} style={{ cursor: 'pointer', border: 'none', background: 'transparent' }}>
-            <Icon name="close" />
+    // Responsive Overlay
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
+      
+      {/* Responsive Modal Box */}
+      <div 
+        className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0 rounded-t-2xl">
+          <div>
+            <h3 className="text-xl font-bold text-slate-900">{isEdit ? 'Edit Event / Meeting' : 'Add Event / Meeting'}</h3>
+            <p className="text-sm text-slate-500 mt-1">Configure schedule, event type, and room assignment.</p>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors bg-white border border-slate-200 shadow-sm shrink-0">
+            <Icon name="close" className="w-4 h-4" />
           </button>
         </div>
 
-        <form onSubmit={submit} className="mm-form">
-          {/* মূল তথ্য */}
-          <div style={styles.card}>
-            <div style={{ marginBottom: '20px' }}>
-              <label style={styles.label}>Title <span style={{ color: '#ef4444' }}>*</span></label>
-              <input
-                type="text"
-                style={styles.input}
-                value={data.title}
-                onChange={(e) => setData('title', e.target.value)}
-                placeholder="যেমন: Parent-Teacher Meeting"
-                required
-              />
-              {errors.title && <em style={styles.error}>{errors.title}</em>}
-            </div>
+        {/* Form Body (Scrollable) */}
+        <form onSubmit={submit} className="flex flex-col flex-1 overflow-hidden">
+          <div className="p-6 overflow-y-auto space-y-5 flex-1 custom-scrollbar">
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              
+              {/* Title */}
+              <div className="sm:col-span-2">
+                <label className={labelClass}>Title <span className="text-rose-500">*</span></label>
+                <input
+                  type="text"
+                  value={data.title}
+                  onChange={(e) => setData('title', e.target.value)}
+                  placeholder="যেমন: Parent-Teacher Meeting"
+                  required
+                  autoFocus
+                  className={inputClass}
+                />
+                {errors.title && <p className="text-rose-500 text-xs mt-1">{errors.title}</p>}
+              </div>
 
-            <div style={styles.grid}>
+              {/* Type */}
               <div>
-                <label style={styles.label}>Type <span style={{ color: '#ef4444' }}>*</span></label>
+                <label className={labelClass}>Type <span className="text-rose-500">*</span></label>
                 <select
-                  style={styles.select}
                   value={data.type}
                   onChange={(e) => setData('type', e.target.value)}
                   required
+                  className={`${inputClass} bg-white`}
                 >
-                  {typeOptions.map(t => <option key={t.value} value={t.value}>{t.value}</option>)}
+                  <option value="Event">Event</option>
+                  <option value="Meeting">Meeting</option>
+                  <option value="Holiday">Holiday</option>
+                  <option value="Other">Other</option>
                 </select>
-                {errors.type && <em style={styles.error}>{errors.type}</em>}
+                {errors.type && <p className="text-rose-500 text-xs mt-1">{errors.type}</p>}
               </div>
 
+              {/* Room */}
               <div>
-                <label style={styles.label}>Room <span style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 'normal' }}>(Optional)</span></label>
+                <label className={labelClass}>Room <span className="text-slate-400 font-normal">(Optional)</span></label>
                 <select
-                  style={styles.select}
                   value={data.classroom_id}
                   onChange={(e) => setData('classroom_id', e.target.value)}
+                  className={`${inputClass} bg-white`}
                 >
                   <option value="">Not Assigned</option>
-                  {classrooms.map(r => <option key={r.id} value={r.id}>{r.room_number}</option>)}
+                  {classrooms.map(r => <option key={r.id} value={r.id}>Room: {r.room_number}</option>)}
                 </select>
-                {errors.classroom_id && <em style={styles.error}>{errors.classroom_id}</em>}
+                {errors.classroom_id && <p className="text-rose-500 text-xs mt-1">{errors.classroom_id}</p>}
               </div>
-            </div>
-          </div>
 
-          {/* সময়সূচী */}
-          <div style={styles.card}>
-            <div style={styles.grid}>
+              {/* Schedule Dates */}
               <div>
-                <label style={styles.label}>Starts At <span style={{ color: '#ef4444' }}>*</span></label>
+                <label className={labelClass}>Starts At <span className="text-rose-500">*</span></label>
                 <input
                   type="datetime-local"
-                  style={styles.input}
                   value={data.start_datetime}
                   onChange={(e) => setData('start_datetime', e.target.value)}
                   required
+                  className={`${inputClass} font-mono`}
                 />
-                {errors.start_datetime && <em style={styles.error}>{errors.start_datetime}</em>}
+                {errors.start_datetime && <p className="text-rose-500 text-xs mt-1">{errors.start_datetime}</p>}
               </div>
 
               <div>
-                <label style={styles.label}>Ends At <span style={{ color: '#ef4444' }}>*</span></label>
+                <label className={labelClass}>Ends At <span className="text-rose-500">*</span></label>
                 <input
                   type="datetime-local"
-                  style={styles.input}
                   value={data.end_datetime}
                   onChange={(e) => setData('end_datetime', e.target.value)}
                   required
+                  className={`${inputClass} font-mono`}
                 />
-                {errors.end_datetime && <em style={styles.error}>{errors.end_datetime}</em>}
+                {errors.end_datetime && <p className="text-rose-500 text-xs mt-1">{errors.end_datetime}</p>}
               </div>
+
+              {/* Description */}
+              <div className="sm:col-span-2">
+                <label className={labelClass}>Description <span className="text-slate-400 font-normal">(Optional)</span></label>
+                <textarea
+                  rows="3"
+                  value={data.description}
+                  onChange={(e) => setData('description', e.target.value)}
+                  placeholder="ইভেন্ট সম্পর্কে অতিরিক্ত তথ্য..."
+                  className={`${inputClass} resize-none`}
+                />
+                {errors.description && <p className="text-rose-500 text-xs mt-1">{errors.description}</p>}
+              </div>
+
+              {/* Active Toggle */}
+              <div className="sm:col-span-2 pt-2 border-t border-slate-100">
+                <label className="flex items-center gap-3 cursor-pointer group w-max">
+                  <div className="relative flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={data.is_active}
+                      onChange={(e) => setData('is_active', e.target.checked)}
+                      className="peer appearance-none w-5 h-5 border-2 border-slate-300 rounded focus:ring-0 checked:bg-emerald-600 checked:border-emerald-600 cursor-pointer transition-colors"
+                    />
+                    <svg className="absolute w-3.5 h-3.5 top-[3px] left-[3px] text-white pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span className="text-sm font-semibold text-slate-700 group-hover:text-slate-900 transition-colors">Active — এই ইভেন্টটি সবার কাছে দৃশ্যমান থাকবে</span>
+                </label>
+              </div>
+
             </div>
           </div>
 
-          {/* বিস্তারিত */}
-          <div style={{ marginBottom: '20px' }}>
-            <label style={styles.label}>Description <span style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 'normal' }}>(Optional)</span></label>
-            <textarea
-              style={{ ...styles.input, minHeight: '90px', resize: 'vertical' }}
-              value={data.description}
-              onChange={(e) => setData('description', e.target.value)}
-              placeholder="ইভেন্ট সম্পর্কে অতিরিক্ত তথ্য..."
-            />
-            {errors.description && <em style={styles.error}>{errors.description}</em>}
-          </div>
-
-          {/* একটিভ স্ট্যাটাস */}
-          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13.5px', color: '#334155', fontWeight: 500, cursor: 'pointer', marginBottom: '10px' }}>
-            <input
-              type="checkbox"
-              checked={data.is_active}
-              onChange={(e) => setData('is_active', e.target.checked)}
-              style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#4f46e5' }}
-            />
-            Active — এই ইভেন্টটি সবার কাছে দৃশ্যমান থাকবে
-          </label>
-
-          <div className="mm-modal-foot" style={{ marginTop: '15px', paddingTop: '15px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-            <button type="button" className="btn btn-outline" onClick={onClose} disabled={processing} style={{ padding: '8px 16px', borderRadius: '6px' }}>Cancel</button>
-            <button type="submit" className="btn" disabled={processing} style={{ padding: '8px 20px', borderRadius: '6px', background: '#4f46e5', color: '#fff', border: 'none', cursor: processing ? 'not-allowed' : 'pointer', opacity: processing ? 0.7 : 1 }}>
+          {/* Footer */}
+          <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex flex-col-reverse sm:flex-row items-center justify-end gap-3 shrink-0 rounded-b-2xl">
+            <button type="button" onClick={onClose} disabled={processing} className="w-full sm:w-auto px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-all shadow-sm">
+              Cancel
+            </button>
+            <button type="submit" disabled={processing} className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md shadow-indigo-500/20 disabled:opacity-70 active:scale-95">
+              <Icon name="save" className="w-4 h-4" />
               {processing ? 'Saving...' : (isEdit ? 'Update Event' : 'Save Event')}
             </button>
           </div>

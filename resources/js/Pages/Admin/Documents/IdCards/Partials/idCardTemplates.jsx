@@ -1,10 +1,4 @@
 // Registry of selectable ID card design templates.
-//
-// Every design = a structural "shape" combined with a color "accent" treatment.
-// Because a single <IdCardPreview> component renders every shape/accent
-// combination, growing the gallery is just adding a row here — no new
-// rendering code needed. Ships with 12 curated combos; safe to extend
-// toward 20 the same way.
 
 export const CARD_SIZE = {
   Portrait: { width: 240, height: 380 },
@@ -37,7 +31,6 @@ export const CARD_TEMPLATES = [
 ];
 
 export function shadeColor(hex, percent) {
-  // darken (negative percent) or lighten (positive percent) a hex color
   let color = (hex || '#1e293b').replace('#', '');
   if (color.length === 3) color = color.split('').map((c) => c + c).join('');
   const num = parseInt(color, 16) || 0;
@@ -50,7 +43,6 @@ export function shadeColor(hex, percent) {
   return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
 }
 
-// Returns a style object to spread onto the header/footer element.
 export function accentStyle(accent, color) {
   switch (accent) {
     case 'gradient':

@@ -5,81 +5,113 @@ export default function QuestionShowModal({ item, onClose }) {
   if (!item) return null;
 
   return (
-    <div className="mm-modal-overlay" onClick={onClose}>
-      <div className="mm-modal mm-modal-lg" onClick={(e) => e.stopPropagation()}>
-        <div className="mm-modal-head">
-          <h3>Question Details</h3>
-          <button className="icon-btn" onClick={onClose}><Icon name="close" /></button>
+    // Responsive Overlay
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
+      
+      {/* Responsive Modal Box (Increased width for nice MCQ view) */}
+      <div 
+        className="w-full max-w-3xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden transform transition-all animate-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Modal Header */}
+        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0 rounded-t-2xl">
+          <div>
+            <h3 className="text-xl font-bold text-slate-900">Question Preview</h3>
+            <p className="text-sm text-slate-500 mt-0.5">Review question details, options, and correct answer.</p>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors bg-white border border-slate-200 shadow-sm shrink-0">
+            <Icon name="close" className="w-4 h-4" />
+          </button>
         </div>
 
-        <div className="mm-modal-body" style={{ padding: '20px' }}>
-
-          {/* Question Meta Info */}
-          <div style={{ display: 'flex', gap: '15px', marginBottom: '20px', flexWrap: 'wrap' }}>
-            <span style={{ backgroundColor: '#e5e7eb', padding: '4px 10px', borderRadius: '15px', fontSize: '12px' }}>
-              <strong>Class:</strong> {item.school_class?.name}
+        {/* Modal Body (Scrollable) */}
+        <div className="p-6 overflow-y-auto space-y-6 flex-1 custom-scrollbar">
+          
+          {/* Tags & Meta Info */}
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold tracking-wide uppercase bg-slate-100 text-slate-700 border border-slate-200">
+              <Icon name="book" className="w-3.5 h-3.5" /> Class: {item.school_class?.name}
             </span>
-            <span style={{ backgroundColor: '#e5e7eb', padding: '4px 10px', borderRadius: '15px', fontSize: '12px' }}>
-              <strong>Subject:</strong> {item.subject?.name}
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold tracking-wide uppercase bg-slate-100 text-slate-700 border border-slate-200">
+              <Icon name="file-text" className="w-3.5 h-3.5" /> Subject: {item.subject?.name}
             </span>
-            <span style={{ backgroundColor: '#e0f2fe', padding: '4px 10px', borderRadius: '15px', fontSize: '12px', color: '#0369a1' }}>
-              <strong>Type:</strong> {item.question_type}
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold tracking-wide uppercase bg-sky-50 text-sky-700 border border-sky-200">
+              <Icon name="tag" className="w-3.5 h-3.5" /> Type: {item.question_type}
             </span>
-            <span style={{ backgroundColor: '#dcfce7', padding: '4px 10px', borderRadius: '15px', fontSize: '12px', color: '#15803d' }}>
-              <strong>Marks:</strong> {item.marks}
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold tracking-wide uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <Icon name="check-circle" className="w-3.5 h-3.5" /> Marks: {item.marks}
             </span>
           </div>
 
-          {/* The Question */}
-          <div style={{ backgroundColor: '#f9fafb', padding: '20px', borderRadius: '8px', border: '1px solid #e5e7eb', marginBottom: '20px' }}>
-            <strong style={{ fontSize: '18px', color: '#111827', whiteSpace: 'pre-wrap' }}>Q: {item.question}</strong>
+          {/* The Question Box */}
+          <div className="bg-indigo-50/50 p-6 rounded-2xl border border-indigo-100 shadow-sm relative">
+            <div className="absolute top-0 left-0 w-1.5 h-full bg-indigo-500 rounded-l-2xl"></div>
+            <div className="flex gap-4">
+              <div className="text-2xl font-black text-indigo-300">Q.</div>
+              <div className="text-lg font-bold text-slate-900 leading-relaxed whitespace-pre-wrap mt-1">
+                {item.question}
+              </div>
+            </div>
           </div>
 
-          {/* Options */}
+          {/* Options Grid (For MCQ) */}
           {item.question_type === 'MCQ' && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '20px' }}>
-              {['a', 'b', 'c', 'd'].map(opt => (
-                <div key={opt} style={{
-                  padding: '12px 15px',
-                  borderRadius: '8px',
-                  border: item.correct_answer === opt ? '2px solid #10b981' : '1px solid #d1d5db',
-                  backgroundColor: item.correct_answer === opt ? '#ecfdf5' : '#ffffff',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px'
-                }}>
-                  <span style={{ fontWeight: 'bold', color: item.correct_answer === opt ? '#047857' : '#6b7280' }}>
-                    {opt.toUpperCase()}.
-                  </span>
-                  <span style={{ color: '#374151', flexGrow: 1 }}>{item[`option_${opt}`] || '-'}</span>
-
-                  {item.correct_answer === opt && (
-                    <Icon name="check-circle" style={{ color: '#10b981' }} />
-                  )}
-                </div>
-              ))}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {['a', 'b', 'c', 'd'].map(opt => {
+                const isCorrect = item.correct_answer === opt;
+                return (
+                  <div key={opt} className={`p-4 rounded-xl border flex items-start gap-4 transition-colors ${
+                    isCorrect ? 'bg-emerald-50 border-emerald-400 shadow-sm' : 'bg-white border-slate-200'
+                  }`}>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0 border ${
+                      isCorrect ? 'bg-emerald-500 text-white border-emerald-600' : 'bg-slate-100 text-slate-500 border-slate-200'
+                    }`}>
+                      {opt.toUpperCase()}
+                    </div>
+                    <div className={`flex-1 pt-1 font-medium ${isCorrect ? 'text-emerald-900' : 'text-slate-700'}`}>
+                      {item[`option_${opt}`] || <span className="text-slate-300 italic">No option provided</span>}
+                    </div>
+                    {isCorrect && (
+                      <div className="shrink-0 mt-1">
+                        <Icon name="check-circle" className="w-5 h-5 text-emerald-600" />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
 
+          {/* Answer Box (For True/False) */}
           {item.question_type === 'True/False' && (
-            <div style={{ padding: '15px', backgroundColor: '#ecfdf5', borderRadius: '8px', border: '1px solid #a7f3d0', marginBottom: '20px' }}>
-              <span style={{ color: '#065f46', fontWeight: 'bold' }}>Correct Answer: </span>
-              <span style={{ fontSize: '16px', color: '#047857' }}>{item.correct_answer}</span>
+            <div className="bg-emerald-50 p-5 rounded-xl border border-emerald-200 shadow-sm flex items-center justify-between">
+              <span className="font-bold text-emerald-700 uppercase tracking-wider text-sm flex items-center gap-2">
+                <Icon name="check-circle" className="w-5 h-5" /> Correct Answer
+              </span>
+              <strong className="text-xl font-black text-emerald-800">{item.correct_answer}</strong>
             </div>
           )}
 
-          {/* Explanation */}
+          {/* Explanation Box */}
           {item.explanation && (
-            <div style={{ backgroundColor: '#fffbeb', padding: '15px', borderRadius: '8px', border: '1px solid #fde68a' }}>
-              <span style={{ fontSize: '13px', color: '#92400e', display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Explanation:</span>
-              <p style={{ margin: '0', color: '#b45309', whiteSpace: 'pre-wrap' }}>{item.explanation}</p>
+            <div className="bg-amber-50/50 p-5 rounded-xl border border-amber-100 shadow-sm">
+              <div className="flex items-center gap-2 mb-2">
+                <Icon name="info" className="w-4 h-4 text-amber-500" />
+                <span className="font-bold text-amber-700 uppercase text-xs tracking-wider">Explanation</span>
+              </div>
+              <p className="text-sm font-medium text-amber-900/80 leading-relaxed whitespace-pre-wrap">
+                {item.explanation}
+              </p>
             </div>
           )}
 
         </div>
 
-        <div className="mm-modal-foot mt-2">
-          <button type="button" className="btn btn-outline" onClick={onClose}>Close</button>
+        {/* Modal Footer */}
+        <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-end rounded-b-2xl shrink-0">
+          <button type="button" className="w-full sm:w-auto px-6 py-2.5 text-sm font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 hover:text-slate-900 rounded-xl transition-all shadow-sm active:scale-95" onClick={onClose}>
+            Close Window
+          </button>
         </div>
       </div>
     </div>

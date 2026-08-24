@@ -248,7 +248,7 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
     Route::resource('communication-helpdesk', HelpdeskTicketController::class)->names('communication.helpdesk');
     Route::post('communication-helpdesk/{id}/reply', [HelpdeskTicketController::class, 'reply'])->name('communication.helpdesk.reply');
     Route::resource('communication-cms', CommunicationCmsController::class)->names('communication.cms');
-    Route::get('communication-chat', [CommunicationChatController::class, 'index'])->name('communication.chat');
+    Route::get('communication-chat', [CommunicationChatController::class, 'index'])->name('communication.chat.index');
     Route::post('communication-chat', [CommunicationChatController::class, 'store'])->name('communication.chat.store');
     Route::post('student-attendance/send-absent-sms', [StudentAttendanceController::class, 'sendAbsentSms'])->name('attendance.send-absent-sms');
 

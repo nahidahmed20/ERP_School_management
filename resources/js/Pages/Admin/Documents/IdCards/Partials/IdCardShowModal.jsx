@@ -1,227 +1,67 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Icon from '@/Components/Icons';
-import { CARD_SIZE, FIELD_LABEL_DEFAULTS, accentStyle, isFilledAccent, findTemplate } from './idCardTemplates';
+import IdCardPreview from './IdCardPreview'; 
 
-const ALIGN_TO_FLEX = { left: 'flex-start', center: 'center', right: 'flex-end' };
-const ALIGN_TO_ROW = { left: 'flex-start', center: 'center', right: 'flex-end' };
+export default function IdCardShowModal({ item, onClose }) {
+  const [previewSide, setPreviewSide] = useState('front');
+  if (!item) return null;
 
-export default function IdCardPreview({
-  side = 'front',
-  templateKey = 'classic-solid',
-  layoutType = 'Portrait',
-  themeColor = '#1e293b',
-  textAlign = 'center',
-  photoAlign = 'center',
-  fieldLabels,
-  showBloodGroup = true,
-  showPhone = true,
-  showAddress = false,
-  backContent = '',
-  logoPreview,
-  sigPreview,
-  bgPreview,
-}) {
-  const template = findTemplate(templateKey);
-  const effectiveOrientation = template.orientation === 'any' ? layoutType : template.orientation;
-  const size = CARD_SIZE[effectiveOrientation] ?? CARD_SIZE.Portrait;
-  const accent = accentStyle(template.accent, themeColor);
-  const filled = isFilledAccent(template.accent);
-  const labels = { ...FIELD_LABEL_DEFAULTS, ...(fieldLabels || {}) };
-
-  const cardStyle = {
-    width: size.width,
-    height: size.height,
-    background: bgPreview ? `url(${bgPreview}) center/cover` : '#fff',
-  };
-
-  if (side === 'back') {
-    return (
-      <div className="idcard-preview-card" style={cardStyle}>
-        <div className="idcard-preview-header" style={{ height: 32, color: filled ? '#fff' : themeColor, ...accent }}>
-          <span style={{ fontSize: '10px' }}>Terms &amp; Conditions</span>
-        </div>
-        <div className="idcard-preview-back-body">
-          <p>{backContent || 'No back side content added yet.'}</p>
-          <div className="idcard-preview-barcode">STU-2024-001</div>
-        </div>
-        <div className="idcard-preview-footer" style={{ height: 6, ...accent }} />
-      </div>
-    );
-  }
-
-  const headerTextColor = filled ? '#fff' : themeColor;
-
-  const logoBlock = logoPreview ? (
-    <img src={logoPreview} alt="School logo" className="idcard-preview-logo" />
-  ) : (
-    <span>SCHOOL NAME</span>
-  );
-
-  const avatar = (square) => (
-    <div className={`idcard-preview-avatar${square ? ' idcard-avatar-square' : ''}`} style={{ borderColor: themeColor }}>
-      <Icon name="user" style={{ fontSize: '30px' }} />
-    </div>
-  );
-
-  const nameBlock = (
-    <>
-      <strong className="idcard-preview-name">John Doe</strong>
-      <div className="idcard-preview-meta">
-        {labels.class}: 10 | {labels.roll}: 12
-      </div>
-    </>
-  );
-
-  const detailRows = (
-    <div className="idcard-preview-details" style={{ textAlign }}>
-      <div className="idcard-preview-row">
-        <span>
-          <strong>{labels.id}:</strong> STU-2024-001
-        </span>
-        {showBloodGroup && (
-          <span className="idcard-preview-blood">
-            <strong>{labels.blood}:</strong> O+
-          </span>
-        )}
-      </div>
-      <div>
-        <strong>{labels.dob}:</strong> 12-05-2005
-      </div>
-      {showPhone && (
-        <div>
-          <strong>{labels.phone}:</strong> +880 1234 56789
-        </div>
-      )}
-      {showAddress && (
-        <div className="idcard-preview-address">
-          <strong>{labels.address}:</strong> 123 School Rd, Dhaka
-        </div>
-      )}
-    </div>
-  );
-
-  const signatureBlock = (
-    <div className="idcard-preview-sign">
-      <div className="idcard-preview-sign-label">Holder's Signature</div>
-      <div style={{ textAlign: 'center' }}>
-        {sigPreview ? <img src={sigPreview} alt="Signature" className="idcard-preview-sig" /> : <div style={{ height: 20 }} />}
-        <div className="idcard-preview-sig-line">Principal</div>
-      </div>
-    </div>
-  );
-
-  // ---------------- Split (left color panel + right details) ----------------
-  if (template.shape === 'split') {
-    const reverse = photoAlign === 'right';
-    return (
-      <div
-        className="idcard-preview-card idcard-shape-split"
-        style={{ ...cardStyle, flexDirection: reverse ? 'row-reverse' : 'row' }}
-      >
-        {bgPreview && <div className="idcard-preview-overlay" />}
-        <div className="idcard-split-photo" style={{ color: '#fff', ...accent }}>
-          {avatar(false)}
-          <div className="idcard-split-logo">{logoBlock}</div>
-        </div>
-        <div className="idcard-split-info" style={{ alignItems: ALIGN_TO_FLEX[textAlign] }}>
-          <div style={{ textAlign, width: '100%' }}>{nameBlock}</div>
-          {detailRows}
-          <div className="idcard-preview-sign-inline">
-            {sigPreview ? <img src={sigPreview} alt="Signature" className="idcard-preview-sig" /> : <div style={{ height: 18 }} />}
-            <div className="idcard-preview-sig-line">Principal</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ---------------- Banner (diagonal header, overlapping avatar) ----------------
-  if (template.shape === 'banner') {
-    return (
-      <div className="idcard-preview-card idcard-shape-banner" style={cardStyle}>
-        {bgPreview && <div className="idcard-preview-overlay" />}
-        <div className="idcard-banner-header" style={{ color: headerTextColor, justifyContent: ALIGN_TO_ROW[photoAlign], ...accent }}>
-          {logoBlock}
-        </div>
-        <div className="idcard-banner-avatar-row" style={{ justifyContent: ALIGN_TO_ROW[photoAlign] }}>
-          {avatar(false)}
-        </div>
-        <div className="idcard-preview-body-plain" style={{ alignItems: ALIGN_TO_FLEX[textAlign] }}>
-          <div style={{ textAlign, width: '100%' }}>{nameBlock}</div>
-          {detailRows}
-        </div>
-        {signatureBlock}
-        <div className="idcard-preview-footer" style={accent} />
-      </div>
-    );
-  }
-
-  // ---------------- Framed (bordered card, corner ticks, no header band) ----------------
-  if (template.shape === 'framed') {
-    return (
-      <div className="idcard-preview-card idcard-shape-framed" style={{ ...cardStyle, border: `2px solid ${themeColor}` }}>
-        {bgPreview && <div className="idcard-preview-overlay" />}
-        <span className="idcard-corner idcard-corner-tl" style={{ borderColor: themeColor }} />
-        <span className="idcard-corner idcard-corner-tr" style={{ borderColor: themeColor }} />
-        <span className="idcard-corner idcard-corner-bl" style={{ borderColor: themeColor }} />
-        <span className="idcard-corner idcard-corner-br" style={{ borderColor: themeColor }} />
-        <div className="idcard-framed-logo-row" style={{ color: headerTextColor, justifyContent: ALIGN_TO_ROW[photoAlign], ...accent }}>
-          {logoBlock}
-        </div>
-        <div className="idcard-preview-body-plain" style={{ alignItems: ALIGN_TO_FLEX[photoAlign] }}>
-          {avatar(true)}
-        </div>
-        <div className="idcard-preview-body-plain" style={{ alignItems: ALIGN_TO_FLEX[textAlign] }}>
-          <div style={{ textAlign, width: '100%' }}>{nameBlock}</div>
-          {detailRows}
-        </div>
-      </div>
-    );
-  }
-
-  // ---------------- Minimal (thin accent lines, generous whitespace) ----------------
-  if (template.shape === 'minimal') {
-    return (
-      <div className="idcard-preview-card idcard-shape-minimal" style={cardStyle}>
-        {bgPreview && <div className="idcard-preview-overlay" />}
-        <div className="idcard-minimal-topline" style={{ background: filled ? accent.background : themeColor }} />
-        <div className="idcard-minimal-logo-row" style={{ justifyContent: ALIGN_TO_ROW[photoAlign] }}>
-          {logoBlock}
-        </div>
-        <div className="idcard-preview-body-plain" style={{ alignItems: ALIGN_TO_FLEX[photoAlign] }}>
-          {avatar(true)}
-        </div>
-        <div className="idcard-preview-body-plain" style={{ alignItems: ALIGN_TO_FLEX[textAlign] }}>
-          <div style={{ textAlign, width: '100%' }}>{nameBlock}</div>
-          {detailRows}
-        </div>
-        <div className="idcard-minimal-bottomline" style={{ background: filled ? accent.background : themeColor }} />
-      </div>
-    );
-  }
-
-  // ---------------- Classic (current/original design — header band + centered body) ----------------
   return (
-    <div className="idcard-preview-card" style={cardStyle}>
-      {bgPreview && <div className="idcard-preview-overlay" />}
-      <div
-        className="idcard-preview-header"
-        style={{
-          height: effectiveOrientation === 'Portrait' ? 70 : 50,
-          color: headerTextColor,
-          justifyContent: ALIGN_TO_ROW[photoAlign],
-          ...accent,
-        }}
+    // Responsive Overlay
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
+      
+      {/* Responsive Modal Box */}
+      <div 
+        className="w-full max-w-md bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden transform transition-all animate-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
       >
-        {logoBlock}
+        {/* Header */}
+        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0 rounded-t-2xl">
+          <div>
+            <h3 className="text-xl font-bold text-slate-900">ID Card Preview</h3>
+            <p className="text-sm font-semibold text-indigo-600 mt-0.5">{item.title}</p>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors bg-white border border-slate-200 shadow-sm shrink-0">
+            <Icon name="close" className="w-4 h-4" />
+          </button>
+        </div>
+        
+        {/* Modal Body */}
+        <div className="p-6 bg-slate-200/50 overflow-y-auto flex-1 flex flex-col items-center custom-scrollbar">
+          
+          <div className="flex bg-slate-100 p-1 rounded-xl mb-4 shadow-sm border border-slate-200 w-fit">
+            <button type="button" className={`px-5 py-1.5 text-xs font-bold rounded-lg transition-all ${previewSide === 'front' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`} onClick={() => setPreviewSide('front')}>Front</button>
+            <button type="button" className={`px-5 py-1.5 text-xs font-bold rounded-lg transition-all ${previewSide === 'back' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`} onClick={() => setPreviewSide('back')}>Back</button>
+          </div>
+
+          <div className="shadow-2xl rounded-xl overflow-hidden ring-1 ring-slate-900/5 bg-white">
+            <IdCardPreview
+              side={previewSide}
+              templateKey={item.design_template}
+              layoutType={item.layout_type}
+              themeColor={item.theme_color}
+              textAlign={item.text_align}
+              photoAlign={item.photo_align}
+              fieldLabels={item.field_labels}
+              showBloodGroup={item.show_blood_group}
+              showPhone={item.show_phone}
+              showAddress={item.show_address}
+              backContent={item.back_side_content}
+              logoPreview={item.logo_image ? `/storage/${item.logo_image}` : null}
+              sigPreview={item.signature_image ? `/storage/${item.signature_image}` : null}
+              bgPreview={item.background_image ? `/storage/${item.background_image}` : null}
+            />
+          </div>
+
+        </div>
+
+        {/* Modal Footer */}
+        <div className="px-6 py-4 border-t border-slate-100 bg-white flex items-center justify-end rounded-b-2xl shrink-0">
+          <button type="button" className="w-full sm:w-auto px-6 py-2.5 text-sm font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 rounded-xl transition-all shadow-sm active:scale-95" onClick={onClose}>
+            Close
+          </button>
+        </div>
       </div>
-      <div className="idcard-preview-body">
-        <div style={{ alignSelf: ALIGN_TO_FLEX[photoAlign] }}>{avatar(false)}</div>
-        <div style={{ textAlign, width: '100%' }}>{nameBlock}</div>
-        {detailRows}
-      </div>
-      {signatureBlock}
-      <div className="idcard-preview-footer" style={accent} />
     </div>
   );
 }

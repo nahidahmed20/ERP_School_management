@@ -15,7 +15,6 @@ class CommunicationChatController extends Controller
         $currentUserId = Auth::id();
 
         // Fetch all users except the currently logged-in user
-        // You can filter this by role (e.g., only Admins/Teachers) if needed
         $users = User::where('id', '!=', $currentUserId)->select('id', 'name', 'email')->get();
 
         $activeUserId = $request->get('user_id');
@@ -63,7 +62,6 @@ class CommunicationChatController extends Controller
             'is_read' => false,
         ]);
 
-        // Returns back to the same page, Inertia handles the smooth update
         return back();
     }
 }

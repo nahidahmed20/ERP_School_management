@@ -3,9 +3,9 @@ import { Head, router, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
 import Pagination from '@/Components/Pagination';
+import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 import HomeworkFormModal from './Partials/HomeworkFormModal';
 import HomeworkShowModal from './Partials/HomeworkShowModal';
-import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 import Swal from 'sweetalert2';
 
 export default function Index({ homeworks, classes, subjects, campuses, filters }) {
@@ -33,113 +33,240 @@ export default function Index({ homeworks, classes, subjects, campuses, filters 
     }, { preserveState: true, replace: true });
   }
 
+  // --- Export Functions ---
+  const handlePrint = () => window.print();
+
+  const exportToCSV = () => {
+    if (!homeworks.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
+    const headers = ['Title / Assignment', 'Class', 'Subject', 'Given Date', 'Deadline', 'Total Marks', 'Status'];
+    const rows = homeworks.data.map(item => [
+      item.title || 'N/A', 
+      item.school_class?.name || 'N/A', 
+      item.subject?.name || 'N/A', 
+      item.homework_date || 'N/A', 
+      item.submission_date || 'N/A', 
+      item.total_marks || 'N/A',
+      item.is_active ? 'Active' : 'Inactive'
+    ]);
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows.map(e => e.map(val => `"${val}"`).join(','))].join('\n');
+    const link = document.createElement("a");
+    link.setAttribute("href", encodeURI(csvContent));
+    link.setAttribute("download", `Homework_Assignments_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const copyToClipboard = () => {
+    if (!homeworks.data.length) return;
+    let text = "Title\tClass\tSubject\tGiven Date\tDeadline\tMarks\n";
+    homeworks.data.forEach(item => {
+      text += `${item.title}\t${item.school_class?.name || '-'}\t${item.subject?.name || '-'}\t${item.homework_date}\t${item.submission_date}\t${item.total_marks || '-'}\n`;
+    });
+    navigator.clipboard.writeText(text);
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Data copied to clipboard!', showConfirmButton: false, timer: 2000 });
+  };
+
   return (
-    <AuthenticatedLayout
-      header={
-        <div className="page-head">
+    <AuthenticatedLayout>
+      <Head title="Homework & Assignments" />
+
+      {/* Print Specific CSS */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @media print {
+          nav, aside, header, .no-print, button, a, select, input { display: none !important; }
+          body, html { background: #f8fafc !important; }
+          .print-table-wrapper { width: 100% !important; border: none !important; box-shadow: none !important; }
+          .print-title { display: block !important; font-size: 24px !important; font-weight: bold !important; margin-bottom: 20px !important; }
+        }
+        @media screen { .print-title { display: none; } }
+      `}} />
+
+      <div className="print-title">Homework & Assignments Directory - {new Date().toLocaleDateString('en-GB')}</div>
+
+      <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8 no-print">
+        
+        {/* Page Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <span className="eyebrow">LMS (Learning Management)</span>
-            <h1>Homework & Assignments</h1>
-            <p className="desc">স্টুডেন্টদের ক্লাস ও বিষয়ভিত্তিক হোমওয়ার্ক তৈরি করুন।</p>
+            <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">LMS (Learning Management)</span>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Homework &amp; Assignments</h1>
+            <p className="text-sm text-slate-500 mt-1">স্টুডেন্টদের ক্লাস ও বিষয়ভিত্তিক হোমওয়ার্ক তৈরি ও পরিচালনা করুন।</p>
           </div>
-          <div className="mm-head-actions">
-            <button className="btn" onClick={() => { setEditingItem(null); setFormOpen(true); }}>
-              <Icon name="plus" /> Add Homework
+          <button
+            onClick={() => { setEditingItem(null); setFormOpen(true); }}
+            className="w-full sm:w-auto inline-flex justify-center items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md shadow-indigo-500/20 active:scale-95"
+          >
+            <Icon name="plus" className="w-4 h-4" /> Add Homework
+          </button>
+        </div>
+
+        {/* Unified Modern Toolbar */}
+        <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
+            
+            {/* Per Page */}
+            <select
+              value={perPage}
+              onChange={e => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}
+              className="appearance-none bg-none pr-3 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer text-center font-mono"
+              style={{ backgroundImage: 'none' }}
+            >
+              <option value="10">10 / Page</option>
+              <option value="20">20 / Page</option>
+              <option value="50">50 / Page</option>
+              <option value="all">All</option>
+            </select>
+
+            <div className="hidden sm:block w-px h-6 bg-slate-200"></div>
+
+            {/* Class Filter */}
+            <select 
+              value={classId} 
+              onChange={(e) => { setClassId(e.target.value); applyFilters({ class_id: e.target.value }); }}
+              className="w-full sm:w-36 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
+            >
+              <option value="">All Classes</option>
+              {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+
+            {/* Subject Filter */}
+            <select 
+              value={subjectId} 
+              onChange={(e) => { setSubjectId(e.target.value); applyFilters({ subject_id: e.target.value }); }}
+              className="w-full sm:w-36 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
+            >
+              <option value="">All Subjects</option>
+              {subjects.map(s => <option key={s.id} value={s.id}>{s.name} ({s.code})</option>)}
+            </select>
+
+            {/* Search Input */}
+            <div className="relative flex-1 min-w-[200px] sm:w-64">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Icon name="search" className="w-4 h-4 text-slate-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search title..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
+                className="block w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+              />
+            </div>
+
+            {/* Apply Button */}
+            <button
+              onClick={() => applyFilters()}
+              className="w-full sm:w-auto px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
+            >
+              Search
+            </button>
+          </div>
+
+          {/* Export Actions */}
+          <div className="flex items-center justify-end gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-xl w-full xl:w-auto shadow-sm shrink-0 ml-auto">
+            <button onClick={copyToClipboard} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Copy to Clipboard">
+              Copy
+            </button>
+            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+            <button onClick={exportToCSV} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-emerald-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export CSV">
+              CSV
+            </button>
+            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+            <button onClick={() => alert('Backend Excel plugin needed')} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-green-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export Excel">
+              Excel
+            </button>
+            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+            <button onClick={() => alert('Backend PDF plugin needed')} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-rose-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export PDF">
+              PDF
+            </button>
+            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+            <button onClick={handlePrint} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-amber-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Print List">
+              Print
             </button>
           </div>
         </div>
-      }
-    >
-      <Head title="Homework & Assignments" />
 
-      <div className="card mm-card">
-        <div className="mm-filters" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          <select value={perPage} onChange={(e) => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}>
-            <option value="10">10 / page</option>
-            <option value="50">50 / page</option>
-            <option value="all">Show All</option>
-          </select>
-
-          <div className="search">
-            <Icon name="search" />
-            <input placeholder="Search title..." value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && applyFilters()} />
+        {/* Main Table Card */}
+        <div className="bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 print-table-wrapper">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50/50">
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Title / Assignment</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Class &amp; Subject</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Dates</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Attachment</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right no-print">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {homeworks.data.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
+                      <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-3 border border-slate-100">
+                        <Icon name="edit-3" className="w-8 h-8 text-slate-300" />
+                      </div>
+                      <p className="text-sm font-semibold text-slate-600">কোনো হোমওয়ার্ক পাওয়া যায়নি</p>
+                      <p className="text-xs text-slate-400 mt-1">Try adjusting filters or add a new homework</p>
+                    </td>
+                  </tr>
+                ) : (
+                  homeworks.data.map((item) => (
+                    <tr key={item.id} className="hover:bg-slate-50/60 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100 shrink-0 mt-0.5">
+                            <Icon name="edit-3" className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <span className="text-sm font-bold text-slate-900 block">{item.title}</span>
+                            <span className="text-xs text-slate-500 font-medium block mt-0.5">Marks: {item.total_marks || 'N/A'}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-bold text-slate-800 block">{item.school_class?.name}</span>
+                        <span className="text-xs text-slate-500 font-medium block mt-0.5">{item.subject?.name}</span>
+                      </td>
+                      <td className="px-6 py-4 text-xs font-mono space-y-0.5">
+                        <div className="text-slate-600">Given: {item.homework_date}</div>
+                        <div className="text-rose-600 font-bold">Deadline: {item.submission_date}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        {item.document_path ? (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <Icon name="paperclip" className="w-3.5 h-3.5" /> Attached
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 italic text-xs">None</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-right no-print">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button onClick={() => setViewingItem(item)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="View Details">
+                            <Icon name="eye" className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => { setEditingItem(item); setFormOpen(true); }} className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Edit Homework">
+                            <Icon name="edit" className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => setDeletingItem(item)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Delete Homework">
+                            <Icon name="trash" className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
 
-          <select value={classId} onChange={(e) => { setClassId(e.target.value); applyFilters({ class_id: e.target.value }); }}>
-            <option value="">All Classes</option>
-            {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
-
-          <select value={subjectId} onChange={(e) => { setSubjectId(e.target.value); applyFilters({ subject_id: e.target.value }); }}>
-            <option value="">All Subjects</option>
-            {subjects.map(s => <option key={s.id} value={s.id}>{s.name} ({s.code})</option>)}
-          </select>
-
-          <button className="btn btn-outline" onClick={() => applyFilters()}>Filter</button>
+          <div className="no-print border-t border-slate-100 bg-white px-6 py-4 rounded-b-2xl">
+            <Pagination meta={homeworks} />
+          </div>
         </div>
-
-        <div className="mm-table-wrap">
-          <table className="mm-table">
-            <thead>
-              <tr>
-                <th>Title / Assignment</th>
-                <th>Class & Subject</th>
-                <th>Dates</th>
-                <th>Attachment</th>
-                <th className="mm-actions-col">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {homeworks.data.length === 0 && (
-                <tr><td colSpan={5} className="mm-empty">কোনো হোমওয়ার্ক পাওয়া যায়নি।</td></tr>
-              )}
-              {homeworks.data.map((item) => (
-                <tr key={item.id}>
-                  <td>
-                    <div className="mm-label-cell" style={{ alignItems: 'flex-start' }}>
-                      <Icon name="edit-3" className="mm-row-icon" style={{ marginTop: '2px' }} />
-                      <div>
-                        <div style={{ fontWeight: 500, color: '#111827' }}>{item.title}</div>
-                        <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>Marks: {item.total_marks || 'N/A'}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div style={{ fontWeight: 500 }}>{item.school_class?.name}</div>
-                    <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>{item.subject?.name}</div>
-                  </td>
-                  <td>
-                    <div style={{ fontSize: '0.85rem' }}>Given: {item.homework_date}</div>
-                    <div style={{ fontSize: '0.85rem', color: '#b91c1c', fontWeight: 'bold' }}>Deadline: {item.submission_date}</div>
-                  </td>
-                  <td>
-                    {item.document_path ? (
-                      <span style={{ padding: '3px 8px', backgroundColor: '#dcfce7', color: '#15803d', borderRadius: '4px', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                        <Icon name="paperclip" style={{ width: '12px' }} /> Attached
-                      </span>
-                    ) : (
-                      <span style={{ color: '#9CA3AF', fontSize: '12px' }}>None</span>
-                    )}
-                  </td>
-                  <td>
-                    <div className="mm-row-actions">
-                      <button className="icon-btn" title="View" onClick={() => setViewingItem(item)}>
-                        <Icon name="eye" />
-                      </button>
-                      <button className="icon-btn" title="Edit" onClick={() => { setEditingItem(item); setFormOpen(true); }}>
-                        <Icon name="edit" />
-                      </button>
-                      <button className="icon-btn icon-btn-danger" title="Delete" onClick={() => setDeletingItem(item)}>
-                        <Icon name="trash" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <Pagination meta={homeworks} />
       </div>
 
       {formOpen && <HomeworkFormModal item={editingItem} classes={classes} subjects={subjects} campuses={campuses} activeCampusId={auth?.active_campus_id} onClose={() => setFormOpen(false)} />}
@@ -147,9 +274,13 @@ export default function Index({ homeworks, classes, subjects, campuses, filters 
       {viewingItem && <HomeworkShowModal item={viewingItem} onClose={() => setViewingItem(null)} />}
 
       {deletingItem && (
-        <ConfirmDeleteModal item={{ name: `Homework: ${deletingItem.title}` }} onCancel={() => setDeletingItem(null)} onConfirm={() => {
+        <ConfirmDeleteModal 
+          item={{ name: `Homework: ${deletingItem.title}` }} 
+          onCancel={() => setDeletingItem(null)} 
+          onConfirm={() => {
             router.delete(route('admin.lms.homework.destroy', deletingItem.id), { onSuccess: () => setDeletingItem(null) });
-        }} />
+          }} 
+        />
       )}
     </AuthenticatedLayout>
   );
