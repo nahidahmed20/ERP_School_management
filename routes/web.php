@@ -220,11 +220,11 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
     Route::resource('staff-leaves', StaffLeaveController::class);
     Route::resource('staff-payrolls', StaffPayrollController::class);
 
-    Route::get('/attendance-report', [ReportController::class, 'staffAttendanceReport'])->name('attendance-report.index');
+    Route::get('stff/attendances/report', [ReportController::class, 'staffAttendanceReport'])->name('staff.attendances-report');
     Route::post('/attendance-report', [ReportController::class, 'generate'])->name('attendance-report.generate');
     Route::get('fee-collection', [ReportController::class, 'feeCollection'])->name('reports.fees');
     Route::get('due-fees', [ReportController::class, 'dueFees'])->name('due_fees');
-    Route::get('student/attendance/report', [ReportController::class, 'studentReport'])->name('student_attendance.report');
+    Route::get('std/attendance/report', [ReportController::class, 'studentReport'])->name('studentAttendance.report');
     Route::get('/reports/saved', [ReportController::class, 'saved'])->name('reports.saved');
 
     Route::resource('fees-groups', FeeGroupController::class);

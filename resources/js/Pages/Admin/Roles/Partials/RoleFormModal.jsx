@@ -40,16 +40,16 @@ export default function RoleFormModal({ item, permissions, onClose }) {
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 transition-opacity animate-in fade-in duration-200"
-      onClick={onClose}
-    >
+    // Responsive Overlay
+    <div className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 transition-opacity animate-in fade-in duration-200" onClick={onClose}>
+      
+      {/* Responsive Modal Box */}
       <div 
-        className="bg-white rounded-2xl w-full max-w-3xl max-h-[90vh] shadow-2xl overflow-hidden transform transition-all flex flex-col ring-1 ring-slate-900/5 animate-in zoom-in-95 duration-200"
+        className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] shadow-2xl overflow-hidden transform transition-all flex flex-col ring-1 ring-slate-900/5 animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
+        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0 rounded-t-2xl">
           <div>
             <h3 className="text-xl font-bold text-slate-900">
               {isEditing ? 'Edit Role' : 'Create New Role'}
@@ -58,20 +58,17 @@ export default function RoleFormModal({ item, permissions, onClose }) {
               {isEditing ? 'Update the role name and adjust permissions.' : 'Define a new role and its permissions.'}
             </p>
           </div>
-          <button 
-            onClick={onClose} 
-            className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors bg-slate-100"
-          >
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors bg-white border border-slate-200 shadow-sm shrink-0">
             <Icon name="close" className="w-4 h-4" />
           </button>
         </div>
 
         {/* Modal Body (Scrollable) */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-white">
+        <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-white custom-scrollbar">
           
           {/* Role Name Input */}
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+          <div className="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm">
+            <label className="block text-sm font-bold text-slate-800 mb-2">
               Role Name <span className="text-rose-500">*</span>
             </label>
             <input
@@ -80,36 +77,44 @@ export default function RoleFormModal({ item, permissions, onClose }) {
               onChange={(e) => setData('name', e.target.value)}
               placeholder="e.g. Editor, Teacher, Accountant"
               autoFocus
-              className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+              className="block w-full sm:w-1/2 px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-inner"
             />
-            {errors.name && <p className="text-rose-500 text-xs font-medium mt-1">{errors.name}</p>}
+            {errors.name && <p className="text-rose-500 text-xs font-medium mt-1.5">{errors.name}</p>}
           </div>
 
           {/* Permissions Section */}
           <div>
-            <div className="flex justify-between items-center mb-3">
-              <label className="block text-sm font-semibold text-slate-700">Assign Permissions</label>
+            <div className="flex justify-between items-end mb-4 border-b border-slate-200 pb-3">
+              <div>
+                <h4 className="text-lg font-bold text-slate-900">Assign Permissions</h4>
+                <p className="text-xs font-medium text-slate-500 mt-0.5">Select modules and actions this role can perform.</p>
+              </div>
               <button
                 type="button"
                 onClick={toggleAllPermissions}
-                className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors"
+                className={`text-xs font-bold px-4 py-2 rounded-lg transition-all shadow-sm flex items-center gap-1.5 ${
+                  data.permissions.length === permissions.length 
+                    ? 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100' 
+                    : 'bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100'
+                }`}
               >
+                <Icon name={data.permissions.length === permissions.length ? "x-circle" : "check-circle"} className="w-3.5 h-3.5" />
                 {data.permissions.length === permissions.length ? 'Deselect All' : 'Select All'}
               </button>
             </div>
 
             {/* Beautiful Checkbox Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
               {permissions.map((permission) => (
                 <label 
                   key={permission.id} 
-                  className={`flex items-center gap-3 cursor-pointer group p-3 rounded-lg border transition-all ${
+                  className={`flex items-start gap-3 cursor-pointer group p-3.5 rounded-xl border transition-all ${
                     data.permissions.includes(permission.name) 
-                      ? 'bg-indigo-50/50 border-indigo-200' 
-                      : 'bg-white border-slate-200 hover:border-slate-300 shadow-sm hover:shadow'
+                      ? 'bg-indigo-50 border-indigo-300 shadow-sm ring-1 ring-indigo-100' 
+                      : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50 shadow-sm'
                   }`}
                 >
-                  <div className="relative flex items-center">
+                  <div className="relative flex items-center mt-0.5 shrink-0">
                     <input
                       type="checkbox"
                       checked={data.permissions.includes(permission.name)}
@@ -120,7 +125,7 @@ export default function RoleFormModal({ item, permissions, onClose }) {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
-                  <span className={`text-sm font-medium transition-colors ${
+                  <span className={`text-sm font-semibold transition-colors leading-tight ${
                     data.permissions.includes(permission.name) ? 'text-indigo-900' : 'text-slate-700 group-hover:text-slate-900'
                   }`}>
                     {permission.name}
@@ -128,13 +133,13 @@ export default function RoleFormModal({ item, permissions, onClose }) {
                 </label>
               ))}
             </div>
-            {errors.permissions && <p className="text-rose-500 text-xs font-medium mt-1.5">{errors.permissions}</p>}
+            {errors.permissions && <p className="text-rose-500 text-xs font-bold mt-2 bg-rose-50 p-2 rounded-lg border border-rose-100">{errors.permissions}</p>}
           </div>
 
         </div>
 
         {/* Modal Footer */}
-        <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-end gap-3 shrink-0">
+        <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-end gap-3 shrink-0 rounded-b-2xl">
           <button 
             type="button" 
             onClick={onClose} 

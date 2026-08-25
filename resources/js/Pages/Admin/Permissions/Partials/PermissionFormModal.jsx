@@ -21,17 +21,22 @@ export default function PermissionFormModal({ item, onClose }) {
     }
   }
 
+  const inputClass = "block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all";
+  const labelClass = "block text-sm font-semibold text-slate-700 mb-1.5";
+
   return (
+    // Responsive Overlay
     <div 
       className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 transition-opacity animate-in fade-in duration-200"
       onClick={onClose}
     >
+      {/* Responsive Modal Box */}
       <div 
         className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden transform transition-all flex flex-col ring-1 ring-slate-900/5 animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0 rounded-t-2xl">
           <div>
             <h3 className="text-xl font-bold text-slate-900">
               {isEdit ? 'Edit Permission' : 'Create Permission'}
@@ -42,17 +47,17 @@ export default function PermissionFormModal({ item, onClose }) {
           </div>
           <button 
             onClick={onClose} 
-            className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors bg-slate-100"
+            className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors bg-white border border-slate-200 shadow-sm shrink-0"
           >
             <Icon name="close" className="w-4 h-4" />
           </button>
         </div>
 
         {/* Modal Body */}
-        <form onSubmit={submit}>
+        <form onSubmit={submit} className="flex flex-col flex-1 overflow-hidden">
           <div className="p-6 bg-white space-y-4">
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+              <label className={labelClass}>
                 Permission Name <span className="text-rose-500">*</span>
               </label>
               <input
@@ -61,30 +66,33 @@ export default function PermissionFormModal({ item, onClose }) {
                 onChange={(e) => setData('name', e.target.value)}
                 placeholder="e.g. create users, edit posts"
                 autoFocus
-                className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                className={inputClass}
               />
               {errors.name && <p className="text-rose-500 text-xs font-medium mt-1.5">{errors.name}</p>}
-              <p className="text-xs text-slate-400 mt-2 flex items-center gap-1">
-                <Icon name="info" className="w-3 h-3" />
-                Must be unique. Convention: lowercase, space separated.
-              </p>
+              
+              <div className="flex items-start gap-1.5 mt-3 bg-blue-50/80 border border-blue-200 p-3 rounded-xl shadow-sm">
+                <Icon name="info" className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+                <p className="text-xs font-medium text-blue-700 leading-relaxed">
+                  Name must be unique. Convention: lowercase, space separated.
+                </p>
+              </div>
             </div>
           </div>
 
           {/* Modal Footer */}
-          <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-end gap-3">
+          <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex flex-col-reverse sm:flex-row items-center justify-end gap-3 shrink-0 rounded-b-2xl">
             <button 
               type="button" 
               onClick={onClose} 
               disabled={processing}
-              className="px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 hover:text-slate-800 rounded-xl transition-all shadow-sm"
+              className="w-full sm:w-auto px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 hover:text-slate-800 rounded-xl transition-all shadow-sm"
             >
               Cancel
             </button>
             <button 
               type="submit" 
               disabled={processing}
-              className="flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md shadow-indigo-500/20 disabled:opacity-70 disabled:cursor-not-allowed active:scale-95"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md shadow-indigo-500/20 disabled:opacity-70 disabled:cursor-not-allowed active:scale-95"
             >
               {processing && (
                 <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">

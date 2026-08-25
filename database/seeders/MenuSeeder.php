@@ -11,11 +11,6 @@ class MenuSeeder extends Seeder
 {
     public function run(): void
     {
-        Schema::disableForeignKeyConstraints();
-        MenuItem::truncate();
-        MenuGroup::truncate();
-        Schema::enableForeignKeyConstraints();
-
         $nav = [
             ['label' => 'Overview', 'items' => [
                 ['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'grid', 'route' => 'dashboard'],
@@ -50,7 +45,7 @@ class MenuSeeder extends Seeder
                     ['key' => 'admin.classrooms.index', 'label' => 'Classroom', 'route' => 'admin.classrooms.index'],
                     ['key' => 'admin.time-tables.index', 'label' => 'Class Timetable', 'route' => 'admin.time-tables.index'],
                     ['key' => 'admin.lesson-plans.index', 'label' => 'Lesson & Syllabus', 'route' => 'admin.lesson-plans.index'],
-                    ['key' => 'admin.study-materials.index', 'label' => 'Study Materials / Downloads', 'route' => 'admin.study-materials.index'], // Added this
+                    ['key' => 'admin.study-materials.index', 'label' => 'Study Materials / Downloads', 'route' => 'admin.study-materials.index'], 
                     ['key' => 'admin.sessions.index', 'label' => 'Academic Sessions', 'route' => 'admin.sessions.index'],
                 ]],
                 ['key' => 'attendance', 'label' => 'Attendance', 'icon' => 'calendar', 'count' => 3, 'children' => [
@@ -75,8 +70,8 @@ class MenuSeeder extends Seeder
                     ['key' => 'admin.staff-attendance.index', 'label' => 'Daily Attendance', 'route' => 'admin.staff-attendance.index'],
                     ['key' => 'admin.staff-leaves.index', 'label' => 'Leave Applications', 'route' => 'admin.staff-leaves.index'],
                     ['key' => 'admin.staff-payrolls.index', 'label' => 'Payroll Management', 'route' => 'admin.staff-payrolls.index'],
-                    ['key' => 'admin.staff-loans.index', 'label' => 'Advance Salary & Loans', 'route' => 'admin.staff-loans.index'], // Added this
-                    ['key' => 'admin.staff-appraisals.index', 'label' => 'Performance & Appraisals', 'route' => 'admin.staff-appraisals.index'], // Added this
+                    ['key' => 'admin.staff-loans.index', 'label' => 'Advance Salary & Loans', 'route' => 'admin.staff-loans.index'], 
+                    ['key' => 'admin.staff-appraisals.index', 'label' => 'Performance & Appraisals', 'route' => 'admin.staff-appraisals.index'], 
                     ['key' => 'admin.departments.index', 'label' => 'Departments', 'route' => 'admin.departments.index'],
                     ['key' => 'admin.designations.index', 'label' => 'Designations', 'route' => 'admin.designations.index'],
                     ['key' => 'admin.leave-types.index', 'label' => 'Leave Types', 'route' => 'admin.leave-types.index'],
@@ -99,8 +94,8 @@ class MenuSeeder extends Seeder
                     ['key' => 'admin.studentfees.index', 'label' => 'Student Fee Assignment', 'route' => 'admin.studentfees.index'],
                     ['key' => 'admin.fees.invoices', 'label' => 'Invoices', 'route' => 'admin.fees.invoices'],
                     ['key' => 'admin.fees.payments', 'label' => 'Payments', 'route' => 'admin.fees.payments'],
-                    ['key' => 'admin.accounting.chart.index', 'label' => 'Chart of Accounts & Banks', 'route' => 'admin.accounting.chart.index'], // Added this
-                    ['key' => 'admin.accounting.vouchers.index', 'label' => 'Accounting Vouchers', 'route' => 'admin.accounting.vouchers.index'], // Added this
+                    ['key' => 'admin.accounting.chart.index', 'label' => 'Chart of Accounts & Banks', 'route' => 'admin.accounting.chart.index'], 
+                    ['key' => 'admin.accounting.vouchers.index', 'label' => 'Accounting Vouchers', 'route' => 'admin.accounting.vouchers.index'], 
                     ['key' => 'admin.fees.ledger', 'label' => 'Income / Expense Ledger', 'route' => 'admin.fees.ledger'],
                 ]],
                 ['key' => 'payments', 'label' => 'Payment Gateways', 'icon' => 'card', 'count' => 3, 'children' => [
@@ -132,14 +127,14 @@ class MenuSeeder extends Seeder
                     ['key' => 'admin.library-issues.index', 'label' => 'Book Issues & Fines', 'route' => 'admin.library-issues.index'],
                 ]],
                 ['key' => 'transport', 'label' => 'Transport', 'icon' => 'bus', 'count' => 3, 'children' => [
-                    ['key' => 'admin.transport.routes.index', 'label' => 'Routes & Stops', 'route' => 'admin.transport.routes.index'], // Added this
+                    ['key' => 'admin.transport.routes.index', 'label' => 'Routes & Stops', 'route' => 'admin.transport.routes.index'], 
                     ['key' => 'admin.vehicles.index', 'label' => 'Vehicles', 'route' => 'admin.vehicles.index'],
                     ['key' => 'admin.transports.index', 'label' => 'Transport Allocation', 'route' => 'admin.transports.index'],
                 ]],
                 ['key' => 'hostel', 'label' => 'Hostel Management', 'icon' => 'home', 'count' => 3, 'children' => [
                     ['key' => 'admin.hostel-rooms.index', 'label' => 'Hostels & Rooms', 'route' => 'admin.hostel-rooms.index'],
                     ['key' => 'admin.hostel-allocations.index', 'label' => 'Room Allocation', 'route' => 'admin.hostel-allocations.index'],
-                    ['key' => 'admin.hostel-fees.index', 'label' => 'Hostel Fee Collection', 'route' => 'admin.hostel-fees.index'], // Added this
+                    ['key' => 'admin.hostel-fees.index', 'label' => 'Hostel Fee Collection', 'route' => 'admin.hostel-fees.index'], 
                 ]],
                 ['key' => 'cafeteria', 'label' => 'Cafeteria', 'icon' => 'cutlery', 'count' => 4, 'children' => [
                     ['key' => 'admin.cafeteria.outlets.index', 'label' => 'Outlets', 'route' => 'admin.cafeteria.outlets.index'],
@@ -184,18 +179,18 @@ class MenuSeeder extends Seeder
                     ['key' => 'admin.communication-calendars.index', 'label' => 'Calendar & Events', 'route' => 'admin.communication-calendars.index'],
                     ['key' => 'admin.communication.cms.index', 'label' => 'Website CMS', 'route' => 'admin.communication.cms.index'],
                     ['key' => 'admin.communication.helpdesk.index', 'label' => 'Helpdesk / Tickets', 'route' => 'admin.communication.helpdesk.index'],
-                    ['key' => 'admin.email-logs.index', 'label' => 'Email Logs & Templates', 'route' => 'admin.email-logs.index'], // Added this
+                    ['key' => 'admin.email-logs.index', 'label' => 'Email Logs & Templates', 'route' => 'admin.email-logs.index'], 
                     ['key' => 'admin.sms-logs.index', 'label' => 'SMS Logs', 'route' => 'admin.sms-logs.index'],
                 ]],
             ]],
 
             ['label' => 'System', 'items' => [
                 ['key' => 'reports', 'label' => 'Reports & Analytics', 'icon' => 'chart', 'count' => 4, 'children' => [
-                    ['key' => 'admin.reports.saved', 'label' => 'Saved Reports', 'route' => 'admin.reports.saved'],
-                    ['key' => 'admin.reports.widgets', 'label' => 'Dashboard Widgets', 'route' => 'admin.reports.widgets'],
-                    ['key' => 'admin.reports.analytics', 'label' => 'Usage Analytics', 'route' => 'admin.reports.analytics'],
                     ['key' => 'admin.reports.fees', 'label' => 'Fee Collection Report', 'route' => 'admin.reports.fees'],
-                    ['key' => 'admin.due_fees', 'label' => 'Due Fee Report', 'route' => 'admin.due_fees']
+                    ['key' => 'admin.due_fees', 'label' => 'Due Fee Report', 'route' => 'admin.due_fees'],
+                    ['key' => 'admin.reports.student_attendance', 'label' => 'Student Attendance', 'route' => 'admin.studentAttendance.report'],
+                    ['key' => 'admin.staff.attendances-report', 'label' => 'Staff Attendance', 'route' => 'admin.staff.attendances-report'],
+                    ['key' => 'admin.reports.saved', 'label' => 'Saved Reports', 'route' => 'admin.reports.saved']
                 ]],
                 ['key' => 'workflow', 'label' => 'Workflow & Forms', 'icon' => 'workflow', 'count' => 3, 'children' => [
                     ['key' => 'admin.workflow-builder.index', 'label' => 'Form Builder', 'route' => 'admin.workflow-builder.index'],
@@ -237,28 +232,39 @@ class MenuSeeder extends Seeder
         ];
 
         foreach ($nav as $gOrder => $group) {
-            $g = MenuGroup::create(['label' => $group['label'], 'order' => $gOrder]);
+            // Use updateOrCreate for groups
+            $g = MenuGroup::updateOrCreate(
+                ['label' => $group['label']],
+                ['order' => $gOrder]
+            );
 
             foreach ($group['items'] as $iOrder => $item) {
-                $parent = MenuItem::create([
-                    'menu_group_id' => $g->id,
-                    'key'           => $item['key'],
-                    'label'         => $item['label'],
-                    'icon'          => $item['icon'] ?? null,
-                    'route_name'    => $item['route'] ?? null,
-                    'badge_count'   => $item['count'] ?? null,
-                    'order'         => $iOrder,
-                ]);
+                // Use updateOrCreate for main menu items
+                $parent = MenuItem::updateOrCreate(
+                    ['key' => $item['key']], 
+                    [
+                        'menu_group_id' => $g->id,
+                        'parent_id'     => null,
+                        'label'         => $item['label'],
+                        'icon'          => $item['icon'] ?? null,
+                        'route_name'    => $item['route'] ?? null,
+                        'badge_count'   => $item['count'] ?? null,
+                        'order'         => $iOrder,
+                    ]
+                );
 
                 foreach ($item['children'] ?? [] as $cOrder => $child) {
-                    MenuItem::create([
-                        'menu_group_id' => $g->id,
-                        'parent_id'     => $parent->id,
-                        'key'           => $child['key'],
-                        'label'         => $child['label'],
-                        'route_name'    => $child['route'],
-                        'order'         => $cOrder,
-                    ]);
+                    // Use updateOrCreate for child menu items
+                    MenuItem::updateOrCreate(
+                        ['key' => $child['key']], 
+                        [
+                            'menu_group_id' => $g->id,
+                            'parent_id'     => $parent->id,
+                            'label'         => $child['label'],
+                            'route_name'    => $child['route'] ?? null,
+                            'order'         => $cOrder,
+                        ]
+                    );
                 }
             }
         }

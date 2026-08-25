@@ -18,6 +18,7 @@ use Inertia\Inertia;
 
 class ReportController extends Controller
 {
+    // ১. Staff Attendance Report (GET)
     public function staffAttendanceReport()
     {
         $staffs = Staff::select('id', 'first_name', 'last_name', 'staff_id_no')
@@ -31,6 +32,7 @@ class ReportController extends Controller
         ]);
     }
 
+    // ২. Staff Attendance Generate (POST)
     public function generate(Request $request)
     {
         $request->validate([
@@ -59,6 +61,7 @@ class ReportController extends Controller
         ]);
     }
 
+    // ৩. Fee Collection Report (GET)
     public function feeCollection(Request $request)
     {
         $startDate = $request->start_date ?? Carbon::now()->startOfMonth()->toDateString();
@@ -77,7 +80,6 @@ class ReportController extends Controller
         }
 
         $payments = $query->latest()->get();
-
         $totalCollection = $payments->sum('amount_paid');
 
         return Inertia::render('Admin/Reports/FeeCollection', [
@@ -92,6 +94,7 @@ class ReportController extends Controller
         ]);
     }
 
+    // ৪. Due Fees Report (GET)
     public function dueFees(Request $request)
     {
         $classId = $request->class_id ?? '';
@@ -143,6 +146,7 @@ class ReportController extends Controller
         ]);
     }
 
+    // ৫. Student Attendance Report (GET)
     public function studentReport(Request $request)
     {
         $classId = $request->class_id;
@@ -195,4 +199,12 @@ class ReportController extends Controller
         ]);
     }
 
+    public function saved()
+    {
+        $savedReports = []; 
+
+        return Inertia::render('Admin/Reports/SavedReports', [
+            'savedReports' => $savedReports
+        ]);
+    }
 }

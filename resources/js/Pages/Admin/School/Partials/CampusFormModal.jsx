@@ -28,125 +28,126 @@ export default function CampusFormModal({ item, onClose }) {
     }
   }
 
+  const inputClass = "block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all";
+  const labelClass = "block text-sm font-semibold text-slate-700 mb-1.5";
+
   return (
-    <div 
-      className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 transition-opacity animate-in fade-in duration-200"
-      onClick={onClose}
-    >
+    // Responsive Overlay
+    <div className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 transition-opacity animate-in fade-in duration-200" onClick={onClose}>
+      
+      {/* Responsive Modal Box */}
       <div 
-        className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] shadow-2xl overflow-hidden transform transition-all flex flex-col ring-1 ring-slate-900/5 animate-in zoom-in-95 duration-200"
+        className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden transform transition-all animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
+        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0 rounded-t-2xl">
           <div>
             <h3 className="text-xl font-bold text-slate-900">
               {isEdit ? 'Edit Campus Details' : 'Add New Campus'}
             </h3>
             <p className="text-sm text-slate-500 mt-1">Configure campus information, contact details, and status.</p>
           </div>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors bg-slate-100">
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors bg-white border border-slate-200 shadow-sm shrink-0">
             <Icon name="close" className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Form Body */}
+        {/* Form Body (Scrollable) */}
         <form onSubmit={submit} className="flex flex-col flex-1 overflow-hidden">
-          <div className="p-6 overflow-y-auto space-y-5 flex-1">
+          <div className="p-6 overflow-y-auto space-y-5 flex-1 custom-scrollbar">
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               
-              {/* Name */}
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Campus Name <span className="text-rose-500">*</span></label>
+              <div className="sm:col-span-2">
+                <label className={labelClass}>Campus Name <span className="text-rose-500">*</span></label>
                 <input 
+                  type="text"
                   value={data.name} 
                   onChange={(e) => setData('name', e.target.value)} 
+                  required
                   placeholder="e.g. Main Campus" 
-                  className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                  className={inputClass}
+                  autoFocus
                 />
                 {errors.name && <p className="text-rose-500 text-xs mt-1">{errors.name}</p>}
               </div>
 
-              {/* Code */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Campus Code <span className="text-rose-500">*</span></label>
+                <label className={labelClass}>Campus Code <span className="text-rose-500">*</span></label>
                 <input 
+                  type="text"
                   value={data.code} 
                   onChange={(e) => setData('code', e.target.value)} 
+                  required
                   placeholder="e.g. MC-01" 
-                  className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-mono"
+                  className={`${inputClass} font-mono font-bold tracking-wide`}
                 />
                 {errors.code && <p className="text-rose-500 text-xs mt-1">{errors.code}</p>}
               </div>
 
-              {/* Phone */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Phone Number</label>
+                <label className={labelClass}>Phone Number</label>
                 <input 
+                  type="text"
                   value={data.phone} 
                   onChange={(e) => setData('phone', e.target.value)} 
                   placeholder="e.g. +880123456789" 
-                  className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                  className={inputClass}
                 />
                 {errors.phone && <p className="text-rose-500 text-xs mt-1">{errors.phone}</p>}
               </div>
 
-              {/* Email */}
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Email Address</label>
+              <div className="sm:col-span-2">
+                <label className={labelClass}>Email Address</label>
                 <input 
                   type="email"
                   value={data.email} 
                   onChange={(e) => setData('email', e.target.value)} 
                   placeholder="e.g. info@campus.com" 
-                  className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                  className={inputClass}
                 />
                 {errors.email && <p className="text-rose-500 text-xs mt-1">{errors.email}</p>}
               </div>
 
-              {/* Address */}
               <div className="sm:col-span-2">
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Physical Address</label>
+                <label className={labelClass}>Physical Address</label>
                 <textarea 
                   rows="2"
                   value={data.address} 
                   onChange={(e) => setData('address', e.target.value)} 
                   placeholder="Enter full address..." 
-                  className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 outline-none transition-all resize-none"
+                  className={`${inputClass} resize-none`}
                 />
                 {errors.address && <p className="text-rose-500 text-xs mt-1">{errors.address}</p>}
               </div>
 
-              {/* Established Year */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Established Year</label>
+                <label className={labelClass}>Established Year</label>
                 <input 
                   type="number"
                   value={data.established_year} 
                   onChange={(e) => setData('established_year', e.target.value)} 
                   placeholder="e.g. 2005" 
-                  className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                  className={inputClass}
                 />
                 {errors.established_year && <p className="text-rose-500 text-xs mt-1">{errors.established_year}</p>}
               </div>
 
-              {/* Order */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Display Order</label>
+                <label className={labelClass}>Display Order</label>
                 <input 
                   type="number"
                   value={data.order} 
                   onChange={(e) => setData('order', e.target.value)} 
-                  className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                  className={inputClass}
                 />
                 {errors.order && <p className="text-rose-500 text-xs mt-1">{errors.order}</p>}
               </div>
 
               {/* Checkboxes */}
-              <div className="sm:col-span-2 flex flex-wrap gap-6 pt-2 border-t border-slate-100 mt-2">
+              <div className="sm:col-span-2 flex flex-wrap gap-6 pt-4 border-t border-slate-100">
                 
-                {/* Main Campus Toggle */}
                 <label className="flex items-center gap-3 cursor-pointer group">
                   <div className="relative flex items-center">
                     <input
@@ -162,7 +163,6 @@ export default function CampusFormModal({ item, onClose }) {
                   <span className="text-sm font-semibold text-slate-700 group-hover:text-slate-900 transition-colors">Set as Main Campus</span>
                 </label>
 
-                {/* Active Status Toggle */}
                 <label className="flex items-center gap-3 cursor-pointer group">
                   <div className="relative flex items-center">
                     <input
@@ -184,11 +184,12 @@ export default function CampusFormModal({ item, onClose }) {
           </div>
 
           {/* Modal Footer */}
-          <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-end gap-3 shrink-0">
-            <button type="button" onClick={onClose} disabled={processing} className="px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 hover:text-slate-800 rounded-xl transition-all shadow-sm">
+          <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex flex-col-reverse sm:flex-row items-center justify-end gap-3 shrink-0 rounded-b-2xl">
+            <button type="button" onClick={onClose} disabled={processing} className="w-full sm:w-auto px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 hover:text-slate-800 rounded-xl transition-all shadow-sm">
               Cancel
             </button>
-            <button type="submit" disabled={processing} className="flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md shadow-indigo-500/20 disabled:opacity-70 disabled:cursor-not-allowed active:scale-95">
+            <button type="submit" disabled={processing} className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md shadow-indigo-500/20 disabled:opacity-70 disabled:cursor-not-allowed active:scale-95">
+              <Icon name="save" className="w-4 h-4" />
               {processing ? 'Saving...' : (isEdit ? 'Update Campus' : 'Create Campus')}
             </button>
           </div>

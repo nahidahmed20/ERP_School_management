@@ -51,17 +51,63 @@ export default function Index({ campuses, filters }) {
     });
   }
 
+  // --- Export Functions ---
+  const handlePrint = () => window.print();
+
+  const exportToCSV = () => {
+    if (!campuses.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
+    const headers = ['Campus Name', 'Code', 'Phone', 'Email', 'Established', 'Status'];
+    const rows = campuses.data.map(item => [
+      item.name || 'N/A', 
+      item.code || 'N/A', 
+      item.phone || 'N/A', 
+      item.email || 'N/A', 
+      item.established_year || 'N/A', 
+      item.is_active ? 'Active' : 'Inactive'
+    ]);
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows.map(e => e.map(val => `"${val}"`).join(','))].join('\n');
+    const link = document.createElement("a");
+    link.setAttribute("href", encodeURI(csvContent));
+    link.setAttribute("download", `Campuses_Branches_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const copyToClipboard = () => {
+    if (!campuses.data.length) return;
+    let text = "Campus Name\tCode\tPhone\tEstablished\tStatus\n";
+    campuses.data.forEach(item => {
+      text += `${item.name}\t${item.code}\t${item.phone || '-'}\t${item.established_year || '-'}\t${item.is_active ? 'Active' : 'Inactive'}\n`;
+    });
+    navigator.clipboard.writeText(text);
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Data copied to clipboard!', showConfirmButton: false, timer: 2000 });
+  };
+
   return (
     <AuthenticatedLayout>
       <Head title="School & Branches" />
 
-      <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8">
+      {/* Print Specific CSS */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @media print {
+          nav, aside, header, .no-print, button, a, select, input { display: none !important; }
+          body, html { background: #f8fafc !important; }
+          .print-table-wrapper { width: 100% !important; border: none !important; box-shadow: none !important; }
+          .print-title { display: block !important; font-size: 24px !important; font-weight: bold !important; margin-bottom: 20px !important; }
+        }
+        @media screen { .print-title { display: none; } }
+      `}} />
+
+      <div className="print-title">Campuses &amp; Branches Directory - {new Date().toLocaleDateString('en-GB')}</div>
+
+      <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8 no-print">
         
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">Settings & Registry</span>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">School & Branches</h1>
+            <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">Settings &amp; Registry</span>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">School &amp; Branches</h1>
             <p className="text-sm text-slate-500 mt-1">প্রতিষ্ঠানের সকল Campus/Branch এখান থেকে নিয়ন্ত্রণ করুন।</p>
           </div>
           <button
@@ -73,14 +119,14 @@ export default function Index({ campuses, filters }) {
         </div>
 
         {/* Unified Modern Toolbar */}
-        <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col lg:flex-row items-center gap-4">
-          <div className="flex flex-wrap items-center gap-3 w-full">
+        <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
             
-            {/* Per Page (Arrow hidden) */}
+            {/* Per Page */}
             <select
               value={perPage}
               onChange={e => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}
-              className="appearance-none bg-none pr-3 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer text-center"
+              className="appearance-none bg-none pr-3 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer text-center font-mono"
               style={{ backgroundImage: 'none' }}
             >
               <option value="10">10 / Page</option>
@@ -103,7 +149,7 @@ export default function Index({ campuses, filters }) {
             </select>
 
             {/* Search Input */}
-            <div className="relative flex-1 min-w-[200px]">
+            <div className="relative flex-1 min-w-[200px] sm:w-80">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Icon name="search" className="w-4 h-4 text-slate-400" />
               </div>
@@ -125,27 +171,44 @@ export default function Index({ campuses, filters }) {
               Filter
             </button>
           </div>
+
+          {/* Export Actions */}
+          <div className="flex items-center justify-end gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-xl w-full xl:w-auto shadow-sm shrink-0 ml-auto">
+            <button onClick={copyToClipboard} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Copy to Clipboard">Copy</button>
+            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+            <button onClick={exportToCSV} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-emerald-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export CSV">CSV</button>
+            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+            <button onClick={() => alert('Backend Excel plugin needed')} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-green-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export Excel">Excel</button>
+            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+            <button onClick={() => alert('Backend PDF plugin needed')} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-rose-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export PDF">PDF</button>
+            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+            <button onClick={handlePrint} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-amber-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Print List">Print</button>
+          </div>
         </div>
 
         {/* Main Table Card */}
-        <div className="bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5">
+        <div className="bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 print-table-wrapper">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50/50">
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Name</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider w-[35%]">Name</th>
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Code</th>
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Phone</th>
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Established</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Actions</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Status</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right no-print">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {campuses.data.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
-                      কোনো Campus পাওয়া যায়নি।
+                      <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-3 border border-slate-100">
+                        <Icon name="building" className="w-8 h-8 text-slate-300" />
+                      </div>
+                      <p className="text-sm font-semibold text-slate-600">কোনো Campus পাওয়া যায়নি।</p>
+                      <p className="text-xs text-slate-400 mt-1">Start by adding a new campus.</p>
                     </td>
                   </tr>
                 ) : (
@@ -153,26 +216,30 @@ export default function Index({ campuses, filters }) {
                     <tr key={item.id} className="hover:bg-slate-50/60 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-500 flex items-center justify-center shrink-0">
-                            <Icon name="building" className="w-4 h-4" />
+                          <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 border border-indigo-100 shadow-sm">
+                            <Icon name="building" className="w-5 h-5" />
                           </div>
                           <div>
-                            <span className="text-sm font-bold text-slate-900 block">{item.name}</span>
-                            {item.is_main && <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-wide">Main Campus</span>}
+                            <span className="text-sm font-bold text-slate-900 block leading-tight">{item.name}</span>
+                            {item.is_main && <span className="inline-flex px-1.5 py-0.5 mt-1 rounded text-[9px] font-bold tracking-wide uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">Main Campus</span>}
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <code className="text-xs font-bold bg-slate-100 text-slate-700 px-2 py-1 rounded border border-slate-200">{item.code}</code>
+                        <code className="text-sm font-bold font-mono tracking-tight bg-slate-100 text-indigo-600 px-2.5 py-1 rounded-md border border-slate-200">
+                          {item.code}
+                        </code>
                       </td>
-                      <td className="px-6 py-4 text-sm text-slate-600">{item.phone ?? '—'}</td>
-                      <td className="px-6 py-4 text-sm text-slate-500">{item.established_year ?? '—'}</td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide uppercase ${item.is_active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}`}>
+                      <td className="px-6 py-4 text-sm font-medium text-slate-600">{item.phone ?? <span className="italic text-slate-400">N/A</span>}</td>
+                      <td className="px-6 py-4 text-sm font-medium text-slate-600">{item.established_year ?? <span className="italic text-slate-400">N/A</span>}</td>
+                      <td className="px-6 py-4 text-center">
+                        <span className={`inline-flex px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide uppercase border ${
+                          item.is_active ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'
+                        }`}>
                           {item.is_active ? 'Active' : 'Inactive'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-6 py-4 text-right no-print">
                         <div className="flex items-center justify-end gap-1.5">
                           <button onClick={() => setViewingItem(item)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="View Details">
                             <Icon name="eye" className="w-4 h-4" />
@@ -192,7 +259,7 @@ export default function Index({ campuses, filters }) {
             </table>
           </div>
 
-          <div className="border-t border-slate-100 bg-white px-6 py-4 rounded-b-2xl">
+          <div className="no-print border-t border-slate-100 bg-white px-6 py-4 rounded-b-2xl">
             <Pagination meta={campuses} />
           </div>
         </div>

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
+import Swal from 'sweetalert2';
 
 export default function DueFees({ dueAssignments, totalDue, classes, filters }) {
   const [classId, setClassId] = useState(filters.class_id || '');
@@ -9,7 +10,7 @@ export default function DueFees({ dueAssignments, totalDue, classes, filters }) 
   const [dateUntil, setDateUntil] = useState(filters.date_until || '');
 
   const applyFilters = (e) => {
-    e.preventDefault();
+    e?.preventDefault();
     router.get(route('admin.reports.due_fees'), {
       class_id: classId,
       section_id: sectionId,
@@ -17,208 +18,273 @@ export default function DueFees({ dueAssignments, totalDue, classes, filters }) 
     }, { preserveState: true });
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
-
   const selectedClass = classes.find(c => c.id == classId);
 
+  // --- Export Functions ---
+  const handlePrint = () => window.print();
+
+  const exportToCSV = () => {
+    if (!dueAssignments.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
+    const headers = ['Student Name', 'Admission No', 'Class', 'Section', 'Guardian Contact', 'Fee Group', 'Due Date', 'Due Amount'];
+    const rows = dueAssignments.map(assignment => [
+      `${assignment.student?.first_name || ''} ${assignment.student?.last_name || ''}`.trim() || 'N/A',
+      assignment.student?.admission_no || 'N/A',
+      assignment.student?.current_enrollment?.school_class?.name || 'N/A',
+      assignment.student?.current_enrollment?.section?.name || 'N/A',
+      assignment.student?.guardian?.father_phone || 'N/A',
+      assignment.fee_group?.name || 'N/A',
+      assignment.due_date || 'N/A',
+      assignment.due_amount || '0'
+    ]);
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows.map(e => e.map(val => `"${val}"`).join(','))].join('\n');
+    const link = document.createElement("a");
+    link.setAttribute("href", encodeURI(csvContent));
+    link.setAttribute("download", `Due_Fees_Report_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const copyToClipboard = () => {
+    if (!dueAssignments.length) return;
+    let text = "Student\tAdm No\tClass\tContact\tFee Type\tDue Date\tAmount\n";
+    dueAssignments.forEach(assignment => {
+      let studentName = `${assignment.student?.first_name || ''} ${assignment.student?.last_name || ''}`.trim();
+      let className = assignment.student?.current_enrollment?.school_class?.name || '-';
+      text += `${studentName}\t${assignment.student?.admission_no || '-'}\t${className}\t${assignment.student?.guardian?.father_phone || '-'}\t${assignment.fee_group?.name}\t${assignment.due_date}\t${assignment.due_amount}\n`;
+    });
+    navigator.clipboard.writeText(text);
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Data copied to clipboard!', showConfirmButton: false, timer: 2000 });
+  };
+
+  const Taka = () => (
+    <span className="font-sans font-normal mr-0.5">৳</span>
+  );
+
   return (
-    <AuthenticatedLayout header={<div className="page-head"><h1>Due Fees Report</h1><p style={{ color: '#64748b', marginTop: '4px' }}>নির্দিষ্ট তারিখ পর্যন্ত শিক্ষার্থীদের বকেয়া ফি এর তালিকা।</p></div>}>
+    <AuthenticatedLayout>
       <Head title="Due Fees Report" />
 
-      {/* Filters (Print করার সময় হাইড হয়ে যাবে) */}
-      <div className="card mm-card no-print" style={{ padding: '24px', borderRadius: '12px', marginBottom: '24px', borderTop: '4px solid #ef4444', background: '#fff' }}>
-        <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', color: '#475569', fontWeight: '600' }}>
-          <Icon name="filter" style={{ width: '18px', height: '18px' }} />
-          <span>Filter Report</span>
-        </div>
-        
-        <form onSubmit={applyFilters} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', alignItems: 'end' }}>
-          <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: '600', color: '#475569', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Class</label>
-            <select className="custom-input" value={classId} onChange={e => { setClassId(e.target.value); setSectionId(''); }} style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#f8fafc', color: '#334155' }}>
-              <option value="">All Classes</option>
-              {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-          </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: '600', color: '#475569', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Section (Optional)</label>
-            <select className="custom-input" value={sectionId} onChange={e => setSectionId(e.target.value)} disabled={!classId} style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', background: classId ? '#f8fafc' : '#f1f5f9', color: '#334155', cursor: !classId ? 'not-allowed' : 'pointer' }}>
-              <option value="">All Sections</option>
-              {selectedClass?.sections?.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
-          </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: '600', color: '#475569', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Due Date Until</label>
-            <input className="custom-input" type="date" value={dateUntil} onChange={e => setDateUntil(e.target.value)} required style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#f8fafc', color: '#334155' }} />
-          </div>
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <button type="submit" className="btn action-btn" style={{ flex: 1, padding: '10px 16px', background: '#0f172a', color: '#fff', borderRadius: '8px', fontWeight: '600', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-              <Icon name="search" style={{ width: '16px', height: '16px' }} /> Generate
-            </button>
-            <button type="button" onClick={handlePrint} className="btn btn-outline print-btn" style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff', color: '#475569', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Print Report">
-              <Icon name="printer" />
-            </button>
-          </div>
-        </form>
-      </div>
-
-      {/* Report Content (Printable Area) */}
-      <div className="card mm-card printable-area" style={{ padding: '32px', borderRadius: '12px', background: '#fff', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-        
-        {/* Print Header */}
-        <div style={{ textAlign: 'center', marginBottom: '32px', paddingBottom: '20px', borderBottom: '1px solid #e2e8f0' }}>
-          <h2 style={{ margin: '0 0 10px 0', color: '#0f172a', fontSize: '24px' }}>Due Fees Report <span style={{ color: '#64748b', fontSize: '18px', fontWeight: 'normal' }}>(বকেয়া তালিকা)</span></h2>
-          <div style={{ display: 'inline-flex', gap: '16px', background: '#f8fafc', padding: '8px 16px', borderRadius: '24px', border: '1px solid #e2e8f0', fontSize: '13px', color: '#475569' }}>
-            <span>Calculated Until: <strong style={{ color: '#0f172a' }}>{dateUntil || 'N/A'}</strong></span>
-            <span style={{ borderLeft: '1px solid #cbd5e1', paddingLeft: '16px' }}>
-              Class: <strong style={{ color: '#0f172a' }}>{classId ? classes.find(c => c.id == classId)?.name : 'All Classes'}</strong>
-              {sectionId && ` | Section: ${selectedClass?.sections?.find(s => s.id == sectionId)?.name}`}
-            </span>
-          </div>
-        </div>
-
-        {/* Total Summary */}
-        <div className="summary-box" style={{ background: 'linear-gradient(135deg, #fef2f2 0%, #fff1f2 100%)', border: '1px solid #fecaca', padding: '24px', borderRadius: '12px', marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <div style={{ width: '48px', height: '48px', background: '#fee2e2', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#dc2626' }}>
-              <Icon name="wallet" />
-            </div>
-            <div>
-              <span style={{ fontSize: '13px', color: '#dc2626', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Pending Amount</span>
-              <div style={{ fontSize: '14px', color: '#991b1b', marginTop: '2px' }}>মোট বকেয়া টাকার পরিমাণ</div>
-            </div>
-          </div>
-          <div style={{ fontSize: '32px', fontWeight: '800', color: '#b91c1c', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span className="tk">৳</span>{Number(totalDue).toLocaleString()}
-          </div>
-        </div>
-
-        {/* Data Table */}
-        <div style={{ overflowX: 'auto', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-          <table className="mm-table custom-table" style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', whiteSpace: 'nowrap' }}>
-            <thead>
-              <tr>
-                <th style={{ padding: '16px', width: '50px', textAlign: 'center' }}>SL</th>
-                <th style={{ padding: '16px' }}>Student Info</th>
-                <th style={{ padding: '16px' }}>Guardian Contact</th>
-                <th style={{ padding: '16px' }}>Fee Group</th>
-                <th style={{ padding: '16px', textAlign: 'center' }}>Due Date</th>
-                <th style={{ padding: '16px', textAlign: 'right' }}>Due Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              {dueAssignments.length === 0 ? (
-                <tr>
-                  <td colSpan="6" style={{ padding: '40px 20px', textAlign: 'center' }}>
-                    <div style={{ display: 'inline-block', background: '#ecfdf5', color: '#059669', padding: '12px 24px', borderRadius: '30px', fontWeight: '600', fontSize: '15px' }}>
-                      🎉 এই ফিল্টারে কোনো শিক্ষার্থীর বকেয়া নেই!
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                dueAssignments.map((assignment, index) => (
-                  <tr key={assignment.id}>
-                    <td style={{ padding: '16px', color: '#64748b', textAlign: 'center', fontWeight: '500' }}>
-                      {String(index + 1).padStart(2, '0')}
-                    </td>
-                    <td style={{ padding: '16px' }}>
-                      <div style={{ fontWeight: '600', color: '#0f172a', fontSize: '15px' }}>
-                        {assignment.student?.first_name} {assignment.student?.last_name}
-                      </div>
-                      <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px', display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <span style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', fontWeight: '500' }}>
-                          Class {assignment.student?.current_enrollment?.school_class?.name} 
-                          {assignment.student?.current_enrollment?.section && ` (${assignment.student?.current_enrollment?.section?.name})`}
-                        </span>
-                        <span>Roll: <strong style={{color: '#475569'}}>{assignment.student?.current_enrollment?.roll_no || '--'}</strong></span>
-                        <span style={{ color: '#cbd5e1' }}>|</span>
-                        <span>Adm: <strong style={{color: '#475569'}}>{assignment.student?.admission_no || '--'}</strong></span>
-                      </div>
-                    </td>
-                    <td style={{ padding: '16px' }}>
-                      <div style={{ fontWeight: '600', color: '#334155', fontSize: '14px' }}>
-                        {assignment.student?.guardian?.father_name || 'N/A'}
-                      </div>
-                      <div style={{ color: '#0284c7', fontSize: '13px', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <Icon name="phone" style={{ width: '12px', height: '12px' }}/> {assignment.student?.guardian?.father_phone || '--'}
-                      </div>
-                    </td>
-                    <td style={{ padding: '16px' }}>
-                      <span style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '4px 10px', borderRadius: '6px', fontSize: '13px', color: '#475569', fontWeight: '600' }}>
-                        {assignment.fee_group?.name}
-                      </span>
-                    </td>
-                    <td style={{ padding: '16px', textAlign: 'center' }}>
-                      <span style={{ color: '#ef4444', fontSize: '13px', fontWeight: '600', background: '#fef2f2', padding: '4px 10px', borderRadius: '6px' }}>
-                        {assignment.due_date}
-                      </span>
-                    </td>
-                    <td style={{ padding: '16px', textAlign: 'right', fontWeight: 'bold', color: '#dc2626', fontSize: '16px' }}>
-                      <span className="tk">৳</span>{Number(assignment.due_amount).toLocaleString()}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Styles & Print CSS */}
-      <style>{`
-        /* টাকা সিম্বল ফিক্স (কোনোভাবেই বাঁকা হবে না) */
-        .tk {
-          font-family: 'SolaimanLipi', 'Noto Sans Bengali', Arial, sans-serif !important;
-          font-style: normal !important;
-          font-weight: 500 !important;
-          display: inline-block;
-          margin-right: 2px;
-          line-height: 1;
-        }
-
-        /* কাস্টম ইনপুট ফোকাস ইফেক্ট */
-        .custom-input:focus {
-          outline: none;
-          border-color: #ef4444 !important;
-          box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
-        }
-
-        /* বাটন হোভার ইফেক্ট */
-        .action-btn:hover { background: #1e293b !important; transform: translateY(-1px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        .action-btn:active { transform: translateY(0); }
-        .print-btn:hover { background: #f8fafc !important; border-color: #94a3b8 !important; }
-
-        /* টেবিল স্টাইল */
-        .custom-table th {
-          background: #f8fafc;
-          border-bottom: 2px solid #e2e8f0;
-          color: #475569;
-          font-size: 13px;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-        .custom-table tbody tr {
-          border-bottom: 1px solid #f1f5f9;
-          transition: background-color 0.2s ease;
-        }
-        .custom-table tbody tr:hover {
-          background-color: #f8fafc;
-        }
-        .custom-table tbody tr:last-child {
-          border-bottom: none;
-        }
-
-        /* প্রিন্ট অপশন */
+      {/* Print Specific CSS */}
+      <style dangerouslySetInnerHTML={{__html: `
         @media print {
-          body * { visibility: hidden; }
-          .printable-area, .printable-area * { visibility: visible; }
-          .printable-area { position: absolute; left: 0; top: 0; width: 100%; padding: 0 !important; border: none !important; box-shadow: none !important; }
-          .no-print { display: none !important; }
-          .summary-box { border: 1px solid #000 !important; background: transparent !important; }
+          nav, aside, header, .no-print, button, a, select, input { display: none !important; }
+          body, html { background: #fff !important; color: #000 !important; }
+          .printable-area { width: 100% !important; border: none !important; box-shadow: none !important; padding: 0 !important; }
+          
+          /* Adjust summary card for print to save ink */
+          .summary-widget {
+            background: #fff !important;
+            color: #000 !important;
+            border: 2px solid #cbd5e1 !important;
+            box-shadow: none !important;
+          }
+          .summary-widget * { color: #000 !important; }
+          .summary-widget svg, .summary-widget .bg-white\\/10 { display: none !important; }
+          
+          /* Force table borders for print */
+          table th, table td { border-bottom: 1px solid #e2e8f0 !important; color: #000 !important; }
         }
-      `}</style>
+      `}} />
+
+      <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8">
+        
+        {/* Page Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 no-print">
+          <div>
+            <span className="text-xs font-bold tracking-wider text-rose-600 uppercase">Reports</span>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Due Fees Report</h1>
+            <p className="text-sm text-slate-500 mt-1">নির্দিষ্ট তারিখ পর্যন্ত শিক্ষার্থীদের বকেয়া ফি এর তালিকা।</p>
+          </div>
+        </div>
+
+        {/* --- Filter Section --- */}
+        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 border-t-4 border-t-rose-500 no-print">
+          <div className="flex items-center gap-2 mb-4 text-slate-800 font-bold">
+            <Icon name="filter" className="w-5 h-5 text-rose-500" />
+            <h2>Filter Report</h2>
+          </div>
+          
+          <form onSubmit={applyFilters} className="flex flex-col md:flex-row items-end gap-4 w-full">
+            
+            <div className="w-full md:flex-1">
+              <label className="flex items-center gap-1.5 text-sm font-semibold text-slate-700 mb-2 uppercase tracking-wide">
+                Class
+              </label>
+              <select 
+                value={classId} 
+                onChange={e => { setClassId(e.target.value); setSectionId(''); }} 
+                className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-rose-500 outline-none transition-all cursor-pointer"
+              >
+                <option value="">All Classes</option>
+                {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+
+            <div className="w-full md:flex-1">
+              <label className="flex items-center gap-1.5 text-sm font-semibold text-slate-700 mb-2 uppercase tracking-wide">
+                Section (Optional)
+              </label>
+              <select 
+                value={sectionId} 
+                onChange={e => setSectionId(e.target.value)} 
+                disabled={!classId} 
+                className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-rose-500 outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <option value="">All Sections</option>
+                {selectedClass?.sections?.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+            </div>
+
+            <div className="w-full md:flex-1">
+              <label className="flex items-center gap-1.5 text-sm font-semibold text-slate-700 mb-2 uppercase tracking-wide">
+                Due Date Until <span className="text-rose-500">*</span>
+              </label>
+              <input 
+                type="date" 
+                value={dateUntil} 
+                onChange={e => setDateUntil(e.target.value)} 
+                required 
+                className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-rose-500 outline-none transition-all" 
+              />
+            </div>
+
+            <div className="w-full md:w-auto">
+              <button 
+                type="submit" 
+                className="w-full md:w-auto bg-slate-900 hover:bg-slate-800 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md shadow-slate-900/20 active:scale-95 flex items-center justify-center gap-2"
+              >
+                <Icon name="search" className="w-4 h-4" /> Generate
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* Export Actions Toolbar */}
+        <div className="flex justify-end no-print">
+          <div className="flex items-center justify-end gap-1.5 bg-white border border-slate-200 p-1 rounded-xl shadow-sm">
+            <button onClick={copyToClipboard} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-all flex items-center gap-1.5" title="Copy to Clipboard">Copy</button>
+            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+            <button onClick={exportToCSV} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all flex items-center gap-1.5" title="Export CSV">CSV</button>
+            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+            <button onClick={() => alert('Backend Excel plugin needed')} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all flex items-center gap-1.5" title="Export Excel">Excel</button>
+            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+            <button onClick={() => alert('Backend PDF plugin needed')} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all flex items-center gap-1.5" title="Export PDF">PDF</button>
+            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+            <button onClick={handlePrint} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all flex items-center gap-1.5" title="Print Report">Print</button>
+          </div>
+        </div>
+
+        {/* --- Report Content Area --- */}
+        <div className="bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 printable-area overflow-hidden">
+          
+          <div className="p-6 sm:p-8">
+            {/* Report Header (Visible mainly on print) */}
+            <div className="text-center mb-8 pb-6 border-b-2 border-dashed border-slate-200">
+              <h2 className="text-2xl font-bold text-slate-900 mb-2">Due Fees Report <span className="text-lg text-slate-500 font-normal">(বকেয়া তালিকা)</span></h2>
+              <div className="inline-flex items-center gap-3 text-sm font-semibold text-slate-600 bg-slate-50 px-5 py-2 rounded-full border border-slate-100 mt-2">
+                <span>Calculated Until: <span className="text-rose-600">{dateUntil || 'N/A'}</span></span>
+                <span className="w-px h-4 bg-slate-300"></span>
+                <span>Class: <span className="text-slate-900">{classId ? classes.find(c => c.id == classId)?.name : 'All Classes'}</span> {sectionId && `(${selectedClass?.sections?.find(s => s.id == sectionId)?.name})`}</span>
+              </div>
+            </div>
+
+            {/* Premium Summary Widget */}
+            <div className="summary-widget relative overflow-hidden bg-gradient-to-br from-rose-500 to-red-600 rounded-2xl p-6 sm:p-8 mb-8 flex justify-between items-center text-white shadow-lg shadow-rose-500/30">
+              <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mt-10 -mr-10 blur-2xl"></div>
+              <div className="flex items-center gap-4 relative z-10">
+                <div className="bg-white/20 p-4 rounded-full backdrop-blur-md shrink-0 hidden sm:flex">
+                  <Icon name="wallet" className="w-8 h-8 text-white" />
+                </div>
+                <div>
+                  <div className="text-sm font-bold text-rose-100 uppercase tracking-wider mb-1">Total Pending Amount</div>
+                  <div className="text-xs text-rose-200 mb-1.5 font-medium">মোট বকেয়া টাকার পরিমাণ</div>
+                  <div className="text-4xl sm:text-5xl font-black tracking-tight">
+                    <Taka />{Number(totalDue).toLocaleString()}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Data Table */}
+            <div className="rounded-xl border border-slate-200 overflow-x-auto">
+              <table className="w-full text-left border-collapse whitespace-nowrap">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200">
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-16 text-center">SL</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Student Info</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Guardian Contact</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Fee Group</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Due Date</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Due Amount</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {dueAssignments.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" className="px-6 py-16 text-center text-slate-500">
+                        <div className="inline-block bg-emerald-50 text-emerald-600 px-6 py-3 rounded-full font-bold text-base border border-emerald-100 shadow-sm">
+                          🎉 এই ফিল্টারে কোনো শিক্ষার্থীর বকেয়া নেই!
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    dueAssignments.map((assignment, index) => (
+                      <tr key={assignment.id} className="hover:bg-slate-50/60 transition-colors">
+                        <td className="px-6 py-4 text-sm font-bold text-slate-500 text-center">
+                          {String(index + 1).padStart(2, '0')}
+                        </td>
+                        <td className="px-6 py-4">
+                          <strong className="text-sm font-bold text-slate-900 block">
+                            {assignment.student?.first_name} {assignment.student?.last_name}
+                          </strong>
+                          <div className="flex items-center gap-2 mt-1.5">
+                            <span className="text-xs font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                              Class {assignment.student?.current_enrollment?.school_class?.name}
+                              {assignment.student?.current_enrollment?.section && ` (${assignment.student?.current_enrollment?.section?.name})`}
+                            </span>
+                            <span className="text-xs text-slate-500">
+                              Roll: <strong className="text-slate-700">{assignment.student?.current_enrollment?.roll_no || '--'}</strong>
+                            </span>
+                            <span className="text-slate-300">|</span>
+                            <span className="text-xs text-slate-500">
+                              Adm: <strong className="text-slate-700">{assignment.student?.admission_no || '--'}</strong>
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <strong className="text-sm font-bold text-slate-800 block">
+                            {assignment.student?.guardian?.father_name || 'N/A'}
+                          </strong>
+                          <div className="flex items-center gap-1.5 text-xs font-semibold text-sky-600 mt-1">
+                            <Icon name="phone" className="w-3.5 h-3.5" /> {assignment.student?.guardian?.father_phone || '--'}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="inline-flex px-2.5 py-1 rounded-md text-xs font-bold bg-slate-50 text-slate-600 border border-slate-200">
+                            {assignment.fee_group?.name}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <span className="inline-flex px-2.5 py-1 rounded-md text-xs font-bold bg-rose-50 text-rose-600 border border-rose-100">
+                            {assignment.due_date}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <strong className="text-base font-black text-rose-600 tracking-tight">
+                            <Taka />{Number(assignment.due_amount).toLocaleString()}
+                          </strong>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
     </AuthenticatedLayout>
   );
 }
