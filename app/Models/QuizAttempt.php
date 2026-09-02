@@ -11,6 +11,7 @@ class QuizAttempt extends Model
     use HasFactory, BelongsToCampus;
 
     protected $guarded = ['id'];
+    protected $casts = ['attempt_date'=>'date','started_at'=>'datetime','submitted_at'=>'datetime','obtained_marks'=>'decimal:2'];
 
     public function exam()
     {

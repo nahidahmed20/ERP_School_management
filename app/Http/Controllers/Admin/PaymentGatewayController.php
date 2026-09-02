@@ -19,7 +19,7 @@ class PaymentGatewayController extends Controller
             $query->where('name', 'like', "%{$search}%");
         }
 
-        $gateways = $query->latest()->paginate($request->per_page ?? 10)->withQueryString();
+        $gateways = $query->latest()->paginate(\App\Support\PerPage::resolve())->withQueryString();
 
         return Inertia::render('Admin/PaymentsGateways/Index', [
             'gateways' => $gateways,

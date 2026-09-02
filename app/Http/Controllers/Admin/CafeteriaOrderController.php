@@ -21,7 +21,7 @@ class CafeteriaOrderController extends Controller
             $query->where('order_number', 'like', "%{$search}%");
         }
 
-        $orders = $query->latest()->paginate(10)->withQueryString();
+        $orders = $query->latest()->paginate(\App\Support\PerPage::resolve())->withQueryString();
         
         $outlets = CafeteriaOutlet::where('is_active', true)->select('id', 'name')->get();
         $foods = FoodItem::where('is_available', true)->select('id', 'name', 'price')->get();

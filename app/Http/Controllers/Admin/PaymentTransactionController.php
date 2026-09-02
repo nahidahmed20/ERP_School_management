@@ -15,15 +15,17 @@ class PaymentTransactionController extends Controller
         $query = PaymentTransaction::with('gateway');
 
         if ($search = $request->search) {
-            $query->where('transaction_id', 'like', "%{$search}%")
-                  ->orWhere('reference_no', 'like', "%{$search}%");
+            $query->where(function ($q) use ($search) {
+                $q->where('transaction_id', 'like', "%{$search}%")
+                    ->orWhere('reference_no', 'like', "%{$search}%");
+            });
         }
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        $transactions = $query->latest('transaction_date')->paginate($request->per_page ?? 10)->withQueryString();
+        $transactions = $query->latest('transaction_date')->paginate(\App\Support\PerPage::resolve())->withQueryString();
         $gateways = PaymentGateway::where('is_active', true)->get(['id', 'name']); // ফর্মের জন্য
 
         return Inertia::render('Admin/PaymentsTransactions/Index', [
@@ -39,7 +41,7 @@ class PaymentTransactionController extends Controller
             'payment_gateway_id' => 'nullable|exists:payment_gateways,id',
             'transaction_id' => 'required|string|unique:payment_transactions,transaction_id',
             'reference_no' => 'nullable|string',
-            'amount' => 'required|numeric|min:0',
+            'amount' => 'required|numeric|min:0.01',
             'payment_method' => 'nullable|string',
             'status' => 'required|in:Pending,Completed,Failed,Refunded',
             'transaction_date' => 'required|date',
@@ -58,7 +60,7 @@ class PaymentTransactionController extends Controller
             'payment_gateway_id' => 'nullable|exists:payment_gateways,id',
             'transaction_id' => 'required|string|unique:payment_transactions,transaction_id,'.$id,
             'reference_no' => 'nullable|string',
-            'amount' => 'required|numeric|min:0',
+            'amount' => 'required|numeric|min:0.01',
             'payment_method' => 'nullable|string',
             'status' => 'required|in:Pending,Completed,Failed,Refunded',
             'transaction_date' => 'required|date',
@@ -81,7 +83,11 @@ class PaymentTransactionController extends Controller
 
     public function destroy($id)
     {
-        PaymentTransaction::findOrFail($id)->delete();
+        $transaction = PaymentTransaction::findOrFail($id);
+        if ($transaction->source_type) {
+            return back()->with('error', 'System-generated transaction delete করা যাবে না; source record থেকে reversal করুন।');
+        }
+        $transaction->delete();
         return back()->with('success', 'ট্রানজেকশন রেকর্ড মুছে ফেলা হয়েছে!');
     }
 }

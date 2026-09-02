@@ -6,8 +6,9 @@ import SettingFormModal from './Partials/SettingFormModal';
 import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 import Pagination from '@/Components/Pagination';
 import Swal from 'sweetalert2'; 
+import WebsiteSettingsForm from './Partials/WebsiteSettingsForm';
 
-export default function Index({ settings, groups, campuses, filters }) {
+export default function Index({ settings, groups, campuses, filters, websiteSettings }) {
   const { flash, auth } = usePage().props;
 
   const [search, setSearch] = useState(filters.search ?? '');
@@ -18,6 +19,7 @@ export default function Index({ settings, groups, campuses, filters }) {
   const [formOpen, setFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [deletingItem, setDeletingItem] = useState(null);
+  const [websiteFormOpen, setWebsiteFormOpen] = useState(false);
 
   // --- SweetAlert2 Toast Message ---
   useEffect(() => {
@@ -110,12 +112,10 @@ export default function Index({ settings, groups, campuses, filters }) {
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">General Settings</h1>
             <p className="text-sm text-slate-500 mt-1">সিস্টেমের key-value ভিত্তিক configuration এখান থেকে নিয়ন্ত্রণ করুন।</p>
           </div>
-          <button
-            onClick={openCreate}
-            className="w-full sm:w-auto inline-flex justify-center items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md shadow-indigo-500/20 active:scale-95"
-          >
-            <Icon name="plus" className="w-4 h-4" /> Add Setting
-          </button>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            <button onClick={() => setWebsiteFormOpen(true)} className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700"><Icon name="settings" className="h-4 w-4" /> Website & Footer</button>
+            <button onClick={openCreate} className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"><Icon name="plus" className="h-4 w-4" /> Add Setting</button>
+          </div>
         </div>
 
         {/* Unified Modern Toolbar */}
@@ -304,6 +304,7 @@ export default function Index({ settings, groups, campuses, filters }) {
           onConfirm={confirmDelete}
         />
       )}
+      {websiteFormOpen && <WebsiteSettingsForm settings={websiteSettings} onClose={() => setWebsiteFormOpen(false)} />}
     </AuthenticatedLayout>
   );
 }

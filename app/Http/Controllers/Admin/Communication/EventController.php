@@ -23,7 +23,7 @@ class EventController extends Controller
         }
 
         return Inertia::render('Admin/Communication/Events/Index', [
-    'events' => $query->paginate(15)->withQueryString(),
+    'events' => $query->paginate(\App\Support\PerPage::resolve(15))->withQueryString(),
     'classrooms' => Classroom::select('id', 'room_number', 'type')->where('is_active', true)->get(),
     'filters' => [
         'type' => $request->input('type', ''),
@@ -75,6 +75,8 @@ class EventController extends Controller
             'classroom_id' => 'nullable|exists:classrooms,id',
             'description' => 'nullable|string',
             'is_active' => 'boolean',
+            'show_on_dashboard' => 'boolean',
+            'audience' => 'required|in:all,student,parent,staff',
         ]);
     }
 

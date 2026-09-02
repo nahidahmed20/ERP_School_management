@@ -25,7 +25,7 @@ class AssetAssignmentController extends Controller
             $query->where('status', $request->status);
         }
 
-        $assignments = $query->latest('assigned_date')->paginate($request->per_page ?? 10)->withQueryString();
+        $assignments = $query->latest('assigned_date')->paginate(\App\Support\PerPage::resolve())->withQueryString();
 
         $assets = Asset::select('id', 'name')->get();
 

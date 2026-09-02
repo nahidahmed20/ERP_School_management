@@ -13,6 +13,8 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use App\Services\AccountingService;
+use App\Services\InventoryService;
 
 class PurchaseOrderController extends Controller
 {
@@ -96,6 +98,10 @@ class PurchaseOrderController extends Controller
         $this->validateOrder($request, $id);
         $order = PurchaseOrder::findOrFail($id);
 
+        if ($order->status === 'Received') {
+            return back()->with('error', 'Received purchase order edit করা যাবে না। আগে status পরিবর্তন করুন।');
+        }
+
         DB::transaction(function () use ($request, $order) {
             $order->update($request->except('cart'));
             $order->items()->delete();
@@ -127,12 +133,14 @@ class PurchaseOrderController extends Controller
         DB::transaction(function () use ($order, $oldStatus, $newStatus) {
             if ($oldStatus !== 'Received' && $newStatus === 'Received') {
                 foreach($order->items as $item) {
-                    PurchaseItem::where('id', $item->purchase_item_id)->increment('quantity', $item->quantity);
+                    app(InventoryService::class)->move($item->purchaseItem, $item->quantity, 'purchase_receipt', $item, "Purchase {$order->order_number}");
                 }
+                app(AccountingService::class)->post("purchase:{$order->id}", $order, '1200', '2000', (float) $order->total_amount, "Purchase {$order->order_number}", $order->order_date);
             } elseif ($oldStatus === 'Received' && $newStatus !== 'Received') {
                 foreach($order->items as $item) {
-                    PurchaseItem::where('id', $item->purchase_item_id)->decrement('quantity', $item->quantity);
+                    app(InventoryService::class)->move($item->purchaseItem, -$item->quantity, 'purchase_reversal', $item, "Purchase reversal {$order->order_number}");
                 }
+                app(AccountingService::class)->reverseSource($order);
             }
             $order->update(['status' => $newStatus]);
         });
@@ -142,7 +150,16 @@ class PurchaseOrderController extends Controller
 
     public function destroy($id)
     {
-        PurchaseOrder::findOrFail($id)->delete();
+        $order = PurchaseOrder::with('items.purchaseItem')->findOrFail($id);
+        DB::transaction(function () use ($order) {
+            if ($order->status === 'Received') {
+                foreach ($order->items as $item) {
+                    app(InventoryService::class)->move($item->purchaseItem, -$item->quantity, 'purchase_reversal', $item, "Deleted purchase {$order->order_number}");
+                }
+                app(AccountingService::class)->reverseSource($order);
+            }
+            $order->delete();
+        });
         return back()->with('success', 'অর্ডারটি মুছে ফেলা হয়েছে।');
     }
 
@@ -153,7 +170,7 @@ class PurchaseOrderController extends Controller
             'vendor_id' => 'required|exists:vendors,id',
             'order_number' => ['required', 'string', Rule::unique('purchase_orders')->ignore($ignoreId)],
             'order_date' => 'required|date',
-            'total_amount' => 'required|numeric',
+            'total_amount' => 'required|numeric|min:0',
             'cart' => 'required|array|min:1',
             'cart.*.purchase_item_id' => 'required|exists:purchase_items,id',
             'cart.*.size' => 'nullable|string',

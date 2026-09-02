@@ -4,6 +4,7 @@ import InputError from '@/Components/InputError';
 import Checkbox from '@/Components/Checkbox';
 
 const ROLE_THEME = {
+    admin:   { hex: '#2563EB', label: 'Admin Portal', prefix: 'ADM', bg: 'from-blue-600 to-indigo-700' },
     student: { hex: '#4F46E5', label: 'Student Portal', prefix: 'STU', bg: 'from-indigo-600 to-violet-700' },
     staff:   { hex: '#D97706', label: 'Staff Portal', prefix: 'STF', bg: 'from-amber-600 to-orange-700' },
     parent:  { hex: '#0D9488', label: 'Parent Portal', prefix: 'PAR', bg: 'from-teal-600 to-emerald-700' },
@@ -16,6 +17,7 @@ function RoleIcon({ role, className }) {
         student: <path d="M3 9.5 12 5l9 4.5-9 4.5-9-4.5Z M7 11.5V16c0 1.4 2.4 3 5 3s5-1.6 5-3v-4.5" strokeLinejoin="round" strokeLinecap="round" />,
         staff:   <path d="M4 8.5h16a1 1 0 0 1 1 1V18a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5a1 1 0 0 1 1-1Z M9 8.5V6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2.5" strokeLinejoin="round" strokeLinecap="round" />,
         parent:  <path d="M9 8.2a2.6 2.6 0 1 1-5.2 0 2.6 2.6 0 0 1 5.2 0Z M20.2 8.2a2.6 2.6 0 1 1-5.2 0 2.6 2.6 0 0 1 5.2 0Z M2.5 19c0-2.9 2.5-5 3.9-5s3.9 2.1 3.9 5 M13.7 19c0-2.9 2.5-5 3.9-5s3.9 2.1 3.9 5" strokeLinejoin="round" strokeLinecap="round" />,
+        admin:   <path d="M12 3 4.5 6v5.5c0 4.4 3.2 7.8 7.5 9.5 4.3-1.7 7.5-5.1 7.5-9.5V6L12 3Z M9 12l2 2 4-4" strokeLinejoin="round" strokeLinecap="round" />,
     };
     return (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.7">
@@ -25,14 +27,14 @@ function RoleIcon({ role, className }) {
 }
 
 export default function Login({ status, canResetPassword }) {
-    const [role, setRole] = useState('student');
+    const [role, setRole] = useState('admin');
     const theme = ROLE_THEME[role];
 
     const { data, setData, post, processing, errors, reset } = useForm({
-        email: '',
+        login: '',
         password: '',
         remember: false,
-        role: 'student',
+        role: 'admin',
     });
 
     const submit = (e) => {
@@ -160,7 +162,7 @@ export default function Login({ status, canResetPassword }) {
                         )}
 
                         {/* Responsive Role Selector Buttons */}
-                        <div className="grid grid-cols-3 gap-2 p-1.5 bg-slate-100 rounded-2xl mb-6">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-1.5 bg-slate-100 rounded-2xl mb-6">
                             {Object.entries(ROLE_THEME).map(([r, t]) => {
                                 const active = role === r;
                                 return (
@@ -184,19 +186,22 @@ export default function Login({ status, canResetPassword }) {
                         <form onSubmit={submit} className="space-y-4 sm:space-y-5">
                             {/* Identifier Input */}
                             <div>
-                                <label htmlFor="email" className="block text-xs sm:text-sm font-medium text-slate-700 mb-1.5">
-                                    {role === 'student' ? 'Student ID / Email' : 'Email Address'}
+                                <label htmlFor="login" className="block text-xs sm:text-sm font-medium text-slate-700 mb-1.5">
+                                    {role === 'student' ? 'Student ID / Email' : role === 'staff' ? 'Staff ID / Email' : 'Email Address'}
                                 </label>
                                 <input
-                                    id="email"
+                                    id="login"
+                                    name="login"
                                     type="text"
                                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 focus:border-[var(--accent)] transition-all"
-                                    placeholder={role === 'student' ? 'e.g. STU-2023-001' : 'name@school.com'}
-                                    value={data.email}
-                                    onChange={(e) => setData('email', e.target.value)}
+                                    placeholder={role === 'student' ? 'e.g. STU-2023-001' : role === 'staff' ? 'e.g. STF-001' : 'name@school.com'}
+                                    value={data.login}
+                                    onChange={(e) => setData('login', e.target.value)}
                                     autoComplete="username"
+                                    autoFocus
+                                    required
                                 />
-                                <InputError message={errors.email} className="mt-1.5 text-xs" />
+                                <InputError message={errors.login} className="mt-1.5 text-xs" />
                             </div>
 
                             {/* Password Input */}
@@ -212,6 +217,7 @@ export default function Login({ status, canResetPassword }) {
                                     value={data.password}
                                     onChange={(e) => setData('password', e.target.value)}
                                     autoComplete="current-password"
+                                    required
                                 />
                                 <InputError message={errors.password} className="mt-1.5 text-xs" />
                             </div>

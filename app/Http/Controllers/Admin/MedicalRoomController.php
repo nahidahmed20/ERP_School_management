@@ -19,7 +19,7 @@ class MedicalRoomController extends Controller
                   ->orWhere('nurse_name', 'like', "%{$search}%");
         }
 
-        $rooms = $query->latest()->paginate(10)->withQueryString();
+        $rooms = $query->latest()->paginate(\App\Support\PerPage::resolve())->withQueryString();
         $campuses = Campus::select('id', 'name')->get();
 
         return Inertia::render('Admin/MedicalRooms/Index', [

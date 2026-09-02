@@ -25,7 +25,7 @@ class StaffLoanController extends Controller
             $query->where('status', $status);
         }
 
-        $loans = $query->latest()->paginate(15)->withQueryString();
+        $loans = $query->latest()->paginate(\App\Support\PerPage::resolve(15))->withQueryString();
 
         return Inertia::render('Admin/People/Staff/Loans/Index', [
             'loans' => $loans,

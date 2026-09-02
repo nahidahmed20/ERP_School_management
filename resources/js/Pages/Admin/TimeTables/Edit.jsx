@@ -2,16 +2,17 @@ import { useForm, Head, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
 
-export default function Edit({ classes, classrooms, campuses, editData }) {
+export default function Edit({ classes, classrooms, campuses, editData, staffList = [] }) {
   
   const initialPeriods = editData.periods.length > 0
     ? editData.periods.map(p => ({
         subject_id: p.subject_id,
+        teacher_id: p.teacher_id || '',
         classroom_id: p.classroom_id || '',
         start_time: p.start_time.substring(0, 5),
         end_time: p.end_time.substring(0, 5)
       }))
-    : [{ subject_id: '', classroom_id: '', start_time: '', end_time: '' }];
+    : [{ subject_id: '', teacher_id: '', classroom_id: '', start_time: '', end_time: '' }];
 
   const { data, setData, post, processing, errors } = useForm({
     campus_id: campuses[0]?.id || '',
@@ -25,7 +26,7 @@ export default function Edit({ classes, classrooms, campuses, editData }) {
   const availableSections = selectedClass?.sections || [];
   const availableSubjects = selectedClass?.subjects || [];
 
-  const addPeriod = () => setData('periods', [...data.periods, { subject_id: '', classroom_id: '', start_time: '', end_time: '' }]);
+  const addPeriod = () => setData('periods', [...data.periods, { subject_id: '', teacher_id: '', classroom_id: '', start_time: '', end_time: '' }]);
   const removePeriod = (index) => setData('periods', data.periods.filter((_, i) => i !== index));
 
   const handlePeriodChange = (index, field, value) => {
@@ -140,7 +141,7 @@ export default function Edit({ classes, classrooms, campuses, editData }) {
                       </div>
                     </div>
 
-                    <div className="xl:col-span-3">
+                    <div className="xl:col-span-2">
                       <label className={labelClass}>Subject <span className="text-rose-500">*</span></label>
                       <select className={inputClass} value={period.subject_id} onChange={(e) => handlePeriodChange(index, 'subject_id', e.target.value)} required>
                         <option value="" disabled>Select Subject</option>
@@ -148,7 +149,12 @@ export default function Edit({ classes, classrooms, campuses, editData }) {
                       </select>
                     </div>
 
-                    <div className="xl:col-span-3">
+                    <div className="xl:col-span-2">
+                      <label className={labelClass}>Teacher</label>
+                      <select className={inputClass} value={period.teacher_id} onChange={(e) => handlePeriodChange(index, 'teacher_id', e.target.value)}><option value="">Select Teacher</option>{staffList.map(s => <option key={s.id} value={s.id}>{s.first_name} {s.last_name} ({s.staff_id_no})</option>)}</select>
+                    </div>
+
+                    <div className="xl:col-span-2">
                       <label className={labelClass}>Room <span className="text-slate-400 lowercase normal-case">(Optional)</span></label>
                       <select className={inputClass} value={period.classroom_id} onChange={(e) => handlePeriodChange(index, 'classroom_id', e.target.value)}>
                         <option value="">No Room Assigned</option>

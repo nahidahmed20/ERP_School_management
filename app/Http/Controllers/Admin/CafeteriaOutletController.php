@@ -20,7 +20,7 @@ class CafeteriaOutletController extends Controller
                   ->orWhere('phone', 'like', "%{$search}%");
         }
 
-        $outlets = $query->latest()->paginate(10)->withQueryString();
+        $outlets = $query->latest()->paginate(\App\Support\PerPage::resolve())->withQueryString();
         $campuses = Campus::select('id', 'name')->get();
 
         return Inertia::render('Admin/CafeteriaOutlets/Index', [

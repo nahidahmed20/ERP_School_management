@@ -22,7 +22,7 @@ class PhoneCallLogController extends Controller
             $query->where('call_type', $request->call_type);
         }
 
-        $callLogs = $query->latest('date')->paginate($request->per_page ?? 10)->withQueryString();
+        $callLogs = $query->latest('date')->paginate(\App\Support\PerPage::resolve())->withQueryString();
 
         return Inertia::render('Admin/FrontOfficeCallLogs/Index', [
             'callLogs' => $callLogs,

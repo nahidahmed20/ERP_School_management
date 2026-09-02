@@ -7,6 +7,8 @@ use App\Models\PaymentRefund;
 use App\Models\PaymentTransaction;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class PaymentRefundController extends Controller
 {
@@ -25,7 +27,7 @@ class PaymentRefundController extends Controller
             $query->where('status', $request->status);
         }
 
-        $refunds = $query->latest()->paginate($request->per_page ?? 10)->withQueryString();
+        $refunds = $query->latest()->paginate(\App\Support\PerPage::resolve())->withQueryString();
         
         $transactions = PaymentTransaction::where('status', 'Completed')->latest()->limit(50)->get();
 
@@ -46,11 +48,12 @@ class PaymentRefundController extends Controller
             'refund_date' => 'nullable|date',
         ]);
 
-        $refund = PaymentRefund::create($request->all());
-
-        if ($refund->status == 'Refunded') {
-            $refund->transaction->update(['status' => 'Refunded']);
-        }
+        DB::transaction(function () use ($request) {
+            $transaction = PaymentTransaction::lockForUpdate()->findOrFail($request->payment_transaction_id);
+            $this->assertRefundable($transaction, (float) $request->amount);
+            $refund = PaymentRefund::create($request->all());
+            $this->syncTransactionStatus($refund->transaction);
+        });
 
         return back()->with('success', 'রিফান্ড রিকোয়েস্ট তৈরি করা হয়েছে!');
     }
@@ -66,11 +69,12 @@ class PaymentRefundController extends Controller
             'refund_date' => 'nullable|date',
         ]);
 
-        $refund->update($request->only('amount', 'reason', 'status', 'refund_date'));
-
-        if ($refund->status == 'Refunded') {
-            $refund->transaction->update(['status' => 'Refunded']);
-        }
+        DB::transaction(function () use ($request, $refund) {
+            $transaction = PaymentTransaction::lockForUpdate()->findOrFail($refund->payment_transaction_id);
+            $this->assertRefundable($transaction, (float) $request->amount, $refund->id);
+            $refund->update($request->only('amount', 'reason', 'status', 'refund_date'));
+            $this->syncTransactionStatus($transaction);
+        });
 
         return back()->with('success', 'রিফান্ড আপডেট করা হয়েছে!');
     }
@@ -80,18 +84,44 @@ class PaymentRefundController extends Controller
         $request->validate(['status' => 'required|in:Pending,Approved,Refunded,Rejected']);
         
         $refund = PaymentRefund::findOrFail($id);
-        $refund->update(['status' => $request->status]);
-
-        if ($request->status == 'Refunded') {
-            $refund->transaction->update(['status' => 'Refunded']);
-        }
+        DB::transaction(function () use ($request, $refund) {
+            $transaction = PaymentTransaction::lockForUpdate()->findOrFail($refund->payment_transaction_id);
+            if ($request->status === 'Refunded') {
+                $this->assertRefundable($transaction, (float) $refund->amount, $refund->id);
+            }
+            $refund->update([
+                'status' => $request->status,
+                'refund_date' => $request->status === 'Refunded' ? ($refund->refund_date ?? now()->toDateString()) : $refund->refund_date,
+            ]);
+            $this->syncTransactionStatus($transaction);
+        });
 
         return back()->with('success', 'রিফান্ডের স্ট্যাটাস আপডেট করা হয়েছে!');
     }
 
     public function destroy($id)
     {
-        PaymentRefund::findOrFail($id)->delete();
+        $refund = PaymentRefund::findOrFail($id);
+        $transaction = $refund->transaction;
+        $refund->delete();
+        $this->syncTransactionStatus($transaction);
         return back()->with('success', 'রিফান্ড রেকর্ড মুছে ফেলা হয়েছে!');
+    }
+
+    private function assertRefundable(PaymentTransaction $transaction, float $amount, ?int $ignoreRefund = null): void
+    {
+        $refunded = $transaction->refunds()->where('status', 'Refunded')
+            ->when($ignoreRefund, fn ($query) => $query->where('id', '!=', $ignoreRefund))
+            ->sum('amount');
+
+        if ($amount + $refunded > (float) $transaction->amount) {
+            throw ValidationException::withMessages(['amount' => 'Refund amount মূল transaction amount-এর বেশি হতে পারবে না।']);
+        }
+    }
+
+    private function syncTransactionStatus(PaymentTransaction $transaction): void
+    {
+        $refunded = (float) $transaction->refunds()->where('status', 'Refunded')->sum('amount');
+        $transaction->update(['status' => $refunded >= (float) $transaction->amount ? 'Refunded' : 'Completed']);
     }
 }

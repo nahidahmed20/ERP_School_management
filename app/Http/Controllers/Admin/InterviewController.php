@@ -25,7 +25,7 @@ class InterviewController extends Controller
             $query->where('status', $request->status);
         }
 
-        $interviews = $query->latest('interview_date')->paginate($request->per_page ?? 10)->withQueryString();
+        $interviews = $query->latest('interview_date')->paginate(\App\Support\PerPage::resolve())->withQueryString();
 
         $applicants = Applicant::whereIn('status', ['Pending', 'Shortlisted', 'Interviewed'])
                                 ->with('jobPost')

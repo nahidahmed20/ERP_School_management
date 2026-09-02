@@ -27,7 +27,7 @@ class LessonPlanController extends Controller
             $query->where('subject_id', $request->subject_id);
         }
 
-        $lessons = $query->latest()->paginate($request->per_page ?? 10)->withQueryString();
+        $lessons = $query->latest()->paginate(\App\Support\PerPage::resolve())->withQueryString();
 
         return Inertia::render('Admin/AcademicsLessons/Index', [
             'lessons' => $lessons,

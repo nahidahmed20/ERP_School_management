@@ -21,7 +21,7 @@ class StaffAppraisalController extends Controller
             });
         }
 
-        $appraisals = $query->latest('appraisal_date')->paginate(15)->withQueryString();
+        $appraisals = $query->latest('appraisal_date')->paginate(\App\Support\PerPage::resolve(15))->withQueryString();
 
         return Inertia::render('Admin/People/Staff/Appraisals/Index', [
             'appraisals' => $appraisals,

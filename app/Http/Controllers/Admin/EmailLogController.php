@@ -13,7 +13,7 @@ class EmailLogController extends Controller
     {
         $activeTab = $request->get('tab', 'logs'); // 'logs' or 'templates'
 
-        $logs = EmailLog::latest()->paginate(15)->withQueryString();
+        $logs = EmailLog::latest()->paginate(\App\Support\PerPage::resolve(15))->withQueryString();
         $templates = EmailTemplate::latest()->get();
 
         return Inertia::render('Admin/Communication/EmailLogs/Index', [

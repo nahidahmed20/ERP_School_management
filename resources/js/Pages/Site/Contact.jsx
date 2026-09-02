@@ -1,5 +1,4 @@
-import { Head } from '@inertiajs/react';
-import { useState } from 'react';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import SiteLayout from '@/Layouts/SiteLayout';
 
 const desks = [
@@ -10,13 +9,16 @@ const desks = [
 ];
 
 export default function Contact() {
-    const [form, setForm] = useState({ name: '', phone: '', email: '', campus: 'General / Not sure', message: '' });
-    const update = (field) => (e) => setForm({ ...form, [field]: e.target.value });
+    const { flash } = usePage().props;
+    const { data, setData, post, processing, errors, reset } = useForm({ name: '', phone: '', email: '', campus: 'General / Not sure', message: '' });
+    const update = (field) => (e) => setData(field, e.target.value);
 
     const submit = (e) => {
         e.preventDefault();
-        // TODO: post to route('site.contact.store') once the controller exists
-        console.log('Contact inquiry (not yet wired to backend):', form);
+        post(route('site.contact.store'), {
+            preserveScroll: true,
+            onSuccess: () => reset(),
+        });
     };
 
     return (
@@ -58,26 +60,30 @@ export default function Contact() {
                             Send a general inquiry
                         </h3>
                         <form onSubmit={submit}>
+                            {flash?.success && <p className="vd-form-note" role="status">{flash.success}</p>}
                             <div className="vd-form-row">
                                 <div className="vd-field">
                                     <label htmlFor="name">Your name</label>
-                                    <input id="name" type="text" placeholder="Full name" value={form.name} onChange={update('name')} />
+                                    <input id="name" type="text" required placeholder="Full name" value={data.name} onChange={update('name')} />
+                                    {errors.name && <p className="vd-form-note">{errors.name}</p>}
                                 </div>
                                 <div className="vd-field">
                                     <label htmlFor="phone">Phone number</label>
-                                    <input id="phone" type="tel" placeholder="01XXX-XXXXXX" value={form.phone} onChange={update('phone')} />
+                                    <input id="phone" type="tel" required placeholder="01XXX-XXXXXX" value={data.phone} onChange={update('phone')} />
+                                    {errors.phone && <p className="vd-form-note">{errors.phone}</p>}
                                 </div>
                             </div>
                             <div className="vd-form-row">
                                 <div className="vd-field vd-full">
                                     <label htmlFor="email">Email address</label>
-                                    <input id="email" type="email" placeholder="you@example.com" value={form.email} onChange={update('email')} />
+                                    <input id="email" type="email" placeholder="you@example.com" value={data.email} onChange={update('email')} />
+                                    {errors.email && <p className="vd-form-note">{errors.email}</p>}
                                 </div>
                             </div>
                             <div className="vd-form-row">
                                 <div className="vd-field vd-full">
                                     <label htmlFor="campus">Which campus is this about?</label>
-                                    <select id="campus" value={form.campus} onChange={update('campus')}>
+                                    <select id="campus" value={data.campus} onChange={update('campus')}>
                                         <option>General / Not sure</option>
                                         <option>Dhanmondi</option>
                                         <option>Uttara</option>
@@ -89,10 +95,11 @@ export default function Contact() {
                             <div className="vd-form-row">
                                 <div className="vd-field vd-full">
                                     <label htmlFor="msg">Message</label>
-                                    <textarea id="msg" rows="4" placeholder="How can we help?" value={form.message} onChange={update('message')} />
+                                    <textarea id="msg" rows="4" required placeholder="How can we help?" value={data.message} onChange={update('message')} />
+                                    {errors.message && <p className="vd-form-note">{errors.message}</p>}
                                 </div>
                             </div>
-                            <button className="vd-submit-btn" type="submit">Send Message</button>
+                            <button className="vd-submit-btn" type="submit" disabled={processing}>{processing ? 'Sending…' : 'Send Message'}</button>
                         </form>
                     </div>
                 </div>

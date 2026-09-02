@@ -12,6 +12,8 @@ class OnlineExam extends Model
 
     protected $guarded = ['id'];
 
+    protected $casts = ['exam_date'=>'date','is_published'=>'boolean','is_active'=>'boolean','total_marks'=>'decimal:2','passing_marks'=>'decimal:2'];
+
     public function schoolClass()
     {
         return $this->belongsTo(SchoolClass::class, 'school_class_id');
@@ -21,4 +23,6 @@ class OnlineExam extends Model
     {
         return $this->belongsTo(Subject::class);
     }
+
+    public function questions() { return $this->hasMany(ExamQuestion::class); }
 }

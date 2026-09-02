@@ -26,7 +26,7 @@ class AssetMaintenanceController extends Controller
             $query->where('status', $request->status);
         }
 
-        $maintenances = $query->latest('start_date')->paginate($request->per_page ?? 10)->withQueryString();
+        $maintenances = $query->latest('start_date')->paginate(\App\Support\PerPage::resolve())->withQueryString();
 
         $assets = Asset::select('id', 'name')->get();
 

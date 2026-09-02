@@ -22,7 +22,7 @@ class VisitLogController extends Controller
             })->orWhere('symptoms', 'like', "%{$search}%");
         }
 
-        $logs = $query->latest('visit_time')->paginate(10)->withQueryString();
+        $logs = $query->latest('visit_time')->paginate(\App\Support\PerPage::resolve())->withQueryString();
         
         $rooms = MedicalRoom::where('is_active', true)->select('id', 'room_number')->get();
         $campuses = Campus::select('id', 'name')->get();

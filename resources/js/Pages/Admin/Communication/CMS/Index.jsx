@@ -24,8 +24,8 @@ export default function Index({ contents, campuses, activeCampusId, filters }) {
   }, [flash]);
 
   function applyFilters(overrides = {}) {
-    router.get(route('admin.communication.cms.index'), { 
-      search, per_page: perPage, ...overrides 
+    router.get(route('admin.communication.cms.index'), {
+      search, per_page: perPage, ...overrides
     }, { preserveState: true, replace: true });
   }
 
@@ -37,10 +37,10 @@ export default function Index({ contents, campuses, activeCampusId, filters }) {
 
   // Fast toggle publish status
   const togglePublish = (item) => {
-    router.put(route('admin.communication.cms.update', item.id), { 
-      ...item, 
-      is_published: !item.is_published 
-    }, { 
+    router.put(route('admin.communication.cms.update', item.id), {
+      ...item,
+      is_published: !item.is_published
+    }, {
       preserveScroll: true,
       onSuccess: () => {
         Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Status updated!', showConfirmButton: false, timer: 2000 });
@@ -55,9 +55,9 @@ export default function Index({ contents, campuses, activeCampusId, filters }) {
     if (!contents.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
     const headers = ['Title', 'Slug', 'Type', 'Status'];
     const rows = contents.data.map(item => [
-      item.title || 'N/A', 
-      item.slug || 'N/A', 
-      item.content_type || 'N/A', 
+      item.title || 'N/A',
+      item.slug || 'N/A',
+      item.content_type || 'N/A',
       item.is_published ? 'Published' : 'Draft'
     ]);
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows.map(e => e.map(val => `"${val}"`).join(','))].join('\n');
@@ -97,7 +97,7 @@ export default function Index({ contents, campuses, activeCampusId, filters }) {
       <div className="print-title">Website CMS Directory - {new Date().toLocaleDateString('en-GB')}</div>
 
       <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8 no-print">
-        
+
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
@@ -116,7 +116,7 @@ export default function Index({ contents, campuses, activeCampusId, filters }) {
         {/* Unified Modern Toolbar */}
         <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-            
+
             {/* Per Page */}
             <select
               value={perPage}
@@ -127,7 +127,7 @@ export default function Index({ contents, campuses, activeCampusId, filters }) {
               <option value="10">10 / Page</option>
               <option value="20">20 / Page</option>
               <option value="50">50 / Page</option>
-              <option value="all">All</option>
+               
             </select>
 
             <div className="hidden sm:block w-px h-6 bg-slate-200"></div>
@@ -226,7 +226,7 @@ export default function Index({ contents, campuses, activeCampusId, filters }) {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-center">
-                        <button 
+                        <button
                           onClick={() => togglePublish(item)}
                           className={`inline-flex px-3 py-1.5 rounded-lg text-[11px] font-bold tracking-wide uppercase transition-all shadow-sm active:scale-95 border ${item.is_published ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'}`}
                           title="Click to toggle publish status"
@@ -260,12 +260,12 @@ export default function Index({ contents, campuses, activeCampusId, filters }) {
       {isFormOpen && <CmsFormModal item={editingItem} campuses={campuses} activeCampusId={activeCampusId} onClose={() => setIsFormOpen(false)} />}
 
       {deletingItem && (
-        <ConfirmDeleteModal 
-          item={{ name: deletingItem.title }} 
-          onCancel={() => setDeletingItem(null)} 
+        <ConfirmDeleteModal
+          item={{ name: deletingItem.title }}
+          onCancel={() => setDeletingItem(null)}
           onConfirm={() => {
             router.delete(route('admin.communication.cms.destroy', deletingItem.id), { onSuccess: () => setDeletingItem(null) });
-          }} 
+          }}
         />
       )}
     </AuthenticatedLayout>

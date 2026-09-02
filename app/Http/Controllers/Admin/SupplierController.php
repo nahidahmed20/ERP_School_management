@@ -19,7 +19,7 @@ class SupplierController extends Controller
                   ->orWhere('contact_person', 'like', "%{$search}%");
         }
 
-        $suppliers = $query->latest()->paginate($request->per_page ?? 10)->withQueryString();
+        $suppliers = $query->latest()->paginate(\App\Support\PerPage::resolve())->withQueryString();
 
         return Inertia::render('Admin/PurchaseSuppliers/Index', [
             'suppliers' => $suppliers,

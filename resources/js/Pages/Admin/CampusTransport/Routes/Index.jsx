@@ -109,7 +109,7 @@ export default function Index({ routes, filters }) {
               <option value="10">10 / Page</option>
               <option value="25">25 / Page</option>
               <option value="50">50 / Page</option>
-              <option value="All">All</option>
+              <option value="All">All Page</option>
             </select>
 
             <div className="hidden sm:block w-px h-6 bg-slate-200"></div>

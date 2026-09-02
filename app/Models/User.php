@@ -3,17 +3,17 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Traits\BelongsToCampus;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
-use App\Traits\BelongsToCampus;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, HasRoles, BelongsToCampus;
+    use BelongsToCampus, HasFactory, HasRoles, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -25,7 +25,6 @@ class User extends Authenticatable
         'email',
         'password',
         'campus_id',
-        'role',
     ];
 
     /**
@@ -58,7 +57,7 @@ class User extends Authenticatable
 
     public function guardian()
     {
-        return $this->belongsTo(Guardian::class, 'guardian_id');
+        return $this->hasOne(Guardian::class, 'user_id');
     }
 
     public function student()
@@ -68,6 +67,6 @@ class User extends Authenticatable
 
     public function staff()
     {
-        return $this->hasOne(\App\Models\Staff::class, 'user_id');
+        return $this->hasOne(Staff::class, 'user_id');
     }
 }

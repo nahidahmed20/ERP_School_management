@@ -8,7 +8,7 @@ import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 import Pagination from '@/Components/Pagination';
 import Swal from 'sweetalert2'; 
 
-export default function Index({ items, groups, parents, filters }) {
+export default function Index({ items, groups, parents, permissions, filters }) {
   const { flash } = usePage().props;
 
   const [search, setSearch] = useState(filters.search ?? '');
@@ -47,12 +47,28 @@ export default function Index({ items, groups, parents, filters }) {
     setFormOpen(true);
   }
 
+  function toggleItem(item) {
+    router.put(route('admin.menu.update', item.id), {
+      menu_group_id: item.menu_group_id,
+      parent_id: item.parent_id,
+      key: item.key,
+      label: item.label,
+      icon: item.icon,
+      route_name: item.route_name,
+      badge_count: item.badge_count,
+      permission: item.permission,
+      order: item.order,
+      is_active: !item.is_active,
+    }, { preserveScroll: true });
+  }
+
   function confirmDelete() {
     router.delete(route('admin.menu.destroy', deletingItem.id), {
       onSuccess: () => setDeletingItem(null),
     });
   }
 
+<<<<<<< HEAD
   // --- Export Functions ---
   const handlePrint = () => window.print();
 
@@ -86,6 +102,46 @@ export default function Index({ items, groups, parents, filters }) {
     navigator.clipboard.writeText(text);
     Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Data copied to clipboard!', showConfirmButton: false, timer: 2000 });
   };
+=======
+  async function addGroup() {
+    const result = await Swal.fire({
+      title: 'Add menu group',
+      input: 'text',
+      inputLabel: 'Group label',
+      inputPlaceholder: 'e.g. Academics',
+      showCancelButton: true,
+      inputValidator: (value) => !value.trim() ? 'A group label is required.' : undefined,
+    });
+
+    if (result.isConfirmed) {
+      router.post(route('admin.menu-groups.store'), { label: result.value.trim(), order: groups.length, is_active: true });
+    }
+  }
+
+  function toggleGroup(group) {
+    router.put(route('admin.menu-groups.update', group.id), {
+      label: group.label,
+      order: group.order,
+      is_active: !group.is_active,
+    }, { preserveScroll: true });
+  }
+
+  async function editGroup(group) {
+    const result = await Swal.fire({
+      title: 'Edit menu group',
+      html: `<input id="group-label" class="swal2-input" value="${group.label.replaceAll('&', '&amp;').replaceAll('"', '&quot;')}"><input id="group-order" type="number" min="0" class="swal2-input" value="${group.order}">`,
+      showCancelButton: true,
+      preConfirm: () => ({
+        label: document.getElementById('group-label').value.trim(),
+        order: Number(document.getElementById('group-order').value),
+      }),
+    });
+
+    if (result.isConfirmed && result.value.label) {
+      router.put(route('admin.menu-groups.update', group.id), { ...result.value, is_active: group.is_active });
+    }
+  }
+>>>>>>> a1e1e67 (change many)
 
   return (
     <AuthenticatedLayout>
@@ -120,6 +176,25 @@ export default function Index({ items, groups, parents, filters }) {
             >
               <Icon name="plus" className="w-4 h-4" /> Add Menu Item
             </button>
+            <button onClick={addGroup} className="w-full sm:w-auto inline-flex justify-center items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all">
+              <Icon name="plus" className="w-4 h-4" /> Add Group
+            </button>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+          <div className="flex items-center justify-between gap-4 mb-3">
+            <h2 className="text-sm font-bold text-slate-900">Menu Groups</h2>
+            <span className="text-xs text-slate-500">Hide a group without deleting its items</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {groups.map((group) => (
+              <div key={group.id} className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 ${group.is_active ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 bg-slate-100 opacity-70'}`}>
+                <span className="text-sm font-semibold text-slate-700">{group.label}</span>
+                <button type="button" onClick={() => toggleGroup(group)} className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600"><Icon name={group.is_active ? 'toggle-on' : 'toggle-off'} className="h-5 w-5" />{group.is_active ? 'Hide' : 'Show'}</button>
+                <button type="button" onClick={() => editGroup(group)} className="text-xs font-bold text-amber-600">Edit</button>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -284,6 +359,9 @@ export default function Index({ items, groups, parents, filters }) {
                           <button onClick={() => openEdit(item)} className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Edit Menu">
                             <Icon name="edit" className="w-4 h-4" />
                           </button>
+                          <button onClick={() => toggleItem(item)} className={`p-2 rounded-lg transition-colors ${item.is_active ? 'text-emerald-600 hover:bg-emerald-50' : 'text-slate-400 hover:bg-slate-100'}`} title={item.is_active ? 'Hide Menu' : 'Show Menu'}>
+                            <Icon name={item.is_active ? 'toggle-on' : 'toggle-off'} className="w-5 h-5" />
+                          </button>
                           <button onClick={() => setDeletingItem(item)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Delete Menu">
                             <Icon name="trash" className="w-4 h-4" />
                           </button>
@@ -308,6 +386,7 @@ export default function Index({ items, groups, parents, filters }) {
           item={editingItem}
           groups={groups}
           parents={parents}
+          permissions={permissions}
           onClose={() => setFormOpen(false)}
         />
       )}

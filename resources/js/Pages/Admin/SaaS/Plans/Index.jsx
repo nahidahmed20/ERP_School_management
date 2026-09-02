@@ -110,7 +110,7 @@ export default function Index({ plans, filters }) {
               <option value="25">25 / Page</option>
               <option value="50">50 / Page</option>
               <option value="100">100 / Page</option>
-              <option value="all">All</option>
+              <option value="all">All Page</option>
             </select>
 
             <div className="hidden sm:block w-px h-6 bg-slate-200"></div>

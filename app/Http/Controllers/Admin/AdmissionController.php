@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Admission;
-use App\Models\SchoolClass;
 use App\Models\AcademicSession;
+use App\Models\Admission;
+use App\Models\Enrollment;
+use App\Models\Guardian;
+use App\Models\SchoolClass;
 use App\Models\Student;
 use App\Models\User;
-use App\Models\Guardian;
-use App\Models\Enrollment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -24,8 +24,8 @@ class AdmissionController extends Controller
         if ($search = $request->get('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('guardian_name', 'like', "%{$search}%");
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('guardian_name', 'like', "%{$search}%");
             });
         }
 
@@ -37,7 +37,7 @@ class AdmissionController extends Controller
             $query->where('status', $request->get('status'));
         }
 
-        $admissions = $query->latest('application_date')->paginate($request->per_page ?? 10)->withQueryString();
+        $admissions = $query->latest('application_date')->paginate(\App\Support\PerPage::resolve())->withQueryString();
 
         return Inertia::render('Admin/StudentsAdmissions/Index', [
             'admissions' => $admissions,
@@ -62,7 +62,7 @@ class AdmissionController extends Controller
 
         Admission::create(array_merge($request->all(), [
             'academic_session_id' => $activeSession?->id,
-            'campus_id' => session('active_campus_id')
+            'campus_id' => session('active_campus_id'),
         ]));
 
         return back()->with('success', 'ভর্তির আবেদন সফলভাবে জমা হয়েছে!');
@@ -71,18 +71,18 @@ class AdmissionController extends Controller
     public function update(Request $request, $id)
     {
         $admission = Admission::findOrFail($id);
-        
+
         $request->validate([
             'status' => 'required|in:Pending,Approved,Rejected',
             'section_id' => 'required_if:status,Approved|nullable|exists:sections,id',
-            'notes' => 'nullable|string'
+            'notes' => 'nullable|string',
         ]);
 
         if ($request->status === 'Approved' && $admission->status !== 'Approved') {
-            
+
             DB::beginTransaction();
             try {
-                $parentEmail = $admission->email ?? $admission->phone . '@parent.school.com';
+                $parentEmail = $admission->email ?? $admission->phone.'@parent.school.com';
                 $guardianUser = User::firstOrCreate(
                     ['email' => $parentEmail],
                     [
@@ -91,8 +91,8 @@ class AdmissionController extends Controller
                         'campus_id' => $admission->campus_id,
                     ]
                 );
-                
-                if (!$guardianUser->hasRole('parent')) {
+
+                if (! $guardianUser->hasRole('parent')) {
                     $guardianUser->assignRole('parent');
                 }
 
@@ -101,16 +101,17 @@ class AdmissionController extends Controller
                     [
                         'user_id' => $guardianUser->id,
                         'father_name' => $admission->guardian_name,
+                        'mother_name' => 'Not provided',
                         'address' => $admission->address,
                     ]
                 );
 
                 $lastStudent = Student::latest('id')->first();
-                $admissionNo = 'STU-' . date('Y') . '-' . sprintf('%04d', $lastStudent ? $lastStudent->id + 1 : 1);
+                $admissionNo = 'STU-'.date('Y').'-'.sprintf('%04d', $lastStudent ? $lastStudent->id + 1 : 1);
 
-                $studentEmail = $admissionNo . '@student.school.com';
+                $studentEmail = $admissionNo.'@student.school.com';
                 $studentUser = User::create([
-                    'name' => $admission->first_name . ' ' . $admission->last_name,
+                    'name' => $admission->first_name.' '.$admission->last_name,
                     'email' => $studentEmail,
                     'password' => Hash::make($admissionNo),
                     'campus_id' => $admission->campus_id,
@@ -128,7 +129,8 @@ class AdmissionController extends Controller
                     'gender' => $admission->gender,
                     'date_of_birth' => $admission->date_of_birth,
                     'phone' => $admission->phone,
-                    'present_address' => $admission->address,
+                    'present_address' => $admission->address ?: 'Not provided',
+                    'permanent_address' => $admission->address ?: 'Not provided',
                     'nationality' => 'Bangladeshi', // Default
                     'status' => true,
                 ]);
@@ -144,21 +146,25 @@ class AdmissionController extends Controller
                 $admission->update(['status' => 'Approved', 'notes' => $request->notes]);
 
                 DB::commit();
+
                 return back()->with('success', 'আবেদনটি Approved হয়েছে এবং স্টুডেন্ট প্রোফাইল স্বয়ংক্রিয়ভাবে তৈরি হয়েছে!');
 
             } catch (\Exception $e) {
                 DB::rollBack();
-                return back()->with('error', 'অ্যাপ্রুভ করতে সমস্যা হয়েছে: ' . $e->getMessage());
+
+                return back()->with('error', 'অ্যাপ্রুভ করতে সমস্যা হয়েছে: '.$e->getMessage());
             }
         }
 
         $admission->update(['status' => $request->status, 'notes' => $request->notes]);
+
         return back()->with('success', 'আবেদনের স্ট্যাটাস আপডেট করা হয়েছে!');
     }
 
     public function destroy($id)
     {
         Admission::findOrFail($id)->delete();
+
         return back()->with('success', 'আবেদনটি মুছে ফেলা হয়েছে!');
     }
 }

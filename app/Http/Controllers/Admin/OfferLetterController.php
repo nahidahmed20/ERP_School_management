@@ -25,7 +25,7 @@ class OfferLetterController extends Controller
             $query->where('status', $request->status);
         }
 
-        $offerLetters = $query->latest('issue_date')->paginate($request->per_page ?? 10)->withQueryString();
+        $offerLetters = $query->latest('issue_date')->paginate(\App\Support\PerPage::resolve())->withQueryString();
 
         $applicants = Applicant::whereIn('status', ['Interviewed', 'Hired'])
                                 ->with('jobPost')

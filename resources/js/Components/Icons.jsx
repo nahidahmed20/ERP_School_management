@@ -49,6 +49,7 @@ const ICON = {
   close: <><path d="M18 6L6 18"/><path d="M6 6l12 12"/></>,
   check: <><path d="M5 13l4 4L19 7"/></>,
   chevron: <><path d="M9 6l6 6-6 6" /></>,
+  'chevron-down': <><path d="m6 9 6 6 6-6" /></>,
   receipt: <><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1z" /><path d="M8 8h8M8 12h8M8 16h5" /></>,
   monitor: <><rect x="2" y="3" width="20" height="14" rx="2" /><path d="M8 21h8M12 17v4" /></>,
   printer: <><polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" /><rect x="6" y="14" width="12" height="8" /></>,
@@ -86,9 +87,49 @@ const ICON = {
   // UI Utilities
   menu: <><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="18" x2="21" y2="18" /></>,
   x: <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>
+  ,activity: <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+  ,'alert-triangle': <><path d="M10.3 3.7 2.2 18a2 2 0 0 0 1.7 3h16.2a2 2 0 0 0 1.7-3L13.7 3.7a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></>
+  ,archive: <><path d="M3 5h18v4H3zM5 9v11h14V9M10 13h4"/></>
+  ,'book-open': <><path d="M2 4h6a4 4 0 0 1 4 4v13a4 4 0 0 0-4-4H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v13a4 4 0 0 1 4-4h6z"/></>
+  ,briefcase: <><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18M10 12v2h4v-2"/></>
+  ,camera: <><path d="M4 7h3l2-3h6l2 3h3a2 2 0 0 1 2 2v10H2V9a2 2 0 0 1 2-2Z"/><circle cx="12" cy="13" r="4"/></>
+  ,'check-square': <><rect x="3" y="3" width="18" height="18" rx="2"/><path d="m8 12 3 3 6-7"/></>
+  ,'chevron-left': <path d="m15 18-6-6 6-6"/>, 'chevron-right': <path d="m9 18 6-6-6-6"/>,
+  clock: <><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></>,
+  code: <><path d="m8 9-3 3 3 3M16 9l3 3-3 3M14 5l-4 14"/></>,
+  copy: <><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></>,
+  cpu: <><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 1v5M15 1v5M9 18v5M15 18v5M18 9h5M18 15h5M1 9h5M1 15h5"/></>,
+  'credit-card': <><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></>,
+  'currency-dollar': <><circle cx="12" cy="12" r="9"/><path d="M16 8h-6a2 2 0 0 0 0 4h4a2 2 0 0 1 0 4H8M12 5v14"/></>,
+  database: <><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></>,
+  desktop: <><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></>,
+  disc: <><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></>,
+  'document-search': <><path d="M6 3h8l4 4v6M14 3v5h5"/><circle cx="14" cy="17" r="4"/><path d="m17 20 3 3"/></>,
+  'edit-3': <><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/></>,
+  'external-link': <><path d="M15 3h6v6M10 14 21 3M18 13v7H4V6h7"/></>,
+  'hard-drive': <><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 15h.01M11 15h6"/></>,
+  hash: <><path d="M5 9h14M4 15h14M10 3 8 21M16 3l-2 18"/></>,
+  'help-circle': <><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.7 2.7 0 1 1 4.5 2c-1.2.8-2 1.3-2 3M12 18h.01"/></>,
+  list: <><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></>,
+  loader: <><path d="M21 12a9 9 0 1 1-6.2-8.6"/></>,
+  'map-pin': <><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></>,
+  'message-square': <><path d="M21 15a3 3 0 0 1-3 3H8l-5 3V6a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3Z"/></>,
+  'minus-circle': <><circle cx="12" cy="12" r="9"/><path d="M8 12h8"/></>,
+  paperclip: <path d="m21 11-8.5 8.5a6 6 0 0 1-8.5-8.5l9-9a4 4 0 0 1 5.7 5.7l-9 9a2 2 0 0 1-2.9-2.9L15 5.6"/>,
+  phone: <><path d="M22 16.9v3a2 2 0 0 1-2.2 2A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8 10a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.3 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z"/></>,
+  'play-circle': <><circle cx="12" cy="12" r="9"/><path d="m10 8 6 4-6 4Z"/></>,
+  'plus-circle': <><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></>,
+  server: <><rect x="3" y="3" width="18" height="7" rx="2"/><rect x="3" y="14" width="18" height="7" rx="2"/><path d="M7 6h.01M7 17h.01"/></>,
+  sparkles: <><path d="m12 3 1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5ZM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8Z"/></>,
+  star: <path d="m12 2 3 6 7 .9-5 4.8 1.3 6.8L12 17l-6.3 3.5L7 13.7 2 9l7-.9Z"/>,
+  type: <><path d="M4 6V3h16v3M9 21h6M12 3v18"/></>,
+  warning: <><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 17h.01"/></>,
+  'toggle-on': <><rect x="2" y="6" width="20" height="12" rx="6"/><circle cx="16" cy="12" r="3"/></>,
+  'toggle-off': <><rect x="2" y="6" width="20" height="12" rx="6"/><circle cx="8" cy="12" r="3"/></>
 };
 
 export default function Icon({ name, className = 'nav-ic', style }) {
+  const normalizedName = name === 'eye-off' ? 'eyeOff' : name;
   return (
     <svg
       viewBox="0 0 24 24"
@@ -99,8 +140,10 @@ export default function Icon({ name, className = 'nav-ic', style }) {
       strokeLinejoin="round"
       className={className}
       style={style}
+      aria-hidden="true"
+      focusable="false"
     >
-      {ICON[name] || ICON.grid}
+      {ICON[normalizedName] || ICON.file}
     </svg>
   );
 }

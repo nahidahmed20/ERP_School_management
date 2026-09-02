@@ -1,5 +1,4 @@
-import { Head } from '@inertiajs/react';
-import { useState } from 'react';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import SiteLayout from '@/Layouts/SiteLayout';
 
 const steps = [
@@ -16,22 +15,25 @@ const faqs = [
 ];
 
 export default function Admissions() {
-    const [form, setForm] = useState({
-        childName: '',
-        dob: '',
+    const { flash } = usePage().props;
+    const { data, setData, post, processing, errors, reset } = useForm({
+        child_name: '',
+        date_of_birth: '',
         campus: 'Dhanmondi',
         grade: 'Play-group',
-        guardianName: '',
+        guardian_name: '',
         phone: '',
         email: '',
     });
 
-    const update = (field) => (e) => setForm({ ...form, [field]: e.target.value });
+    const update = (field) => (e) => setData(field, e.target.value);
 
     const submit = (e) => {
         e.preventDefault();
-        // TODO: post to route('site.admissions.store') once the controller exists
-        console.log('Admission application (not yet wired to backend):', form);
+        post(route('site.admissions.store'), {
+            preserveScroll: true,
+            onSuccess: () => reset(),
+        });
     };
 
     return (
@@ -88,20 +90,23 @@ export default function Admissions() {
                                 <div className="vd-app-val">Session 2026–27</div>
                             </div>
                             <form onSubmit={submit}>
+                                {flash?.success && <p className="vd-form-note" role="status">{flash.success}</p>}
                                 <div className="vd-form-row">
                                     <div className="vd-field">
                                         <label htmlFor="cname">Child&apos;s full name</label>
-                                        <input id="cname" type="text" placeholder="e.g. Ayesha Rahman" value={form.childName} onChange={update('childName')} />
+                                        <input id="cname" type="text" required placeholder="e.g. Ayesha Rahman" value={data.child_name} onChange={update('child_name')} />
+                                        {errors.child_name && <p className="vd-form-note">{errors.child_name}</p>}
                                     </div>
                                     <div className="vd-field">
                                         <label htmlFor="cdob">Date of birth</label>
-                                        <input id="cdob" type="date" value={form.dob} onChange={update('dob')} />
+                                        <input id="cdob" type="date" required value={data.date_of_birth} onChange={update('date_of_birth')} />
+                                        {errors.date_of_birth && <p className="vd-form-note">{errors.date_of_birth}</p>}
                                     </div>
                                 </div>
                                 <div className="vd-form-row">
                                     <div className="vd-field">
                                         <label htmlFor="campus">Preferred campus</label>
-                                        <select id="campus" value={form.campus} onChange={update('campus')}>
+                                        <select id="campus" value={data.campus} onChange={update('campus')}>
                                             <option>Dhanmondi</option>
                                             <option>Uttara</option>
                                             <option>Chattogram</option>
@@ -110,7 +115,7 @@ export default function Admissions() {
                                     </div>
                                     <div className="vd-field">
                                         <label htmlFor="grade">Applying for class</label>
-                                        <select id="grade" value={form.grade} onChange={update('grade')}>
+                                        <select id="grade" value={data.grade} onChange={update('grade')}>
                                             <option>Play-group</option>
                                             <option>KG</option>
                                             <option>Class 1</option>
@@ -123,21 +128,24 @@ export default function Admissions() {
                                 <div className="vd-form-row">
                                     <div className="vd-field">
                                         <label htmlFor="gname">Parent / guardian name</label>
-                                        <input id="gname" type="text" placeholder="e.g. Nasrin Akter" value={form.guardianName} onChange={update('guardianName')} />
+                                        <input id="gname" type="text" required placeholder="e.g. Nasrin Akter" value={data.guardian_name} onChange={update('guardian_name')} />
+                                        {errors.guardian_name && <p className="vd-form-note">{errors.guardian_name}</p>}
                                     </div>
                                     <div className="vd-field">
                                         <label htmlFor="gphone">Phone number</label>
-                                        <input id="gphone" type="tel" placeholder="01XXX-XXXXXX" value={form.phone} onChange={update('phone')} />
+                                        <input id="gphone" type="tel" required placeholder="01XXX-XXXXXX" value={data.phone} onChange={update('phone')} />
+                                        {errors.phone && <p className="vd-form-note">{errors.phone}</p>}
                                     </div>
                                 </div>
                                 <div className="vd-form-row">
                                     <div className="vd-field vd-full">
                                         <label htmlFor="gemail">Email address</label>
-                                        <input id="gemail" type="email" placeholder="you@example.com" value={form.email} onChange={update('email')} />
+                                        <input id="gemail" type="email" placeholder="you@example.com" value={data.email} onChange={update('email')} />
+                                        {errors.email && <p className="vd-form-note">{errors.email}</p>}
                                     </div>
                                 </div>
-                                <button className="vd-submit-btn" type="submit">Submit Application</button>
-                                <p className="vd-form-note">You&apos;ll receive a confirmation email and an application ID within a few minutes.</p>
+                                <button className="vd-submit-btn" type="submit" disabled={processing}>{processing ? 'Submitting…' : 'Submit Application'}</button>
+                                <p className="vd-form-note">Our admissions team will contact you after reviewing the inquiry.</p>
                             </form>
                         </div>
                     </div>

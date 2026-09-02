@@ -7,6 +7,7 @@ use App\Models\Campus;
 use App\Models\Classroom;
 use App\Models\SchoolClass;
 use App\Models\TimeTable;
+use App\Models\Staff;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -16,7 +17,7 @@ class TimeTableController extends Controller
 {
     public function index(Request $request)
     {
-        $query = TimeTable::with(['schoolClass:id,name', 'section:id,name', 'subject:id,name', 'classroom:id,room_number']);
+        $query = TimeTable::with(['schoolClass:id,name', 'section:id,name', 'subject:id,name', 'classroom:id,room_number', 'teacher:id,first_name,last_name,staff_id_no']);
 
         // Filters
         if ($request->filled('class_id')) {
@@ -56,6 +57,7 @@ class TimeTableController extends Controller
             'periods' => 'required|array|min:1',
             'periods.*.subject_id' => 'required|exists:subjects,id|distinct',
             'periods.*.classroom_id' => 'nullable|exists:classrooms,id',
+            'periods.*.teacher_id' => 'nullable|exists:staff,id',
             'periods.*.start_time' => 'required|date_format:H:i',
             'periods.*.end_time' => 'required|date_format:H:i|after:periods.*.start_time',
         ]);
@@ -102,12 +104,14 @@ class TimeTableController extends Controller
         }
 
         foreach ($periods as $period) {
+            $this->ensureTeacherAvailable($period, $request->day_of_week, $campusId);
             TimeTable::create([
                 'campus_id' => $campusId,
                 'class_id' => $request->class_id,
                 'section_id' => $request->section_id,
                 'day_of_week' => $request->day_of_week,
                 'subject_id' => $period['subject_id'],
+                'teacher_id' => $period['teacher_id'] ?? null,
                 'classroom_id' => $period['classroom_id'] ?? null,
                 'start_time' => $period['start_time'],
                 'end_time' => $period['end_time'],
@@ -128,6 +132,7 @@ class TimeTableController extends Controller
             'classrooms' => Classroom::select('id', 'room_number', 'type')
                             ->where('is_active', true)
                             ->get(),
+            'staffList' => Staff::where('is_active', true)->orderBy('first_name')->get(['id','first_name','last_name','staff_id_no']),
         ]);
     }
 
@@ -154,6 +159,7 @@ class TimeTableController extends Controller
             'classrooms' => Classroom::select('id', 'room_number', 'type')
                             ->where('is_active', true)
                             ->get(),
+            'staffList' => Staff::where('is_active', true)->orderBy('first_name')->get(['id','first_name','last_name','staff_id_no']),
             'editData' => [
                 'class_id' => $request->class_id,
                 'section_id' => $request->section_id,
@@ -172,6 +178,7 @@ class TimeTableController extends Controller
             'day_of_week' => 'required|string|in:Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday',
             'periods' => 'nullable|array',
             'periods.*.subject_id' => 'required_with:periods|exists:subjects,id|distinct',
+            'periods.*.teacher_id' => 'nullable|exists:staff,id',
             'periods.*.start_time' => 'required_with:periods|date_format:H:i',
             'periods.*.end_time' => 'required_with:periods|date_format:H:i|after:periods.*.start_time',
         ], [
@@ -232,12 +239,14 @@ class TimeTableController extends Controller
 
         if (!empty($periods)) {
             foreach ($periods as $period) {
+                $this->ensureTeacherAvailable($period, $request->day_of_week, $campusId);
                 TimeTable::create([
                     'campus_id' => $campusId,
                     'class_id' => $request->class_id,
                     'section_id' => $request->section_id,
                     'day_of_week' => $request->day_of_week,
                     'subject_id' => $period['subject_id'],
+                    'teacher_id' => $period['teacher_id'] ?? null,
                     'classroom_id' => $period['classroom_id'] ?? null,
                     'start_time' => $period['start_time'],
                     'end_time' => $period['end_time'],
@@ -254,5 +263,20 @@ class TimeTableController extends Controller
         $timeTable->delete();
 
         return back()->with('success', 'রুটিন থেকে পিরিয়ডটি মুছে ফেলা হয়েছে।');
+    }
+
+    private function ensureTeacherAvailable(array $period, string $day, ?int $campusId): void
+    {
+        if (empty($period['teacher_id'])) return;
+
+        $clash = TimeTable::with('teacher:id,first_name,last_name')
+            ->where('campus_id', $campusId)->where('day_of_week', $day)
+            ->where('teacher_id', $period['teacher_id'])
+            ->where('start_time', '<', Carbon::parse($period['end_time'])->format('H:i:s'))
+            ->where('end_time', '>', Carbon::parse($period['start_time'])->format('H:i:s'))->first();
+
+        if ($clash) {
+            throw ValidationException::withMessages(['conflict' => "Teacher {$clash->teacher?->first_name} {$clash->teacher?->last_name} already has a class during this time."]);
+        }
     }
 }

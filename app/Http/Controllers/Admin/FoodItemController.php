@@ -19,7 +19,7 @@ class FoodItemController extends Controller
             $query->where('name', 'like', "%{$search}%");
         }
 
-        $items = $query->latest()->paginate(10)->withQueryString();
+        $items = $query->latest()->paginate(\App\Support\PerPage::resolve())->withQueryString();
         $outlets = CafeteriaOutlet::where('is_active', true)->select('id', 'name')->get();
         $campuses = Campus::select('id', 'name')->get();
 

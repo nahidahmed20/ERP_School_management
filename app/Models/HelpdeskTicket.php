@@ -7,7 +7,7 @@ class HelpdeskTicket extends Model {
     use HasFactory;
 
     protected $fillable = [
-        'campus_id', 'ticket_number', 'requester_name', 'requester_type',
+        'campus_id', 'user_id', 'ticket_number', 'requester_name', 'requester_type',
         'subject', 'description', 'priority', 'status', 'replies'
     ];
 

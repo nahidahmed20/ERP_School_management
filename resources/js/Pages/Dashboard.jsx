@@ -2,7 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import Icon from '@/Components/Icons';
 
-export default function Dashboard({ stats, recentAdmissions }) {
+export default function Dashboard({ stats, recentAdmissions, financialStats = [] }) {
 
     // সেফলি রাউট জেনারেট করার জন্য হেল্পার ফাংশন
     const getRoute = (name) => {
@@ -24,14 +24,12 @@ export default function Dashboard({ stats, recentAdmissions }) {
         { name: 'Settings', icon: 'settings', routeName: 'admin.general.index', color: 'from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800' },
     ];
 
-    const statCards = [
-        { title: 'Unpaid Invoices', value: '2', color: 'from-rose-500 to-rose-600', routeName: 'admin.studentfees.index' },
-        { title: 'Unpaid Amount', value: '৳ 4,544', color: 'from-amber-500 to-amber-600', routeName: 'admin.studentfees.index' },
-        { title: 'Income Today', value: '৳ 0', color: 'from-blue-500 to-blue-600', routeName: 'admin.fees.ledger' },
-        { title: 'Expense Today', value: '৳ 622', color: 'from-slate-600 to-slate-700', routeName: 'admin.fees.ledger' },
-        { title: 'Profit Today', value: '৳ -622', color: 'from-cyan-500 to-cyan-600', routeName: 'admin.reports.saved' },
-        { title: 'This Month Income', value: '৳ 4,994', color: 'from-emerald-600 to-emerald-700', routeName: 'admin.fees.ledger' },
-    ];
+    const cardColors = ['from-rose-500 to-rose-600', 'from-amber-500 to-amber-600', 'from-blue-500 to-blue-600', 'from-slate-600 to-slate-700', 'from-cyan-500 to-cyan-600', 'from-emerald-600 to-emerald-700'];
+    const statCards = financialStats.map((item, index) => ({
+        ...item,
+        value: item.currency ? `৳ ${Number(item.value).toLocaleString()}` : Number(item.value).toLocaleString(),
+        color: cardColors[index % cardColors.length],
+    }));
 
     return (
         <AuthenticatedLayout>
@@ -120,7 +118,7 @@ export default function Dashboard({ stats, recentAdmissions }) {
                                     {recentAdmissions?.map((s, i) => (
                                         <tr key={i} className="hover:bg-slate-50/60 transition-colors">
                                             <td className="px-6 py-4 font-bold text-slate-900">{s.name}</td>
-                                            <td className="px-6 py-4 text-slate-600 font-mono text-xs">{s.date}</td>
+                                            <td className="px-6 py-4 text-slate-600 text-xs">{s.class} · {s.date}</td>
                                             <td className="px-6 py-4 text-right">
                                                 <Link href={getRoute('admin.students.index')} className="inline-flex px-3 py-1 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg text-xs font-bold transition-colors">
                                                     View

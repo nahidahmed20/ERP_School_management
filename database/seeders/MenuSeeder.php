@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\MenuGroup;
 use App\Models\MenuItem;
+use App\Services\MenuOrderService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Schema;
 
@@ -27,7 +28,7 @@ class MenuSeeder extends Seeder
             ]],
 
             ['label' => 'Academics', 'items' => [
-                ['key' => 'students', 'label' => 'Students', 'icon' => 'cap', 'count' => 9, 'children' => [
+                ['key' => 'students', 'label' => 'Students', 'icon' => 'cap', 'count' => 10, 'children' => [
                     ['key' => 'admin.students.index', 'label' => 'Student List', 'route' => 'admin.students.index'],
                     ['key' => 'admin.students.create', 'label' => 'Student Admissions', 'route' => 'admin.students.create'],
                     ['key' => 'admin.students.admissions.index', 'label' => 'Online Admissions', 'route' => 'admin.students.admissions.index'],
@@ -35,6 +36,7 @@ class MenuSeeder extends Seeder
                     ['key' => 'admin.students.documents.index', 'label' => 'Student Documents', 'route' => 'admin.students.documents.index'],
                     ['key' => 'admin.students.promotions', 'label' => 'Promotions', 'route' => 'admin.students.promotions'],
                     ['key' => 'admin.students.discipline.index', 'label' => 'Disciplinary Records', 'route' => 'admin.students.discipline.index'],
+                    ['key' => 'admin.student-development-records.index', 'label' => 'Student Development & Support', 'route' => 'admin.student-development-records.index'],
                     ['key' => 'admin.student-categories.index', 'label' => 'Student Categories', 'route' => 'admin.student-categories.index'],
                     ['key' => 'admin.houses.index', 'label' => 'Houses', 'route' => 'admin.houses.index'],
                 ]],
@@ -65,13 +67,19 @@ class MenuSeeder extends Seeder
             ]],
 
             ['label' => 'People', 'items' => [
-                ['key' => 'staff', 'label' => 'Staff & HR', 'icon' => 'users', 'count' => 9, 'children' => [
+                ['key' => 'staff', 'label' => 'Staff & HR', 'icon' => 'users', 'count' => 10, 'children' => [
                     ['key' => 'admin.staff.index', 'label' => 'Staff Directory', 'route' => 'admin.staff.index'],
                     ['key' => 'admin.staff-attendance.index', 'label' => 'Daily Attendance', 'route' => 'admin.staff-attendance.index'],
                     ['key' => 'admin.staff-leaves.index', 'label' => 'Leave Applications', 'route' => 'admin.staff-leaves.index'],
                     ['key' => 'admin.staff-payrolls.index', 'label' => 'Payroll Management', 'route' => 'admin.staff-payrolls.index'],
+<<<<<<< HEAD
                     ['key' => 'admin.staff-loans.index', 'label' => 'Advance Salary & Loans', 'route' => 'admin.staff-loans.index'], 
                     ['key' => 'admin.staff-appraisals.index', 'label' => 'Performance & Appraisals', 'route' => 'admin.staff-appraisals.index'], 
+=======
+                    ['key' => 'admin.staff-loans.index', 'label' => 'Advance Salary & Loans', 'route' => 'admin.staff-loans.index'], // Added this
+                    ['key' => 'admin.staff-appraisals.index', 'label' => 'Performance & Appraisals', 'route' => 'admin.staff-appraisals.index'], // Added this
+                    ['key' => 'admin.staff-hr-records.index', 'label' => 'Teacher HR & Development', 'route' => 'admin.staff-hr-records.index'],
+>>>>>>> a1e1e67 (change many)
                     ['key' => 'admin.departments.index', 'label' => 'Departments', 'route' => 'admin.departments.index'],
                     ['key' => 'admin.designations.index', 'label' => 'Designations', 'route' => 'admin.designations.index'],
                     ['key' => 'admin.leave-types.index', 'label' => 'Leave Types', 'route' => 'admin.leave-types.index'],
@@ -89,7 +97,7 @@ class MenuSeeder extends Seeder
             ]],
 
             ['label' => 'Finance', 'items' => [
-                ['key' => 'fees', 'label' => 'Fees & Accounts', 'icon' => 'wallet', 'count' => 7, 'children' => [
+                ['key' => 'fees', 'label' => 'Fees & Accounts', 'icon' => 'wallet', 'count' => 8, 'children' => [
                     ['key' => 'admin.fees-groups.index', 'label' => 'Fee Groups & Types', 'route' => 'admin.fees-groups.index'],
                     ['key' => 'admin.studentfees.index', 'label' => 'Student Fee Assignment', 'route' => 'admin.studentfees.index'],
                     ['key' => 'admin.fees.invoices', 'label' => 'Invoices', 'route' => 'admin.fees.invoices'],
@@ -97,6 +105,7 @@ class MenuSeeder extends Seeder
                     ['key' => 'admin.accounting.chart.index', 'label' => 'Chart of Accounts & Banks', 'route' => 'admin.accounting.chart.index'], 
                     ['key' => 'admin.accounting.vouchers.index', 'label' => 'Accounting Vouchers', 'route' => 'admin.accounting.vouchers.index'], 
                     ['key' => 'admin.fees.ledger', 'label' => 'Income / Expense Ledger', 'route' => 'admin.fees.ledger'],
+                    ['key' => 'admin.reports.financial-summary', 'label' => 'Financial Reports', 'route' => 'admin.reports.financial-summary'],
                 ]],
                 ['key' => 'payments', 'label' => 'Payment Gateways', 'icon' => 'card', 'count' => 3, 'children' => [
                     ['key' => 'admin.payments.gateways.index', 'label' => 'Gateway Config', 'route' => 'admin.payments.gateways.index'],
@@ -105,6 +114,7 @@ class MenuSeeder extends Seeder
                 ]],
                 ['key' => 'purchase', 'label' => 'Inventory & Assets', 'icon' => 'box', 'count' => 7, 'children' => [
                     ['key' => 'admin.purchase.items.index', 'label' => 'Products & Items', 'route' => 'admin.purchase.items.index'],
+                    ['key' => 'admin.purchase.items.report', 'label' => 'Stock & Movement Report', 'route' => 'admin.purchase.items.report'],
                     ['key' => 'admin.purchase.suppliers.index', 'label' => 'Suppliers ', 'route' => 'admin.purchase.suppliers.index'],
                     ['key' => 'admin.purchase.vendors.index', 'label' => 'Vendors', 'route' => 'admin.purchase.vendors.index'],
                     ['key' => 'admin.purchase.requests.index', 'label' => 'Purchase Requests', 'route' => 'admin.purchase.requests.index'],
@@ -152,23 +162,25 @@ class MenuSeeder extends Seeder
             ]],
 
             ['label' => 'Learning', 'items' => [
-                ['key' => 'lms', 'label' => 'LMS & Online Exams', 'icon' => 'laptop', 'count' => 7, 'children' => [
+                ['key' => 'lms', 'label' => 'LMS & Online Exams', 'icon' => 'laptop', 'count' => 8, 'children' => [
                     ['key' => 'admin.lms.courses.index', 'label' => 'Courses', 'route' => 'admin.lms.courses.index'],
                     ['key' => 'admin.lms.lessons.index', 'label' => 'Lessons', 'route' => 'admin.lms.lessons.index'],
                     ['key' => 'admin.lms.homework.index', 'label' => 'Homework', 'route' => 'admin.lms.homework.index'],
                     ['key' => 'admin.lms.exams.index', 'label' => 'Online Exams', 'route' => 'admin.lms.exams.index'],
                     ['key' => 'admin.lms.quizattempts.index', 'label' => 'Quiz Attempts', 'route' => 'admin.lms.quizattempts.index'],
                     ['key' => 'admin.lms.questions.index', 'label' => 'Question Banks', 'route' => 'admin.lms.questions.index'],
+                    ['key' => 'admin.lms.question-papers.index', 'label' => 'Question Paper Generator', 'route' => 'admin.lms.question-papers.index'],
                     ['key' => 'admin.lms.exam-questions.index', 'label' => 'Assign Questions', 'route' => 'admin.lms.exam-questions.index'],
                 ]],
             ]],
 
             ['label' => 'Documents & Certificates', 'items' => [
-                ['key' => 'documents', 'label' => 'Certificates & ID Cards', 'icon' => 'award', 'count' => 4, 'children' => [
+                ['key' => 'documents', 'label' => 'Certificates & ID Cards', 'icon' => 'award', 'count' => 5, 'children' => [
                     ['key' => 'admin.documents.certificatetemplates.index', 'label' => 'Certificate Templates', 'route' => 'admin.documents.certificatetemplates.index'],
                     ['key' => 'admin.documents.certificates.index', 'label' => 'Generated Certificates', 'route' => 'admin.documents.certificates.index'],
                     ['key' => 'admin.documents.idcards.index', 'label' => 'ID Card Templates', 'route' => 'admin.documents.idcards.index'],
                     ['key' => 'admin.documents.transcripts.index', 'label' => 'Transcript Templates', 'route' => 'admin.documents.transcripts.index'],
+                    ['key' => 'admin.documents.official.index', 'label' => 'Official Document Studio', 'route' => 'admin.documents.official.index'],
                 ]],
             ]],
 
@@ -268,5 +280,7 @@ class MenuSeeder extends Seeder
                 }
             }
         }
+
+        app(MenuOrderService::class)->apply();
     }
 }

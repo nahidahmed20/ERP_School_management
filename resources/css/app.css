@@ -3,3 +3,78 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+    .mobile-nav-backdrop {
+        @apply fixed inset-0 z-[39] bg-slate-950/50 backdrop-blur-sm md:hidden;
+        animation: ui-fade-in .2s ease-out;
+    }
+
+    .ui-icon-button {
+        @apply inline-flex size-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-emerald-50 hover:text-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-700/20;
+    }
+
+    .ui-primary-button,
+    .ui-pagination-active {
+        background: var(--forest);
+        border-color: var(--forest);
+        box-shadow: 0 8px 18px -10px rgba(15, 43, 33, .7);
+    }
+
+    .ui-primary-button:hover { background: var(--forest-light); }
+    .ui-primary-button:active { background: var(--forest-deep); }
+    .ui-primary-button:focus,
+    .ui-secondary-button:focus { --tw-ring-color: rgba(201, 154, 46, .45); }
+
+    .ui-secondary-button {
+        color: var(--forest-deep);
+        border-color: var(--line);
+    }
+
+    .ui-secondary-button:hover {
+        color: var(--forest);
+        border-color: rgba(27, 67, 50, .35);
+        background: var(--paper);
+    }
+
+    .ui-page-size-select {
+        color: var(--forest-deep) !important;
+        border-color: var(--line) !important;
+        background-color: var(--surface) !important;
+    }
+
+    .ui-page-size-select:focus {
+        border-color: var(--forest-light) !important;
+        --tw-ring-color: rgba(201, 154, 46, .35) !important;
+    }
+
+    /* Keep existing page markup while aligning its non-semantic indigo accents with the sidebar. */
+    .content [class~="bg-indigo-600"] { background-color: var(--forest) !important; }
+    .content [class~="hover:bg-indigo-700"]:hover { background-color: var(--forest-light) !important; }
+    .content [class~="active:bg-indigo-800"]:active { background-color: var(--forest-deep) !important; }
+    .content [class~="text-indigo-600"],
+    .content [class~="text-indigo-700"] { color: var(--forest) !important; }
+    .content [class~="text-indigo-500"] { color: #9a741f !important; }
+    .content [class~="bg-indigo-50"] { background-color: rgba(27, 67, 50, .08) !important; }
+    .content [class~="bg-indigo-100"] { background-color: rgba(27, 67, 50, .13) !important; }
+    .content [class~="border-indigo-100"],
+    .content [class~="border-indigo-200"] { border-color: rgba(27, 67, 50, .2) !important; }
+    .content [class~="focus:ring-indigo-500"]:focus { --tw-ring-color: rgba(201, 154, 46, .38) !important; }
+    .content [class~="focus:border-indigo-500"]:focus { border-color: var(--forest-light) !important; }
+    .content .btn:not(.btn-danger):not(.btn-outline):not(.btn-ghost) { background: var(--forest) !important; }
+    .content .btn:not(.btn-danger):not(.btn-outline):not(.btn-ghost):hover { background: var(--forest-light) !important; }
+}
+
+@keyframes ui-fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+@media (max-width: 767px) {
+    .content { padding: 14px 12px 32px; }
+    .content h1 { font-size: 1.35rem !important; line-height: 1.75rem !important; }
+    .content .rounded-2xl { border-radius: 0.875rem; }
+    .content table { min-width: 720px; font-size: .8125rem; }
+    .content th, .content td { padding-left: .875rem !important; padding-right: .875rem !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}

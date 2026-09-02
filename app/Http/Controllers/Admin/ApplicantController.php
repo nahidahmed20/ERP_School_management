@@ -29,7 +29,7 @@ class ApplicantController extends Controller
             $query->where('job_post_id', $request->job_post_id);
         }
 
-        $applicants = $query->latest('applied_date')->paginate($request->per_page ?? 10)->withQueryString();
+        $applicants = $query->latest('applied_date')->paginate(\App\Support\PerPage::resolve())->withQueryString();
         $jobPosts = JobPost::select('id', 'title')->latest()->get(); 
 
         return Inertia::render('Admin/RecruitmentApplicants/Index', [

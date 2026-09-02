@@ -11,6 +11,11 @@ class Exam extends Model
 
     protected $guarded = [];
 
+    protected $casts = [
+        'start_date' => 'date', 'end_date' => 'date', 'is_active' => 'boolean',
+        'results_published' => 'boolean', 'results_published_at' => 'datetime',
+    ];
+
     public function schedules()
     {
         return $this->hasMany(ExamSchedule::class, 'exam_id');

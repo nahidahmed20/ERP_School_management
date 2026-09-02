@@ -14,7 +14,7 @@ class LedgerController extends Controller
         $totalIncome = Payment::sum('amount_paid');
         $totalExpense = Expense::sum('amount');
 
-        $expenses = Expense::latest()->paginate(10);
+        $expenses = Expense::latest()->paginate(\App\Support\PerPage::resolve());
 
         return Inertia::render('Admin/FeesLedger/Index', [
             'totalIncome'  => $totalIncome,

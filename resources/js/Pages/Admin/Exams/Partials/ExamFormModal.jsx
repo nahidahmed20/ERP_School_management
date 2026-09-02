@@ -11,6 +11,7 @@ export default function ExamFormModal({ item, activeCampusId, onClose }) {
     end_date: item?.end_date ? item.end_date.substring(0, 10) : '',
     description: item?.description || '',
     is_active: item?.is_active ?? true,
+    results_published: item?.results_published ?? false,
   });
 
   function submit(e) {
@@ -125,6 +126,13 @@ export default function ExamFormModal({ item, activeCampusId, onClose }) {
                   <span className="text-sm font-semibold text-slate-700 group-hover:text-slate-900 transition-colors">
                     Active — এই পরীক্ষাটি Exam Schedule ফর্মে সিলেক্ট করার জন্য দেখানো হবে
                   </span>
+                </label>
+              </div>
+
+              <div className="sm:col-span-2 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input type="checkbox" checked={data.results_published} onChange={(e) => setData('results_published', e.target.checked)} className="mt-0.5 rounded border-slate-300 text-indigo-600" />
+                  <span><strong className="block text-sm text-slate-900">Publish results to student accounts</strong><span className="mt-1 block text-xs text-slate-600">চালু করলে permission পাওয়া students তাদের নিজের marks দেখতে পারবে।</span></span>
                 </label>
               </div>
 

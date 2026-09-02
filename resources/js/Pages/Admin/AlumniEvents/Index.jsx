@@ -42,7 +42,7 @@ export default function Index({ events, filters }) {
   const handleStatusChange = (id, newStatus) => {
     router.patch(route('admin.alumni.events.update-status', id), {
       status: newStatus
-    }, { 
+    }, {
       preserveScroll: true,
       onSuccess: () => {
         Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Status updated successfully!', showConfirmButton: false, timer: 2000 });
@@ -65,10 +65,10 @@ export default function Index({ events, filters }) {
     if (!events.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
     const headers = ['Event Title', 'Date', 'Time', 'Location', 'Status'];
     const rows = events.data.map(item => [
-      item.title || 'N/A', 
-      item.date || 'N/A', 
-      item.time || 'N/A', 
-      item.location || 'N/A', 
+      item.title || 'N/A',
+      item.date || 'N/A',
+      item.time || 'N/A',
+      item.location || 'N/A',
       item.status || 'Upcoming'
     ]);
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows.map(e => e.map(val => `"${val}"`).join(','))].join('\n');
@@ -108,7 +108,7 @@ export default function Index({ events, filters }) {
       <div className="print-title">Alumni Events Directory - {new Date().toLocaleDateString('en-GB')}</div>
 
       <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8 no-print">
-        
+
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
@@ -127,7 +127,7 @@ export default function Index({ events, filters }) {
         {/* Unified Modern Toolbar */}
         <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-            
+
             {/* Per Page */}
             <select
               value={perPage}
@@ -138,14 +138,14 @@ export default function Index({ events, filters }) {
               <option value="10">10 / Page</option>
               <option value="20">20 / Page</option>
               <option value="50">50 / Page</option>
-              <option value="all">All</option>
+              <option value="all">All Page</option>
             </select>
 
             <div className="hidden sm:block w-px h-6 bg-slate-200"></div>
 
             {/* Status Filter */}
-            <select 
-              value={statusFilter} 
+            <select
+              value={statusFilter}
               onChange={(e) => { setStatusFilter(e.target.value); applyFilters({ status: e.target.value }); }}
               className="w-full sm:w-36 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
             >

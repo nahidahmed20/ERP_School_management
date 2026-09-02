@@ -9,6 +9,10 @@ use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+use App\Models\PaymentTransaction;
+use App\Services\AccountingService;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Validation\Rule;
 
 class PaymentController extends Controller
 {
@@ -46,6 +50,7 @@ class PaymentController extends Controller
             'amount_paid'       => 'required|numeric|min:1',
             'payment_date'      => 'required|date',
             'payment_method'    => 'required|string',
+            'transaction_id'    => ['nullable', 'string', 'max:255', Rule::unique('payments', 'transaction_id'), Rule::unique('payment_transactions', 'transaction_id')],
         ], [
             'amount_paid.min' => 'টাকার পরিমাণ কমপক্ষে ১ টাকা হতে হবে!',
             'fee_assignment_id.required' => 'কোন ফি-টি নিচ্ছেন তা সিলেক্ট করুন!',
@@ -53,7 +58,11 @@ class PaymentController extends Controller
 
         DB::beginTransaction();
         try {
-            $assignment = FeeAssignment::with('feeGroup.feeTypes')->findOrFail($request->fee_assignment_id);
+            $assignment = FeeAssignment::with('feeGroup.feeTypes')->lockForUpdate()->findOrFail($request->fee_assignment_id);
+
+            if ((int) $assignment->student_id !== (int) $request->student_id) {
+                throw ValidationException::withMessages(['student_id' => 'Selected fee এই student-এর নয়।']);
+            }
 
             $totalFee = $assignment->feeGroup->feeTypes->sum('amount');
 
@@ -61,7 +70,13 @@ class PaymentController extends Controller
 
             $totalPaidNow = $previouslyPaid + $request->amount_paid;
 
-            Payment::create([
+            if ($totalPaidNow > $totalFee) {
+                throw ValidationException::withMessages([
+                    'amount_paid' => 'বকেয়া টাকার চেয়ে বেশি payment নেওয়া যাবে না। Remaining: '.number_format(max(0, $totalFee - $previouslyPaid), 2),
+                ]);
+            }
+
+            $payment = Payment::create([
                 'fee_assignment_id' => $request->fee_assignment_id,
                 'student_id'        => $request->student_id,
                 'amount_paid'       => $request->amount_paid,
@@ -70,6 +85,21 @@ class PaymentController extends Controller
                 'transaction_id'    => $request->transaction_id,
                 'remarks'           => $request->remarks,
             ]);
+
+            $transactionId = $request->transaction_id ?: 'FEE-'.$payment->id.'-'.now()->format('YmdHis');
+            $payment->update(['transaction_id' => $transactionId]);
+            PaymentTransaction::create([
+                'transaction_id' => $transactionId, 'reference_no' => 'FEE-'.$assignment->id,
+                'amount' => $request->amount_paid, 'currency' => 'BDT',
+                'payment_method' => $request->payment_method, 'status' => 'Completed',
+                'transaction_date' => $request->payment_date, 'note' => $request->remarks,
+                'source_type' => Payment::class, 'source_id' => $payment->id, 'student_id' => $request->student_id,
+            ]);
+
+            app(AccountingService::class)->post(
+                "fee-payment:{$payment->id}", $payment, '1000', '4000', (float) $request->amount_paid,
+                "Student fee receipt {$transactionId}", $request->payment_date, 'Receipt'
+            );
 
             if ($totalPaidNow >= $totalFee) {
                 $assignment->update(['status' => 'paid']);
@@ -80,6 +110,9 @@ class PaymentController extends Controller
             DB::commit();
             return back()->with('success', 'পেমেন্ট সফলভাবে রিসিভ করা হয়েছে!');
 
+        } catch (ValidationException $e) {
+            DB::rollBack();
+            throw $e;
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'পেমেন্ট নিতে সমস্যা হয়েছে: ' . $e->getMessage());
@@ -97,7 +130,7 @@ class PaymentController extends Controller
             });
         }
 
-        $payments = $query->latest()->paginate($request->per_page ?? 10)->withQueryString();
+        $payments = $query->latest()->paginate(\App\Support\PerPage::resolve())->withQueryString();
 
         return Inertia::render('Admin/FeesInvoices/Index', [
             'payments' => $payments,

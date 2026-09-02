@@ -10,6 +10,10 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use App\Models\PaymentTransaction;
+use App\Services\AccountingService;
+use App\Services\InventoryService;
+use Illuminate\Validation\ValidationException;
 
 class SaleController extends Controller
 {
@@ -51,10 +55,16 @@ class SaleController extends Controller
 
     public function store(Request $request)
     {
-        $this->validateSale($request);
+        $validated = $this->validateSale($request);
 
-        DB::transaction(function () use ($request) {
+        DB::transaction(function () use ($request, $validated) {
             $invoice_number = 'INV-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
+
+            $lines = $this->prepareLines($validated['cart']);
+            $subtotal = collect($lines)->sum('subtotal');
+            $discount = min((float) ($validated['discount'] ?? 0), $subtotal);
+            $total = round($subtotal - $discount, 2);
+            $paid = min((float) $validated['paid_amount'], $total);
 
             $sale = Sale::create([
                 'invoice_number' => $invoice_number,
@@ -62,27 +72,30 @@ class SaleController extends Controller
                 'user_id' => Auth::id(),
                 'customer_name' => $request->customer_name ?? 'Walk-in Customer',
                 'customer_phone' => $request->customer_phone,
-                'subtotal' => $request->subtotal,
-                'discount' => $request->discount ?? 0,
-                'total_amount' => $request->total_amount,
-                'paid_amount' => $request->paid_amount,
-                'due_amount' => $request->total_amount - $request->paid_amount,
+                'subtotal' => $subtotal,
+                'discount' => $discount,
+                'total_amount' => $total,
+                'paid_amount' => $paid,
+                'due_amount' => $total - $paid,
                 'payment_method' => $request->payment_method ?? 'Cash',
             ]);
 
-            foreach ($request->cart as $item) {
-                SaleItem::create([
+            foreach ($lines as $item) {
+                $saleItem = SaleItem::create([
                     'sale_id' => $sale->id,
                     'purchase_item_id' => $item['purchase_item_id'],
                     'size' => $item['size'] ?? null,
                     'color' => $item['color'] ?? null,
                     'quantity' => $item['quantity'],
                     'unit_price' => $item['unit_price'],
+                    'unit_cost' => $item['unit_cost'],
                     'subtotal' => $item['quantity'] * $item['unit_price'],
                 ]);
 
-                PurchaseItem::where('id', $item['purchase_item_id'])->decrement('quantity', $item['quantity']);
+                app(InventoryService::class)->move($item['product'], -$item['quantity'], 'sale', $saleItem, "Sale {$invoice_number}");
             }
+
+            $this->syncSaleFinance($sale);
         });
 
         return redirect()->route('admin.sales.index')->with('success', 'বিক্রি সফলভাবে সম্পন্ন হয়েছে!');
@@ -109,40 +122,49 @@ class SaleController extends Controller
 
     public function update(Request $request, $id)
     {
-        $this->validateSale($request);
+        $validated = $this->validateSale($request);
         $sale = Sale::with('items')->findOrFail($id);
 
-        DB::transaction(function () use ($request, $sale) {
+        DB::transaction(function () use ($request, $validated, $sale) {
             foreach ($sale->items as $oldItem) {
-                PurchaseItem::where('id', $oldItem->purchase_item_id)->increment('quantity', $oldItem->quantity);
+                app(InventoryService::class)->move($oldItem->product, $oldItem->quantity, 'sale_reversal', $oldItem, "Edit reversal {$sale->invoice_number}");
             }
 
             $sale->items()->delete();
 
+            $lines = $this->prepareLines($validated['cart']);
+            $subtotal = collect($lines)->sum('subtotal');
+            $discount = min((float) ($validated['discount'] ?? 0), $subtotal);
+            $total = round($subtotal - $discount, 2);
+            $paid = min((float) $validated['paid_amount'], $total);
+
             $sale->update([
                 'customer_name' => $request->customer_name ?? 'Walk-in Customer',
                 'customer_phone' => $request->customer_phone,
-                'subtotal' => $request->subtotal,
-                'discount' => $request->discount ?? 0,
-                'total_amount' => $request->total_amount,
-                'paid_amount' => $request->paid_amount,
-                'due_amount' => $request->total_amount - $request->paid_amount,
+                'subtotal' => $subtotal,
+                'discount' => $discount,
+                'total_amount' => $total,
+                'paid_amount' => $paid,
+                'due_amount' => $total - $paid,
                 'payment_method' => $request->payment_method ?? 'Cash',
             ]);
 
-            foreach ($request->cart as $item) {
-                SaleItem::create([
+            foreach ($lines as $item) {
+                $saleItem = SaleItem::create([
                     'sale_id' => $sale->id,
                     'purchase_item_id' => $item['purchase_item_id'],
                     'size' => $item['size'] ?? null,
                     'color' => $item['color'] ?? null,
                     'quantity' => $item['quantity'],
                     'unit_price' => $item['unit_price'],
+                    'unit_cost' => $item['unit_cost'],
                     'subtotal' => $item['quantity'] * $item['unit_price'],
                 ]);
 
-                PurchaseItem::where('id', $item['purchase_item_id'])->decrement('quantity', $item['quantity']);
+                app(InventoryService::class)->move($item['product'], -$item['quantity'], 'sale', $saleItem, "Sale {$sale->invoice_number}");
             }
+
+            $this->syncSaleFinance($sale->fresh('items'));
         });
 
         return redirect()->route('admin.sales.index')->with('success', 'বিক্রির তথ্য আপডেট হয়েছে!');
@@ -154,8 +176,11 @@ class SaleController extends Controller
 
         DB::transaction(function () use ($sale) {
             foreach ($sale->items as $item) {
-                PurchaseItem::where('id', $item->purchase_item_id)->increment('quantity', $item->quantity);
+                app(InventoryService::class)->move($item->product, $item->quantity, 'sale_reversal', $item, "Void {$sale->invoice_number}");
             }
+            app(AccountingService::class)->reverseSource($sale);
+            PaymentTransaction::where('source_type', Sale::class)->where('source_id', $sale->id)
+                ->update(['status' => 'Refunded']);
             $sale->delete();
         });
 
@@ -163,14 +188,12 @@ class SaleController extends Controller
     }
 
     // --- Validation Logic ---
-    private function validateSale(Request $request)
+    private function validateSale(Request $request): array
     {
-        $request->validate([
+        return $request->validate([
             'customer_name' => 'nullable|string|max:255',
             'customer_phone' => 'nullable|string|max:20',
-            'subtotal' => 'required|numeric|min:0',
             'discount' => 'nullable|numeric|min:0',
-            'total_amount' => 'required|numeric|min:0',
             'paid_amount' => 'required|numeric|min:0',
             'payment_method' => 'required|string',
             'cart' => 'required|array|min:1',
@@ -178,6 +201,44 @@ class SaleController extends Controller
             'cart.*.quantity' => 'required|integer|min:1',
             'cart.*.unit_price' => 'required|numeric|min:0',
         ]);
+    }
+
+    private function prepareLines(array $cart): array
+    {
+        $lines = [];
+        foreach ($cart as $line) {
+            $product = PurchaseItem::query()->lockForUpdate()->findOrFail($line['purchase_item_id']);
+            $quantity = (int) $line['quantity'];
+            if ($product->quantity < $quantity) {
+                throw ValidationException::withMessages(['cart' => "{$product->name}-এর পর্যাপ্ত stock নেই।"]);
+            }
+            $price = round((float) $line['unit_price'], 2);
+            $lines[] = $line + [
+                'product' => $product,
+                'unit_cost' => (float) $product->purchase_price,
+                'subtotal' => round($quantity * $price, 2),
+            ];
+        }
+        return $lines;
+    }
+
+    private function syncSaleFinance(Sale $sale): void
+    {
+        $accounting = app(AccountingService::class);
+        $accounting->reverseSource($sale);
+        $accounting->post("sale:{$sale->id}:paid", $sale, '1000', '4100', (float) $sale->paid_amount, "Sale {$sale->invoice_number}", $sale->created_at?->toDateString(), 'Receipt');
+        $accounting->post("sale:{$sale->id}:due", $sale, '1100', '4100', (float) $sale->due_amount, "Sale due {$sale->invoice_number}", $sale->created_at?->toDateString());
+        $cost = $sale->items->sum(fn ($item) => (float) $item->unit_cost * (int) $item->quantity);
+        $accounting->post("sale:{$sale->id}:cogs", $sale, '5000', '1200', $cost, "COGS {$sale->invoice_number}", $sale->created_at?->toDateString());
+
+        if ((float) $sale->paid_amount > 0) {
+            PaymentTransaction::updateOrCreate(
+                ['source_type' => Sale::class, 'source_id' => $sale->id],
+                ['transaction_id' => 'SALE-'.$sale->invoice_number, 'reference_no' => $sale->invoice_number,
+                 'amount' => $sale->paid_amount, 'currency' => 'BDT', 'payment_method' => $sale->payment_method,
+                 'status' => 'Completed', 'transaction_date' => $sale->created_at?->toDateString() ?? now()->toDateString()]
+            );
+        }
     }
 
     public function report(Request $request)

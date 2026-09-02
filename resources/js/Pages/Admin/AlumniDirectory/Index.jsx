@@ -28,8 +28,8 @@ export default function Index({ alumnis, filters }) {
   }, [flash]);
 
   const applyFilters = (overrides = {}) => {
-    router.get(route('admin.alumni.directory.index'), { 
-      search, passing_year: yearFilter, per_page: perPage, ...overrides 
+    router.get(route('admin.alumni.directory.index'), {
+      search, passing_year: yearFilter, per_page: perPage, ...overrides
     }, { preserveState: true, replace: true });
   };
 
@@ -51,11 +51,11 @@ export default function Index({ alumnis, filters }) {
     if (!alumnis.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
     const headers = ['Name', 'Phone', 'Email', 'Passing Year', 'Profession', 'Organization'];
     const rows = alumnis.data.map(item => [
-      item.name || 'N/A', 
-      item.phone || 'N/A', 
-      item.email || 'N/A', 
-      item.passing_year || 'N/A', 
-      item.current_profession || 'N/A', 
+      item.name || 'N/A',
+      item.phone || 'N/A',
+      item.email || 'N/A',
+      item.passing_year || 'N/A',
+      item.current_profession || 'N/A',
       item.organization || 'N/A'
     ]);
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows.map(e => e.map(val => `"${val}"`).join(','))].join('\n');
@@ -95,7 +95,7 @@ export default function Index({ alumnis, filters }) {
       <div className="print-title">Alumni Directory - {new Date().toLocaleDateString('en-GB')}</div>
 
       <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8 no-print">
-        
+
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
@@ -114,7 +114,7 @@ export default function Index({ alumnis, filters }) {
         {/* Unified Modern Toolbar */}
         <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-            
+
             {/* Per Page */}
             <select
               value={perPage}
@@ -125,14 +125,14 @@ export default function Index({ alumnis, filters }) {
               <option value="10">10 / Page</option>
               <option value="20">20 / Page</option>
               <option value="50">50 / Page</option>
-              <option value="all">All</option>
+              <option value="all">All Page</option>
             </select>
 
             <div className="hidden sm:block w-px h-6 bg-slate-200"></div>
 
             {/* Year Filter */}
-            <select 
-              value={yearFilter} 
+            <select
+              value={yearFilter}
               onChange={(e) => { setYearFilter(e.target.value); applyFilters({ passing_year: e.target.value }); }}
               className="w-full sm:w-44 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer font-mono"
             >

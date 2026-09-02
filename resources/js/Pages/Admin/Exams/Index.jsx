@@ -184,13 +184,14 @@ export default function Index({ exams, filters }) {
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Exam Name</th>
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Schedule</th>
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Status</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Student Result</th>
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right no-print">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {exams.data.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-6 py-12 text-center text-slate-500">
+                    <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
                       কোনো পরীক্ষা পাওয়া যায়নি।
                     </td>
                   </tr>
@@ -226,6 +227,7 @@ export default function Index({ exams, filters }) {
                             {item.is_active ? 'Active' : 'Inactive'}
                           </span>
                         </td>
+                        <td className="px-6 py-4 text-center"><span className={`inline-flex rounded-md border px-2.5 py-1 text-[11px] font-bold uppercase ${item.results_published ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-amber-200 bg-amber-50 text-amber-700'}`}>{item.results_published ? 'Published' : 'Hidden'}</span></td>
                         <td className="px-6 py-4 text-right no-print">
                           <div className="flex items-center justify-end gap-1.5">
                             <button onClick={() => { setEditingItem(item); setFormOpen(true); }} className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Edit Exam">

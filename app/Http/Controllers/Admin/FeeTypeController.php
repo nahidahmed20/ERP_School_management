@@ -18,7 +18,7 @@ class FeeTypeController extends Controller
             $query->where('name', 'like', "%{$request->search}%");
         }
 
-        $feeTypes = $query->latest()->paginate($request->per_page ?? 10)->withQueryString();
+        $feeTypes = $query->latest()->paginate(\App\Support\PerPage::resolve())->withQueryString();
 
         return Inertia::render('Admin/FeesTypes/Index', [
             'feeGroup' => $feeGroup,

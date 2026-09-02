@@ -8,10 +8,12 @@ use App\Models\Campus;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Validation\Rule;
+use App\Services\WebsiteSettingsService;
+use Illuminate\Support\Facades\Storage;
 
 class GeneralSettingController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, WebsiteSettingsService $websiteSettings)
     {
         $query = Setting::query();
 
@@ -46,13 +48,81 @@ class GeneralSettingController extends Controller
             'groups' => Setting::select('group')->distinct()->orderBy('group')->pluck('group'),
             'campuses' => $campuses, 
             'filters' => $request->only(['search', 'group', 'status', 'per_page']),
+            'websiteSettings' => $websiteSettings->values(),
         ]);
+    }
+
+    public function updateWebsite(Request $request, WebsiteSettingsService $websiteSettings)
+    {
+        $data = $request->validate([
+            'school_name' => 'required|string|max:255',
+            'school_short_name' => 'required|string|max:80',
+            'school_tagline' => 'nullable|string|max:160',
+            'primary_phone' => 'nullable|string|max:50',
+            'secondary_phone' => 'nullable|string|max:50',
+            'email' => 'nullable|email|max:255',
+            'address' => 'nullable|string|max:500',
+            'footer_description' => 'nullable|string|max:1000',
+            'copyright_text' => 'nullable|string|max:255',
+            'powered_by_text' => 'nullable|string|max:255',
+            'facebook_url' => 'nullable|url|max:500',
+            'youtube_url' => 'nullable|url|max:500',
+            'linkedin_url' => 'nullable|url|max:500',
+            'admission_session' => 'nullable|string|max:100',
+            'admission_deadline' => 'nullable|string|max:100',
+            'logo' => 'nullable|image|mimes:png,jpg,jpeg,webp|max:4096',
+            'footer_logo' => 'nullable|image|mimes:png,jpg,jpeg,webp|max:4096',
+            'favicon' => 'nullable|image|mimes:png,jpg,jpeg,webp,ico|max:1024',
+            'remove_logo' => 'nullable|boolean',
+            'remove_footer_logo' => 'nullable|boolean',
+            'remove_favicon' => 'nullable|boolean',
+        ]);
+
+        $labels = [
+            'school_name' => 'School Name', 'school_short_name' => 'Short Name',
+            'school_tagline' => 'Tagline', 'primary_phone' => 'Primary Phone',
+            'secondary_phone' => 'Secondary Phone', 'email' => 'Email Address',
+            'address' => 'Address', 'footer_description' => 'Footer Description',
+            'copyright_text' => 'Copyright Text', 'powered_by_text' => 'Powered By Text',
+            'facebook_url' => 'Facebook URL', 'youtube_url' => 'YouTube URL',
+            'linkedin_url' => 'LinkedIn URL', 'admission_session' => 'Admission Session',
+            'admission_deadline' => 'Admission Deadline',
+        ];
+
+        foreach ($labels as $key => $label) {
+            Setting::withoutGlobalScopes()->updateOrCreate(
+                ['key' => $key],
+                ['campus_id' => null, 'group' => 'website', 'value' => $data[$key] ?? null,
+                    'type' => in_array($key, ['address', 'footer_description']) ? 'textarea' : 'text',
+                    'label' => $label, 'is_active' => true]
+            );
+        }
+
+        foreach (['logo', 'footer_logo', 'favicon'] as $key) {
+            $setting = Setting::withoutGlobalScopes()->where('key', $key)->first();
+            if ($request->boolean('remove_'.$key) || $request->hasFile($key)) {
+                if ($setting?->value) {
+                    Storage::disk('public')->delete($setting->value);
+                }
+                $path = $request->hasFile($key) ? $request->file($key)->store('branding', 'public') : null;
+                Setting::withoutGlobalScopes()->updateOrCreate(
+                    ['key' => $key],
+                    ['campus_id' => null, 'group' => 'website', 'value' => $path, 'type' => 'image',
+                        'label' => ucwords(str_replace('_', ' ', $key)), 'is_active' => true]
+                );
+            }
+        }
+
+        $websiteSettings->clearCache();
+
+        return back()->with('success', 'Website branding and footer settings updated successfully.');
     }
 
     public function store(Request $request)
     {
         $data = $this->validateData($request);
         Setting::create($data);
+        app(WebsiteSettingsService::class)->clearCache();
 
         return back()->with('success', 'নতুন Setting সফলভাবে যোগ করা হয়েছে।');
     }
@@ -61,6 +131,7 @@ class GeneralSettingController extends Controller
     {
         $data = $this->validateData($request, $setting->id);
         $setting->update($data);
+        app(WebsiteSettingsService::class)->clearCache();
 
         return back()->with('success', 'Setting সফলভাবে আপডেট করা হয়েছে।');
     }
@@ -68,6 +139,7 @@ class GeneralSettingController extends Controller
     public function destroy(Setting $setting)
     {
         $setting->delete();
+        app(WebsiteSettingsService::class)->clearCache();
         return back()->with('success', 'Setting সফলভাবে মুছে ফেলা হয়েছে।');
     }
 

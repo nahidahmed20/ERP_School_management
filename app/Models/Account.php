@@ -13,4 +13,7 @@ class Account extends Model {
     protected $casts = [
         'is_active' => 'boolean',
     ];
+
+    public function debitEntries() { return $this->hasMany(JournalEntry::class, 'debit_account_id'); }
+    public function creditEntries() { return $this->hasMany(JournalEntry::class, 'credit_account_id'); }
 }

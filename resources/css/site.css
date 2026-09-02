@@ -92,6 +92,10 @@ html { scroll-behavior: smooth; }
 }
 .verdant-front-site .vd-btn-portal:hover { background: var(--gold-bright); transform: translateY(-2px); }
 .verdant-front-site .vd-hide-mobile { display: flex; }
+.verdant-front-site .vd-brand-logo { width: 52px; height: 52px; flex: 0 0 52px; object-fit: contain; border-radius: 12px; }
+.verdant-front-site .vd-social-links { display: flex; justify-content: flex-end; gap: 18px; padding-top: 18px; }
+.verdant-front-site .vd-social-links a { color: var(--gold-soft); font-size: 13px; text-decoration: none; }
+.verdant-front-site .vd-footer-grid li span { color: rgba(255,255,255,0.6); font-size: 13.5px; line-height: 1.5; }
 @media (max-width: 880px) { .verdant-front-site .vd-hide-mobile { display: none; } }
 
 /* ---------- Hero ---------- */

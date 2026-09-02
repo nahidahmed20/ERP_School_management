@@ -20,7 +20,7 @@ class GuardianController extends Controller
                   ->orWhere('mother_phone', 'like', "%{$request->search}%");
         }
 
-        $parents = $query->latest()->paginate($request->per_page ?? 10)->withQueryString();
+        $parents = $query->latest()->paginate(\App\Support\PerPage::resolve())->withQueryString();
 
         return Inertia::render('Admin/Students/Parents', [
             'parents' => $parents,

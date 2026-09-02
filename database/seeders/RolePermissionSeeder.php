@@ -4,31 +4,19 @@ namespace Database\Seeders;
 
 use App\Models\Campus;
 use App\Models\User;
+use App\Services\PermissionSyncService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Schema;
-use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class RolePermissionSeeder extends Seeder
 {
     public function run(): void
     {
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        $permissions = [
-            'admin.dashboard',
-            'admin.users.index',
-            'admin.roles.index',
-            'admin.permissions.index',
-            'admin.menu.index',
-            'admin.settings.general',
-            'admin.students.index',
-        ];
-
-        foreach ($permissions as $permission) {
-            Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
-        }
+        $permissions = app(PermissionSyncService::class)->sync();
 
         $mainCampus = Campus::firstOrCreate(
             ['code' => 'MAIN'],
@@ -47,7 +35,12 @@ class RolePermissionSeeder extends Seeder
         $superAdminRole = Role::firstOrCreate(['name' => 'Super Admin', 'guard_name' => 'web']);
 
         $teacherRole = Role::firstOrCreate(['name' => 'Teacher', 'guard_name' => 'web']);
-        $teacherRole->syncPermissions(['admin.dashboard', 'admin.students.index']);
+        $teacherRole->syncPermissions(['dashboard', 'admin.students.index']);
+
+        $studentRole = Role::firstOrCreate(['name' => 'student', 'guard_name' => 'web']);
+        $parentRole = Role::firstOrCreate(['name' => 'parent', 'guard_name' => 'web']);
+        $studentRole->givePermissionTo(['dashboard', 'portal.services.view', 'portal.exams.attempt']);
+        $parentRole->givePermissionTo('dashboard');
 
         $superAdminUser = User::firstOrCreate(
             ['email' => 'admin@school.com'],

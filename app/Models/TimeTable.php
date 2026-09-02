@@ -30,4 +30,9 @@ class TimeTable extends Model
     {
         return $this->belongsTo(Classroom::class, 'classroom_id');
     }
+
+    public function teacher()
+    {
+        return $this->belongsTo(Staff::class, 'teacher_id');
+    }
 }

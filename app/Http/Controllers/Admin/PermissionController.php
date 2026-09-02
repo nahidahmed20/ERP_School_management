@@ -17,7 +17,7 @@ class PermissionController extends Controller
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
-        $permissions = $query->paginate(10)->withQueryString();
+        $permissions = $query->paginate(\App\Support\PerPage::resolve())->withQueryString();
 
         return Inertia::render('Admin/Permissions/Index', [
             'permissions' => $permissions,

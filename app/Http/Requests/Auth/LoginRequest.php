@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\SecurityFailedLogin;
+use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -28,8 +30,10 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'string', 'email'],
+            'login' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string'],
+            'role' => ['required', 'string', 'in:admin,student,staff,parent'],
+            'remember' => ['sometimes', 'boolean'],
         ];
     }
 
@@ -42,11 +46,18 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+        $user = $this->resolveUser();
+
+        if (! $user || ! Auth::attempt([
+            'email' => $user->email,
+            'password' => $this->string('password')->toString(),
+        ], $this->boolean('remember')) || ! $this->canAccessPortal($user)) {
+            Auth::guard('web')->logout();
             RateLimiter::hit($this->throttleKey());
+            $this->recordFailedAttempt();
 
             throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
+                'login' => trans('auth.failed'),
             ]);
         }
 
@@ -69,7 +80,7 @@ class LoginRequest extends FormRequest
         $seconds = RateLimiter::availableIn($this->throttleKey());
 
         throw ValidationException::withMessages([
-            'email' => trans('auth.throttle', [
+            'login' => trans('auth.throttle', [
                 'seconds' => $seconds,
                 'minutes' => ceil($seconds / 60),
             ]),
@@ -81,6 +92,51 @@ class LoginRequest extends FormRequest
      */
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
+        return Str::transliterate(Str::lower($this->string('login')).'|'.$this->ip());
+    }
+
+    private function resolveUser(): ?User
+    {
+        $login = trim($this->string('login')->toString());
+        $normalizedLogin = Str::lower($login);
+
+        return User::query()
+            ->whereRaw('LOWER(email) = ?', [$normalizedLogin])
+            ->when($this->string('role')->toString() === 'student', function ($query) use ($normalizedLogin) {
+                $query->orWhereHas('student', fn ($student) => $student->whereRaw('LOWER(admission_no) = ?', [$normalizedLogin])
+                );
+            })
+            ->when($this->string('role')->toString() === 'staff', function ($query) use ($normalizedLogin) {
+                $query->orWhereHas('staff', fn ($staff) => $staff->whereRaw('LOWER(staff_id_no) = ?', [$normalizedLogin])
+                );
+            })
+            ->when($this->string('role')->toString() === 'parent', function ($query) use ($normalizedLogin) {
+                $query->orWhereHas('guardian', fn ($guardian) => $guardian->whereRaw('LOWER(guardian_email) = ?', [$normalizedLogin])
+                );
+            })
+            ->first();
+    }
+
+    private function canAccessPortal(User $user): bool
+    {
+        return match ($this->string('role')->toString()) {
+            'student' => $user->student()->where('status', true)->exists(),
+            'staff' => $user->staff()->where('is_active', true)->exists(),
+            'parent' => $user->guardian()->exists(),
+            'admin' => $user->roles()
+                ->whereNotIn('name', ['student', 'parent'])
+                ->exists(),
+            default => false,
+        };
+    }
+
+    private function recordFailedAttempt(): void
+    {
+        SecurityFailedLogin::create([
+            'email_attempted' => trim($this->string('login')->toString()),
+            'ip_address' => $this->ip(),
+            'user_agent' => Str::limit((string) $this->userAgent(), 65535, ''),
+            'attempted_at' => now(),
+        ]);
     }
 }

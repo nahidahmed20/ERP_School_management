@@ -22,7 +22,7 @@ class AccountingChartController extends Controller
             $query->where('type', $type);
         }
 
-        $accounts = $query->orderBy('type')->latest()->paginate(15)->withQueryString();
+        $accounts = $query->orderBy('type')->latest()->paginate(\App\Support\PerPage::resolve(15))->withQueryString();
 
         return Inertia::render('Admin/Finance/Accounts/Chart/Index', [
             'accounts' => $accounts,

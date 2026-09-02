@@ -21,11 +21,11 @@ export default function Index({ materials, classes, subjects, filters }) {
   }, [flash]);
 
   function applyFilters(overrides = {}) {
-    router.get(route('admin.study-materials.index'), { 
-      search, 
-      class_id: classFilter, 
+    router.get(route('admin.study-materials.index'), {
+      search,
+      class_id: classFilter,
       per_page: perPage,
-      ...overrides 
+      ...overrides
     }, { preserveState: true, replace: true });
   }
 
@@ -48,10 +48,10 @@ export default function Index({ materials, classes, subjects, filters }) {
     if (!materials.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
     const headers = ['Title', 'Class', 'Subject', 'File Type', 'Uploaded Date'];
     const rows = materials.data.map(item => [
-      item.title || 'N/A', 
-      item.school_class?.name || 'N/A', 
-      item.subject?.name || 'General', 
-      item.file_type || 'N/A', 
+      item.title || 'N/A',
+      item.school_class?.name || 'N/A',
+      item.subject?.name || 'General',
+      item.file_type || 'N/A',
       new Date(item.created_at).toLocaleDateString()
     ]);
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows.map(e => e.map(val => `"${val}"`).join(','))].join('\n');
@@ -91,7 +91,7 @@ export default function Index({ materials, classes, subjects, filters }) {
       <div className="print-title">Study Materials & Downloads - {new Date().toLocaleDateString('en-GB')}</div>
 
       <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8 no-print">
-        
+
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
@@ -110,7 +110,7 @@ export default function Index({ materials, classes, subjects, filters }) {
         {/* Unified Modern Toolbar */}
         <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-            
+
             {/* Per Page */}
             <select
               value={perPage}
@@ -120,14 +120,14 @@ export default function Index({ materials, classes, subjects, filters }) {
             >
               <option value="10">10 / Page</option>
               <option value="50">50 / Page</option>
-              <option value="all">All</option>
+              <option value="all">All Page</option>
             </select>
 
             <div className="hidden sm:block w-px h-6 bg-slate-200"></div>
 
             {/* Class Filter */}
-            <select 
-              value={classFilter} 
+            <select
+              value={classFilter}
               onChange={(e) => setClassFilter(e.target.value)}
               className="w-full sm:w-44 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
             >
@@ -233,14 +233,14 @@ export default function Index({ materials, classes, subjects, filters }) {
                         </td>
                         <td className="px-6 py-4 text-right no-print">
                           <div className="flex items-center justify-end gap-1.5">
-                            <a 
-                              href={route('admin.study-materials.download', item.id)} 
+                            <a
+                              href={route('admin.study-materials.download', item.id)}
                               className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors border border-indigo-100 shadow-sm"
                             >
                               <Icon name="download" className="w-3.5 h-3.5" /> Download
                             </a>
-                            <button 
-                              onClick={() => setDeletingItem(item)} 
+                            <button
+                              onClick={() => setDeletingItem(item)}
                               className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
                               title="Delete Material"
                             >

@@ -55,8 +55,8 @@ export default function Pagination({ meta }) {
               preserveScroll
               className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-semibold transition-all ${
                 link.active
-                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20' // Active Page Design
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-indigo-600 border border-transparent' // Normal Page Design
+                  ? 'ui-pagination-active text-white shadow-md' // Active Page Design
+                  : 'text-slate-600 hover:bg-emerald-50 hover:text-emerald-900 border border-transparent' // Normal Page Design
               }`}
             >
               {renderContent()}

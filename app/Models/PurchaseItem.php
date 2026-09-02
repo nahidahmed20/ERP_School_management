@@ -16,5 +16,14 @@ class PurchaseItem extends Model
         'size' => 'array',
         'color' => 'array',
         'is_active' => 'boolean',
+        'quantity' => 'integer',
+        'reorder_level' => 'integer',
+        'purchase_price' => 'decimal:2',
+        'selling_price' => 'decimal:2',
     ];
+
+    public function movements()
+    {
+        return $this->hasMany(InventoryMovement::class);
+    }
 }

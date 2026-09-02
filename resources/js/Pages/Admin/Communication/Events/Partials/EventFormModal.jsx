@@ -20,6 +20,8 @@ export default function EventFormModal({ item, classrooms, activeCampusId, onClo
     classroom_id: item?.classroom_id || '',
     description: item?.description || '',
     is_active: item?.is_active ?? true,
+    show_on_dashboard: item?.show_on_dashboard ?? true,
+    audience: item?.audience || 'all',
   });
 
   function submit(e) {
@@ -148,6 +150,19 @@ export default function EventFormModal({ item, classrooms, activeCampusId, onClo
 
               {/* Active Toggle */}
               <div className="sm:col-span-2 pt-2 border-t border-slate-100">
+                <div className="mb-4">
+                  <label className={labelClass}>Visible to</label>
+                  <select value={data.audience} onChange={(e) => setData('audience', e.target.value)} className={`${inputClass} bg-white`}>
+                    <option value="all">Everyone</option>
+                    <option value="student">Students only</option>
+                    <option value="parent">Parents only</option>
+                    <option value="staff">Staff only</option>
+                  </select>
+                </div>
+                <label className="mb-4 flex items-center gap-3 cursor-pointer group w-max">
+                  <input type="checkbox" checked={data.show_on_dashboard} onChange={(e) => setData('show_on_dashboard', e.target.checked)} className="h-5 w-5 rounded border-slate-300 text-emerald-700 focus:ring-emerald-600" />
+                  <span className="text-sm font-semibold text-slate-700">Show as login/dashboard announcement</span>
+                </label>
                 <label className="flex items-center gap-3 cursor-pointer group w-max">
                   <div className="relative flex items-center">
                     <input

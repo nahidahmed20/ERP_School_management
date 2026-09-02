@@ -22,7 +22,7 @@ class StudyMaterialController extends Controller
             $query->where('title', 'like', "%{$search}%");
         }
 
-        $materials = $query->latest()->paginate(15)->withQueryString();
+        $materials = $query->latest()->paginate(\App\Support\PerPage::resolve(15))->withQueryString();
 
         return Inertia::render('Admin/Academics/StudyMaterials/Index', [
             'materials' => $materials,

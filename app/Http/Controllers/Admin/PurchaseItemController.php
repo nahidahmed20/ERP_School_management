@@ -10,6 +10,9 @@ use App\Models\Campus;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Validation\Rule;
+use App\Models\InventoryMovement;
+use App\Services\InventoryService;
+use Illuminate\Support\Facades\DB;
 
 class PurchaseItemController extends Controller
 {
@@ -46,7 +49,14 @@ class PurchaseItemController extends Controller
             $data['item_code'] = 'PRD-' . date('Y') . '-' . strtoupper(substr(uniqid(), -4));
         }
 
-        PurchaseItem::create($data);
+        DB::transaction(function () use ($data) {
+            $opening = (int) ($data['quantity'] ?? 0);
+            $data['quantity'] = 0;
+            $item = PurchaseItem::create($data);
+            if ($opening > 0) {
+                app(InventoryService::class)->move($item, $opening, 'opening_stock', $item, 'Opening stock');
+            }
+        });
         return back()->with('success', 'নতুন আইটেম যোগ করা হয়েছে।');
     }
 
@@ -59,13 +69,25 @@ class PurchaseItemController extends Controller
             $data['item_code'] = 'PRD-' . date('Y') . '-' . strtoupper(substr(uniqid(), -4));
         }
 
-        $item->update($data);
+        DB::transaction(function () use ($item, $data) {
+            $requestedQuantity = (int) $data['quantity'];
+            unset($data['quantity']);
+            $item->update($data);
+            $difference = $requestedQuantity - (int) $item->quantity;
+            if ($difference !== 0) {
+                app(InventoryService::class)->move($item, $difference, 'adjustment', $item, 'Manual stock adjustment');
+            }
+        });
         return back()->with('success', 'আইটেমের তথ্য আপডেট করা হয়েছে।');
     }
 
     public function destroy($id)
     {
-        PurchaseItem::findOrFail($id)->delete();
+        $item = PurchaseItem::findOrFail($id);
+        if ($item->movements()->exists()) {
+            return back()->with('error', 'Stock history থাকা product delete করা যাবে না; inactive করুন।');
+        }
+        $item->delete();
         return back()->with('success', 'আইটেমটি মুছে ফেলা হয়েছে।');
     }
 
@@ -88,10 +110,36 @@ class PurchaseItemController extends Controller
             'color' => 'nullable|array',  
             'unit' => 'required|string|max:50',
             'quantity' => 'required|integer|min:0',
+            'reorder_level' => 'nullable|integer|min:0',
             'purchase_price' => 'nullable|numeric|min:0',
             'selling_price' => 'required|numeric|min:0',
             'description' => 'nullable|string',
             'is_active' => 'boolean',
+        ]);
+    }
+
+    public function report(Request $request)
+    {
+        $query = PurchaseItem::query()->withCount('movements');
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(fn ($q) => $q->where('name', 'like', "%{$search}%")->orWhere('item_code', 'like', "%{$search}%"));
+        }
+        if ($request->status === 'low') $query->whereColumn('quantity', '<=', 'reorder_level');
+        if ($request->status === 'out') $query->where('quantity', 0);
+
+        $summaryQuery = PurchaseItem::query();
+        return Inertia::render('Admin/PurchaseItems/Report', [
+            'items' => $query->orderBy('quantity')->paginate(\App\Support\PerPage::resolve())->withQueryString(),
+            'summary' => [
+                'products' => (clone $summaryQuery)->count(),
+                'units' => (clone $summaryQuery)->sum('quantity'),
+                'stock_value' => (clone $summaryQuery)->selectRaw('COALESCE(SUM(quantity * purchase_price), 0) value')->value('value'),
+                'low_stock' => (clone $summaryQuery)->whereColumn('quantity', '<=', 'reorder_level')->count(),
+                'out_of_stock' => (clone $summaryQuery)->where('quantity', 0)->count(),
+            ],
+            'recentMovements' => InventoryMovement::with('item:id,name,item_code')->latest()->limit(20)->get(),
+            'filters' => $request->only(['search', 'status', 'per_page']),
         ]);
     }
 

@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'government_holidays' => [
+        'feed_url' => env('GOVERNMENT_HOLIDAY_FEED_URL'),
+    ],
+
 ];

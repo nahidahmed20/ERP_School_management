@@ -26,7 +26,7 @@ class DisciplinaryRecordController extends Controller
             $query->where('type', $request->type);
         }
 
-        $records = $query->latest('incident_date')->paginate($request->per_page ?? 10)->withQueryString();
+        $records = $query->latest('incident_date')->paginate(\App\Support\PerPage::resolve())->withQueryString();
         $students = Student::select('id', 'first_name', 'last_name', 'admission_no')->where('status', true)->get();
 
         return Inertia::render('Admin/StudentsDiscipline/Index', [

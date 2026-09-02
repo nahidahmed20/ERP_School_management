@@ -23,7 +23,7 @@ class ExamController extends Controller
         }
 
         return Inertia::render('Admin/Exams/Index', [
-            'exams' => $query->paginate(15)->withQueryString(),
+            'exams' => $query->paginate(\App\Support\PerPage::resolve(15))->withQueryString(),
             'filters' => [
                 'search' => $request->input('search', ''),
                 'status' => $request->input('status', ''),
@@ -34,6 +34,7 @@ class ExamController extends Controller
     public function store(Request $request)
     {
         $data = $this->validateData($request);
+        $data['results_published_at'] = $data['results_published'] ? now() : null;
         Exam::create($data);
 
         return back()->with('success', 'পরীক্ষা সফলভাবে তৈরি করা হয়েছে।');
@@ -43,6 +44,9 @@ class ExamController extends Controller
     {
         $exam = Exam::findOrFail($id);
         $data = $this->validateData($request);
+        $data['results_published_at'] = $data['results_published']
+            ? ($exam->results_published_at ?? now())
+            : null;
         $exam->update($data);
 
         return back()->with('success', 'পরীক্ষার তথ্য আপডেট করা হয়েছে।');
@@ -70,6 +74,7 @@ class ExamController extends Controller
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'description' => 'nullable|string',
             'is_active' => 'boolean',
+            'results_published' => 'boolean',
         ]);
     }
 }

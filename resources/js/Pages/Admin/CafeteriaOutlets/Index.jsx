@@ -125,7 +125,7 @@ export default function Index({ outlets, campuses, activeCampusId, filters }) {
               <option value="10">10 / Page</option>
               <option value="20">20 / Page</option>
               <option value="50">50 / Page</option>
-              <option value="all">All</option>
+              <option value="all">All Page</option>
             </select>
 
             <div className="hidden sm:block w-px h-6 bg-slate-200"></div>

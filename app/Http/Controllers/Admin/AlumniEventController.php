@@ -23,7 +23,7 @@ class AlumniEventController extends Controller
             $query->where('status', $request->status);
         }
 
-        $events = $query->latest('date')->paginate($request->per_page ?? 10)->withQueryString();
+        $events = $query->latest('date')->paginate(\App\Support\PerPage::resolve())->withQueryString();
 
         return Inertia::render('Admin/AlumniEvents/Index', [
             'events' => $events,

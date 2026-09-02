@@ -21,7 +21,7 @@ class HealthRecordController extends Controller
             })->orWhere('blood_group', 'like', "%{$search}%");
         }
 
-        $records = $query->latest()->paginate(10)->withQueryString();
+        $records = $query->latest()->paginate(\App\Support\PerPage::resolve())->withQueryString();
         $campuses = Campus::select('id', 'name')->get();
 
         // Spatie & Staff/Student Relation Data 

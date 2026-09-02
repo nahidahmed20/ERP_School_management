@@ -5,6 +5,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ExamMark extends Model {
     protected $guarded = ['id'];
+    protected $casts = ['marks_obtained'=>'decimal:2','grade_point'=>'decimal:2','written_marks'=>'decimal:2','practical_marks'=>'decimal:2','viva_marks'=>'decimal:2','full_marks'=>'decimal:2','pass_marks'=>'decimal:2'];
 
     public function student() {
         return $this->belongsTo(Student::class);

@@ -6,13 +6,9 @@ import Pagination from '@/Components/Pagination';
 import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 import Swal from 'sweetalert2';
 
-// ---------------------------------------------------------
-// Student View Modal (NEW Modern SaaS Split-View Design)
-// ---------------------------------------------------------
 function StudentViewModal({ student, onClose }) {
   const [imageError, setImageError] = useState(false);
 
-  // Reset image error state when a new student is viewed
   useEffect(() => {
     setImageError(false);
   }, [student]);
@@ -28,7 +24,6 @@ function StudentViewModal({ student, onClose }) {
         className="bg-white rounded-2xl w-full max-w-5xl max-h-[90vh] flex flex-col md:flex-row shadow-2xl overflow-hidden transform transition-all ring-1 ring-slate-900/5 animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Mobile Close Button (Absolute) */}
         <button
           onClick={onClose}
           className="absolute top-4 right-4 md:hidden w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 z-50"
@@ -36,9 +31,7 @@ function StudentViewModal({ student, onClose }) {
           <Icon name="close" className="w-4 h-4" />
         </button>
 
-        {/* LEFT SIDEBAR: Profile Summary */}
         <div className="w-full md:w-2/5 lg:w-1/3 bg-slate-50 border-r border-slate-100 p-8 flex flex-col items-center text-center shrink-0 overflow-y-auto">
-          {/* Avatar with Error Handling & Fallback Icon */}
           <div className="w-32 h-32 rounded-full overflow-hidden bg-white ring-4 ring-white shadow-sm border border-slate-100 flex items-center justify-center text-slate-300 mb-5 relative group">
             {student.photo && !imageError ? (
               <img
@@ -73,7 +66,6 @@ function StudentViewModal({ student, onClose }) {
             </span>
           </div>
 
-          {/* Left Panel Action Buttons */}
           <div className="w-full space-y-3 mt-auto pt-6">
             <Link href={route('admin.students.edit', student.id)} className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-indigo-600 transition-colors shadow-sm">
               <Icon name="edit" className="w-4 h-4" /> Edit Full Profile
@@ -84,9 +76,7 @@ function StudentViewModal({ student, onClose }) {
           </div>
         </div>
 
-        {/* RIGHT SIDE: Detailed Information */}
         <div className="w-full md:w-3/5 lg:w-2/3 flex flex-col bg-white">
-          {/* Right Header (Desktop Close Button) */}
           <div className="hidden md:flex justify-end p-4 border-b border-slate-50">
             <button
               onClick={onClose}
@@ -97,8 +87,6 @@ function StudentViewModal({ student, onClose }) {
           </div>
 
           <div className="p-6 sm:p-8 overflow-y-auto space-y-8">
-
-            {/* Section: Academic Data */}
             <section>
               <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 flex items-center gap-2 border-b border-slate-100 pb-2">
                 <span className="w-2 h-2 rounded-full bg-indigo-500"></span> Academic Info
@@ -123,7 +111,6 @@ function StudentViewModal({ student, onClose }) {
               </dl>
             </section>
 
-            {/* Section: Personal Data */}
             <section>
               <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 flex items-center gap-2 border-b border-slate-100 pb-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Personal Details
@@ -148,7 +135,6 @@ function StudentViewModal({ student, onClose }) {
               </dl>
             </section>
 
-            {/* Section: Guardian Data */}
             <section>
               <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 flex items-center gap-2 border-b border-slate-100 pb-2">
                 <span className="w-2 h-2 rounded-full bg-amber-500"></span> Guardian & Contacts
@@ -180,7 +166,6 @@ function StudentViewModal({ student, onClose }) {
                 </div>
               </dl>
             </section>
-
           </div>
         </div>
       </div>
@@ -188,9 +173,6 @@ function StudentViewModal({ student, onClose }) {
   );
 }
 
-// ---------------------------------------------------------
-// Main Index Component
-// ---------------------------------------------------------
 export default function Index({ students, classes, filters }) {
   const { flash } = usePage().props;
   const [search, setSearch] = useState(filters.search ?? '');
@@ -205,12 +187,8 @@ export default function Index({ students, classes, filters }) {
   const selectedClass = classes.find(c => c.id == classId);
 
   useEffect(() => {
-    if (flash?.success) {
-      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: flash.success, showConfirmButton: false, timer: 3000 });
-    }
-    if (flash?.error) {
-      Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: flash.error, showConfirmButton: false, timer: 4000 });
-    }
+    if (flash?.success) Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: flash.success, showConfirmButton: false, timer: 3000 });
+    if (flash?.error) Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: flash.error, showConfirmButton: false, timer: 4000 });
   }, [flash]);
 
   useEffect(() => {
@@ -262,7 +240,6 @@ export default function Index({ students, classes, filters }) {
     <AuthenticatedLayout>
       <Head title="Students Directory" />
 
-      {/* Print Specific CSS */}
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
           nav, aside, header, .no-print, button, a, select, input { display: none !important; }
@@ -277,7 +254,6 @@ export default function Index({ students, classes, filters }) {
 
       <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8 no-print">
 
-        {/* Page Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Student Directory</h1>
@@ -285,38 +261,36 @@ export default function Index({ students, classes, filters }) {
           </div>
           <Link
             href={route('admin.students.create')}
-            className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md shadow-indigo-500/20 active:scale-95"
+            className="inline-flex w-full sm:w-auto justify-center items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md shadow-indigo-500/20 active:scale-95"
           >
             <Icon name="plus" className="w-4 h-4" /> New Admission
           </Link>
         </div>
 
-        {/* Unified Modern Toolbar */}
-        <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col lg:flex-row items-center justify-between gap-4">
+        {/* ----------------------------------------------------- */}
+        {/* Unified Modern Toolbar (FULLY RESPONSIVE)           */}
+        {/* ----------------------------------------------------- */}
+        <div className="bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 lg:gap-6">
 
-          {/* Left Group: Search & Filters & Per Page */}
-          <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
+          {/* Left Group: Filters */}
+          <div className="flex flex-col sm:flex-row flex-wrap items-center gap-3 w-full lg:w-auto">
 
-            {/* Per Page (Moved to left and arrow icon hidden) */}
             <select
               value={perPage}
               onChange={e => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}
-              className="appearance-none bg-none pr-3 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer text-center"
+              className="w-full sm:w-auto appearance-none bg-none py-2.5 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer text-center sm:text-left"
               style={{ backgroundImage: 'none' }}
             >
               <option value="10">10 / Page</option>
               <option value="25">25 / Page</option>
               <option value="50">50 / Page</option>
               <option value="100">100 / Page</option>
-              <option value="500">500 / Page</option>
               <option value="all">All</option>
             </select>
 
-            {/* Divider (Hidden on Mobile) */}
             <div className="hidden sm:block w-px h-6 bg-slate-200"></div>
 
-            {/* Search */}
-            <div className="relative w-full sm:w-64">
+            <div className="relative w-full sm:w-56">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -324,67 +298,83 @@ export default function Index({ students, classes, filters }) {
               </div>
               <input
                 type="text"
-                placeholder="Search by name, ID, phone..."
+                placeholder="Search..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && applyFilters()}
-                className="block w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                className="block w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
               />
             </div>
 
-            {/* Class Filter */}
             <select
               value={classId}
               onChange={e => { setClassId(e.target.value); setSectionId(''); }}
-              className="w-full sm:w-40 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none cursor-pointer"
+              className="w-full sm:w-36 py-2.5 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
             >
               <option value="">All Classes</option>
               {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
 
-            {/* Section Filter */}
             <select
               value={sectionId}
               onChange={e => setSectionId(e.target.value)}
               disabled={!classId}
-              className="w-full sm:w-40 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none cursor-pointer disabled:opacity-50"
+              className="w-full sm:w-36 py-2.5 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer disabled:opacity-50"
             >
               <option value="">All Sections</option>
               {selectedClass?.sections?.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
 
-            {/* Apply Button */}
             <button
               onClick={() => applyFilters()}
-              className="w-full sm:w-auto px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
+              className="w-full sm:w-auto px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
             >
               Apply
             </button>
           </div>
 
-          {/* Right Group: Actions ONLY */}
-          <div className="flex items-center gap-3 w-full lg:w-auto justify-end border-t lg:border-none border-slate-100 pt-3 lg:pt-0">
-            {/* Icons - Uses explicit SVGs now */}
-            <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-xl shrink-0">
-              <button onClick={copyToClipboard} className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-white hover:shadow-sm rounded-lg transition-all" title="Copy Table">
+          {/* Right Group: Export Actions (Responsive Fix) */}
+          <div className="w-full lg:w-auto flex flex-col sm:flex-row items-center justify-between sm:justify-end gap-3 border-t lg:border-none border-slate-100 pt-4 lg:pt-0 mt-2 lg:mt-0">
+            <div className="flex items-center justify-between sm:justify-center w-full sm:w-auto gap-1 bg-slate-50 border border-slate-200 p-1.5 rounded-xl">
+              <button
+                onClick={copyToClipboard}
+                className="flex-1 sm:flex-none flex justify-center items-center gap-2 py-2 px-3 text-slate-500 hover:text-indigo-600 hover:bg-white hover:shadow-sm rounded-lg transition-all"
+                title="Copy Table"
+              >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                 </svg>
+                <span className="sm:hidden text-xs font-semibold">Copy</span>
               </button>
-              <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-              <button onClick={exportToCSV} className="p-1.5 text-slate-500 hover:text-emerald-600 hover:bg-white hover:shadow-sm rounded-lg transition-all" title="Export CSV">
+
+              <div className="w-px h-5 bg-slate-200 mx-1"></div>
+
+              <button
+                onClick={exportToCSV}
+                className="flex-1 sm:flex-none flex justify-center items-center gap-2 py-2 px-3 text-slate-500 hover:text-emerald-600 hover:bg-white hover:shadow-sm rounded-lg transition-all"
+                title="Export CSV"
+              >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline>
                 </svg>
+                <span className="sm:hidden text-xs font-semibold">CSV</span>
               </button>
-              <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-              <button onClick={handlePrint} className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-white hover:shadow-sm rounded-lg transition-all" title="Print">
+
+              <div className="w-px h-5 bg-slate-200 mx-1"></div>
+
+              <button
+                onClick={handlePrint}
+                className="flex-1 sm:flex-none flex justify-center items-center gap-2 py-2 px-3 text-slate-500 hover:text-rose-600 hover:bg-white hover:shadow-sm rounded-lg transition-all"
+                title="Print"
+              >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect>
                 </svg>
+                <span className="sm:hidden text-xs font-semibold">Print</span>
               </button>
             </div>
           </div>
+
         </div>
 
         {/* Main Table Card */}
@@ -416,8 +406,6 @@ export default function Index({ students, classes, filters }) {
                   students.data.map((student) => {
                     return (
                       <tr key={student.id} className="hover:bg-slate-50/60 transition-colors group">
-
-                        {/* Student Profile Column with Error Handling Logic integrated below */}
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-4">
                             <div className="relative w-10 h-10 rounded-full bg-slate-100 ring-2 ring-white shadow-sm flex items-center justify-center overflow-hidden shrink-0">
@@ -427,9 +415,9 @@ export default function Index({ students, classes, filters }) {
                                     alt="Avatar"
                                     className="w-full h-full object-cover"
                                     onError={(e) => {
-                                      e.target.onerror = null; // Prevent infinite loop
-                                      e.target.style.display = 'none'; // hide broken image
-                                      e.target.nextSibling.style.display = 'block'; // show SVG
+                                      e.target.onerror = null;
+                                      e.target.style.display = 'none';
+                                      e.target.nextSibling.style.display = 'block';
                                     }}
                                   />
                                 ) : null}
@@ -452,7 +440,6 @@ export default function Index({ students, classes, filters }) {
                           </div>
                         </td>
 
-                        {/* Enrollment Column */}
                         <td className="px-6 py-4">
                           {student.current_enrollment ? (
                             <div>
@@ -468,7 +455,6 @@ export default function Index({ students, classes, filters }) {
                           )}
                         </td>
 
-                        {/* Guardian Column */}
                         <td className="px-6 py-4">
                           <div className="text-sm font-medium text-slate-900">{student.guardian?.father_name ?? 'N/A'}</div>
                           <div className="text-xs text-slate-500 flex items-center gap-1 mt-1">
@@ -476,11 +462,8 @@ export default function Index({ students, classes, filters }) {
                           </div>
                         </td>
 
-                        {/* Actions Column */}
                         <td className="px-6 py-4 no-print text-right relative">
                           <div className="flex items-center justify-end gap-2">
-
-                            {/* Quick View Button */}
                             <button
                               onClick={(e) => { e.stopPropagation(); setViewingItem(student); }}
                               className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors tooltip-trigger"
@@ -489,7 +472,6 @@ export default function Index({ students, classes, filters }) {
                               <Icon name="eye" className="w-4 h-4" />
                             </button>
 
-                            {/* Action Dropdown */}
                             <div className="relative">
                               <button
                                 onClick={(e) => {
@@ -555,7 +537,6 @@ export default function Index({ students, classes, filters }) {
         </div>
       </div>
 
-      {/* Modals */}
       {viewingItem && (
         <StudentViewModal student={viewingItem} onClose={() => setViewingItem(null)} />
       )}

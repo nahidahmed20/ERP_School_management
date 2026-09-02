@@ -62,6 +62,13 @@ class MarksController extends Controller
             'class_id' => 'required|exists:school_classes,id',
             'subject_id' => 'required|exists:subjects,id',
             'marks' => 'required|array',
+            'marks.*.student_id' => 'required|exists:students,id',
+            'marks.*.marks_obtained' => 'nullable|numeric|min:0',
+            'marks.*.written_marks' => 'nullable|numeric|min:0',
+            'marks.*.practical_marks' => 'nullable|numeric|min:0',
+            'marks.*.viva_marks' => 'nullable|numeric|min:0',
+            'marks.*.full_marks' => 'nullable|numeric|min:0',
+            'marks.*.pass_marks' => 'nullable|numeric|min:0',
         ]);
 
         $schedule = ExamSchedule::where('exam_id', $request->exam_id)
@@ -83,7 +90,8 @@ class MarksController extends Controller
         $grades = Grade::all();
 
         foreach ($request->marks as $markData) {
-            $marksObtained = $markData['marks_obtained'];
+            $components = collect(['written_marks','practical_marks','viva_marks'])->map(fn($key)=>(float)($markData[$key]??0));
+            $marksObtained = $components->sum() > 0 ? $components->sum() : ($markData['marks_obtained'] ?? null);
             $gradeName = null;
             $gradePoint = null;
 
@@ -110,6 +118,11 @@ class MarksController extends Controller
                     'grade' => $gradeName,
                     'grade_point' => $gradePoint,
                     'note' => $markData['note'] ?? null,
+                    'written_marks' => $markData['written_marks'] ?? null,
+                    'practical_marks' => $markData['practical_marks'] ?? null,
+                    'viva_marks' => $markData['viva_marks'] ?? null,
+                    'full_marks' => $markData['full_marks'] ?? null,
+                    'pass_marks' => $markData['pass_marks'] ?? null,
                 ]
             );
         }

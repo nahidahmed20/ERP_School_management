@@ -17,7 +17,7 @@ class CertificateTemplateController extends Controller
             $query->where('title', 'like', "%{$search}%");
         }
         return Inertia::render('Admin/Documents/CertificateTemplates/Index', [
-            'templates' => $query->latest()->paginate(10)->withQueryString(),
+            'templates' => $query->latest()->paginate(\App\Support\PerPage::resolve())->withQueryString(),
             'filters' => $request->only(['search']),
         ]);
     }

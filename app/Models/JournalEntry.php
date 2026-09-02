@@ -8,8 +8,11 @@ class JournalEntry extends Model {
     
     protected $fillable = [
         'voucher_no', 'date', 'voucher_type', 'debit_account_id', 
-        'credit_account_id', 'amount', 'description', 'created_by'
+        'credit_account_id', 'amount', 'description', 'created_by', 'campus_id',
+        'source_type', 'source_id', 'source_key', 'reversed_at'
     ];
+
+    protected $casts = ['date' => 'date', 'reversed_at' => 'datetime', 'amount' => 'decimal:2'];
 
     public function debitAccount() {
         return $this->belongsTo(Account::class, 'debit_account_id');

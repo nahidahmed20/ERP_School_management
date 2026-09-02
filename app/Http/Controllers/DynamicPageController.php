@@ -15,6 +15,11 @@ class DynamicPageController extends Controller
         $menuItem = MenuItem::with('group')->where('route_name', $routeName)->first();
 
         abort_unless($menuItem, 404);
+        abort_unless(
+            $request->user()->hasRole('Super Admin')
+                || $request->user()->can($menuItem->permission ?: $menuItem->route_name),
+            403
+        );
 
         return Inertia::render('ComingSoon', [
             'title' => $menuItem->label,

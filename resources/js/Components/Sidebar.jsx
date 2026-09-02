@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import Icon from './Icons';
 
-export default function Sidebar({ mobileOpen = false }) {
+export default function Sidebar({ mobileOpen = false, onNavigate }) {
   const { url, props } = usePage();
   const navigation = props.navigation ?? [];
 
@@ -152,6 +152,7 @@ export default function Sidebar({ mobileOpen = false }) {
                           key={child.key || childRoute}
                           href={hrefFor(child)}
                           className={`nav-subitem ${active ? 'active' : ''}`}
+                          onClick={onNavigate}
                         >
                           <span className="dot" />
                           <span>{child.label}</span>
@@ -165,6 +166,7 @@ export default function Sidebar({ mobileOpen = false }) {
                   key={item.key || getRoute(item)}
                   href={hrefFor(item)}
                   className={`nav-item ${isChildActive(getRoute(item)) ? 'active' : ''}`}
+                  onClick={onNavigate}
                 >
                   <Icon name={item.icon} />
                   <span>{item.label}</span>

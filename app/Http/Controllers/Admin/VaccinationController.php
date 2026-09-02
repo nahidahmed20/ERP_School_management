@@ -21,7 +21,7 @@ class VaccinationController extends Controller
             })->orWhere('vaccine_name', 'like', "%{$search}%");
         }
 
-        $vaccinations = $query->latest('date_administered')->paginate(10)->withQueryString();
+        $vaccinations = $query->latest('date_administered')->paginate(\App\Support\PerPage::resolve())->withQueryString();
         $campuses = Campus::select('id', 'name')->get();
 
         // Spatie & Staff/Student Relation Data 

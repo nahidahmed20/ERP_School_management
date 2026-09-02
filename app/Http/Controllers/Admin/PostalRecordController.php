@@ -23,7 +23,7 @@ class PostalRecordController extends Controller
             $query->where('type', $request->type);
         }
 
-        $records = $query->latest('date')->paginate($request->per_page ?? 10)->withQueryString();
+        $records = $query->latest('date')->paginate(\App\Support\PerPage::resolve())->withQueryString();
 
         return Inertia::render('Admin/FrontOfficePostal/Index', [
             'records' => $records,

@@ -12,7 +12,8 @@ class AccountingVoucherController extends Controller
 {
     public function index(Request $request)
     {
-        $query = JournalEntry::with(['debitAccount:id,name,code', 'creditAccount:id,name,code', 'creator:id,name']);
+        $query = JournalEntry::with(['debitAccount:id,name,code', 'creditAccount:id,name,code', 'creator:id,name'])
+            ->whereNull('reversed_at');
 
         if ($search = $request->get('search')) {
             $query->where('voucher_no', 'like', "%{$search}%")
@@ -23,7 +24,7 @@ class AccountingVoucherController extends Controller
             $query->where('voucher_type', $type);
         }
 
-        $vouchers = $query->latest('date')->paginate(15)->withQueryString();
+        $vouchers = $query->latest('date')->paginate(\App\Support\PerPage::resolve(15))->withQueryString();
 
         return Inertia::render('Admin/Finance/Accounts/Vouchers/Index', [
             'vouchers' => $vouchers,
@@ -47,7 +48,7 @@ class AccountingVoucherController extends Controller
         ]);
 
         // Generate Voucher Number
-        $validated['voucher_no'] = 'VCH-' . date('ym') . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
+        $validated['voucher_no'] = 'VCH-' . date('ymd') . '-' . strtoupper(Str::random(8));
         $validated['created_by'] = auth()->id();
 
         JournalEntry::create($validated);
@@ -56,7 +57,7 @@ class AccountingVoucherController extends Controller
 
     public function destroy($id)
     {
-        JournalEntry::findOrFail($id)->delete();
+        JournalEntry::findOrFail($id)->update(['reversed_at' => now()]);
         return back()->with('success', 'Voucher deleted / reversed.');
     }
 }

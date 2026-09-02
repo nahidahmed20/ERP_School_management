@@ -1,7 +1,7 @@
 import { useForm } from '@inertiajs/react';
 import Icon from '@/Components/Icons';
 
-export default function MenuItemFormModal({ item, groups, parents, onClose }) {
+export default function MenuItemFormModal({ item, groups, parents, permissions = [], onClose }) {
   const isEdit = !!item;
 
   const { data, setData, post, put, processing, errors, reset } = useForm({
@@ -14,6 +14,7 @@ export default function MenuItemFormModal({ item, groups, parents, onClose }) {
     badge_count: item?.badge_count ?? '',
     order: item?.order ?? 0,
     is_active: item?.is_active ?? true,
+    permission: item?.permission ?? '',
   });
 
   function submit(e) {
@@ -135,6 +136,19 @@ export default function MenuItemFormModal({ item, groups, parents, onClose }) {
                   className={inputClass}
                 />
                 {errors.icon && <p className="text-rose-500 text-xs mt-1">{errors.icon}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Required Permission</label>
+                <select
+                  value={data.permission}
+                  onChange={(e) => setData('permission', e.target.value)}
+                  className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
+                >
+                  <option value="">Use route permission</option>
+                  {permissions.map((permission) => <option key={permission} value={permission}>{permission}</option>)}
+                </select>
+                {errors.permission && <p className="text-rose-500 text-xs mt-1">{errors.permission}</p>}
               </div>
 
               {/* Order & Badge */}

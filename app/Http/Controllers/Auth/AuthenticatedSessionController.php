@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\SecurityLoginHistory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -33,6 +35,14 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        SecurityLoginHistory::create([
+            'user_id' => $request->user()->id,
+            'ip_address' => $request->ip(),
+            'user_agent' => Str::limit((string) $request->userAgent(), 65535, ''),
+            'device_type' => $this->deviceType((string) $request->userAgent()),
+            'login_at' => now(),
+        ]);
+
         return redirect()->intended(route('dashboard', absolute: false));
     }
 
@@ -48,5 +58,14 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/');
+    }
+
+    private function deviceType(string $userAgent): string
+    {
+        return match (true) {
+            preg_match('/tablet|ipad|playbook|silk/i', $userAgent) === 1 => 'Tablet',
+            preg_match('/mobile|iphone|ipod|android/i', $userAgent) === 1 => 'Mobile',
+            default => 'Desktop',
+        };
     }
 }

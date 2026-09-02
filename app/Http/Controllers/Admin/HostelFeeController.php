@@ -29,7 +29,7 @@ class HostelFeeController extends Controller
             $query->where('month', $month);
         }
 
-        $fees = $query->latest('year')->latest('month')->paginate(15)->withQueryString();
+        $fees = $query->latest('year')->latest('month')->paginate(\App\Support\PerPage::resolve(15))->withQueryString();
 
         return Inertia::render('Admin/Campus/Hostel/Fees/Index', [
             'fees' => $fees,

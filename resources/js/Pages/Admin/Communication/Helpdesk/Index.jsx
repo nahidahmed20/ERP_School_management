@@ -43,12 +43,12 @@ export default function Index({ tickets, campuses, activeCampusId, filters }) {
     if (!tickets.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
     const headers = ['Ticket ID', 'Subject', 'Requester Name', 'Type', 'Priority', 'Status', 'Date'];
     const rows = tickets.data.map(item => [
-      item.ticket_number || 'N/A', 
-      item.subject || 'N/A', 
-      item.requester_name || 'N/A', 
-      item.requester_type || 'N/A', 
-      item.priority || 'Medium', 
-      item.status || 'Open', 
+      item.ticket_number || 'N/A',
+      item.subject || 'N/A',
+      item.requester_name || 'N/A',
+      item.requester_type || 'N/A',
+      item.priority || 'Medium',
+      item.status || 'Open',
       displayDate(item.created_at)
     ]);
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows.map(e => e.map(val => `"${val}"`).join(','))].join('\n');
@@ -88,7 +88,7 @@ export default function Index({ tickets, campuses, activeCampusId, filters }) {
       <div className="print-title">Helpdesk &amp; Tickets Directory - {new Date().toLocaleDateString('en-GB')}</div>
 
       <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8 no-print">
-        
+
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
@@ -107,7 +107,7 @@ export default function Index({ tickets, campuses, activeCampusId, filters }) {
         {/* Unified Modern Toolbar */}
         <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-            
+
             {/* Per Page */}
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold text-slate-500">Show</span>
@@ -122,7 +122,7 @@ export default function Index({ tickets, campuses, activeCampusId, filters }) {
                 <option value="50">50 / Page</option>
                 <option value="100">100 / Page</option>
                 <option value="500">500 / Page</option>
-                <option value="all">All</option>
+                <option value="all">All </option>
               </select>
             </div>
 
@@ -260,12 +260,12 @@ export default function Index({ tickets, campuses, activeCampusId, filters }) {
       {viewingTicket && <TicketViewModal ticket={viewingTicket} onClose={() => { setViewingTicket(null); applyFilters(); }} />}
 
       {deletingItem && (
-        <ConfirmDeleteModal 
-          item={{ name: deletingItem.ticket_number }} 
-          onCancel={() => setDeletingItem(null)} 
+        <ConfirmDeleteModal
+          item={{ name: deletingItem.ticket_number }}
+          onCancel={() => setDeletingItem(null)}
           onConfirm={() => {
             router.delete(route('admin.communication.helpdesk.destroy', deletingItem.id), { onSuccess: () => setDeletingItem(null) });
-          }} 
+          }}
         />
       )}
     </AuthenticatedLayout>

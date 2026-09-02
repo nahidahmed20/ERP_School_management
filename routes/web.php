@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Admin\AcademicSessionController;
+use App\Http\Controllers\Admin\AccountingChartController;
+use App\Http\Controllers\Admin\AccountingVoucherController;
 use App\Http\Controllers\Admin\AdmissionController;
 use App\Http\Controllers\Admin\AdmissionInquiryController;
 use App\Http\Controllers\Admin\AlumniController;
@@ -15,7 +17,6 @@ use App\Http\Controllers\Admin\BiometricEnrolledUserController;
 use App\Http\Controllers\Admin\BiometricSyncLogController;
 use App\Http\Controllers\Admin\BookController;
 use App\Http\Controllers\Admin\BookIssueController;
-use App\Http\Controllers\Admin\BranchController;
 use App\Http\Controllers\Admin\CafeteriaOrderController;
 use App\Http\Controllers\Admin\CafeteriaOutletController;
 use App\Http\Controllers\Admin\CampusController;
@@ -31,6 +32,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DepartmentController;
 use App\Http\Controllers\Admin\DesignationController;
 use App\Http\Controllers\Admin\DisciplinaryRecordController;
+use App\Http\Controllers\Admin\EmailLogController;
 use App\Http\Controllers\Admin\Exam\ExamController;
 use App\Http\Controllers\Admin\Exam\ExamScheduleController;
 use App\Http\Controllers\Admin\Exam\GradeController;
@@ -49,11 +51,11 @@ use App\Http\Controllers\Admin\HealthRecordController;
 use App\Http\Controllers\Admin\HelpdeskTicketController;
 use App\Http\Controllers\Admin\HomeworkController;
 use App\Http\Controllers\Admin\HostelAllocationController;
+use App\Http\Controllers\Admin\HostelFeeController;
 use App\Http\Controllers\Admin\HostelRoomController;
 use App\Http\Controllers\Admin\HouseController;
 use App\Http\Controllers\Admin\IdCardTemplateController;
 use App\Http\Controllers\Admin\InterviewController;
-use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Admin\JobPostController;
 use App\Http\Controllers\Admin\LeaveTypeController;
 use App\Http\Controllers\Admin\LedgerController;
@@ -79,76 +81,106 @@ use App\Http\Controllers\Admin\PurchaseItemController;
 use App\Http\Controllers\Admin\PurchaseOrderController;
 use App\Http\Controllers\Admin\PurchaseRequestController;
 use App\Http\Controllers\Admin\QuestionBankController;
+use App\Http\Controllers\Admin\QuestionPaperController;
+use App\Http\Controllers\Admin\OfficialDocumentController;
+use App\Http\Controllers\Admin\OfficialDocumentTemplateController;
 use App\Http\Controllers\Admin\QuizAttemptController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\SaasAiAssistantController;
+use App\Http\Controllers\Admin\SaasApiKeyController;
+use App\Http\Controllers\Admin\SaasBackupController;
+use App\Http\Controllers\Admin\SaasPlanController;
+use App\Http\Controllers\Admin\SaasQueueMonitorController;
+use App\Http\Controllers\Admin\SaasScheduledTaskController;
+use App\Http\Controllers\Admin\SaasTenantController;
 use App\Http\Controllers\Admin\SaleController;
 use App\Http\Controllers\Admin\SchoolClassController;
 use App\Http\Controllers\Admin\SectionController;
+use App\Http\Controllers\Admin\SecurityAuditLogController;
 use App\Http\Controllers\Admin\SecurityFailedLoginController;
 use App\Http\Controllers\Admin\SecurityLoginController;
 use App\Http\Controllers\Admin\SecurityTrustedDeviceController;
 use App\Http\Controllers\Admin\SmsLogController;
+use App\Http\Controllers\Admin\StaffAppraisalController;
 use App\Http\Controllers\Admin\StaffAttendanceController;
 use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Admin\StaffLeaveController;
+use App\Http\Controllers\Admin\StaffLoanController;
 use App\Http\Controllers\Admin\StaffPayrollController;
+use App\Http\Controllers\Admin\StaffHrRecordController;
 use App\Http\Controllers\Admin\StudentAttendanceController;
+use App\Http\Controllers\Admin\StudentDevelopmentRecordController;
 use App\Http\Controllers\Admin\StudentCategoryController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\StudentDocumentController;
 use App\Http\Controllers\Admin\StudentFeeController;
+use App\Http\Controllers\Admin\StudentServiceReviewController;
+use App\Http\Controllers\Admin\StudyMaterialController;
 use App\Http\Controllers\Admin\SubjectController;
 use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Admin\SystemRegistryController;
 use App\Http\Controllers\Admin\TimeTableController;
 use App\Http\Controllers\Admin\TranscriptTemplateController;
 use App\Http\Controllers\Admin\TransportAllocationController;
+use App\Http\Controllers\Admin\TransportRouteController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VaccinationController;
 use App\Http\Controllers\Admin\VehicleController;
 use App\Http\Controllers\Admin\VendorController;
 use App\Http\Controllers\Admin\VisitLogController;
 use App\Http\Controllers\Admin\VisitorController;
-use App\Http\Controllers\Admin\SecurityAuditLogController;
-use App\Http\Controllers\Admin\SaasTenantController;
-use App\Http\Controllers\Admin\SaasPlanController;
-use App\Http\Controllers\Admin\SaasApiKeyController;
-use App\Http\Controllers\Admin\SaasAiAssistantController;
-use App\Http\Controllers\Admin\SaasBackupController;
-use App\Http\Controllers\Admin\SaasScheduledTaskController;
-use App\Http\Controllers\Admin\SaasQueueMonitorController;
-use App\Http\Controllers\Admin\StudyMaterialController;
-use App\Http\Controllers\Admin\TransportRouteController;
-use App\Http\Controllers\Admin\StaffLoanController;
-use App\Http\Controllers\Admin\StaffAppraisalController;
-use App\Http\Controllers\Admin\AccountingChartController;
-use App\Http\Controllers\Admin\AccountingVoucherController;
-use App\Http\Controllers\Admin\HostelFeeController;
-use App\Http\Controllers\Admin\EmailLogController;
 use App\Http\Controllers\DynamicPageController;
 use App\Http\Controllers\ProfileController;
-use Illuminate\Foundation\Application;
+use App\Http\Controllers\PublicInquiryController;
+use App\Http\Controllers\StudentPortalController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-
 
 Route::get('/', fn () => Inertia::render('Site/Home'))->name('home');
 Route::get('/campuses', fn () => Inertia::render('Site/Campuses'))->name('site.campuses');
 Route::get('/academics', fn () => Inertia::render('Site/Academics'))->name('site.academics');
 Route::get('/admissions', fn () => Inertia::render('Site/Admissions'))->name('site.admissions');
 Route::get('/contact', fn () => Inertia::render('Site/Contact'))->name('site.contact');
+Route::post('/admissions', [PublicInquiryController::class, 'admission'])
+    ->middleware('throttle:5,1')->name('site.admissions.store');
+Route::post('/contact', [PublicInquiryController::class, 'contact'])
+    ->middleware('throttle:5,1')->name('site.contact.store');
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->middleware(['auth', 'verified'])
+    ->middleware(['auth', 'verified', 'admin.access'])
     ->name('dashboard');
+Route::get('/my-results', [DashboardController::class, 'results'])
+    ->middleware(['auth', 'verified', 'permission:portal.results.view'])
+    ->name('portal.results.view');
+Route::middleware(['auth', 'verified', 'permission:portal.services.view'])->group(function () {
+    Route::get('/student-services', [StudentPortalController::class, 'index'])->name('portal.services');
+    Route::post('/student-services/homework/{homework}', [StudentPortalController::class, 'submitHomework'])->name('portal.homework.submit');
+    Route::post('/student-services/leave', [StudentPortalController::class, 'leave'])->name('portal.leave.store');
+    Route::post('/student-services/attendance-correction', [StudentPortalController::class, 'attendanceCorrection'])->name('portal.attendance-correction.store');
+    Route::post('/student-services/profile-update', [StudentPortalController::class, 'profileUpdate'])->name('portal.profile-update.store');
+    Route::post('/student-services/task', [StudentPortalController::class, 'toggleTask'])->name('portal.task.toggle');
+    Route::post('/student-services/library-reservation', [StudentPortalController::class, 'reserveBook'])->name('portal.library-reservation.store');
+    Route::post('/student-services/ticket', [StudentPortalController::class, 'ticket'])->name('portal.ticket.store');
+    Route::post('/student-services/payment/{invoice}', [StudentPortalController::class, 'paymentRequest'])->name('portal.payment.request');
+});
+Route::middleware(['auth', 'verified', 'permission:portal.exams.attempt'])->group(function () {
+    Route::get('/student-exams/{exam}', [StudentPortalController::class, 'startExam'])->name('portal.exams.start');
+    Route::post('/student-exams/{exam}', [StudentPortalController::class, 'submitExam'])->name('portal.exams.submit');
+});
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
-Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('student-service-reviews', [StudentServiceReviewController::class,'index'])->name('student-services.index');
+    Route::patch('student-service-reviews/homework/{submission}', [StudentServiceReviewController::class,'homework'])->name('student-services.homework');
+    Route::patch('student-service-reviews/leave/{leave}', [StudentServiceReviewController::class,'leave'])->name('student-services.leave');
+    Route::patch('student-service-reviews/correction/{correction}', [StudentServiceReviewController::class,'correction'])->name('student-services.correction');
+    Route::patch('student-service-reviews/profile/{profile}', [StudentServiceReviewController::class,'profile'])->name('student-services.profile');
+    Route::patch('student-service-reviews/reservation/{reservation}', [StudentServiceReviewController::class,'reservation'])->name('student-services.reservation');
     Route::get('/menu-manager', [MenuItemController::class, 'index'])->name('menu.index');
     Route::post('/menu-manager', [MenuItemController::class, 'store'])->name('menu.store');
     Route::put('/menu-manager/{menuItem}', [MenuItemController::class, 'update'])->name('menu.update');
@@ -157,6 +189,8 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
     Route::get('/menu-manager/export/pdf', [MenuItemController::class, 'exportPdf'])->name('menu.export.pdf');
     Route::get('/menu-groups', [MenuGroupController::class, 'index'])->name('menu-groups.index');
     Route::post('/menu-groups', [MenuGroupController::class, 'store'])->name('menu-groups.store');
+    Route::put('/menu-groups/{menuGroup}', [MenuGroupController::class, 'update'])->name('menu-groups.update');
+    Route::delete('/menu-groups/{menuGroup}', [MenuGroupController::class, 'destroy'])->name('menu-groups.destroy');
 
     Route::resource('users', UserController::class);
     Route::resource('roles', RoleController::class);
@@ -166,6 +200,7 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
     Route::resource('campuses', CampusController::class);
     Route::resource('sessions', AcademicSessionController::class);
     Route::resource('general', GeneralSettingController::class);
+    Route::post('general/website', [GeneralSettingController::class, 'updateWebsite'])->name('general.website.update');
     Route::resource('files', FileManagerController::class);
     Route::post('files/folder', [FileManagerController::class, 'storeFolder'])->name('files.folder.store');
     Route::resource('registry', SystemRegistryController::class);
@@ -187,7 +222,6 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
     Route::post('time-tables/bulk-update', [TimeTableController::class, 'bulkUpdate'])->name('time-tables.bulk-update');
     Route::resource('time-tables', TimeTableController::class);
 
-
     Route::resource('lesson-plans', LessonPlanController::class);
 
     Route::resource('communication-calendars', EventController::class);
@@ -195,9 +229,9 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
     Route::resource('exam-schedules', ExamScheduleController::class);
     Route::post('exams/schedule/bulk-update', [ExamScheduleController::class, 'bulkUpdate'])->name('exams.schedule.bulk-update');
 
-    Route::resource('grades',GradeController::class);
+    Route::resource('grades', GradeController::class);
     Route::delete('exams-marks/clear', [MarksController::class, 'destroy'])->name('exams-marks.destroy');
-    Route::resource('exams-marks',MarksController::class);
+    Route::resource('exams-marks', MarksController::class);
     Route::get('exams/report/cards', [MarksController::class, 'examsReportcards'])->name('exams.reportcards');
     Route::get('exams/tabulation/sheet', [TabulationSheetController::class, 'index'])->name('exams.tabulation');
 
@@ -212,13 +246,15 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
 
     Route::resource('students', StudentController::class);
     Route::resource('student-attendance', StudentAttendanceController::class);
+    Route::resource('student-development-records', StudentDevelopmentRecordController::class)->only(['index','store','update','destroy']);
 
-    Route::resource('leave-types',LeaveTypeController::class);
+    Route::resource('leave-types', LeaveTypeController::class);
     Route::resource('staff', StaffController::class);
     Route::get('staff-attendance', [StaffAttendanceController::class, 'index'])->name('staff-attendance.index');
     Route::post('staff-attendance', [StaffAttendanceController::class, 'store'])->name('staff-attendance.store');
     Route::resource('staff-leaves', StaffLeaveController::class);
     Route::resource('staff-payrolls', StaffPayrollController::class);
+    Route::resource('staff-hr-records', StaffHrRecordController::class)->only(['index', 'store', 'update', 'destroy']);
 
     Route::get('stff/attendances/report', [ReportController::class, 'staffAttendanceReport'])->name('staff.attendances-report');
     Route::post('/attendance-report', [ReportController::class, 'generate'])->name('attendance-report.generate');
@@ -226,6 +262,7 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
     Route::get('due-fees', [ReportController::class, 'dueFees'])->name('due_fees');
     Route::get('std/attendance/report', [ReportController::class, 'studentReport'])->name('studentAttendance.report');
     Route::get('/reports/saved', [ReportController::class, 'saved'])->name('reports.saved');
+    Route::get('/reports/financial-summary', [ReportController::class, 'financialSummary'])->name('reports.financial-summary');
 
     Route::resource('fees-groups', FeeGroupController::class);
     Route::get('fees-groups/{feeGroup}/fees-types', [FeeTypeController::class, 'index'])->name('fees-types.index');
@@ -280,14 +317,14 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
     Route::resource('documents/certificates', GeneratedCertificateController::class)->names('documents.certificates');
     Route::resource('documents/idcards', IdCardTemplateController::class)->names('documents.idcards');
     Route::resource('documents/transcripts', TranscriptTemplateController::class)->names('documents.transcripts');
+    Route::resource('documents/official', OfficialDocumentController::class)->only(['index','store','destroy'])->names('documents.official');
+    Route::resource('documents/official-templates', OfficialDocumentTemplateController::class)->only(['store','update','destroy'])->names('documents.official-templates');
 
     Route::resource('vehicles', VehicleController::class);
     Route::resource('transports', TransportAllocationController::class);
     Route::resource('hostel-rooms', HostelRoomController::class);
     Route::resource('hostel-allocations', HostelAllocationController::class);
     Route::resource('library-issues', BookIssueController::class);
-
-
 
     Route::prefix('purchase')->name('purchase.')->group(function () {
         Route::resource('vendors', VendorController::class);
@@ -309,10 +346,12 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
     Route::delete('purchase-items/sizes/{id}', [PurchaseItemController::class, 'destroySize'])->name('purchase.items.sizes.destroy');
     Route::post('purchase-items/colors', [PurchaseItemController::class, 'storeColor'])->name('purchase.items.colors.store');
     Route::delete('purchase-items/colors/{id}', [PurchaseItemController::class, 'destroyColor'])->name('purchase.items.colors.destroy');
+    Route::get('purchase-items/report', [PurchaseItemController::class, 'report'])->name('purchase.items.report');
 
     Route::prefix('lms')->name('lms.')->group(function () {
         Route::resource('exams', OnlineExamController::class);
         Route::resource('questions', QuestionBankController::class);
+        Route::resource('question-papers', QuestionPaperController::class)->only(['index','store','destroy']);
         Route::get('exam-questions', [ExamQuestionController::class, 'index'])->name('exam-questions.index');
         Route::post('exam-questions', [ExamQuestionController::class, 'store'])->name('exam-questions.store');
         Route::delete('exam-questions/{id}', [ExamQuestionController::class, 'destroy'])->name('exam-questions.destroy');
@@ -345,7 +384,7 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
     });
 
     Route::get('sales/{sale}/invoice', [SaleController::class, 'invoice'])->name('sales.invoice');
-    Route::get('/sales/reports', [SaleController::class, 'index'])->name('sales.reports.index');
+    Route::get('/sales/reports', [SaleController::class, 'report'])->name('sales.reports.index');
     Route::resource('sales', SaleController::class);
 
     Route::prefix('cafeteria')->name('cafeteria.')->group(function () {
@@ -394,20 +433,17 @@ Route::middleware('auth') ->prefix('admin')->name('admin.')->group(function () {
     Route::resource('hostel-fees', HostelFeeController::class);
 
     Route::get('email-logs', [EmailLogController::class, 'index'])->name('email-logs.index');
-Route::delete('email-logs/{id}', [EmailLogController::class, 'destroyLog'])->name('email-logs.destroy');
+    Route::delete('email-logs/{id}', [EmailLogController::class, 'destroyLog'])->name('email-logs.destroy');
 
-// For Templates
-Route::post('email-templates', [EmailLogController::class, 'storeTemplate'])->name('email-templates.store');
-Route::put('email-templates/{id}', [EmailLogController::class, 'updateTemplate'])->name('email-templates.update');
-Route::delete('email-templates/{id}', [EmailLogController::class, 'destroyTemplate'])->name('email-templates.destroy');
+    // For Templates
+    Route::post('email-templates', [EmailLogController::class, 'storeTemplate'])->name('email-templates.store');
+    Route::put('email-templates/{id}', [EmailLogController::class, 'updateTemplate'])->name('email-templates.update');
+    Route::delete('email-templates/{id}', [EmailLogController::class, 'destroyTemplate'])->name('email-templates.destroy');
 });
 
-
-
+require __DIR__.'/auth.php';
 
 Route::middleware('auth')
     ->get('/{any}', DynamicPageController::class)
     ->where('any', '^(?!login|register|dashboard|profile|admin|logout).*$')
     ->name('dynamic.page');
-
-require __DIR__.'/auth.php';

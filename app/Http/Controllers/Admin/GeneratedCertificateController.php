@@ -23,7 +23,7 @@ class GeneratedCertificateController extends Controller
                   });
         }
 
-        $certificates = $query->latest()->paginate(10)->withQueryString();
+        $certificates = $query->latest()->paginate(\App\Support\PerPage::resolve())->withQueryString();
         $templates = CertificateTemplate::where('is_active', true)->select('id', 'title')->get();
         $campuses = Campus::select('id', 'name')->get();
 

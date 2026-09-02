@@ -23,7 +23,7 @@ class AdmissionInquiryController extends Controller
             $query->where('status', $request->status);
         }
 
-        $inquiries = $query->latest('inquiry_date')->paginate($request->per_page ?? 10)->withQueryString();
+        $inquiries = $query->latest('inquiry_date')->paginate(\App\Support\PerPage::resolve())->withQueryString();
 
         return Inertia::render('Admin/FrontOfficeAdmissionInquiries/Index', [
             'inquiries' => $inquiries,

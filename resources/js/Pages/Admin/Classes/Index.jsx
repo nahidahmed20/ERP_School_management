@@ -19,7 +19,7 @@ export default function Index({ classes, campuses, allSections, allSubjects, fil
   const [formOpen, setFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [deletingItem, setDeletingItem] = useState(null);
-  
+
   const [assigningSectionClass, setAssigningSectionClass] = useState(null);
   const [assigningSubjectClass, setAssigningSubjectClass] = useState(null);
 
@@ -45,8 +45,8 @@ export default function Index({ classes, campuses, allSections, allSubjects, fil
     if (!classes.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
     const headers = ['Class Name', 'Numeric Name', 'Sections', 'Subjects', 'Status'];
     const rows = classes.data.map(item => [
-      item.name || 'N/A', 
-      item.numeric_name || 'N/A', 
+      item.name || 'N/A',
+      item.numeric_name || 'N/A',
       item.sections?.map(s => s.name).join(', ') || 'None',
       item.subjects?.map(s => s.name).join(', ') || 'None',
       item.is_active ? 'Active' : 'Inactive'
@@ -88,7 +88,7 @@ export default function Index({ classes, campuses, allSections, allSubjects, fil
       <div className="print-title">Classes Directory - {new Date().toLocaleDateString('en-GB')}</div>
 
       <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8 no-print">
-        
+
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
@@ -107,7 +107,7 @@ export default function Index({ classes, campuses, allSections, allSubjects, fil
         {/* Unified Modern Toolbar */}
         <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-            
+
             {/* Per Page */}
             <select
               value={perPage}
@@ -119,14 +119,14 @@ export default function Index({ classes, campuses, allSections, allSubjects, fil
               <option value="50">50 / Page</option>
               <option value="100">100 / Page</option>
               <option value="500">500 / Page</option>
-              <option value="all">All</option>
+              <option value="all">All Page</option>
             </select>
 
             <div className="hidden sm:block w-px h-6 bg-slate-200"></div>
 
             {/* Status Filter */}
-            <select 
-              value={status} 
+            <select
+              value={status}
               onChange={(e) => { setStatus(e.target.value); applyFilters({ status: e.target.value }); }}
               className="w-full sm:w-36 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
             >
@@ -218,7 +218,7 @@ export default function Index({ classes, campuses, allSections, allSubjects, fil
                       <td className="px-6 py-4 text-sm font-semibold text-slate-700">
                         {item.numeric_name ?? '—'}
                       </td>
-                      
+
                       {/* Assigned Sections Column */}
                       <td className="px-6 py-4">
                         <div className="flex flex-wrap gap-1.5 max-w-[200px]">
@@ -230,7 +230,7 @@ export default function Index({ classes, campuses, allSections, allSubjects, fil
                           {(!item.sections || item.sections.length === 0) && <span className="text-slate-400 text-xs italic">No sections</span>}
                         </div>
                       </td>
-                      
+
                       {/* Assigned Subjects Column */}
                       <td className="px-6 py-4">
                         <div className="flex flex-wrap gap-1.5 max-w-[250px]">
@@ -247,13 +247,13 @@ export default function Index({ classes, campuses, allSections, allSubjects, fil
                           {(!item.subjects || item.subjects.length === 0) && <span className="text-slate-400 text-xs italic">No subjects</span>}
                         </div>
                       </td>
-                      
+
                       <td className="px-6 py-4 text-center">
                         <span className={`inline-flex px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide uppercase ${item.is_active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}`}>
                           {item.is_active ? 'Active' : 'Inactive'}
                         </span>
                       </td>
-                      
+
                       <td className="px-6 py-4 text-right no-print">
                         <div className="flex items-center justify-end gap-1.5">
                           <button onClick={() => setAssigningSectionClass(item)} className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="Assign Sections">
@@ -284,11 +284,11 @@ export default function Index({ classes, campuses, allSections, allSubjects, fil
       </div>
 
       {formOpen && <ClassFormModal item={editingItem} campuses={campuses} activeCampusId={auth?.active_campus_id} onClose={() => setFormOpen(false)} />}
-      
+
       {assigningSectionClass && <AssignSectionModal schoolClass={assigningSectionClass} allSections={allSections} onClose={() => setAssigningSectionClass(null)} />}
-      
+
       {assigningSubjectClass && <AssignSubjectModal schoolClass={assigningSubjectClass} allSubjects={allSubjects} onClose={() => setAssigningSubjectClass(null)} />}
-      
+
       {deletingItem && (
         <ConfirmDeleteModal item={deletingItem} onCancel={() => setDeletingItem(null)} onConfirm={() => {
           router.delete(route('admin.classes.destroy', deletingItem.id), { onSuccess: () => setDeletingItem(null) });

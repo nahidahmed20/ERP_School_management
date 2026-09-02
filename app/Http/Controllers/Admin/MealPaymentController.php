@@ -22,7 +22,7 @@ class MealPaymentController extends Controller
                   });
         }
 
-        $payments = $query->latest()->paginate(10)->withQueryString();
+        $payments = $query->latest()->paginate(\App\Support\PerPage::resolve())->withQueryString();
         $campuses = Campus::select('id', 'name')->get();
 
         // Spatie & Staff/Student Relation Data 

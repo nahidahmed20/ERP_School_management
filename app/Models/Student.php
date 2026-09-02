@@ -45,4 +45,9 @@ class Student extends Model
         return $this->hasMany(StudentDocument::class, 'student_id');
     }
 
+    public function developmentRecords()
+    {
+        return $this->hasMany(StudentDevelopmentRecord::class);
+    }
+
 }

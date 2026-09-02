@@ -12,13 +12,52 @@ use App\Models\StaffAttendance;
 use App\Models\Student;
 use App\Models\StudentAttendance;
 use App\Models\User;
+use App\Models\Account;
+use App\Models\JournalEntry;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class ReportController extends Controller
 {
+<<<<<<< HEAD
     // ১. Staff Attendance Report (GET)
+=======
+    public function financialSummary(Request $request)
+    {
+        $startDate = $request->start_date ?? now()->startOfMonth()->toDateString();
+        $endDate = $request->end_date ?? now()->endOfMonth()->toDateString();
+
+        $accounts = Account::query()->where('is_active', true)
+            ->withSum(['debitEntries as period_debit' => fn ($q) => $q->whereNull('reversed_at')->whereBetween('date', [$startDate, $endDate])], 'amount')
+            ->withSum(['creditEntries as period_credit' => fn ($q) => $q->whereNull('reversed_at')->whereBetween('date', [$startDate, $endDate])], 'amount')
+            ->orderBy('code')->get()->map(function ($account) {
+                $debit = (float) ($account->period_debit ?? 0);
+                $credit = (float) ($account->period_credit ?? 0);
+                $normalDebit = in_array($account->type, ['Asset', 'Expense'], true);
+                $account->balance = round((float) $account->opening_balance + ($normalDebit ? $debit - $credit : $credit - $debit), 2);
+                return $account;
+            });
+
+        $income = $accounts->where('type', 'Income')->sum('balance');
+        $expense = $accounts->where('type', 'Expense')->sum('balance');
+        $entries = JournalEntry::whereNull('reversed_at')->whereBetween('date', [$startDate, $endDate]);
+
+        return Inertia::render('Admin/Reports/FinancialSummary', [
+            'accounts' => $accounts->values(),
+            'summary' => [
+                'total_debit' => (float) (clone $entries)->sum('amount'),
+                'total_credit' => (float) (clone $entries)->sum('amount'),
+                'income' => (float) $income,
+                'expense' => (float) $expense,
+                'net_profit' => (float) ($income - $expense),
+                'is_balanced' => abs((float) (clone $entries)->sum('amount') - (float) (clone $entries)->sum('amount')) < 0.01,
+            ],
+            'filters' => compact('startDate', 'endDate'),
+        ]);
+    }
+
+>>>>>>> a1e1e67 (change many)
     public function staffAttendanceReport()
     {
         $staffs = Staff::select('id', 'first_name', 'last_name', 'staff_id_no')

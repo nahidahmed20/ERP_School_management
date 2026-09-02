@@ -22,7 +22,7 @@ class JobPostController extends Controller
             $query->where('status', $request->status);
         }
 
-        $jobPosts = $query->latest('created_at')->paginate($request->per_page ?? 10)->withQueryString();
+        $jobPosts = $query->latest('created_at')->paginate(\App\Support\PerPage::resolve())->withQueryString();
 
         return Inertia::render('Admin/RecruitmentJobPosts/Index', [
             'jobPosts' => $jobPosts,

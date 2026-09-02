@@ -20,7 +20,7 @@ class MedicineStockController extends Controller
                   ->orWhere('category', 'like', "%{$search}%");
         }
 
-        $stocks = $query->latest()->paginate(10)->withQueryString();
+        $stocks = $query->latest()->paginate(\App\Support\PerPage::resolve())->withQueryString();
         $rooms = MedicalRoom::where('is_active', true)->select('id', 'room_number')->get();
         $campuses = Campus::select('id', 'name')->get();
 

@@ -24,7 +24,7 @@ class AlumniController extends Controller
             $query->where('passing_year', $request->passing_year);
         }
 
-        $alumnis = $query->latest()->paginate($request->per_page ?? 10)->withQueryString();
+        $alumnis = $query->latest()->paginate(\App\Support\PerPage::resolve())->withQueryString();
 
         return Inertia::render('Admin/AlumniDirectory/Index', [
             'alumnis' => $alumnis,

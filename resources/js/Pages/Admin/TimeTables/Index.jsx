@@ -260,6 +260,7 @@ export default function Index({ timeTables, classes, filters }) {
                                 Room: {period.classroom.room_number}
                               </div>
                             )}
+                            {period.teacher && <div className="flex items-center gap-2"><Icon name="user" className="w-3.5 h-3.5 opacity-50 shrink-0" />Teacher: {period.teacher.first_name} {period.teacher.last_name}</div>}
                           </div>
                         </div>
                       );
