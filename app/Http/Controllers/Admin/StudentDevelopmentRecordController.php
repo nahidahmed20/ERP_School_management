@@ -21,7 +21,7 @@ class StudentDevelopmentRecordController extends Controller
         if ($request->filled('search')) $query->where(fn($q) => $q->where('title','like',"%{$request->search}%")->orWhereHas('student',fn($s)=>$s->where('first_name','like',"%{$request->search}%")->orWhere('admission_no','like',"%{$request->search}%")));
         return Inertia::render('Admin/Students/Development/Index', [
             'records'=>$query->paginate(\App\Support\PerPage::resolve(15))->withQueryString(),
-            'studentList'=>Student::with(['currentEnrollment.schoolClass:id,name'])->where('is_active',true)->orderBy('first_name')->get(['id','first_name','last_name','admission_no']),
+            'studentList'=>Student::with(['currentEnrollment.schoolClass:id,name'])->where('status',true)->orderBy('first_name')->get(['id','first_name','last_name','admission_no']),
             'filters'=>$request->only(['type','student_id','search']),
             'summary'=>collect(self::TYPES)->mapWithKeys(fn($type)=>[$type=>StudentDevelopmentRecord::where('record_type',$type)->count()]),
         ]);

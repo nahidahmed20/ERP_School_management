@@ -12,4 +12,7 @@ class HostelRoom extends Model
 
     protected $guarded = ['id'];
 
+    public function beds(){ return $this->hasMany(HostelBed::class); }
+    public function allocations(){ return $this->hasMany(HostelAllocation::class); }
+
 }

@@ -9,6 +9,15 @@ class StaffPayroll extends Model
 {
 
     protected $guarded=['id'];
+    protected $casts=[
+        'calculation'=>'array', 'generated_at'=>'datetime',
+        'basic_salary'=>'decimal:2', 'allowance'=>'decimal:2', 'deduction'=>'decimal:2', 'net_salary'=>'decimal:2',
+        'daily_rate'=>'decimal:2', 'absence_deduction'=>'decimal:2', 'loan_deduction'=>'decimal:2',
+        'overtime_rate'=>'decimal:2', 'overtime_amount'=>'decimal:2',
+        'bonus'=>'decimal:2', 'arrears'=>'decimal:2', 'provident_fund'=>'decimal:2',
+        'tax_deduction'=>'decimal:2', 'gratuity_provision'=>'decimal:2',
+        'approved_at'=>'datetime', 'finalized_at'=>'datetime',
+    ];
 
     public function staff()
     {

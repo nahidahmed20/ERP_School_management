@@ -6,6 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\{BiometricDevice, Campus};
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Models\BiometricEnrolledUser;
+use App\Services\BiometricAttendanceService;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Str;
 
 class BiometricDeviceController extends Controller
 {
@@ -36,7 +40,27 @@ class BiometricDeviceController extends Controller
                 'search' => $request->get('search', ''),
                 'per_page' => $perPageRaw,
             ],
+            'enrolledUsers' => BiometricEnrolledUser::where('is_active', true)->get(['biometric_id','user_name','user_type']),
         ]);
+    }
+
+    public function token(BiometricDevice $device)
+    {
+        $token=Str::random(48);$device->update(['api_token_hash'=>hash('sha256',$token),'sync_mode'=>'push']);
+        return back()->with('success','Push token generated. Copy it now: '.$token);
+    }
+
+    public function sync(BiometricDevice $device)
+    {
+        Artisan::call('attendance:sync',['--device'=>$device->id]);
+        return back()->with($device->fresh()->status==='Online'?'success':'error',trim(Artisan::output()));
+    }
+
+    public function simulate(Request $request,BiometricDevice $device,BiometricAttendanceService $service)
+    {
+        $data=$request->validate(['biometric_id'=>'required|exists:biometric_enrolled_users,biometric_id','punch_time'=>'required|date']);
+        $log=$service->ingest($device,$data+['state'=>'Simulator']);
+        return back()->with($log->sync_status==='Success'?'success':'error',$log->sync_status==='Success'?'Test punch synced successfully.':$log->error_message);
     }
 
     public function store(Request $request)

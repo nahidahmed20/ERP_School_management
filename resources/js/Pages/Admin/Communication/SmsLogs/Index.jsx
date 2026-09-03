@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, router, usePage, useForm } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
 import Pagination from '@/Components/Pagination';
@@ -7,7 +7,7 @@ import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 import SmsFormModal from './Partials/SmsFormModal';
 import Swal from 'sweetalert2';
 
-export default function Index({ logs, campuses, activeCampusId, filters }) {
+export default function Index({ logs, campuses, activeCampusId, filters, classes = [], exams = [] }) {
   const { flash } = usePage().props;
 
   const [search, setSearch] = useState(filters.search ?? '');
@@ -15,6 +15,9 @@ export default function Index({ logs, campuses, activeCampusId, filters }) {
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [deletingItem, setDeletingItem] = useState(null);
+  const campaign = useForm({ type:'absent', date:new Date().toISOString().slice(0,10), exam_id:'', class_id:'', section_id:'', message:'' });
+  const selectedClass = classes.find(c => String(c.id) === String(campaign.data.class_id));
+  const campaignText = {notice:'সম্মানিত অভিভাবক, {student}-এর জন্য গুরুত্বপূর্ণ নোটিশ: ',emergency:'জরুরি বিজ্ঞপ্তি: ',homework:'সম্মানিত অভিভাবক, {student}-এর নতুন homework দেওয়া হয়েছে।',meeting:'সম্মানিত অভিভাবক, parent-teacher meeting সংক্রান্ত বিজ্ঞপ্তি: ',holiday:'আগামী ছুটি সংক্রান্ত বিজ্ঞপ্তি: '}[campaign.data.type];
 
   useEffect(() => {
     if (flash?.success) {
@@ -87,6 +90,19 @@ export default function Index({ logs, campuses, activeCampusId, filters }) {
       <div className="print-title">SMS Logs Directory - {new Date().toLocaleDateString('en-GB')}</div>
 
       <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8 no-print">
+        <section className="rounded-2xl border border-indigo-200 bg-indigo-50/50 p-5">
+          <h2 className="text-lg font-black text-indigo-950">Guardian SMS Campaign</h2><p className="mb-4 text-sm text-indigo-700">Absent, exam result, fee due অথবা announcement একসঙ্গে পাঠান। Gateway না থাকলে log-mode simulation হবে।</p>
+          <form onSubmit={e=>{e.preventDefault();campaign.post(route('admin.sms-logs.campaign'));}} className="grid gap-3 md:grid-cols-4">
+            <select value={campaign.data.type} onChange={e=>campaign.setData({type:e.target.value,date:campaign.data.date,exam_id:'',class_id:'',section_id:'',message:''})} className="rounded-xl border-slate-300"><option value="absent">Absent students</option><option value="exam_result">Exam marks/results</option><option value="fee_due">Fee due reminder</option><option value="notice">School notice</option><option value="emergency">Emergency</option><option value="homework">Homework reminder</option><option value="meeting">Parent meeting</option><option value="holiday">Holiday notice</option></select>
+            {campaign.data.type==='absent'&&<input type="date" value={campaign.data.date} onChange={e=>campaign.setData('date',e.target.value)} required className="rounded-xl border-slate-300"/>}
+            {campaign.data.type==='exam_result'&&<select value={campaign.data.exam_id} onChange={e=>campaign.setData('exam_id',e.target.value)} required className="rounded-xl border-slate-300"><option value="">Select exam</option>{exams.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select>}
+            {!['exam_result','fee_due'].includes(campaign.data.type)&&<select value={campaign.data.class_id} onChange={e=>campaign.setData('class_id',e.target.value)} className="rounded-xl border-slate-300"><option value="">All classes</option>{classes.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select>}
+            {campaign.data.type==='absent'&&campaign.data.class_id&&<select value={campaign.data.section_id} onChange={e=>campaign.setData('section_id',e.target.value)} className="rounded-xl border-slate-300"><option value="">All sections</option>{selectedClass?.sections?.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select>}
+            {!['absent','exam_result','fee_due'].includes(campaign.data.type)&&<textarea value={campaign.data.message} onChange={e=>campaign.setData('message',e.target.value)} placeholder={`${campaignText} ({student} ও {date} ব্যবহার করা যাবে)`} required className="rounded-xl border-slate-300 md:col-span-2"/>}
+            <button disabled={campaign.processing} className="rounded-xl bg-indigo-600 px-5 py-2.5 font-bold text-white">{campaign.processing?'Processing…':'Send campaign'}</button>
+            {Object.values(campaign.errors).map((x,i)=><p key={i} className="text-xs text-red-600">{x}</p>)}
+          </form>
+        </section>
         
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">

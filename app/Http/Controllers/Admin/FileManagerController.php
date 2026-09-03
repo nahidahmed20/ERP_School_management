@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use App\Services\MalwareScanner;
 use Inertia\Inertia;
 
 class FileManagerController extends Controller
@@ -68,25 +69,25 @@ class FileManagerController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, MalwareScanner $scanner)
     {
         $request->validate([
             'file' => 'required|file|max:20480', 
             'folder_id' => 'nullable|exists:file_manager_folders,id',
-            'campus_id' => 'required|exists:campuses,id', 
         ]);
 
         try {
             $uploaded = $request->file('file');
-            $stored = $uploaded->store('file-manager', 'public');
+            $scanner->assertClean($uploaded);
+            $stored = $uploaded->store('file-manager/'.config('app.active_campus_id'), 'local');
 
             FileManagerFile::create([
                 'folder_id' => $request->get('folder_id'),
-                'campus_id' => $request->get('campus_id'), // Campus ID সেভ
+                'campus_id' => config('app.active_campus_id'),
                 'name' => Str::random(10) . '_' . $uploaded->getClientOriginalName(),
                 'original_name' => $uploaded->getClientOriginalName(),
                 'path' => $stored,
-                'disk' => 'public',
+                'disk' => 'local',
                 'mime_type' => $uploaded->getClientMimeType(),
                 'size' => $uploaded->getSize(),
                 'uploaded_by' => $request->user()?->id,
@@ -104,11 +105,11 @@ class FileManagerController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'parent_id' => 'nullable|exists:file_manager_folders,id',
-            'campus_id' => 'required|exists:campuses,id',
         ]);
 
         try {
             $data['created_by'] = $request->user()?->id;
+            $data['campus_id'] = config('app.active_campus_id');
             FileManagerFolder::create($data);
 
             return back()->with('success', 'নতুন ফোল্ডার তৈরি করা হয়েছে।');
@@ -134,6 +135,12 @@ class FileManagerController extends Controller
         }
     }
 
+    public function download(FileManagerFile $file)
+    {
+        abort_unless(Storage::disk($file->disk)->exists($file->path), 404);
+        return Storage::disk($file->disk)->download($file->path, $file->original_name, ['Content-Type' => $file->mime_type, 'X-Content-Type-Options' => 'nosniff']);
+    }
+
     // --- Helper Methods ---
 
     private function formatFiles($files)
@@ -151,7 +158,7 @@ class FileManagerController extends Controller
             'mime_type' => $file->mime_type,
             'size' => $file->size,
             'human_size' => $this->bytesToHuman($file->size),
-            'url' => Storage::disk($file->disk)->url($file->path),
+            'url' => route('admin.files.download', $file),
             'created_at' => $file->created_at->format('d M, Y h:i A'),
             'folder' => $file->folder,
             'uploader' => $file->uploader,

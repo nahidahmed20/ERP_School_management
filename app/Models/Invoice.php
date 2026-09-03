@@ -12,6 +12,16 @@ class Invoice extends Model
 
     protected $guarded = ['id'];
 
+    protected function casts(): array
+    {
+        return ['invoice_date' => 'date', 'due_date' => 'date', 'period_start' => 'date', 'period_end' => 'date', 'fine_applied_at' => 'datetime'];
+    }
+
+    public function feeAssignment()
+    {
+        return $this->belongsTo(FeeAssignment::class);
+    }
+
     public function student()
     {
         return $this->belongsTo(Student::class);

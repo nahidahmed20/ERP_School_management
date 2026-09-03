@@ -10,6 +10,7 @@ class StudentAttendance extends Model
     use HasFactory;
 
     protected $guarded = ['id'];
+    protected $casts = ['attendance_date'=>'date','is_excused'=>'boolean','verified_at'=>'datetime'];
 
     public function student()
     {

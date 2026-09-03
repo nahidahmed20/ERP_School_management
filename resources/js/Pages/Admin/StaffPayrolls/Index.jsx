@@ -271,8 +271,22 @@ function PayrollFormModal({ item, staffs, onClose }) {
   );
 }
 
+function AutoPayrollPanel({ staffs, adjustments }) {
+  const currentMonth=new Date().toISOString().slice(0,7);
+  const {data,setData,post,processing,errors}=useForm({salary_month:currentMonth,staff_id:'',working_days:'',overtime_enabled:false,overtime_mode:'hour',overtime_rate:'',overtime_multiplier:1.5,allowance:0,deduction:0,bonus:0,arrears:0,provident_fund_rate:'',tax_rate:'',gratuity_rate:''});
+  const submit=e=>{e.preventDefault();post(route('admin.staff-payrolls.generate'));};
+  const input="rounded-xl border-slate-300 text-sm";
+  const setOvertime=async a=>{const r=await Swal.fire({title:'Set overtime',html:'<select id="ot-mode" class="swal2-select"><option value="hour">Hours</option><option value="day">Days</option></select><input id="ot-value" type="number" min="0" step="0.25" class="swal2-input" placeholder="Amount">',showCancelButton:true,preConfirm:()=>({mode:document.getElementById('ot-mode').value,value:Number(document.getElementById('ot-value').value)})});if(r.isConfirmed)router.patch(route('admin.staff-payrolls.attendance.update',a.id),{salary_paid_override:!!a.salary_paid_override,overtime_hours:r.value.mode==='hour'?r.value.value:0,overtime_days:r.value.mode==='day'?r.value.value:0,payroll_note:a.payroll_note||''},{preserveScroll:true});};
+  return <div className="space-y-5"><section className="rounded-2xl border border-indigo-200 bg-indigo-50/50 p-5"><div className="mb-4"><h2 className="text-lg font-black text-indigo-950">Automatic Payroll Generator</h2><p className="text-sm text-indigo-700">Attendance, unpaid leave, loan and optional overtime automatically calculate হবে। আবার generate করলে unpaid payroll safely recalculate হবে; paid payroll lock থাকবে।</p></div><form onSubmit={submit} className="grid gap-3 md:grid-cols-4">
+    <input type="month" value={data.salary_month} onChange={e=>setData('salary_month',e.target.value)} required className={input}/><select value={data.staff_id} onChange={e=>setData('staff_id',e.target.value)} className={input}><option value="">All active staff</option>{staffs.map(s=><option key={s.id} value={s.id}>{s.first_name} {s.last_name} ({s.staff_id_no})</option>)}</select><input type="number" min="1" max="31" placeholder="Working days (auto)" value={data.working_days} onChange={e=>setData('working_days',e.target.value)} className={input}/><label className="flex items-center gap-2 rounded-xl border bg-white px-3"><input type="checkbox" checked={data.overtime_enabled} onChange={e=>setData('overtime_enabled',e.target.checked)}/> Include overtime</label>
+    {data.overtime_enabled&&<><select value={data.overtime_mode} onChange={e=>setData('overtime_mode',e.target.value)} className={input}><option value="hour">Hourly overtime</option><option value="day">Daily overtime</option></select><input type="number" step="0.01" min="0" placeholder="Custom OT rate (auto if empty)" value={data.overtime_rate} onChange={e=>setData('overtime_rate',e.target.value)} className={input}/><input type="number" step="0.1" min="0" placeholder="OT multiplier" value={data.overtime_multiplier} onChange={e=>setData('overtime_multiplier',e.target.value)} className={input}/></>}
+    <input type="number" min="0" step="0.01" placeholder="Extra allowance" value={data.allowance} onChange={e=>setData('allowance',e.target.value)} className={input}/><input type="number" min="0" step="0.01" placeholder="Bonus" value={data.bonus} onChange={e=>setData('bonus',e.target.value)} className={input}/><input type="number" min="0" step="0.01" placeholder="Arrears" value={data.arrears} onChange={e=>setData('arrears',e.target.value)} className={input}/><input type="number" min="0" max="100" step="0.01" placeholder="PF rate % (staff default)" value={data.provident_fund_rate} onChange={e=>setData('provident_fund_rate',e.target.value)} className={input}/><input type="number" min="0" max="100" step="0.01" placeholder="Tax/TDS rate %" value={data.tax_rate} onChange={e=>setData('tax_rate',e.target.value)} className={input}/><input type="number" min="0" max="100" step="0.01" placeholder="Gratuity provision %" value={data.gratuity_rate} onChange={e=>setData('gratuity_rate',e.target.value)} className={input}/><input type="number" min="0" step="0.01" placeholder="Manual deduction" value={data.deduction} onChange={e=>setData('deduction',e.target.value)} className={input}/><button disabled={processing} className="rounded-xl bg-indigo-600 px-5 py-2.5 font-bold text-white">{processing?'Generating…':'Generate Payroll'}</button>{Object.values(errors).map((x,i)=><p key={i} className="text-xs text-red-600">{x}</p>)}</form></section>
+    <section className="rounded-2xl border bg-white p-5"><h2 className="font-black text-slate-900">Attendance pay &amp; overtime adjustments</h2><p className="mb-3 text-sm text-slate-500">Absent/half-day salary override এবং প্রতিদিনের OT hour/day সেট করুন।</p><div className="max-h-96 overflow-auto"><table className="w-full text-sm"><thead><tr className="text-left"><th>Date</th><th>Staff</th><th>Status</th><th>Pay decision</th><th>Overtime</th></tr></thead><tbody>{adjustments.map(a=><tr key={a.id} className="border-t"><td className="py-3">{a.date}</td><td>{a.staff?.first_name} {a.staff?.last_name}</td><td className="capitalize">{a.status}</td><td>{['absent','half_day'].includes(a.status)?<button onClick={()=>router.patch(route('admin.staff-payrolls.attendance.update',a.id),{salary_paid_override:!a.salary_paid_override,overtime_hours:a.overtime_hours||0,overtime_days:a.overtime_days||0,payroll_note:a.payroll_note||''},{preserveScroll:true})} className={`rounded-lg px-3 py-1 font-bold ${a.salary_paid_override?'bg-emerald-100 text-emerald-700':'bg-rose-100 text-rose-700'}`}>{a.salary_paid_override?'Salary paid':'Deduct salary'}</button>:<span className="text-emerald-700">Regular pay</span>}</td><td><button onClick={()=>setOvertime(a)} className="rounded-lg bg-amber-100 px-3 py-1 font-bold text-amber-800">{Number(a.overtime_hours||0)}h / {Number(a.overtime_days||0)}d</button></td></tr>)}</tbody></table></div></section>
+  </div>;
+}
+
 // --- Main Index Component ---
-export default function Index({ payrolls = { data: [] }, staffs = [], filters = {} }) {
+export default function Index({ payrolls = { data: [] }, staffs = [], filters = {}, attendanceAdjustments = [] }) {
   const { flash } = usePage().props;
   const [search, setSearch] = useState(filters.search ?? '');
   const [month, setMonth] = useState(filters.month ?? '');
@@ -359,6 +373,7 @@ export default function Index({ payrolls = { data: [] }, staffs = [], filters = 
       <div className="print-title">Staff Payroll Management - {new Date().toLocaleDateString('en-GB')}</div>
 
       <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8 no-print">
+        <AutoPayrollPanel staffs={staffs} adjustments={attendanceAdjustments} />
         
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -373,6 +388,7 @@ export default function Index({ payrolls = { data: [] }, staffs = [], filters = 
           >
             <Icon name="plus" className="w-4 h-4" /> Generate Payroll
           </button>
+          <a href={route('admin.staff-payrolls.bank-sheet',{month:month||new Date().toISOString().slice(0,7)})} className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-2.5 text-sm font-bold text-emerald-700"><Icon name="download" className="h-4 w-4"/>Bank Sheet</a>
         </div>
 
         {/* Unified Modern Toolbar */}
@@ -509,6 +525,8 @@ export default function Index({ payrolls = { data: [] }, staffs = [], filters = 
                       </td>
                       <td className="px-6 py-4 text-right no-print">
                         <div className="flex items-center justify-end gap-1.5">
+                          {(payroll.approval_status||'draft')==='draft'&&<button onClick={()=>router.patch(route('admin.staff-payrolls.approve',payroll.id),{}, {preserveScroll:true})} className="rounded-lg bg-amber-50 px-2 py-1 text-xs font-bold text-amber-700" title="Approve">Approve</button>}
+                          {payroll.approval_status==='approved'&&<button onClick={()=>{const reference=prompt('Bank/reference number (optional)','');router.patch(route('admin.staff-payrolls.finalize',payroll.id),{payment_method:'Bank Transfer',bank_reference:reference||'',payment_date:new Date().toISOString().slice(0,10)},{preserveScroll:true})}} className="rounded-lg bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-700" title="Finalize and lock">Finalize</button>}
                           <button onClick={() => setViewingItem(payroll)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="View Slip">
                             <Icon name="eye" className="w-4 h-4" />
                           </button>

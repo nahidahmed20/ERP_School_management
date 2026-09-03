@@ -68,7 +68,6 @@ export default function Index({ items, groups, parents, permissions, filters }) 
     });
   }
 
-<<<<<<< HEAD
   // --- Export Functions ---
   const handlePrint = () => window.print();
 
@@ -102,7 +101,6 @@ export default function Index({ items, groups, parents, permissions, filters }) 
     navigator.clipboard.writeText(text);
     Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Data copied to clipboard!', showConfirmButton: false, timer: 2000 });
   };
-=======
   async function addGroup() {
     const result = await Swal.fire({
       title: 'Add menu group',
@@ -141,7 +139,6 @@ export default function Index({ items, groups, parents, permissions, filters }) 
       router.put(route('admin.menu-groups.update', group.id), { ...result.value, is_active: group.is_active });
     }
   }
->>>>>>> a1e1e67 (change many)
 
   return (
     <AuthenticatedLayout>

@@ -8,11 +8,14 @@ use App\Models\ExamSchedule;
 use App\Models\ExamMark;
 use App\Models\Homework;
 use App\Models\Invoice;
+use App\Models\BiometricDevice;
 use App\Models\Notice;
 use App\Models\Payment;
+use App\Models\PaymentTransaction;
 use App\Models\Staff;
 use App\Models\StaffLeave;
 use App\Models\StaffAttendance;
+use App\Models\SmsLog;
 use App\Models\Student;
 use App\Models\StudentAttendance;
 use App\Models\StudyMaterial;
@@ -93,6 +96,12 @@ class DashboardController extends Controller
             ]);
         }
 
+        if ($user->staff && $this->isFinanceStaff($user)) {
+            return Inertia::render('Portal/FinanceDashboard', [
+                'finance' => $this->financePortal($user->staff),
+            ]);
+        }
+
         if ($user->staff) {
             return Inertia::render('Portal/Dashboard', [
                 'portal' => $this->staffPortal($user->staff),
@@ -112,6 +121,25 @@ class DashboardController extends Controller
         $monthExpense = Expense::whereBetween('expense_date', [$monthStart, $today])->sum('amount');
         $pendingInvoices = Invoice::whereIn('status', ['Unpaid', 'Partial']);
         $pendingDues = (clone $pendingInvoices)->sum(DB::raw('amount + fine - discount - paid_amount'));
+
+        $attendanceByStatus = StudentAttendance::whereDate('attendance_date', $today)
+            ->selectRaw('LOWER(status) as status, COUNT(*) as total')
+            ->groupBy(DB::raw('LOWER(status)'))
+            ->pluck('total', 'status');
+        $absentToday = (int) ($attendanceByStatus['absent'] ?? 0);
+        $lateToday = (int) ($attendanceByStatus['late'] ?? 0);
+
+        $financeTrend = collect(range(5, 0))->map(function (int $monthsAgo) use ($today) {
+            $month = $today->copy()->subMonths($monthsAgo);
+
+            return [
+                'label' => $month->format('M'),
+                'income' => (float) Payment::whereYear('payment_date', $month->year)
+                    ->whereMonth('payment_date', $month->month)->sum('amount_paid'),
+                'expense' => (float) Expense::whereYear('expense_date', $month->year)
+                    ->whereMonth('expense_date', $month->month)->sum('amount'),
+            ];
+        });
 
         $recentAdmissions = Student::with('currentEnrollment.schoolClass')
             ->latest('id')
@@ -135,6 +163,30 @@ class DashboardController extends Controller
                 ['title' => 'Pending Dues', 'value' => (float) $pendingDues, 'isCurrency' => true],
             ],
             'recentAdmissions' => $recentAdmissions,
+            'overview' => [
+                'students' => Student::count(),
+                'staff' => Staff::count(),
+                'attendance_percentage' => $attendancePercentage,
+                'today_collection' => (float) $todayCollection,
+                'pending_dues' => (float) $pendingDues,
+                'month_profit' => (float) ($monthCollection - $monthExpense),
+            ],
+            'attendance' => [
+                'present' => (int) ($attendanceByStatus['present'] ?? 0),
+                'absent' => $absentToday,
+                'late' => $lateToday,
+                'leave' => (int) (($attendanceByStatus['leave'] ?? 0) + ($attendanceByStatus['excused'] ?? 0)),
+                'total' => $totalAttendanceToday,
+                'percentage' => $attendancePercentage,
+            ],
+            'alerts' => [
+                'absent_students' => $absentToday,
+                'pending_leaves' => StaffLeave::where('status', 'pending')->count(),
+                'overdue_invoices' => Invoice::whereIn('status', ['Unpaid', 'Partial'])->whereDate('due_date', '<', $today)->count(),
+                'device_issues' => BiometricDevice::where('status', '!=', 'Online')->count(),
+                'failed_sms' => SmsLog::whereDate('created_at', $today)->where('status', 'Failed')->count(),
+            ],
+            'financeTrend' => $financeTrend,
             'financialStats' => [
                 ['title' => 'Unpaid Invoices', 'value' => (clone $pendingInvoices)->count(), 'routeName' => 'admin.studentfees.index'],
                 ['title' => 'Unpaid Amount', 'value' => (float) $pendingDues, 'currency' => true, 'routeName' => 'admin.studentfees.index'],
@@ -143,8 +195,30 @@ class DashboardController extends Controller
                 ['title' => 'Profit Today', 'value' => (float) ($todayCollection - $todayExpense), 'currency' => true, 'routeName' => 'admin.reports.saved'],
                 ['title' => 'This Month Profit', 'value' => (float) ($monthCollection - $monthExpense), 'currency' => true, 'routeName' => 'admin.fees.ledger'],
             ],
-            'pendingLeaves' => StaffLeave::with('staff:id,first_name,last_name')->where('status', 'pending')->latest()->take(5)->get(),
-            'notices' => Notice::where('is_active', true)->latest('notice_date')->take(5)->get(['id', 'title', 'notice_date', 'type']),
+            'pendingLeaves' => StaffLeave::with('staff:id,first_name,last_name')->where('status', 'pending')->latest()->take(5)->get()
+                ->map(fn (StaffLeave $leave) => [
+                    'id' => $leave->id,
+                    'staff' => trim(($leave->staff?->first_name ?? '').' '.($leave->staff?->last_name ?? '')) ?: 'Staff member',
+                    'from' => Carbon::parse($leave->start_date)->format('d M'),
+                    'to' => Carbon::parse($leave->end_date)->format('d M'),
+                ]),
+            'upcomingExams' => ExamSchedule::with(['exam:id,name', 'schoolClass:id,name', 'subject:id,name'])
+                ->whereBetween('exam_date', [$today, $today->copy()->addDays(14)])
+                ->orderBy('exam_date')->orderBy('start_time')->take(5)->get()
+                ->map(fn (ExamSchedule $schedule) => [
+                    'id' => $schedule->id,
+                    'exam' => $schedule->exam?->name ?? 'Examination',
+                    'class' => $schedule->schoolClass?->name ?? 'Class',
+                    'subject' => $schedule->subject?->name ?? 'Subject',
+                    'date' => Carbon::parse($schedule->exam_date)->format('d M'),
+                ]),
+            'notices' => Notice::where('is_active', true)->latest('notice_date')->take(5)->get()
+                ->map(fn (Notice $notice) => [
+                    'id' => $notice->id,
+                    'title' => $notice->title,
+                    'type' => $notice->type,
+                    'date' => $notice->notice_date?->format('d M Y'),
+                ]),
         ]);
     }
 
@@ -308,6 +382,64 @@ class DashboardController extends Controller
                 'status' => $leave->status,
             ]),
             'notices' => $this->portalNotices(),
+        ];
+    }
+
+    private function isFinanceStaff($user): bool
+    {
+        $identity = strtolower(collect([
+            $user->staff?->designation?->name,
+            $user->staff?->department?->name,
+            ...$user->roles->pluck('name')->all(),
+        ])->filter()->implode(' '));
+
+        return str_contains($identity, 'finance')
+            || str_contains($identity, 'account')
+            || str_contains($identity, 'cashier');
+    }
+
+    private function financePortal(Staff $staff): array
+    {
+        $today = Carbon::today();
+        $monthStart = $today->copy()->startOfMonth();
+        $dueExpression = 'GREATEST(amount + fine - discount - paid_amount, 0)';
+
+        $trend = collect(range(5, 0))->map(function (int $ago) use ($today) {
+            $month = $today->copy()->subMonths($ago);
+            return [
+                'label' => $month->format('M'),
+                'income' => (float) Payment::whereYear('payment_date',$month->year)->whereMonth('payment_date',$month->month)->sum('amount_paid'),
+                'expense' => (float) Expense::whereYear('expense_date',$month->year)->whereMonth('expense_date',$month->month)->sum('amount'),
+            ];
+        })->values();
+
+        return [
+            'today' => $today->format('l, d F Y'),
+            'name' => trim($staff->first_name.' '.$staff->last_name),
+            'designation' => $staff->designation?->name ?? 'Finance Staff',
+            'department' => $staff->department?->name ?? 'Finance',
+            'metrics' => [
+                'today_collection' => (float) Payment::whereDate('payment_date',$today)->sum('amount_paid'),
+                'month_collection' => (float) Payment::whereBetween('payment_date',[$monthStart,$today])->sum('amount_paid'),
+                'today_expense' => (float) Expense::whereDate('expense_date',$today)->sum('amount'),
+                'month_expense' => (float) Expense::whereBetween('expense_date',[$monthStart,$today])->sum('amount'),
+                'total_due' => (float) Invoice::whereIn('status',['Unpaid','Partial'])->sum(DB::raw($dueExpression)),
+                'overdue_count' => Invoice::whereIn('status',['Unpaid','Partial'])->whereDate('due_date','<',$today)->count(),
+                'pending_online' => PaymentTransaction::where('status','Pending')->count(),
+                'failed_online' => PaymentTransaction::where('status','Failed')->whereDate('transaction_date',$today)->count(),
+            ],
+            'trend' => $trend,
+            'recentPayments' => Payment::with('student:id,first_name,last_name,admission_no')->latest('payment_date')->latest('id')->take(8)->get()->map(fn($p)=>[
+                'id'=>$p->id,'student'=>trim(($p->student?->first_name??'').' '.($p->student?->last_name??'')) ?: 'Unknown',
+                'admission_no'=>$p->student?->admission_no,'amount'=>(float)$p->amount_paid,'method'=>$p->payment_method,'date'=>Carbon::parse($p->payment_date)->format('d M Y'),
+            ]),
+            'overdueInvoices' => Invoice::with('student:id,first_name,last_name,admission_no')->whereIn('status',['Unpaid','Partial'])->whereDate('due_date','<',$today)->orderBy('due_date')->take(8)->get()->map(fn($i)=>[
+                'id'=>$i->id,'invoice_no'=>$i->invoice_no,'student'=>trim(($i->student?->first_name??'').' '.($i->student?->last_name??'')) ?: 'Unknown',
+                'due'=>(float)max(0,$i->amount+$i->fine-$i->discount-$i->paid_amount),'due_date'=>$i->due_date?->format('d M Y'),
+            ]),
+            'transactions' => PaymentTransaction::with('gateway:id,name')->latest('transaction_date')->latest('id')->take(8)->get()->map(fn($t)=>[
+                'id'=>$t->id,'transaction_id'=>$t->transaction_id,'gateway'=>$t->gateway?->name??$t->payment_method??'Manual','amount'=>(float)$t->amount,'status'=>$t->status,'date'=>$t->transaction_date?->format('d M Y'),
+            ]),
         ];
     }
 

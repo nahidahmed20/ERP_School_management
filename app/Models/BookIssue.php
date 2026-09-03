@@ -21,4 +21,7 @@ class BookIssue extends Model
     {
         return $this->belongsTo(User::class);
     }
+    public function copy(){return $this->belongsTo(BookCopy::class,'book_copy_id');}
+    public function member(){return $this->belongsTo(LibraryMember::class,'library_member_id');}
+    public function finePayments(){return $this->hasMany(LibraryFinePayment::class);}
 }

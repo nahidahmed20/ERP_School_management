@@ -15,6 +15,9 @@ class MenuSeeder extends Seeder
         $nav = [
             ['label' => 'Overview', 'items' => [
                 ['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'grid', 'route' => 'dashboard'],
+                ['key' => 'admin.security.operations', 'label' => 'Security & Operations', 'icon' => 'shield', 'route' => 'admin.security.operations'],
+                ['key' => 'admin.reporting-administration.index', 'label' => 'Reporting & Administration', 'icon' => 'chart', 'route' => 'admin.reporting-administration.index'],
+                ['key' => 'admin.saas.control', 'label' => 'SaaS Control Center', 'icon' => 'cloud', 'route' => 'admin.saas.control'],
             ]],
 
             ['label' => 'Front Office', 'items' => [
@@ -28,35 +31,39 @@ class MenuSeeder extends Seeder
             ]],
 
             ['label' => 'Academics', 'items' => [
-                ['key' => 'students', 'label' => 'Students', 'icon' => 'cap', 'count' => 10, 'children' => [
+                ['key' => 'students', 'label' => 'Students', 'icon' => 'cap', 'count' => 12, 'children' => [
                     ['key' => 'admin.students.index', 'label' => 'Student List', 'route' => 'admin.students.index'],
                     ['key' => 'admin.students.create', 'label' => 'Student Admissions', 'route' => 'admin.students.create'],
                     ['key' => 'admin.students.admissions.index', 'label' => 'Online Admissions', 'route' => 'admin.students.admissions.index'],
                     ['key' => 'admin.students.parents', 'label' => 'Parents & Guardians', 'route' => 'admin.students.parents'],
+                    ['key' => 'admin.students.family-hub', 'label' => 'Student & Guardian Hub', 'route' => 'admin.students.family-hub'],
                     ['key' => 'admin.students.documents.index', 'label' => 'Student Documents', 'route' => 'admin.students.documents.index'],
                     ['key' => 'admin.students.promotions', 'label' => 'Promotions', 'route' => 'admin.students.promotions'],
                     ['key' => 'admin.students.discipline.index', 'label' => 'Disciplinary Records', 'route' => 'admin.students.discipline.index'],
                     ['key' => 'admin.student-development-records.index', 'label' => 'Student Development & Support', 'route' => 'admin.student-development-records.index'],
                     ['key' => 'admin.student-categories.index', 'label' => 'Student Categories', 'route' => 'admin.student-categories.index'],
                     ['key' => 'admin.houses.index', 'label' => 'Houses', 'route' => 'admin.houses.index'],
+                    ['key' => 'admin.student-services.index', 'label' => 'Student Service Requests', 'route' => 'admin.student-services.index'],
                 ]],
-                ['key' => 'classes', 'label' => 'Classes & Subjects', 'icon' => 'book', 'count' => 8, 'children' => [
+                ['key' => 'classes', 'label' => 'Classes & Subjects', 'icon' => 'book', 'count' => 9, 'children' => [
                     ['key' => 'admin.classes.index', 'label' => 'Classes', 'route' => 'admin.classes.index'],
                     ['key' => 'admin.sections.index', 'label' => 'Sections', 'route' => 'admin.sections.index'],
                     ['key' => 'admin.subjects.index', 'label' => 'Subjects', 'route' => 'admin.subjects.index'],
                     ['key' => 'admin.classrooms.index', 'label' => 'Classroom', 'route' => 'admin.classrooms.index'],
                     ['key' => 'admin.time-tables.index', 'label' => 'Class Timetable', 'route' => 'admin.time-tables.index'],
                     ['key' => 'admin.lesson-plans.index', 'label' => 'Lesson & Syllabus', 'route' => 'admin.lesson-plans.index'],
+                    ['key' => 'admin.academic-operations.index', 'label' => 'Academic Operations', 'route' => 'admin.academic-operations.index'],
                     ['key' => 'admin.study-materials.index', 'label' => 'Study Materials / Downloads', 'route' => 'admin.study-materials.index'], 
                     ['key' => 'admin.sessions.index', 'label' => 'Academic Sessions', 'route' => 'admin.sessions.index'],
                 ]],
-                ['key' => 'attendance', 'label' => 'Attendance', 'icon' => 'calendar', 'count' => 3, 'children' => [
+                ['key' => 'attendance', 'label' => 'Attendance', 'icon' => 'calendar', 'count' => 5, 'children' => [
                     ['key' => 'admin.student-attendance.index', 'label' => 'Student Attendance', 'route' => 'admin.student-attendance.index'],
-                    ['key' => 'admin.biometric.sync-logs.index', 'label' => 'Biometric Sync Logs', 'route' => 'admin.biometric.sync-logs.index'],
-                    ['key' => 'admin.student_attendance.report', 'label' => 'Student Attendance Report', 'route' => 'admin.student_attendance.report'],
-                    ['key' => 'admin.attendance-report.index', 'label' => 'Staff Attendance', 'route' => 'admin.attendance-report.index'],
+                    ['key' => 'admin.attendance-control.index', 'label' => 'Attendance Control & Policy', 'route' => 'admin.attendance-control.index'],
+                    ['key' => 'admin.biometric.sync-logs.index', 'label' => 'Biometric Sync Logs', 'route' => 'admin.biometric.synclogs'],
+                    ['key' => 'admin.student_attendance.report', 'label' => 'Student Attendance Report', 'route' => 'admin.studentAttendance.report'],
+                    ['key' => 'admin.attendance-report.index', 'label' => 'Staff Attendance', 'route' => 'admin.staff-attendance.index'],
                 ]],
-                ['key' => 'exams', 'label' => 'Exams & Marks', 'icon' => 'pencil', 'count' => 5, 'children' => [
+                ['key' => 'exams', 'label' => 'Exams & Marks', 'icon' => 'pencil', 'count' => 6, 'children' => [
                     ['key' => 'admin.exams.index', 'label' => 'Exam List', 'route' => 'admin.exams.index'],
                     ['key' => 'admin.exam-schedules.index', 'label' => 'Exam Schedule', 'route' => 'admin.exam-schedules.index'],
                     ['key' => 'admin.exams-marks.index', 'label' => 'Marks Entry', 'route' => 'admin.exams-marks.index'],
@@ -67,19 +74,15 @@ class MenuSeeder extends Seeder
             ]],
 
             ['label' => 'People', 'items' => [
-                ['key' => 'staff', 'label' => 'Staff & HR', 'icon' => 'users', 'count' => 10, 'children' => [
+                ['key' => 'staff', 'label' => 'Staff & HR', 'icon' => 'users', 'count' => 11, 'children' => [
                     ['key' => 'admin.staff.index', 'label' => 'Staff Directory', 'route' => 'admin.staff.index'],
                     ['key' => 'admin.staff-attendance.index', 'label' => 'Daily Attendance', 'route' => 'admin.staff-attendance.index'],
                     ['key' => 'admin.staff-leaves.index', 'label' => 'Leave Applications', 'route' => 'admin.staff-leaves.index'],
                     ['key' => 'admin.staff-payrolls.index', 'label' => 'Payroll Management', 'route' => 'admin.staff-payrolls.index'],
-<<<<<<< HEAD
-                    ['key' => 'admin.staff-loans.index', 'label' => 'Advance Salary & Loans', 'route' => 'admin.staff-loans.index'], 
-                    ['key' => 'admin.staff-appraisals.index', 'label' => 'Performance & Appraisals', 'route' => 'admin.staff-appraisals.index'], 
-=======
-                    ['key' => 'admin.staff-loans.index', 'label' => 'Advance Salary & Loans', 'route' => 'admin.staff-loans.index'], // Added this
-                    ['key' => 'admin.staff-appraisals.index', 'label' => 'Performance & Appraisals', 'route' => 'admin.staff-appraisals.index'], // Added this
+                    ['key' => 'admin.staff-payrolls.attendance', 'label' => 'Payroll Attendance Adjustments', 'route' => 'admin.staff-payrolls.attendance'],
+                    ['key' => 'admin.staff-loans.index', 'label' => 'Advance Salary & Loans', 'route' => 'admin.staff-loans.index'],
+                    ['key' => 'admin.staff-appraisals.index', 'label' => 'Performance & Appraisals', 'route' => 'admin.staff-appraisals.index'],
                     ['key' => 'admin.staff-hr-records.index', 'label' => 'Teacher HR & Development', 'route' => 'admin.staff-hr-records.index'],
->>>>>>> a1e1e67 (change many)
                     ['key' => 'admin.departments.index', 'label' => 'Departments', 'route' => 'admin.departments.index'],
                     ['key' => 'admin.designations.index', 'label' => 'Designations', 'route' => 'admin.designations.index'],
                     ['key' => 'admin.leave-types.index', 'label' => 'Leave Types', 'route' => 'admin.leave-types.index'],
@@ -112,7 +115,7 @@ class MenuSeeder extends Seeder
                     ['key' => 'admin.payments.transactions.index', 'label' => 'Transactions', 'route' => 'admin.payments.transactions.index'],
                     ['key' => 'admin.payments.refunds.index', 'label' => 'Refunds', 'route' => 'admin.payments.refunds.index'],
                 ]],
-                ['key' => 'purchase', 'label' => 'Inventory & Assets', 'icon' => 'box', 'count' => 7, 'children' => [
+                ['key' => 'purchase', 'label' => 'Inventory & Assets', 'icon' => 'box', 'count' => 10, 'children' => [
                     ['key' => 'admin.purchase.items.index', 'label' => 'Products & Items', 'route' => 'admin.purchase.items.index'],
                     ['key' => 'admin.purchase.items.report', 'label' => 'Stock & Movement Report', 'route' => 'admin.purchase.items.report'],
                     ['key' => 'admin.purchase.suppliers.index', 'label' => 'Suppliers ', 'route' => 'admin.purchase.suppliers.index'],
@@ -132,27 +135,32 @@ class MenuSeeder extends Seeder
             ]],
 
             ['label' => 'Campus Life', 'items' => [
-                ['key' => 'library', 'label' => 'Library', 'icon' => 'book', 'count' => 2, 'children' => [
+                ['key' => 'library', 'label' => 'Library', 'icon' => 'book', 'count' => 3, 'children' => [
+                    ['key' => 'admin.library.operations', 'label' => 'Library Operations', 'route' => 'admin.library.operations'],
                     ['key' => 'admin.library.catalogue.index', 'label' => 'Catalogue', 'route' => 'admin.library.catalogue.index'],
                     ['key' => 'admin.library-issues.index', 'label' => 'Book Issues & Fines', 'route' => 'admin.library-issues.index'],
                 ]],
-                ['key' => 'transport', 'label' => 'Transport', 'icon' => 'bus', 'count' => 3, 'children' => [
+                ['key' => 'transport', 'label' => 'Transport', 'icon' => 'bus', 'count' => 4, 'children' => [
+                    ['key' => 'admin.transport.operations', 'label' => 'Transport Operations', 'route' => 'admin.transport.operations'],
                     ['key' => 'admin.transport.routes.index', 'label' => 'Routes & Stops', 'route' => 'admin.transport.routes.index'], 
                     ['key' => 'admin.vehicles.index', 'label' => 'Vehicles', 'route' => 'admin.vehicles.index'],
                     ['key' => 'admin.transports.index', 'label' => 'Transport Allocation', 'route' => 'admin.transports.index'],
                 ]],
-                ['key' => 'hostel', 'label' => 'Hostel Management', 'icon' => 'home', 'count' => 3, 'children' => [
+                ['key' => 'hostel', 'label' => 'Hostel Management', 'icon' => 'home', 'count' => 4, 'children' => [
+                    ['key' => 'admin.hostel.operations', 'label' => 'Hostel Operations', 'route' => 'admin.hostel.operations'],
                     ['key' => 'admin.hostel-rooms.index', 'label' => 'Hostels & Rooms', 'route' => 'admin.hostel-rooms.index'],
                     ['key' => 'admin.hostel-allocations.index', 'label' => 'Room Allocation', 'route' => 'admin.hostel-allocations.index'],
                     ['key' => 'admin.hostel-fees.index', 'label' => 'Hostel Fee Collection', 'route' => 'admin.hostel-fees.index'], 
                 ]],
-                ['key' => 'cafeteria', 'label' => 'Cafeteria', 'icon' => 'cutlery', 'count' => 4, 'children' => [
+                ['key' => 'cafeteria', 'label' => 'Cafeteria', 'icon' => 'cutlery', 'count' => 5, 'children' => [
+                    ['key' => 'admin.cafeteria.operations', 'label' => 'Cafeteria & Wallet POS', 'route' => 'admin.cafeteria.operations'],
                     ['key' => 'admin.cafeteria.outlets.index', 'label' => 'Outlets', 'route' => 'admin.cafeteria.outlets.index'],
                     ['key' => 'admin.cafeteria.menu-items.index', 'label' => 'Menu Items', 'route' => 'admin.cafeteria.menu-items.index'],
                     ['key' => 'admin.cafeteria.orders.index', 'label' => 'Orders', 'route' => 'admin.cafeteria.orders.index'],
                     ['key' => 'admin.cafeteria.meal-payments.index', 'label' => 'Meal Payments', 'route' => 'admin.cafeteria.meal-payments.index'],
                 ]],
-                ['key' => 'medical', 'label' => 'Medical Room', 'icon' => 'cross', 'count' => 5, 'children' => [
+                ['key' => 'medical', 'label' => 'Medical Room', 'icon' => 'cross', 'count' => 6, 'children' => [
+                    ['key' => 'admin.medical.operations', 'label' => 'Medical Operations', 'route' => 'admin.medical.operations'],
                     ['key' => 'admin.medical.rooms.index', 'label' => 'Medical Rooms', 'route' => 'admin.medical.rooms.index'],
                     ['key' => 'admin.medical.visit-logs.index', 'label' => 'Visit Log', 'route' => 'admin.medical.visit-logs.index'],
                     ['key' => 'admin.medical.health-records.index', 'label' => 'Student Health Records', 'route' => 'admin.medical.health-records.index'],
@@ -185,7 +193,8 @@ class MenuSeeder extends Seeder
             ]],
 
             ['label' => 'Communication', 'items' => [
-                ['key' => 'communication', 'label' => 'Chat, CMS & Alerts', 'icon' => 'chat', 'count' => 7, 'children' => [
+                ['key' => 'communication', 'label' => 'Chat, CMS & Alerts', 'icon' => 'chat', 'count' => 8, 'children' => [
+                    ['key' => 'admin.communication-center.index', 'label' => 'Communication Center', 'route' => 'admin.communication-center.index'],
                     ['key' => 'admin.communication.chat.index', 'label' => 'Chat', 'route' => 'admin.communication.chat.index'],
                     ['key' => 'admin.communication-notifications.index', 'label' => 'Notifications', 'route' => 'admin.communication-notifications.index'],
                     ['key' => 'admin.communication-calendars.index', 'label' => 'Calendar & Events', 'route' => 'admin.communication-calendars.index'],
@@ -197,7 +206,7 @@ class MenuSeeder extends Seeder
             ]],
 
             ['label' => 'System', 'items' => [
-                ['key' => 'reports', 'label' => 'Reports & Analytics', 'icon' => 'chart', 'count' => 4, 'children' => [
+                ['key' => 'reports', 'label' => 'Reports & Analytics', 'icon' => 'chart', 'count' => 5, 'children' => [
                     ['key' => 'admin.reports.fees', 'label' => 'Fee Collection Report', 'route' => 'admin.reports.fees'],
                     ['key' => 'admin.due_fees', 'label' => 'Due Fee Report', 'route' => 'admin.due_fees'],
                     ['key' => 'admin.reports.student_attendance', 'label' => 'Student Attendance', 'route' => 'admin.studentAttendance.report'],

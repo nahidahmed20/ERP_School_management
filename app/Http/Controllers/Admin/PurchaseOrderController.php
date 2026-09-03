@@ -62,7 +62,10 @@ class PurchaseOrderController extends Controller
         $this->validateOrder($request);
 
         DB::transaction(function () use ($request) {
-            $order = PurchaseOrder::create($request->except('cart'));
+            $payload = $request->except(['cart', 'total_amount']);
+            $payload['campus_id'] = config('app.active_campus_id');
+            $payload['total_amount'] = collect($request->cart)->sum(fn ($item) => round((float) $item['quantity'] * (float) $item['unit_price'], 2));
+            $order = PurchaseOrder::create($payload);
 
             foreach ($request->cart as $item) {
                 PurchaseOrderItem::create([
@@ -103,7 +106,9 @@ class PurchaseOrderController extends Controller
         }
 
         DB::transaction(function () use ($request, $order) {
-            $order->update($request->except('cart'));
+            $payload = $request->except(['cart', 'total_amount', 'campus_id']);
+            $payload['total_amount'] = collect($request->cart)->sum(fn ($item) => round((float) $item['quantity'] * (float) $item['unit_price'], 2));
+            $order->update($payload);
             $order->items()->delete();
 
             foreach ($request->cart as $item) {

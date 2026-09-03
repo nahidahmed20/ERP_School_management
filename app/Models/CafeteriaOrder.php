@@ -7,7 +7,7 @@ class CafeteriaOrder extends Model
     protected $guarded = [];
     
     protected $casts = [
-        'items' => 'array', 
+        'items' => 'array', 'accepted_at'=>'datetime','preparing_at'=>'datetime','ready_at'=>'datetime','served_at'=>'datetime',
     ];
 
     public function customer() {

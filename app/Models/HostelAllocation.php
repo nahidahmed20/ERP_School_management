@@ -12,6 +12,8 @@ class HostelAllocation extends Model
 
     protected $guarded = ['id'];
 
+    protected $casts = ['is_active'=>'boolean','allocation_date'=>'date','checked_in_at'=>'datetime','checked_out_at'=>'datetime'];
+
     public function room()
     {
         return $this->belongsTo(HostelRoom::class, 'hostel_room_id');
@@ -20,5 +22,10 @@ class HostelAllocation extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function bed()
+    {
+        return $this->belongsTo(HostelBed::class, 'hostel_bed_id');
     }
 }

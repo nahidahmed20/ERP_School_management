@@ -20,4 +20,5 @@ class Campus extends Model
     {
         return $this->belongsTo(Campus::class, 'campus_id');
     }
+    public function tenant(){return $this->belongsTo(SaasTenant::class,'saas_tenant_id');}
 }

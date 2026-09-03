@@ -2,6 +2,7 @@
 namespace App\Traits;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 trait BelongsToCampus
 {
@@ -12,6 +13,12 @@ trait BelongsToCampus
             
             if ($activeCampusId) {
                 $builder->where('campus_id', $activeCampusId);
+            }
+        });
+
+        static::creating(function (Model $model) {
+            if (! $model->getAttribute('campus_id') && config('app.active_campus_id')) {
+                $model->setAttribute('campus_id', config('app.active_campus_id'));
             }
         });
     }

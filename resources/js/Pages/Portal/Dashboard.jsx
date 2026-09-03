@@ -111,6 +111,7 @@ function StudentParentDashboard({ portal }) {
                             {portal.student.class} · Section {portal.student.section} · ID {portal.student.admission_no}
                         </p>
                         {!isParent && <Link href={route('portal.services')} className="mt-4 inline-flex rounded-xl bg-white px-4 py-2 text-sm font-bold text-emerald-950 shadow-sm">Open My Student Account</Link>}
+                        {isParent && <Link href={route('portal.parent.services')} className="mt-4 inline-flex rounded-xl bg-white px-4 py-2 text-sm font-bold text-emerald-950 shadow-sm">Parent Service Center</Link>}
                     </div>
                     {isParent && portal.children?.length > 1 && (
                         <label className="min-w-52 text-xs font-semibold text-emerald-100">
@@ -200,6 +201,7 @@ function StaffDashboard({ portal }) {
                 <p className="text-xs font-bold uppercase tracking-[0.18em] text-amber-300">{portal.today}</p>
                 <h1 className="mt-2 text-2xl font-bold text-white sm:text-3xl">স্বাগতম, {portal.greeting_name}</h1>
                 <p className="mt-2 text-sm text-emerald-100">{portal.staff.designation} · {portal.staff.department} · ID {portal.staff.staff_no}</p>
+                <Link href={route('portal.staff.services')} className="mt-4 inline-flex rounded-xl bg-white px-4 py-2 text-sm font-bold text-emerald-950">My HR &amp; Payroll</Link>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-3">

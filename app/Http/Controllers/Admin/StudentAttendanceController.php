@@ -7,6 +7,9 @@ use App\Models\AcademicSession;
 use App\Models\SchoolClass;
 use App\Models\Student;
 use App\Models\StudentAttendance;
+use App\Models\AttendanceDayLock;
+use App\Models\AttendancePolicy;
+use App\Models\Event;
 use App\Services\SmsService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -68,6 +71,11 @@ class StudentAttendanceController extends Controller
             'attendances.*.status' => 'required|in:present,absent,late,half_day',
         ]);
 
+        if (AttendanceDayLock::where('attendance_type','student')->whereDate('attendance_date',$request->date)->where('class_id',$request->class_id)->where(fn($q)=>$q->whereNull('section_id')->orWhere('section_id',$request->section_id))->exists()) return back()->with('error','This attendance sheet is locked. Reopen it from Attendance Control.');
+        $policy=AttendancePolicy::where('is_active',true)->first();
+        $holiday=Event::where('is_government_holiday',true)->whereDate('start_datetime','<=',$request->date)->whereDate('end_datetime','>=',$request->date)->exists();
+        if ($policy?->block_holiday_entry && ($holiday || in_array(\Carbon\Carbon::parse($request->date)->dayOfWeek,$policy->weekly_holidays??[]))) return back()->with('error','Attendance cannot be entered on a configured holiday.');
+
         $activeSession = AcademicSession::where('is_current', 1)->first();
         if (!$activeSession) return back()->with('error', 'কোনো অ্যাক্টিভ শিক্ষাবর্ষ পাওয়া যায়নি!');
 
@@ -83,6 +91,9 @@ class StudentAttendanceController extends Controller
                     'academic_session_id' => $activeSession->id,
                     'status'              => $att['status'],
                     'remarks'             => $att['remarks'] ?? null,
+                    'source'              => 'manual',
+                    'recorded_by'         => $request->user()->id,
+                    'verified_at'         => now(),
                 ]
             );
         }
@@ -133,8 +144,15 @@ class StudentAttendanceController extends Controller
                 
                 $message = "সম্মানিত অভিভাবক, আপনার সন্তান {$student->first_name} আজ ({$formattedDate}) স্কুলে অনুপস্থিত। - স্কুল কর্তৃপক্ষ";
                 
-                SmsService::send($phone, $message);
-                $smsCount++;
+                if (SmsService::send($phone, $message, [
+                    'campus_id' => $student->campus_id,
+                    'recipient_name' => trim($student->first_name.' '.$student->last_name),
+                    'recipient_type' => 'student',
+                    'recipient_id' => $student->id,
+                    'category' => 'attendance',
+                    'reference_key' => 'absent:'.$attendance->id,
+                    'sent_by' => $request->user()->id,
+                ])) $smsCount++;
             }
         }
 

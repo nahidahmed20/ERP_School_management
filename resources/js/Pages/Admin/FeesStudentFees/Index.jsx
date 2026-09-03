@@ -15,7 +15,8 @@ export default function Index({ students, classes, feeGroups, filters }) {
   const { data, setData, post, processing, errors, reset } = useForm({
     student_ids: [],
     fee_group_id: '',
-    due_date: ''
+    due_date: '', amount: '', billing_frequency: 'one_time', ends_on: '',
+    discount_type: 'none', discount_value: 0, late_fee_type: 'none', late_fee_value: 0, grace_days: 0
   });
 
   useEffect(() => {
@@ -160,7 +161,7 @@ export default function Index({ students, classes, feeGroups, filters }) {
                 <h3 className="text-lg font-bold text-slate-900">২. ফি নির্ধারণ করুন</h3>
               </div>
 
-              <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 max-w-3xl">
+              <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                 <div>
                   <label className={labelClass}>Select Fee Group <span className="text-rose-500">*</span></label>
                   <select
@@ -181,6 +182,12 @@ export default function Index({ students, classes, feeGroups, filters }) {
                   />
                   {errors.due_date && <p className="text-xs text-rose-500 mt-1.5">{errors.due_date}</p>}
                 </div>
+                <div><label className={labelClass}>Custom Amount <span className="font-normal text-slate-400">(optional)</span></label><input type="number" min="0" step="0.01" value={data.amount} onChange={e=>setData('amount',e.target.value)} placeholder="Use fee group total" className={`${inputClass} bg-white`}/></div>
+                <div><label className={labelClass}>Billing Frequency</label><select value={data.billing_frequency} onChange={e=>setData('billing_frequency',e.target.value)} className={`${inputClass} bg-white`}><option value="one_time">One time</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select></div>
+                {data.billing_frequency!=='one_time'&&<div><label className={labelClass}>Repeat Until <span className="font-normal text-slate-400">(optional)</span></label><input type="date" value={data.ends_on} onChange={e=>setData('ends_on',e.target.value)} className={`${inputClass} bg-white`}/></div>}
+                <div><label className={labelClass}>Discount</label><div className="flex gap-2"><select value={data.discount_type} onChange={e=>setData('discount_type',e.target.value)} className={`${inputClass} bg-white`}><option value="none">None</option><option value="fixed">Fixed</option><option value="percentage">Percentage</option></select>{data.discount_type!=='none'&&<input type="number" min="0" step="0.01" value={data.discount_value} onChange={e=>setData('discount_value',e.target.value)} className={`${inputClass} w-28 bg-white`}/>}</div></div>
+                <div><label className={labelClass}>Late Fine</label><div className="flex gap-2"><select value={data.late_fee_type} onChange={e=>setData('late_fee_type',e.target.value)} className={`${inputClass} bg-white`}><option value="none">None</option><option value="fixed">Fixed</option><option value="percentage">Percentage</option></select>{data.late_fee_type!=='none'&&<input type="number" min="0" step="0.01" value={data.late_fee_value} onChange={e=>setData('late_fee_value',e.target.value)} className={`${inputClass} w-28 bg-white`}/>}</div></div>
+                <div><label className={labelClass}>Grace Days</label><input type="number" min="0" max="365" value={data.grace_days} onChange={e=>setData('grace_days',e.target.value)} className={`${inputClass} bg-white`}/></div>
               </div>
             </div>
 

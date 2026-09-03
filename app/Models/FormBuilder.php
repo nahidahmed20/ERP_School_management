@@ -1,11 +1,12 @@
 <?php
 namespace App\Models;
+use App\Traits\BelongsToCampus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class FormBuilder extends Model {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, BelongsToCampus;
 
     protected $fillable = ['campus_id', 'title', 'description', 'form_schema', 'is_published'];
 

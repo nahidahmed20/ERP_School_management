@@ -20,9 +20,7 @@ use Inertia\Inertia;
 
 class ReportController extends Controller
 {
-<<<<<<< HEAD
     // ১. Staff Attendance Report (GET)
-=======
     public function financialSummary(Request $request)
     {
         $startDate = $request->start_date ?? now()->startOfMonth()->toDateString();
@@ -57,7 +55,6 @@ class ReportController extends Controller
         ]);
     }
 
->>>>>>> a1e1e67 (change many)
     public function staffAttendanceReport()
     {
         $staffs = Staff::select('id', 'first_name', 'last_name', 'staff_id_no')

@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCampus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class FileManagerFile extends Model
 {
-    use HasFactory;
+    use BelongsToCampus, HasFactory;
 
     protected $guarded = ['id'];
 
@@ -25,7 +26,7 @@ class FileManagerFile extends Model
 
     public function getUrlAttribute(): string
     {
-        return \Storage::disk($this->disk)->url($this->path);
+        return route('admin.files.download', $this);
     }
 
     public function getHumanSizeAttribute(): string

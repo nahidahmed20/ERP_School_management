@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\{SmsLog, Campus};
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Models\{Exam,SchoolClass};
+use App\Services\{SmsCampaignService,SmsService};
 
 class SmsLogController extends Controller
 {
@@ -37,6 +39,8 @@ class SmsLogController extends Controller
                 'search' => $request->get('search', ''),
                 'per_page' => $perPageRaw,
             ],
+            'classes' => SchoolClass::with('sections:id,name')->where('is_active',true)->get(['id','name']),
+            'exams' => Exam::latest()->get(['id','name']),
         ]);
     }
 
@@ -49,13 +53,15 @@ class SmsLogController extends Controller
             'message' => 'required|string',
         ]);
 
-        // Here you would integrate your actual SMS Gateway API (e.g., Twilio, BongoSMS, etc.)
-        // For now, we just save the log assuming it was sent successfully.
+        $ok=SmsService::send($validated['phone_number'],$validated['message'],$validated+['category'=>'custom','sent_by'=>$request->user()->id]);
+        return back()->with($ok?'success':'error',$ok?'SMS processed successfully.':'SMS delivery failed. Check gateway settings.');
+    }
 
-        $validated['status'] = 'Sent';
-
-        SmsLog::create($validated);
-        return back()->with('success', 'SMS sent and logged successfully.');
+    public function campaign(Request $request,SmsCampaignService $service)
+    {
+        $data=$request->validate(['type'=>'required|in:absent,exam_result,fee_due,notice,emergency,homework,meeting,holiday','date'=>'required_if:type,absent|nullable|date','exam_id'=>'required_if:type,exam_result|nullable|exists:exams,id','class_id'=>'nullable|exists:school_classes,id','section_id'=>'nullable|exists:sections,id','message'=>'required_unless:type,absent,exam_result,fee_due|nullable|string|max:1000']);
+        $result=$service->send($data['type'],$data,$request->user()->id);
+        return back()->with('success',"{$result['sent']} SMS processed; {$result['skipped']} skipped (missing number, duplicate, or failed).");
     }
 
     public function destroy($id)

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Book;
+use App\Models\BookCopy;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
@@ -44,7 +45,8 @@ class BookController extends Controller
         try {
             $data = $request->all();
             $data['available'] = $request->qty;
-            Book::create($data);
+            $book=Book::create($data);
+            for($i=1;$i<=$request->qty;$i++) BookCopy::create(['book_id'=>$book->id,'accession_no'=>'ACC-'.str_pad($book->id,5,'0',STR_PAD_LEFT).'-'.str_pad($i,3,'0',STR_PAD_LEFT),'barcode'=>'LIB'.str_pad($book->id,7,'0',STR_PAD_LEFT).str_pad($i,3,'0',STR_PAD_LEFT),'qr_code'=>'BOOK-'.$book->id.'-'.$i,'status'=>'available','condition'=>'good']);
 
             DB::commit();
             return back()->with('success', 'Book added to library!');
@@ -93,6 +95,7 @@ class BookController extends Controller
             'publisher' => 'nullable|string|max:255',
             'qty' => 'required|integer|min:1',
             'price' => 'nullable|numeric|min:0',
+            'author_id'=>'nullable|exists:library_authors,id','publisher_id'=>'nullable|exists:library_publishers,id','category_id'=>'nullable|exists:library_categories,id','shelf_location'=>'nullable|string|max:100',
         ];
     }
 }

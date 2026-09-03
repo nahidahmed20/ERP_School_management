@@ -2,13 +2,15 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCampus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Student extends Model
 {
-    use SoftDeletes;
+    use BelongsToCampus, SoftDeletes;
     protected $guarded = [];
+    protected $casts = ['status' => 'boolean', 'admission_date' => 'date', 'date_of_birth' => 'date'];
 
     public function user()
     {
@@ -18,6 +20,31 @@ class Student extends Model
     public function guardian()
     {
         return $this->belongsTo(Guardian::class, 'guardian_id');
+    }
+
+    public function guardians()
+    {
+        return $this->belongsToMany(Guardian::class, 'student_guardians')->withPivot(['relationship','is_primary','can_pickup','receives_sms','receives_email','custody_note'])->withTimestamps();
+    }
+
+    public function authorizedPickups()
+    {
+        return $this->hasMany(StudentAuthorizedPickup::class);
+    }
+
+    public function guardianNotes()
+    {
+        return $this->hasMany(StudentGuardianNote::class);
+    }
+
+    public function parentConsents()
+    {
+        return $this->hasMany(ParentConsent::class);
+    }
+
+    public function clearances()
+    {
+        return $this->hasMany(StudentClearance::class);
     }
 
     public function enrollments()
@@ -38,6 +65,11 @@ class Student extends Model
     public function feeAssignments()
     {
         return $this->hasMany(FeeAssignment::class, 'student_id');
+    }
+
+    public function invoices()
+    {
+        return $this->hasMany(Invoice::class);
     }
 
     public function documents()

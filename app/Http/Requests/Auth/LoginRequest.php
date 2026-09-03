@@ -34,6 +34,7 @@ class LoginRequest extends FormRequest
             'password' => ['required', 'string'],
             'role' => ['required', 'string', 'in:admin,student,staff,parent'],
             'remember' => ['sometimes', 'boolean'],
+            'captcha' => [$this->session()->get('captcha_required') ? 'required' : 'nullable', 'integer'],
         ];
     }
 
@@ -45,6 +46,10 @@ class LoginRequest extends FormRequest
     public function authenticate(): void
     {
         $this->ensureIsNotRateLimited();
+
+        if ($this->session()->get('captcha_required') && (int) $this->input('captcha') !== (int) $this->session()->get('captcha_answer')) {
+            throw ValidationException::withMessages(['captcha' => 'Incorrect security answer.']);
+        }
 
         $user = $this->resolveUser();
 
@@ -62,6 +67,7 @@ class LoginRequest extends FormRequest
         }
 
         RateLimiter::clear($this->throttleKey());
+        $this->session()->forget(['captcha_required','captcha_answer','captcha_question']);
     }
 
     /**
@@ -132,11 +138,15 @@ class LoginRequest extends FormRequest
 
     private function recordFailedAttempt(): void
     {
-        SecurityFailedLogin::create([
+            SecurityFailedLogin::create([
             'email_attempted' => trim($this->string('login')->toString()),
             'ip_address' => $this->ip(),
             'user_agent' => Str::limit((string) $this->userAgent(), 65535, ''),
             'attempted_at' => now(),
         ]);
+        if (RateLimiter::attempts($this->throttleKey()) >= 3) {
+            $a=random_int(1,9);$b=random_int(1,9);
+            $this->session()->put(['captcha_required'=>true,'captcha_question'=>"{$a} + {$b} = ?",'captcha_answer'=>$a+$b]);
+        }
     }
 }

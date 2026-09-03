@@ -45,7 +45,15 @@ class StudentFeeController extends Controller
         $request->validate([
             'student_ids'  => 'required|array|min:1',
             'fee_group_id' => 'required|exists:fee_groups,id',
-            'due_date'     => 'required|date'
+            'due_date'     => 'required|date',
+            'amount' => 'nullable|numeric|min:0',
+            'billing_frequency' => 'required|in:one_time,monthly,quarterly,yearly',
+            'ends_on' => 'nullable|date|after_or_equal:due_date',
+            'discount_type' => 'required|in:none,fixed,percentage',
+            'discount_value' => 'required|numeric|min:0',
+            'late_fee_type' => 'required|in:none,fixed,percentage',
+            'late_fee_value' => 'required|numeric|min:0',
+            'grace_days' => 'required|integer|min:0|max:365',
         ]);
 
         $activeSession = AcademicSession::where('is_current', 1)->first();
@@ -63,8 +71,20 @@ class StudentFeeController extends Controller
                         'academic_session_id' => $activeSession->id
                     ],
                     [
+                        'campus_id' => Student::findOrFail($studentId)->campus_id,
                         'due_date' => $request->due_date,
-                        'status'   => 'unpaid'
+                        'status'   => 'unpaid',
+                        'amount' => $request->amount,
+                        'billing_frequency' => $request->billing_frequency,
+                        'starts_on' => $request->due_date,
+                        'ends_on' => $request->ends_on,
+                        'next_invoice_date' => $request->due_date,
+                        'discount_type' => $request->discount_type,
+                        'discount_value' => $request->discount_value,
+                        'late_fee_type' => $request->late_fee_type,
+                        'late_fee_value' => $request->late_fee_value,
+                        'grace_days' => $request->grace_days,
+                        'is_active' => true,
                     ]
                 );
             }

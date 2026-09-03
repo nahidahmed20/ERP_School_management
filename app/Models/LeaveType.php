@@ -10,6 +10,7 @@ class LeaveType extends Model
     use SoftDeletes;
 
     protected $guarded = ['id'];
+    protected $casts = ['is_active' => 'boolean', 'is_paid' => 'boolean'];
 
     public function staffLeaves()
     {

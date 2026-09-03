@@ -1,11 +1,12 @@
 <?php
 namespace App\Models;
+use App\Traits\BelongsToCampus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CertificateTemplate extends Model {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, BelongsToCampus;
 
     protected $fillable = [
         'campus_id', 'title', 'template_type', 'content_body',

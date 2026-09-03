@@ -1,0 +1,17 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration {
+ public function up():void {
+  Schema::create('cafeteria_wallets',function(Blueprint $t){$t->id();$t->foreignId('campus_id')->nullable()->constrained()->nullOnDelete();$t->foreignId('user_id')->constrained()->cascadeOnDelete();$t->string('card_uid')->nullable()->unique();$t->decimal('balance',12,2)->default(0);$t->decimal('daily_spending_limit',12,2)->nullable();$t->boolean('is_active')->default(true);$t->timestamps();$t->unique('user_id');});
+  Schema::create('cafeteria_wallet_transactions',function(Blueprint $t){$t->id();$t->foreignId('cafeteria_wallet_id')->constrained()->cascadeOnDelete();$t->string('type');$t->decimal('amount',12,2);$t->decimal('balance_after',12,2);$t->string('reference_type')->nullable();$t->unsignedBigInteger('reference_id')->nullable();$t->string('payment_method')->nullable();$t->string('reference_no')->nullable();$t->text('notes')->nullable();$t->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();$t->timestamps();$t->index(['reference_type','reference_id']);});
+  Schema::table('food_items',function(Blueprint $t){$t->foreignId('purchase_item_id')->nullable()->constrained()->nullOnDelete();$t->decimal('stock_quantity',12,2)->default(0);$t->decimal('reorder_level',12,2)->default(5);$t->string('stock_unit')->default('pcs');});
+  Schema::table('cafeteria_orders',function(Blueprint $t){$t->string('payment_method')->default('cash');$t->string('source')->default('counter');$t->dateTime('accepted_at')->nullable();$t->dateTime('preparing_at')->nullable();$t->dateTime('ready_at')->nullable();$t->dateTime('served_at')->nullable();$t->foreignId('processed_by')->nullable()->constrained('users')->nullOnDelete();});
+  Schema::create('cafeteria_refund_requests',function(Blueprint $t){$t->id();$t->foreignId('cafeteria_order_id')->constrained()->cascadeOnDelete();$t->string('type');$t->decimal('amount',12,2);$t->text('reason');$t->string('status')->default('pending');$t->foreignId('requested_by')->nullable()->constrained('users')->nullOnDelete();$t->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();$t->dateTime('decided_at')->nullable();$t->timestamps();});
+  Schema::create('cafeteria_cash_closings',function(Blueprint $t){$t->id();$t->foreignId('cafeteria_outlet_id')->constrained()->cascadeOnDelete();$t->date('business_date');$t->decimal('opening_cash',12,2)->default(0);$t->decimal('cash_sales',12,2)->default(0);$t->decimal('refunds',12,2)->default(0);$t->decimal('expected_cash',12,2)->default(0);$t->decimal('counted_cash',12,2);$t->decimal('variance',12,2)->default(0);$t->text('notes')->nullable();$t->foreignId('closed_by')->nullable()->constrained('users')->nullOnDelete();$t->dateTime('closed_at');$t->timestamps();$t->unique(['cafeteria_outlet_id','business_date']);});
+ }
+ public function down():void {Schema::dropIfExists('cafeteria_cash_closings');Schema::dropIfExists('cafeteria_refund_requests');Schema::table('cafeteria_orders',function(Blueprint $t){$t->dropConstrainedForeignId('processed_by');$t->dropColumn(['payment_method','source','accepted_at','preparing_at','ready_at','served_at']);});Schema::table('food_items',function(Blueprint $t){$t->dropConstrainedForeignId('purchase_item_id');$t->dropColumn(['stock_quantity','reorder_level','stock_unit']);});Schema::dropIfExists('cafeteria_wallet_transactions');Schema::dropIfExists('cafeteria_wallets');}
+};

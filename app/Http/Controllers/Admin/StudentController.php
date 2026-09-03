@@ -209,6 +209,11 @@ class StudentController extends Controller
                 'status'            => true,
             ]);
 
+            $student->guardians()->syncWithoutDetaching([$guardianId => [
+                'relationship' => 'primary guardian', 'is_primary' => true,
+                'can_pickup' => true, 'receives_sms' => true, 'receives_email' => true,
+            ]]);
+
             Enrollment::create([
                 'student_id'            => $student->id,
                 'academic_session_id'   => $activeSession->id,

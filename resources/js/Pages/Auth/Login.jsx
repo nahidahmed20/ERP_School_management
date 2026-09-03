@@ -26,7 +26,7 @@ function RoleIcon({ role, className }) {
     );
 }
 
-export default function Login({ status, canResetPassword }) {
+export default function Login({ status, canResetPassword, captchaQuestion }) {
     const [role, setRole] = useState('admin');
     const theme = ROLE_THEME[role];
 
@@ -35,6 +35,7 @@ export default function Login({ status, canResetPassword }) {
         password: '',
         remember: false,
         role: 'admin',
+        captcha: '',
     });
 
     const submit = (e) => {
@@ -221,6 +222,8 @@ export default function Login({ status, canResetPassword }) {
                                 />
                                 <InputError message={errors.password} className="mt-1.5 text-xs" />
                             </div>
+
+                            {captchaQuestion && <div><label className="block text-sm font-medium text-slate-700">Security check: {captchaQuestion}</label><input type="number" value={data.captcha} onChange={e=>setData('captcha',e.target.value)} className="mt-1 w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-3" required/><InputError message={errors.captcha} className="mt-1.5 text-xs"/></div>}
 
                             {/* Options */}
                             <div className="flex items-center justify-between text-xs sm:text-sm">

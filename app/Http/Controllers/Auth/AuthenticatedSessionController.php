@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Http\Controllers\Auth\TwoFactorChallengeController;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -20,9 +21,13 @@ class AuthenticatedSessionController extends Controller
      */
     public function create(): Response
     {
+        if (session('captcha_required') && ! session('captcha_question')) {
+            $a=random_int(1,9);$b=random_int(1,9);session(['captcha_question'=>"{$a} + {$b} = ?",'captcha_answer'=>$a+$b]);
+        }
         return Inertia::render('Auth/Login', [
             'canResetPassword' => Route::has('password.request'),
             'status' => session('status'),
+            'captchaQuestion' => session('captcha_required') ? session('captcha_question') : null,
         ]);
     }
 
@@ -32,6 +37,14 @@ class AuthenticatedSessionController extends Controller
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
+
+        if ($request->user()->two_factor_enabled) {
+            $user = $request->user();
+            $request->session()->put(['two_factor_user_id'=>$user->id,'two_factor_remember'=>$request->boolean('remember')]);
+            Auth::logout();
+            TwoFactorChallengeController::send($user);
+            return redirect()->route('two-factor.show');
+        }
 
         $request->session()->regenerate();
 

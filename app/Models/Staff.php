@@ -18,6 +18,16 @@ class Staff extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function campus()
+    {
+        return $this->belongsTo(Campus::class);
+    }
+
+    public function teachingAssignments()
+    {
+        return $this->hasMany(TeacherAssignment::class);
+    }
+
     public function department()
     {
         return $this->belongsTo(Department::class);

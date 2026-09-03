@@ -7,6 +7,7 @@ use App\Models\Exam;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Validation\Rule;
 
 class ExamController extends Controller
 {
@@ -63,6 +64,20 @@ class ExamController extends Controller
         }
 
         return back()->with('success', 'পরীক্ষা মুছে ফেলা হয়েছে।');
+    }
+
+    public function workflow(Request $request, Exam $exam)
+    {
+        $data = $request->validate(['action' => ['required', Rule::in(['submit','approve','lock','reopen'])]]);
+        abort_if($exam->approval_status === 'locked' && $data['action'] !== 'reopen', 422, 'The result is locked.');
+        $updates = match ($data['action']) {
+            'submit' => ['approval_status'=>'submitted'],
+            'approve' => ['approval_status'=>'approved','approved_by'=>$request->user()->id,'approved_at'=>now()],
+            'lock' => ['approval_status'=>'locked','locked_at'=>now(),'results_published'=>true,'results_published_at'=>now()],
+            'reopen' => ['approval_status'=>'approved','locked_at'=>null,'results_published'=>false,'results_published_at'=>null],
+        };
+        $exam->update($updates);
+        return back()->with('success', 'Result workflow updated.');
     }
 
     private function validateData(Request $request): array

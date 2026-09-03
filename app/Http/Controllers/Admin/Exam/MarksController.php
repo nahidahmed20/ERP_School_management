@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin\Exam;
 use App\Http\Controllers\Controller;
 use App\Models\Exam;
 use App\Models\ExamMark;
+use App\Models\ExamMarkRevision;
 use App\Models\ExamSchedule;
 use App\Models\Grade;
 use App\Models\SchoolClass;
@@ -69,7 +70,13 @@ class MarksController extends Controller
             'marks.*.viva_marks' => 'nullable|numeric|min:0',
             'marks.*.full_marks' => 'nullable|numeric|min:0',
             'marks.*.pass_marks' => 'nullable|numeric|min:0',
+            'correction_reason' => 'nullable|string|max:1000',
         ]);
+
+        $exam = Exam::findOrFail($request->exam_id);
+        if ($exam->approval_status === 'locked' || $exam->results_published) {
+            return back()->with('error', 'Result is locked/published. Reopen it before changing marks.');
+        }
 
         $schedule = ExamSchedule::where('exam_id', $request->exam_id)
                                 ->where('class_id', $request->class_id)
@@ -105,13 +112,12 @@ class MarksController extends Controller
                 }
             }
 
-            ExamMark::updateOrCreate(
-                [
+            $identity = [
                     'exam_id' => $request->exam_id,
                     'subject_id' => $request->subject_id,
                     'student_id' => $markData['student_id'],
-                ],
-                [
+                ];
+            $values = [
                     'school_class_id' => $request->class_id,
                     'section_id' => $request->section_id ?? null,
                     'marks_obtained' => $marksObtained !== '' ? $marksObtained : null,
@@ -123,8 +129,16 @@ class MarksController extends Controller
                     'viva_marks' => $markData['viva_marks'] ?? null,
                     'full_marks' => $markData['full_marks'] ?? null,
                     'pass_marks' => $markData['pass_marks'] ?? null,
-                ]
-            );
+                ];
+            $existing = ExamMark::where($identity)->first();
+            if ($existing && collect($values)->contains(fn($value,$key)=>(string)$existing->{$key} !== (string)$value)) {
+                if (! $request->filled('correction_reason')) return back()->withErrors(['correction_reason'=>'A correction reason is required when changing existing marks.']);
+                $old = $existing->only(array_keys($values));
+                $existing->update($values);
+                ExamMarkRevision::create(['exam_mark_id'=>$existing->id]+$identity+['old_values'=>$old,'new_values'=>$existing->fresh()->only(array_keys($values)),'reason'=>$request->correction_reason,'changed_by'=>$request->user()->id]);
+            } elseif (! $existing) {
+                ExamMark::create($identity+$values);
+            }
         }
 
         return back()->with('success', 'মার্কস সফলভাবে সেভ করা হয়েছে!');
@@ -132,6 +146,8 @@ class MarksController extends Controller
 
     public function destroy(Request $request)
     {
+        $exam = Exam::findOrFail($request->exam_id);
+        if ($exam->approval_status === 'locked' || $exam->results_published) return back()->with('error','Locked/published marks cannot be deleted.');
         $query = ExamMark::where('exam_id', $request->exam_id)
                          ->where('school_class_id', $request->class_id)
                          ->where('subject_id', $request->subject_id);

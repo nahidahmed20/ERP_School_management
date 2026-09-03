@@ -7,6 +7,7 @@ use App\Models\MenuItem;
 use App\Models\User;
 use App\Services\NavigationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Route;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -59,5 +60,19 @@ class DynamicNavigationTest extends TestCase
 
         $this->assertSame('admin.new-module.index', $item->fresh()->permission);
         $this->assertTrue(Permission::where('name', 'admin.new-module.index')->exists());
+    }
+
+    public function test_every_seeded_menu_link_points_to_a_registered_route(): void
+    {
+        $this->seed(\Database\Seeders\MenuSeeder::class);
+
+        $broken = MenuItem::query()
+            ->whereNotNull('route_name')
+            ->pluck('route_name')
+            ->reject(fn (string $routeName) => Route::has($routeName))
+            ->values()
+            ->all();
+
+        $this->assertSame([], $broken, 'Broken menu routes: '.implode(', ', $broken));
     }
 }

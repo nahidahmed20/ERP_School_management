@@ -10,4 +10,5 @@ class Book extends Model
     use HasFactory;
 
     protected $guarded = ['id'];
+    public function copies(){return $this->hasMany(BookCopy::class);}
 }

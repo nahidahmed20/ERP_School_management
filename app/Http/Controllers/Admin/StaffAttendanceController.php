@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Staff;
 use App\Models\StaffAttendance;
+use App\Models\AttendanceDayLock;
+use App\Models\AttendancePolicy;
+use App\Models\Event;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -29,6 +32,11 @@ class StaffAttendanceController extends Controller
             'staffs' => $staffs,
             'attendances' => $attendances
         ]);
+
+        if (AttendanceDayLock::where('attendance_type','staff')->whereDate('attendance_date',$request->date)->exists()) return back()->with('error','Staff attendance for this date is locked.');
+        $policy=AttendancePolicy::where('is_active',true)->first();
+        $holiday=Event::where('is_government_holiday',true)->whereDate('start_datetime','<=',$request->date)->whereDate('end_datetime','>=',$request->date)->exists();
+        if ($policy?->block_holiday_entry && ($holiday || in_array(\Carbon\Carbon::parse($request->date)->dayOfWeek,$policy->weekly_holidays??[]))) return back()->with('error','Attendance cannot be entered on a configured holiday.');
     }
 
     public function store(Request $request)
@@ -47,13 +55,19 @@ class StaffAttendanceController extends Controller
         $upsertData = [];
 
         foreach ($request->attendances as $att) {
+            $status=$att['status'];
+            if ($status==='present' && $policy && !empty($att['in_time'])) {
+                $minutes=\Carbon\Carbon::parse($policy->staff_start_time)->diffInMinutes(\Carbon\Carbon::parse($att['in_time']),false);
+                if ($minutes >= $policy->half_day_after_minutes) $status='half_day'; elseif ($minutes > $policy->late_grace_minutes) $status='late';
+            }
             $upsertData[] = [
                 'staff_id' => $att['staff_id'],
                 'date' => $date,
-                'status' => $att['status'],
+                'status' => $status,
                 'in_time' => $att['status'] === 'absent' ? null : $att['in_time'],
                 'out_time' => $att['status'] === 'absent' ? null : $att['out_time'],
                 'note' => $att['note'],
+                'source' => 'manual', 'recorded_by' => $request->user()->id, 'verified_at' => now(),
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
@@ -66,7 +80,7 @@ class StaffAttendanceController extends Controller
             StaffAttendance::upsert(
                 $upsertData,
                 ['staff_id', 'date'],
-                ['status', 'in_time', 'out_time', 'note', 'updated_at']
+                ['status', 'in_time', 'out_time', 'note', 'source', 'recorded_by', 'verified_at', 'updated_at']
             );
 
             DB::commit();

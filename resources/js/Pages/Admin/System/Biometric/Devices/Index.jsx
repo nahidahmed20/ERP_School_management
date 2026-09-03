@@ -7,7 +7,7 @@ import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 import DeviceFormModal from './Partials/DeviceFormModal';
 import Swal from 'sweetalert2';
 
-export default function Index({ devices, campuses, activeCampusId, filters }) {
+export default function Index({ devices, campuses, activeCampusId, filters, enrolledUsers = [] }) {
   const { flash } = usePage().props;
   const [search, setSearch] = useState(filters.search ?? '');
   const [perPage, setPerPage] = useState(filters.per_page ?? '10');
@@ -59,6 +59,12 @@ export default function Index({ devices, campuses, activeCampusId, filters }) {
     });
     navigator.clipboard.writeText(text);
     Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Data copied to clipboard!', showConfirmButton: false, timer: 2000 });
+  };
+
+  const simulate = async (device) => {
+    if (!enrolledUsers.length) return Swal.fire('No enrolled users', 'আগে staff/student-এর biometric ID map করুন।', 'warning');
+    const result = await Swal.fire({ title: 'Simulate ZKTeco punch', html: `<select id="bio-user" class="swal2-select">${enrolledUsers.map(u=>`<option value="${u.biometric_id}">${u.user_name} (${u.biometric_id})</option>`).join('')}</select><input id="bio-time" type="datetime-local" class="swal2-input" value="${new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16)}">`, showCancelButton: true, preConfirm:()=>({biometric_id:document.getElementById('bio-user').value,punch_time:document.getElementById('bio-time').value}) });
+    if(result.isConfirmed) router.post(route('admin.biometric-devices.simulate',device.id),result.value,{preserveScroll:true});
   };
 
   return (
@@ -212,6 +218,9 @@ export default function Index({ devices, campuses, activeCampusId, filters }) {
                       </td>
                       <td className="px-6 py-4 text-right no-print">
                         <div className="flex items-center justify-end gap-1.5">
+                          <button onClick={() => router.post(route('admin.biometric-devices.sync', item.id), {}, { preserveScroll:true })} className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg" title="Sync device now"><Icon name="refresh" className="w-4 h-4" /></button>
+                          <button onClick={() => simulate(item)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg" title="Simulate punch (no machine needed)"><Icon name="play" className="w-4 h-4" /></button>
+                          <button onClick={() => router.post(route('admin.biometric-devices.token', item.id), {}, { preserveScroll:true })} className="p-2 text-slate-400 hover:text-violet-600 hover:bg-violet-50 rounded-lg" title="Generate push API token"><Icon name="key" className="w-4 h-4" /></button>
                           <button onClick={() => { setEditingItem(item); setIsFormOpen(true); }} className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Edit Device">
                             <Icon name="edit" className="w-4 h-4" />
                           </button>

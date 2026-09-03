@@ -6,7 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 class SmsLog extends Model {
     use HasFactory;
 
-    protected $fillable = ['campus_id', 'recipient_name', 'phone_number', 'message', 'status'];
+    protected $guarded = ['id'];
+    protected $casts = ['sent_at' => 'datetime'];
 
     public function campus() { return $this->belongsTo(Campus::class); }
 }

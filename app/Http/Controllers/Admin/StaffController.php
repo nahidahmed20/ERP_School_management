@@ -86,6 +86,7 @@ class StaffController extends Controller
                     'name' => $request->first_name . ' ' . $request->last_name,
                     'email' => $staffEmail,
                     'password' => Hash::make($staffIdNo),
+                    'campus_id' => $request->user()->campus_id,
                 ]);
 
                 if ($request->role_name) {
@@ -101,6 +102,7 @@ class StaffController extends Controller
             }
 
             Staff::create([
+                'campus_id'         => $request->user()->campus_id,
                 'user_id'           => $userId,
                 'department_id'     => $request->department_id,
                 'designation_id'    => $request->designation_id,
@@ -201,6 +203,7 @@ class StaffController extends Controller
                     $user->update([
                         'name' => $request->first_name . ' ' . $request->last_name,
                         'email' => $request->email ?? $user->email,
+                        'campus_id' => $staff->campus_id ?? $request->user()->campus_id,
                     ]);
 
                     if ($request->role_name) {

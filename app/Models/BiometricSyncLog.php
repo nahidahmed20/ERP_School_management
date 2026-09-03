@@ -1,10 +1,11 @@
 <?php
 namespace App\Models;
+use App\Traits\BelongsToCampus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class BiometricSyncLog extends Model {
-    use HasFactory;
+    use HasFactory, BelongsToCampus;
     
     protected $fillable = [
         'campus_id', 'device_id', 'enrolled_user_id', 'biometric_id', 

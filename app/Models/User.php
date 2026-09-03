@@ -25,6 +25,11 @@ class User extends Authenticatable
         'email',
         'password',
         'campus_id',
+        'two_factor_enabled',
+        'two_factor_channel',
+        'password_changed_at',
+        'password_expires_days',
+        'locked_until',
     ];
 
     /**
@@ -47,6 +52,9 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'two_factor_enabled' => 'boolean',
+            'password_changed_at' => 'datetime',
+            'locked_until' => 'datetime',
         ];
     }
 

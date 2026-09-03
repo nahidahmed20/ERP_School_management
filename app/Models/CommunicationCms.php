@@ -1,10 +1,11 @@
 <?php
 namespace App\Models;
+use App\Traits\BelongsToCampus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class CommunicationCms extends Model {
-    use HasFactory;
+    use HasFactory, BelongsToCampus;
 
     protected $table = 'communication_cms';
 
