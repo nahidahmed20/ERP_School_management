@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\{StaffAppraisal, Staff};
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Support\CampusRule;
 
 class StaffAppraisalController extends Controller
 {
@@ -35,7 +36,7 @@ class StaffAppraisalController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'staff_id' => 'required|exists:staff,id',
+            'staff_id' => ['required', CampusRule::exists('staff')],
             'appraisal_date' => 'required|date',
             'period' => 'required|string|max:100',
             'rating' => 'required|numeric|min:1|max:5',
@@ -53,7 +54,7 @@ class StaffAppraisalController extends Controller
         $appraisal = StaffAppraisal::findOrFail($id);
         
         $validated = $request->validate([
-            'staff_id' => 'required|exists:staff,id',
+            'staff_id' => ['required', CampusRule::exists('staff')],
             'appraisal_date' => 'required|date',
             'period' => 'required|string|max:100',
             'rating' => 'required|numeric|min:1|max:5',

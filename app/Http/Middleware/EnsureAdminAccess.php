@@ -21,6 +21,12 @@ class EnsureAdminAccess
             'You do not have permission to access this area.'
         );
 
+        // Campus ownership is derived from the authenticated context, never from
+        // a writable form field. Super admins select the context via switchCampus.
+        if ($routeName !== 'admin.campus.switch' && $request->exists('campus_id')) {
+            $request->merge(['campus_id' => config('app.active_campus_id')]);
+        }
+
         return $next($request);
     }
 }

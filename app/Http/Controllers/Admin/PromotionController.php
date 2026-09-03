@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use App\Models\PromotionHistory;
 use Inertia\Inertia;
+use App\Support\CampusRule;
 
 class PromotionController extends Controller
 {
@@ -48,18 +49,33 @@ class PromotionController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'next_session_id' => 'required|exists:academic_sessions,id',
-            'next_class_id'   => 'required|exists:school_classes,id',
-            'next_section_id' => 'required|exists:sections,id',
+            'current_session_id' => ['required', CampusRule::exists('academic_sessions')],
+            'current_class_id' => ['required', CampusRule::exists('school_classes')],
+            'current_section_id' => ['required', CampusRule::exists('sections')],
+            'next_session_id' => ['required', CampusRule::exists('academic_sessions')],
+            'next_class_id'   => ['required', CampusRule::exists('school_classes')],
+            'next_section_id' => ['required', CampusRule::exists('sections')],
             'students'        => 'required|array',
+            'students.*.enrollment_id' => ['required', CampusRule::exists('enrollments')],
+            'students.*.student_id' => ['required', CampusRule::exists('students')],
+            'students.*.promote_status' => 'required|in:promote,repeat,leave',
+            'students.*.roll_no' => 'nullable|string|max:50',
         ]);
+
+        abort_unless(SchoolClass::findOrFail($request->next_class_id)->sections()->whereKey($request->next_section_id)->exists(), 422, 'Next section is not assigned to the selected class.');
 
         DB::beginTransaction();
         try {
             $batch = (string) Str::uuid();
             foreach ($request->students as $studentData) {
+                $enrollment = Enrollment::whereKey($studentData['enrollment_id'])
+                    ->where('student_id', $studentData['student_id'])
+                    ->where('academic_session_id', $request->current_session_id)
+                    ->where('class_id', $request->current_class_id)
+                    ->where('section_id', $request->current_section_id)
+                    ->where('is_current', true)->lockForUpdate()->firstOrFail();
                 if ($studentData['promote_status'] === 'leave') {
-                    Enrollment::where('id', $studentData['enrollment_id'])->update(['is_current' => false]);
+                    $enrollment->update(['is_current' => false]);
                     PromotionHistory::create(['batch_uuid'=>$batch,'student_id'=>$studentData['student_id'],'previous_enrollment_id'=>$studentData['enrollment_id'],'action'=>'leave','processed_by'=>$request->user()->id]);
                     continue;
                 }
@@ -72,7 +88,7 @@ class PromotionController extends Controller
                             ? $request->next_section_id
                             : $request->current_section_id;
 
-                Enrollment::where('id', $studentData['enrollment_id'])->update(['is_current' => false]);
+                $enrollment->update(['is_current' => false]);
 
                 $newEnrollment = Enrollment::create([
                     'student_id'          => $studentData['student_id'],

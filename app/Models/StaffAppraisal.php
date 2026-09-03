@@ -1,10 +1,11 @@
 <?php
 namespace App\Models;
+use App\Traits\BelongsToCampus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class StaffAppraisal extends Model {
-    use HasFactory;
+    use BelongsToCampus, HasFactory;
     
     protected $fillable = [
         'staff_id', 'appraisal_date', 'period', 'rating', 'remarks', 'evaluated_by'

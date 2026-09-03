@@ -9,6 +9,7 @@ use App\Models\Campus;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Validation\Rule;
+use App\Support\CampusRule;
 
 class AssetController extends Controller
 {
@@ -80,7 +81,7 @@ class AssetController extends Controller
             ],
             'name' => 'required|string|max:255',
             'category' => 'nullable|string|max:100',
-            'assigned_to' => 'nullable|exists:users,id',
+            'assigned_to' => ['nullable', CampusRule::exists('users')],
             'location' => 'nullable|string|max:100',
             'purchase_date' => 'nullable|date',
             'cost' => 'nullable|numeric|min:0',

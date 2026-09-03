@@ -10,6 +10,7 @@ use App\Models\Campus;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Validation\Rule;
+use App\Support\CampusRule;
 
 class InvoiceController extends Controller
 {
@@ -77,8 +78,8 @@ class InvoiceController extends Controller
 
         return $request->validate([
             'campus_id' => 'required|exists:campuses,id',
-            'student_id' => 'required|exists:students,id',
-            'fee_group_id' => 'required|exists:fee_groups,id',
+            'student_id' => ['required', CampusRule::exists('students')],
+            'fee_group_id' => ['required', CampusRule::exists('fee_groups')],
             'invoice_no' => [
                 'required', 'string', 'max:100',
                 Rule::unique('invoices', 'invoice_no')->where('campus_id', $campusId)->ignore($ignoreId)

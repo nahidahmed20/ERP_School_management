@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\{HostelFee, Student, HostelRoom};
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Support\CampusRule;
 
 class HostelFeeController extends Controller
 {
@@ -46,8 +47,8 @@ class HostelFeeController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'student_id' => 'required|exists:students,id',
-            'hostel_room_id' => 'nullable|exists:hostel_rooms,id',
+            'student_id' => ['required', CampusRule::exists('students')],
+            'hostel_room_id' => ['nullable', CampusRule::exists('hostel_rooms')],
             'amount' => 'required|numeric|min:1',
             'month' => 'required|string',
             'year' => 'required|integer',
@@ -65,8 +66,8 @@ class HostelFeeController extends Controller
         $fee = HostelFee::findOrFail($id);
 
         $validated = $request->validate([
-            'student_id' => 'required|exists:students,id',
-            'hostel_room_id' => 'nullable|exists:hostel_rooms,id',
+            'student_id' => ['required', CampusRule::exists('students')],
+            'hostel_room_id' => ['nullable', CampusRule::exists('hostel_rooms')],
             'amount' => 'required|numeric|min:1',
             'month' => 'required|string',
             'year' => 'required|integer',

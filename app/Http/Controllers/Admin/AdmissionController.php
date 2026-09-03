@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
+use App\Support\CampusRule;
 
 class AdmissionController extends Controller
 {
@@ -49,7 +50,7 @@ class AdmissionController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'class_id' => 'required|exists:school_classes,id',
+            'class_id' => ['required', CampusRule::exists('school_classes')],
             'first_name' => 'required|string|max:255',
             'date_of_birth' => 'required|date',
             'gender' => 'required|in:male,female,other',
@@ -74,11 +75,14 @@ class AdmissionController extends Controller
 
         $request->validate([
             'status' => 'required|in:Pending,Approved,Rejected',
-            'section_id' => 'required_if:status,Approved|nullable|exists:sections,id',
+            'section_id' => ['required_if:status,Approved', 'nullable', CampusRule::exists('sections')],
             'notes' => 'nullable|string',
         ]);
 
         if ($request->status === 'Approved' && $admission->status !== 'Approved') {
+
+            abort_unless($admission->academicSession && $admission->schoolClass, 422, 'Admission session or class is unavailable in the active campus.');
+            abort_unless($admission->schoolClass->sections()->whereKey($request->section_id)->exists(), 422, 'Selected section is not assigned to the admission class.');
 
             DB::beginTransaction();
             try {

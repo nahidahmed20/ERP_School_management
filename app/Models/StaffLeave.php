@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCampus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class StaffLeave extends Model
 {
-    use SoftDeletes;
+    use BelongsToCampus, SoftDeletes;
 
     protected $guarded = ['id'];
 

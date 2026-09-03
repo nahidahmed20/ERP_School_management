@@ -10,6 +10,7 @@ use App\Models\FoodItem;
 use App\Models\Campus;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Support\CampusRule;
 
 class CafeteriaOrderController extends Controller
 {
@@ -55,8 +56,8 @@ class CafeteriaOrderController extends Controller
     {
         $validated = $request->validate([
             'campus_id' => 'required|exists:campuses,id',
-            'user_id' => 'required|exists:users,id',
-            'cafeteria_outlet_id' => 'required|exists:cafeteria_outlets,id',
+            'user_id' => ['required', CampusRule::exists('users')],
+            'cafeteria_outlet_id' => ['required', CampusRule::exists('cafeteria_outlets')],
             'total_amount' => 'required|numeric',
             'status' => 'required|string',
             'payment_status' => 'required|string',

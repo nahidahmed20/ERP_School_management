@@ -10,6 +10,7 @@ use App\Models\Campus;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
+use App\Support\CampusRule;
 
 class BookIssueController extends Controller
 {
@@ -109,8 +110,8 @@ class BookIssueController extends Controller
     {
         return $request->validate([
             'campus_id' => 'required|exists:campuses,id',
-            'book_id' => 'required|exists:books,id',
-            'user_id' => 'required|exists:users,id',
+            'book_id' => ['required', CampusRule::exists('books')],
+            'user_id' => ['required', CampusRule::exists('users')],
             'issue_date' => 'required|date',
             'due_date' => 'required|date|after_or_equal:issue_date',
             'return_date' => 'nullable|date|after_or_equal:issue_date',

@@ -9,6 +9,7 @@ use App\Models\SchoolClass;
 use App\Models\Classroom;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Support\CampusRule;
 
 class ExamScheduleController extends Controller
 {
@@ -54,15 +55,15 @@ class ExamScheduleController extends Controller
     public function bulkUpdate(Request $request)
     {
         $request->validate([
-            'exam_id' => 'required|exists:exams,id',
-            'class_id' => 'required|exists:school_classes,id',
-            'section_id' => 'required|exists:sections,id',
+            'exam_id' => ['required', CampusRule::exists('exams')],
+            'class_id' => ['required', CampusRule::exists('school_classes')],
+            'section_id' => ['required', CampusRule::exists('sections')],
             'periods' => 'nullable|array',
-            'periods.*.subject_id' => 'required_with:periods|exists:subjects,id|distinct',
+            'periods.*.subject_id' => ['required_with:periods', CampusRule::exists('subjects'), 'distinct'],
             'periods.*.exam_date' => 'required_with:periods|date',
             'periods.*.start_time' => 'required_with:periods|date_format:H:i',
             'periods.*.end_time' => 'required_with:periods|date_format:H:i|after:periods.*.start_time',
-            'periods.*.classroom_id' => 'nullable|exists:classrooms,id',
+            'periods.*.classroom_id' => ['nullable', CampusRule::exists('classrooms')],
         ], [
             'periods.*.subject_id.distinct' => 'একই সাবজেক্টের পরীক্ষা একাধিকবার নেওয়া যাবে না!',
         ]);

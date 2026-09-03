@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\{StaffLoan, Staff};
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Support\CampusRule;
 
 class StaffLoanController extends Controller
 {
@@ -40,7 +41,7 @@ class StaffLoanController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'staff_id' => 'required|exists:staff,id',
+            'staff_id' => ['required', CampusRule::exists('staff')],
             'loan_type' => 'required|string|in:Advance Salary,Loan',
             'amount' => 'required|numeric|min:1',
             'monthly_deduction' => 'nullable|numeric|min:0',
@@ -61,7 +62,7 @@ class StaffLoanController extends Controller
         $loan = StaffLoan::findOrFail($id);
         
         $validated = $request->validate([
-            'staff_id' => 'required|exists:staff,id',
+            'staff_id' => ['required', CampusRule::exists('staff')],
             'loan_type' => 'required|string|in:Advance Salary,Loan',
             'amount' => 'required|numeric|min:1',
             'monthly_deduction' => 'nullable|numeric|min:0',

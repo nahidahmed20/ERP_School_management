@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\{HostelAllocation, HostelBed, HostelRoom};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
@@ -14,6 +15,10 @@ class HostelOperationsController extends Controller
     private function raw(string $table)
     {
         return DB::table($table)->where($table.'.campus_id', config('app.active_campus_id'));
+    }
+    private function campusExists(string $table)
+    {
+        return Rule::exists($table, 'id')->where(fn ($query) => $query->where('campus_id', config('app.active_campus_id')));
     }
     public function index()
     {
@@ -44,14 +49,14 @@ class HostelOperationsController extends Controller
 
     public function bed(Request $request)
     {
-        $data=$request->validate(['hostel_room_id'=>'required|exists:hostel_rooms,id','bed_number'=>'required|string|max:50']);
+        $data=$request->validate(['hostel_room_id'=>['required',$this->campusExists('hostel_rooms')],'bed_number'=>'required|string|max:50']);
         HostelBed::firstOrCreate($data, ['status'=>'available']);
         return back()->with('success','Hostel bed saved.');
     }
 
     public function checkIn(Request $request)
     {
-        $data=$request->validate(['hostel_allocation_id'=>'required|exists:hostel_allocations,id','hostel_bed_id'=>'required|exists:hostel_beds,id','checked_in_at'=>'required|date','security_deposit'=>'nullable|numeric|min:0']);
+        $data=$request->validate(['hostel_allocation_id'=>['required',$this->campusExists('hostel_allocations')],'hostel_bed_id'=>['required',$this->campusExists('hostel_beds')],'checked_in_at'=>'required|date','security_deposit'=>'nullable|numeric|min:0']);
         DB::transaction(function () use ($data,$request) {
             $allocation=HostelAllocation::lockForUpdate()->findOrFail($data['hostel_allocation_id']);
             $bed=HostelBed::lockForUpdate()->findOrFail($data['hostel_bed_id']);
@@ -66,7 +71,7 @@ class HostelOperationsController extends Controller
 
     public function move(Request $request, HostelAllocation $allocation)
     {
-        $data=$request->validate(['hostel_bed_id'=>'required|exists:hostel_beds,id','reason'=>'nullable|string|max:1000']);
+        $data=$request->validate(['hostel_bed_id'=>['required',$this->campusExists('hostel_beds')],'reason'=>'nullable|string|max:1000']);
         DB::transaction(function () use($allocation,$data,$request){
             $new=HostelBed::lockForUpdate()->findOrFail($data['hostel_bed_id']);
             if($new->status!=='available') throw ValidationException::withMessages(['hostel_bed_id'=>'Selected bed is not available.']);
@@ -80,14 +85,14 @@ class HostelOperationsController extends Controller
 
     public function attendance(Request $request)
     {
-        $data=$request->validate(['hostel_allocation_id'=>'required|exists:hostel_allocations,id','attendance_date'=>'required|date','status'=>'required|in:present,absent,leave','check_time'=>'nullable','remarks'=>'nullable|string']);
+        $data=$request->validate(['hostel_allocation_id'=>['required',$this->campusExists('hostel_allocations')],'attendance_date'=>'required|date','status'=>'required|in:present,absent,leave','check_time'=>'nullable','remarks'=>'nullable|string']);
         $this->raw('hostel_attendances')->updateOrInsert(['hostel_allocation_id'=>$data['hostel_allocation_id'],'attendance_date'=>$data['attendance_date']],$data+['campus_id'=>config('app.active_campus_id'),'recorded_by'=>$request->user()->id,'created_at'=>now(),'updated_at'=>now()]);
         return back()->with('success','Hostel attendance recorded.');
     }
 
     public function visitor(Request $request)
     {
-        $data=$request->validate(['hostel_allocation_id'=>'required|exists:hostel_allocations,id','visitor_name'=>'required|string|max:255','phone'=>'nullable|string|max:30','relation'=>'nullable|string|max:100','id_number'=>'nullable|string|max:100','check_in_at'=>'required|date','purpose'=>'nullable|string']);
+        $data=$request->validate(['hostel_allocation_id'=>['required',$this->campusExists('hostel_allocations')],'visitor_name'=>'required|string|max:255','phone'=>'nullable|string|max:30','relation'=>'nullable|string|max:100','id_number'=>'nullable|string|max:100','check_in_at'=>'required|date','purpose'=>'nullable|string']);
         $this->raw('hostel_visitors')->insert($data+['campus_id'=>config('app.active_campus_id'),'approved_by'=>$request->user()->id,'created_at'=>now(),'updated_at'=>now()]);
         return back()->with('success','Visitor checked in.');
     }
@@ -100,7 +105,7 @@ class HostelOperationsController extends Controller
 
     public function meal(Request $request)
     {
-        $data=$request->validate(['hostel_allocation_id'=>'required|exists:hostel_allocations,id','meal_date'=>'required|date','breakfast'=>'boolean','lunch'=>'boolean','dinner'=>'boolean','amount'=>'required|numeric|min:0']);
+        $data=$request->validate(['hostel_allocation_id'=>['required',$this->campusExists('hostel_allocations')],'meal_date'=>'required|date','breakfast'=>'boolean','lunch'=>'boolean','dinner'=>'boolean','amount'=>'required|numeric|min:0']);
         $data+=['breakfast'=>false,'lunch'=>false,'dinner'=>false];
         $this->raw('hostel_meal_allocations')->updateOrInsert(['hostel_allocation_id'=>$data['hostel_allocation_id'],'meal_date'=>$data['meal_date']],$data+['campus_id'=>config('app.active_campus_id'),'status'=>'allocated','created_at'=>now(),'updated_at'=>now()]);
         return back()->with('success','Meal allocation saved.');
@@ -108,7 +113,7 @@ class HostelOperationsController extends Controller
 
     public function charge(Request $request)
     {
-        $data=$request->validate(['hostel_allocation_id'=>'required|exists:hostel_allocations,id','type'=>'required|in:security_deposit,damage_charge,meal_charge,other_charge','amount'=>'required|numeric|min:0.01','status'=>'required|in:due,paid,waived,refunded','reference'=>'nullable|string|max:100','notes'=>'nullable|string']);
+        $data=$request->validate(['hostel_allocation_id'=>['required',$this->campusExists('hostel_allocations')],'type'=>'required|in:security_deposit,damage_charge,meal_charge,other_charge','amount'=>'required|numeric|min:0.01','status'=>'required|in:due,paid,waived,refunded','reference'=>'nullable|string|max:100','notes'=>'nullable|string']);
         $this->ledger($data['hostel_allocation_id'],$data['type'],$data['amount'],$data['status'],$data['notes']??null,$request->user()->id,$data['reference']??null);
         return back()->with('success','Hostel financial entry saved.');
     }
@@ -116,8 +121,8 @@ class HostelOperationsController extends Controller
     public function clearance(Request $request, HostelAllocation $allocation)
     {
         $data=$request->validate(['room_cleared'=>'boolean','fees_cleared'=>'boolean','assets_returned'=>'boolean','notes'=>'nullable|string']);
-        $charges=(float)DB::table('hostel_ledger_entries')->where('hostel_allocation_id',$allocation->id)->where('status','due')->whereIn('type',['damage_charge','meal_charge','other_charge'])->sum('amount');
-        $deposit=(float)DB::table('hostel_ledger_entries')->where('hostel_allocation_id',$allocation->id)->where('type','security_deposit')->where('status','paid')->sum('amount');
+        $charges=(float)$this->raw('hostel_ledger_entries')->where('hostel_allocation_id',$allocation->id)->where('status','due')->whereIn('type',['damage_charge','meal_charge','other_charge'])->sum('amount');
+        $deposit=(float)$this->raw('hostel_ledger_entries')->where('hostel_allocation_id',$allocation->id)->where('type','security_deposit')->where('status','paid')->sum('amount');
         $approved=($data['room_cleared']??false)&&($data['fees_cleared']??false)&&($data['assets_returned']??false);
         $this->raw('hostel_clearances')->updateOrInsert(['hostel_allocation_id'=>$allocation->id],$data+['campus_id'=>config('app.active_campus_id'),'status'=>$approved?'approved':'pending','total_due'=>$charges,'deposit_adjusted'=>min($deposit,$charges),'final_payable'=>max(0,$charges-$deposit),'approved_by'=>$approved?$request->user()->id:null,'created_at'=>now(),'updated_at'=>now()]);
         return back()->with('success','Clearance calculation updated.');
@@ -126,10 +131,10 @@ class HostelOperationsController extends Controller
     public function settle(Request $request, HostelAllocation $allocation)
     {
         DB::transaction(function() use($allocation,$request){
-            $clearance=DB::table('hostel_clearances')->where('hostel_allocation_id',$allocation->id)->lockForUpdate()->first();
+            $clearance=$this->raw('hostel_clearances')->where('hostel_allocation_id',$allocation->id)->lockForUpdate()->first();
             if(!$clearance || $clearance->status!=='approved') throw ValidationException::withMessages(['clearance'=>'Room, fee and asset clearance must be approved first.']);
-            DB::table('hostel_clearances')->where('id',$clearance->id)->update(['status'=>'settled','settled_at'=>now(),'approved_by'=>$request->user()->id,'updated_at'=>now()]);
-            DB::table('hostel_ledger_entries')->where('hostel_allocation_id',$allocation->id)->where('status','due')->update(['status'=>'paid','paid_at'=>now(),'updated_at'=>now()]);
+            $this->raw('hostel_clearances')->where('id',$clearance->id)->update(['status'=>'settled','settled_at'=>now(),'approved_by'=>$request->user()->id,'updated_at'=>now()]);
+            $this->raw('hostel_ledger_entries')->where('hostel_allocation_id',$allocation->id)->where('status','due')->update(['status'=>'paid','paid_at'=>now(),'updated_at'=>now()]);
             if($allocation->hostel_bed_id) HostelBed::whereKey($allocation->hostel_bed_id)->update(['status'=>'available']);
             $allocation->update(['is_active'=>false,'checked_out_at'=>now(),'checkout_notes'=>'Final settlement completed']);
         });

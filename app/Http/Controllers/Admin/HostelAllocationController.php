@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\Campus;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Support\CampusRule;
 
 class HostelAllocationController extends Controller
 {
@@ -74,8 +75,8 @@ class HostelAllocationController extends Controller
     {
         return $request->validate([
             'campus_id' => 'required|exists:campuses,id',
-            'hostel_room_id' => 'required|exists:hostel_rooms,id',
-            'user_id' => 'required|exists:users,id',
+            'hostel_room_id' => ['required', CampusRule::exists('hostel_rooms')],
+            'user_id' => ['required', CampusRule::exists('users')],
             'allocation_date' => 'required|date',
             'monthly_fee' => 'required|numeric|min:0',
             'is_active' => 'boolean',

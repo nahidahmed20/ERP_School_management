@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Campus;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Support\CampusRule;
 
 class PurchaseRequestController extends Controller
 {
@@ -66,7 +67,7 @@ class PurchaseRequestController extends Controller
     {
         return $request->validate([
             'campus_id' => 'required|exists:campuses,id',
-            'requested_by' => 'required|exists:users,id',
+            'requested_by' => ['required', CampusRule::exists('users')],
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'estimated_amount' => 'required|numeric|min:0',

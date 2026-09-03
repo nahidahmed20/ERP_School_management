@@ -1,9 +1,11 @@
 <?php
 
 namespace App\Models;
+use App\Traits\BelongsToCampus;
 use Illuminate\Database\Eloquent\Model;
 
 class ExamMark extends Model {
+    use BelongsToCampus;
     protected $guarded = ['id'];
     protected $casts = ['marks_obtained'=>'decimal:2','grade_point'=>'decimal:2','written_marks'=>'decimal:2','practical_marks'=>'decimal:2','viva_marks'=>'decimal:2','full_marks'=>'decimal:2','pass_marks'=>'decimal:2'];
 

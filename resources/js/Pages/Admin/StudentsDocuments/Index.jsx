@@ -67,7 +67,7 @@ export default function Index({ student, filters }) {
       <Head title="Student Documents" />
 
       <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8">
-        
+
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
@@ -96,8 +96,8 @@ export default function Index({ student, filters }) {
                 />
               </div>
             </div>
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="w-full sm:w-auto px-8 py-3 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md active:scale-95 flex justify-center items-center gap-2"
             >
               Search Student
@@ -108,10 +108,10 @@ export default function Index({ student, filters }) {
         {/* Step 2: Student Profile & Documents */}
         {student && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            
+
             {/* Left Column: Upload Form (Takes up 5 columns) */}
             <div className="lg:col-span-5 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 border-t-4 border-t-emerald-500 flex flex-col h-max">
-              
+
               {/* Profile Snippet */}
               <div className="flex items-center gap-4 mb-6 pb-6 border-b border-slate-100">
                 <div className="w-14 h-14 rounded-full bg-indigo-50 border-2 border-white shadow-sm flex items-center justify-center text-indigo-600 text-xl font-bold font-serif shrink-0">
@@ -128,15 +128,15 @@ export default function Index({ student, filters }) {
               </div>
 
               <h4 className="text-base font-bold text-slate-800 mb-4">Upload New Document</h4>
-              
+
               <form onSubmit={handleUpload} className="flex flex-col gap-4 flex-1">
                 {/* Document Type */}
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-1.5">Document Type <span className="text-rose-500">*</span></label>
-                  <select 
-                    value={data.document_type} 
-                    onChange={e => setData('document_type', e.target.value)} 
-                    className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer" 
+                  <select
+                    value={data.document_type}
+                    onChange={e => setData('document_type', e.target.value)}
+                    className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
                     required
                   >
                     <option value="" disabled>-- Select Type --</option>
@@ -152,13 +152,13 @@ export default function Index({ student, filters }) {
                 {/* File Input */}
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-1.5">Select File (PDF, JPG, PNG) <span className="text-rose-500">*</span></label>
-                  <input 
-                    id="fileUpload" 
-                    type="file" 
-                    accept=".pdf,.jpg,.jpeg,.png" 
-                    onChange={e => setData('file', e.target.files[0])} 
-                    className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition-all border border-slate-200 rounded-xl bg-slate-50 cursor-pointer" 
-                    required 
+                  <input
+                    id="fileUpload"
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={e => setData('file', e.target.files[0])}
+                    className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition-all border border-slate-200 rounded-xl bg-slate-50 cursor-pointer"
+                    required
                   />
                   {errors.file && <p className="text-rose-500 text-xs font-medium mt-1">{errors.file}</p>}
                 </div>
@@ -166,19 +166,19 @@ export default function Index({ student, filters }) {
                 {/* Remarks */}
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-1.5">Remarks <span className="text-slate-400 font-normal">(Optional)</span></label>
-                  <input 
-                    type="text" 
-                    value={data.remarks} 
-                    onChange={e => setData('remarks', e.target.value)} 
-                    placeholder="Add a short note about this file..." 
-                    className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" 
+                  <input
+                    type="text"
+                    value={data.remarks}
+                    onChange={e => setData('remarks', e.target.value)}
+                    placeholder="Add a short note about this file..."
+                    className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                   />
                 </div>
 
                 {/* Submit Button */}
-                <button 
-                  type="submit" 
-                  disabled={processing || !data.file || !data.document_type} 
+                <button
+                  type="submit"
+                  disabled={processing || !data.file || !data.document_type}
                   className="mt-auto w-full flex justify-center items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md shadow-emerald-500/20 disabled:opacity-70 disabled:cursor-not-allowed active:scale-95"
                 >
                   {processing ? (
@@ -220,16 +220,16 @@ export default function Index({ student, filters }) {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <a 
-                          href={`/storage/${doc.file_path}`} 
-                          target="_blank" 
-                          rel="noreferrer" 
+                        <a
+                          href={`/storage/${doc.file_path}`}
+                          target="_blank"
+                          rel="noreferrer"
                           className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors border border-indigo-100"
                         >
                           <Icon name="eye" className="w-3.5 h-3.5" /> View
                         </a>
-                        <button 
-                          onClick={() => handleDelete(doc.id)} 
+                        <button
+                          onClick={() => handleDelete(doc.id)}
                           className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg transition-colors border border-rose-100"
                         >
                           <Icon name="trash" className="w-3.5 h-3.5" /> Delete

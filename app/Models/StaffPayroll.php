@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCampus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class StaffPayroll extends Model
 {
+    use BelongsToCampus;
 
     protected $guarded=['id'];
     protected $casts=[

@@ -8,6 +8,7 @@ use App\Models\Student;
 use App\Models\AcademicSession;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Support\CampusRule;
 
 class DisciplinaryRecordController extends Controller
 {
@@ -39,7 +40,7 @@ class DisciplinaryRecordController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'student_id' => 'required|exists:students,id',
+            'student_id' => ['required', CampusRule::exists('students')],
             'title' => 'required|string|max:255',
             'type' => 'required|in:Complaint,Warning,Suspension,Reward,Other',
             'incident_date' => 'required|date',

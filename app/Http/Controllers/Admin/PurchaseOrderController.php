@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use App\Services\AccountingService;
 use App\Services\InventoryService;
+use App\Support\CampusRule;
 
 class PurchaseOrderController extends Controller
 {
@@ -172,12 +173,12 @@ class PurchaseOrderController extends Controller
     {
         $request->validate([
             'campus_id' => 'required|exists:campuses,id',
-            'vendor_id' => 'required|exists:vendors,id',
+            'vendor_id' => ['required', CampusRule::exists('vendors')],
             'order_number' => ['required', 'string', Rule::unique('purchase_orders')->ignore($ignoreId)],
             'order_date' => 'required|date',
             'total_amount' => 'required|numeric|min:0',
             'cart' => 'required|array|min:1',
-            'cart.*.purchase_item_id' => 'required|exists:purchase_items,id',
+            'cart.*.purchase_item_id' => ['required', CampusRule::exists('purchase_items')],
             'cart.*.size' => 'nullable|string',
             'cart.*.color' => 'nullable|string',
             'cart.*.quantity' => 'required|integer|min:1',

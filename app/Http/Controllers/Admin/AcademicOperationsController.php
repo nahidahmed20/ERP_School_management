@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
+use App\Support\CampusRule;
 
 class AcademicOperationsController extends Controller
 {
@@ -30,14 +31,14 @@ class AcademicOperationsController extends Controller
 
     public function assignment(Request $request)
     {
-        $data=$request->validate(['staff_id'=>'required|exists:staff,id','class_id'=>'required|exists:school_classes,id','section_id'=>'required|exists:sections,id','subject_id'=>'required|exists:subjects,id','is_class_teacher'=>'boolean']);
+        $data=$request->validate(['staff_id'=>['required',CampusRule::exists('staff')],'class_id'=>['required',CampusRule::exists('school_classes')],'section_id'=>['required',CampusRule::exists('sections')],'subject_id'=>['required',CampusRule::exists('subjects')],'is_class_teacher'=>'boolean']);
         TeacherAssignment::updateOrCreate(collect($data)->only(['staff_id','class_id','section_id','subject_id'])->all(), $data+['is_active'=>true]);
         return back()->with('success','Teacher assignment saved.');
     }
 
     public function topic(Request $request)
     {
-        $data=$request->validate(['academic_session_id'=>'required|exists:academic_sessions,id','class_id'=>'required|exists:school_classes,id','section_id'=>'nullable|exists:sections,id','subject_id'=>'required|exists:subjects,id','title'=>'required|string|max:255','planned_date'=>'nullable|date']);
+        $data=$request->validate(['academic_session_id'=>['required',CampusRule::exists('academic_sessions')],'class_id'=>['required',CampusRule::exists('school_classes')],'section_id'=>['nullable',CampusRule::exists('sections')],'subject_id'=>['required',CampusRule::exists('subjects')],'title'=>'required|string|max:255','planned_date'=>'nullable|date']);
         SyllabusTopic::create($data); return back()->with('success','Syllabus topic added.');
     }
 
@@ -50,19 +51,19 @@ class AcademicOperationsController extends Controller
 
     public function diary(Request $request)
     {
-        ClassDiary::create($request->validate(['date'=>'required|date','class_id'=>'required|exists:school_classes,id','section_id'=>'required|exists:sections,id','subject_id'=>'nullable|exists:subjects,id','teacher_id'=>'required|exists:staff,id','topic'=>'required|string|max:255','homework'=>'nullable|string','notes'=>'nullable|string']));
+        ClassDiary::create($request->validate(['date'=>'required|date','class_id'=>['required',CampusRule::exists('school_classes')],'section_id'=>['required',CampusRule::exists('sections')],'subject_id'=>['nullable',CampusRule::exists('subjects')],'teacher_id'=>['required',CampusRule::exists('staff')],'topic'=>'required|string|max:255','homework'=>'nullable|string','notes'=>'nullable|string']));
         return back()->with('success','Class diary saved.');
     }
 
     public function substitution(Request $request)
     {
-        $data=$request->validate(['date'=>'required|date','class_id'=>'required|exists:school_classes,id','section_id'=>'required|exists:sections,id','subject_id'=>'nullable|exists:subjects,id','absent_teacher_id'=>'required|different:substitute_teacher_id|exists:staff,id','substitute_teacher_id'=>'required|exists:staff,id','start_time'=>'nullable|date_format:H:i','end_time'=>'nullable|date_format:H:i|after:start_time','reason'=>'nullable|string']);
+        $data=$request->validate(['date'=>'required|date','class_id'=>['required',CampusRule::exists('school_classes')],'section_id'=>['required',CampusRule::exists('sections')],'subject_id'=>['nullable',CampusRule::exists('subjects')],'absent_teacher_id'=>['required','different:substitute_teacher_id',CampusRule::exists('staff')],'substitute_teacher_id'=>['required',CampusRule::exists('staff')],'start_time'=>'nullable|date_format:H:i','end_time'=>'nullable|date_format:H:i|after:start_time','reason'=>'nullable|string']);
         ClassSubstitution::create($data); return back()->with('success','Substitute teacher assigned.');
     }
 
     public function meeting(Request $request)
     {
-        $data=$request->validate(['student_id'=>'required|exists:students,id','teacher_id'=>'required|exists:staff,id','scheduled_at'=>'required|date','agenda'=>'required|string','notes'=>'nullable|string']);
+        $data=$request->validate(['student_id'=>['required',CampusRule::exists('students')],'teacher_id'=>['required',CampusRule::exists('staff')],'scheduled_at'=>'required|date','agenda'=>'required|string','notes'=>'nullable|string']);
         $student=Student::findOrFail($data['student_id']);
         ParentTeacherMeeting::create(['student_id'=>$data['student_id'],'staff_id'=>$data['teacher_id'],'requested_at'=>$data['scheduled_at'],'agenda'=>$data['agenda'],'notes'=>$data['notes']??null,'guardian_id'=>$student->guardian_id,'status'=>'pending']);
         return back()->with('success','Parent-teacher meeting scheduled.');
@@ -76,7 +77,7 @@ class AcademicOperationsController extends Controller
 
     public function transfer(Request $request)
     {
-        $data=$request->validate(['student_id'=>'required|exists:students,id','type'=>['required',Rule::in(['transfer','withdrawal'])],'effective_date'=>'required|date','reason'=>'required|string','destination_school'=>'nullable|string|max:255']);
+        $data=$request->validate(['student_id'=>['required',CampusRule::exists('students')],'type'=>['required',Rule::in(['transfer','withdrawal'])],'effective_date'=>'required|date','reason'=>'required|string','destination_school'=>'nullable|string|max:255']);
         $student=Student::with('currentEnrollment')->findOrFail($data['student_id']);
         StudentTransfer::create($data+['previous_enrollment_id'=>$student->currentEnrollment?->id]);
         return back()->with('success','Transfer/withdrawal request created.');

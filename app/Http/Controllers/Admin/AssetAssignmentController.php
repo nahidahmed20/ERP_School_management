@@ -7,6 +7,7 @@ use App\Models\AssetAssignment;
 use App\Models\Asset;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Support\CampusRule;
 
 class AssetAssignmentController extends Controller
 {
@@ -39,7 +40,7 @@ class AssetAssignmentController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'asset_id' => 'required|exists:assets,id',
+            'asset_id' => ['required', CampusRule::exists('assets')],
             'assignee_name' => 'required|string|max:255',
             'assigned_date' => 'required|date',
             'due_date' => 'nullable|date|after_or_equal:assigned_date',
@@ -57,7 +58,7 @@ class AssetAssignmentController extends Controller
         $assignment = AssetAssignment::findOrFail($id);
 
         $request->validate([
-            'asset_id' => 'required|exists:assets,id',
+            'asset_id' => ['required', CampusRule::exists('assets')],
             'assignee_name' => 'required|string|max:255',
             'assigned_date' => 'required|date',
             'due_date' => 'nullable|date|after_or_equal:assigned_date',

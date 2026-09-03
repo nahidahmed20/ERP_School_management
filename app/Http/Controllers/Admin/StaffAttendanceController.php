@@ -11,6 +11,7 @@ use App\Models\Event;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+use App\Support\CampusRule;
 
 class StaffAttendanceController extends Controller
 {
@@ -33,10 +34,6 @@ class StaffAttendanceController extends Controller
             'attendances' => $attendances
         ]);
 
-        if (AttendanceDayLock::where('attendance_type','staff')->whereDate('attendance_date',$request->date)->exists()) return back()->with('error','Staff attendance for this date is locked.');
-        $policy=AttendancePolicy::where('is_active',true)->first();
-        $holiday=Event::where('is_government_holiday',true)->whereDate('start_datetime','<=',$request->date)->whereDate('end_datetime','>=',$request->date)->exists();
-        if ($policy?->block_holiday_entry && ($holiday || in_array(\Carbon\Carbon::parse($request->date)->dayOfWeek,$policy->weekly_holidays??[]))) return back()->with('error','Attendance cannot be entered on a configured holiday.');
     }
 
     public function store(Request $request)
@@ -44,12 +41,17 @@ class StaffAttendanceController extends Controller
         $request->validate([
             'date' => 'required|date',
             'attendances' => 'required|array',
-            'attendances.*.staff_id' => 'required|exists:staff,id',
+            'attendances.*.staff_id' => ['required', CampusRule::exists('staff')],
             'attendances.*.status' => 'required|in:present,absent,late,half_day',
             'attendances.*.in_time' => 'nullable',
             'attendances.*.out_time' => 'nullable',
             'attendances.*.note' => 'nullable|string|max:255',
         ]);
+
+        if (AttendanceDayLock::where('attendance_type','staff')->whereDate('attendance_date',$request->date)->exists()) return back()->with('error','Staff attendance for this date is locked.');
+        $policy=AttendancePolicy::where('is_active',true)->first();
+        $holiday=Event::where('is_government_holiday',true)->whereDate('start_datetime','<=',$request->date)->whereDate('end_datetime','>=',$request->date)->exists();
+        if ($policy?->block_holiday_entry && ($holiday || in_array(\Carbon\Carbon::parse($request->date)->dayOfWeek,$policy->weekly_holidays??[]))) return back()->with('error','Attendance cannot be entered on a configured holiday.');
 
         $date = $request->date;
         $upsertData = [];
@@ -61,6 +63,7 @@ class StaffAttendanceController extends Controller
                 if ($minutes >= $policy->half_day_after_minutes) $status='half_day'; elseif ($minutes > $policy->late_grace_minutes) $status='late';
             }
             $upsertData[] = [
+                'campus_id' => config('app.active_campus_id'),
                 'staff_id' => $att['staff_id'],
                 'date' => $date,
                 'status' => $status,

@@ -13,6 +13,7 @@ use App\Models\PaymentTransaction;
 use App\Services\AccountingService;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
+use App\Support\CampusRule;
 
 class PaymentController extends Controller
 {
@@ -45,8 +46,8 @@ class PaymentController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'fee_assignment_id' => 'required|exists:fee_assignments,id',
-            'student_id'        => 'required|exists:students,id',
+            'fee_assignment_id' => ['required', CampusRule::exists('fee_assignments')],
+            'student_id'        => ['required', CampusRule::exists('students')],
             'amount_paid'       => 'required|numeric|min:1',
             'payment_date'      => 'required|date',
             'payment_method'    => 'required|string',

@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Carbon\Carbon;
+use App\Support\CampusRule;
+use App\Services\MalwareScanner;
 
 class StaffLeaveController extends Controller
 {
@@ -48,11 +50,11 @@ class StaffLeaveController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, MalwareScanner $scanner)
     {
         $request->validate([
-            'staff_id'      => 'required|exists:staff,id',
-            'leave_type_id' => 'required|exists:leave_types,id',
+            'staff_id'      => ['required', CampusRule::exists('staff')],
+            'leave_type_id' => ['required', CampusRule::exists('leave_types')],
             'start_date'    => 'required|date',
             'end_date'      => 'required|date|after_or_equal:start_date',
             'reason'        => 'required|string',
@@ -61,7 +63,8 @@ class StaffLeaveController extends Controller
 
         $attachmentPath = null;
         if ($request->hasFile('attachment')) {
-            $attachmentPath = $request->file('attachment')->store('leave_attachments', 'public');
+            $scanner->assertClean($request->file('attachment'));
+            $attachmentPath = $request->file('attachment')->store('leave_attachments/'.config('app.active_campus_id'), 'local');
         }
 
         $startDate = Carbon::parse($request->start_date);
@@ -88,7 +91,7 @@ class StaffLeaveController extends Controller
         return back()->with('success', 'ছুটির আবেদন সফলভাবে যোগ করা হয়েছে!');
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $id, MalwareScanner $scanner)
     {
         $leave = StaffLeave::findOrFail($id);
 
@@ -101,10 +104,11 @@ class StaffLeaveController extends Controller
 
         $attachmentPath = $leave->attachment;
         if ($request->hasFile('attachment')) {
-            if ($leave->attachment && Storage::disk('public')->exists($leave->attachment)) {
-                Storage::disk('public')->delete($leave->attachment);
+            $scanner->assertClean($request->file('attachment'));
+            if ($leave->attachment && Storage::disk('local')->exists($leave->attachment)) {
+                Storage::disk('local')->delete($leave->attachment);
             }
-            $attachmentPath = $request->file('attachment')->store('leave_attachments', 'public');
+            $attachmentPath = $request->file('attachment')->store('leave_attachments/'.config('app.active_campus_id'), 'local');
         }
 
         $startDate = Carbon::parse($request->start_date);
@@ -142,8 +146,8 @@ class StaffLeaveController extends Controller
     public function destroy($id)
     {
         $leave = StaffLeave::findOrFail($id);
-        if ($leave->attachment && Storage::disk('public')->exists($leave->attachment)) {
-            Storage::disk('public')->delete($leave->attachment);
+        if ($leave->attachment && Storage::disk('local')->exists($leave->attachment)) {
+            Storage::disk('local')->delete($leave->attachment);
         }
         $leave->delete();
 

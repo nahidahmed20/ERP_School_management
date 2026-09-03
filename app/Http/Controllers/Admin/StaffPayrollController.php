@@ -11,13 +11,14 @@ use App\Models\StaffAttendance;
 use App\Services\PayrollService;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Support\CampusRule;
 
 class StaffPayrollController extends Controller
 {
     public function generate(Request $request, PayrollService $service)
     {
         $data=$request->validate([
-            'salary_month'=>'required|date_format:Y-m','staff_id'=>'nullable|exists:staff,id','working_days'=>'nullable|integer|min:1|max:31',
+            'salary_month'=>'required|date_format:Y-m','staff_id'=>['nullable',CampusRule::exists('staff')],'working_days'=>'nullable|integer|min:1|max:31',
             'overtime_enabled'=>'required|boolean','overtime_mode'=>'required_if:overtime_enabled,true|in:hour,day','overtime_rate'=>'nullable|numeric|min:0',
             'overtime_multiplier'=>'nullable|numeric|min:0|max:10','allowance'=>'nullable|numeric|min:0','deduction'=>'nullable|numeric|min:0',
             'bonus'=>'nullable|numeric|min:0','arrears'=>'nullable|numeric|min:0','provident_fund_rate'=>'nullable|numeric|min:0|max:100','tax_rate'=>'nullable|numeric|min:0|max:100','gratuity_rate'=>'nullable|numeric|min:0|max:100',
@@ -35,7 +36,7 @@ class StaffPayrollController extends Controller
 
     public function attendance(Request $request)
     {
-        $data=$request->validate(['salary_month'=>'required|date_format:Y-m','staff_id'=>'nullable|exists:staff,id']);
+        $data=$request->validate(['salary_month'=>'required|date_format:Y-m','staff_id'=>['nullable',CampusRule::exists('staff')]]);
         return response()->json(StaffAttendance::with('staff:id,first_name,last_name,staff_id_no')->whereBetween('date',[$data['salary_month'].'-01',Carbon::parse($data['salary_month'].'-01')->endOfMonth()->toDateString()])->when($data['staff_id']??null,fn($q,$id)=>$q->where('staff_id',$id))->whereIn('status',['absent','half_day'])->orderBy('date')->get());
     }
     public function index(Request $request)
@@ -87,7 +88,7 @@ class StaffPayrollController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'staff_id'      => 'required|exists:staff,id',
+            'staff_id'      => ['required', CampusRule::exists('staff')],
             'salary_month'  => 'required|string', // Format: YYYY-MM
             'basic_salary'  => 'required|numeric|min:0',
             'allowance'     => 'nullable|numeric|min:0',

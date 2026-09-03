@@ -14,6 +14,7 @@ use App\Models\Subject;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Carbon\Carbon; 
+use App\Support\CampusRule;
 
 class MarksController extends Controller
 {
@@ -59,11 +60,12 @@ class MarksController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'exam_id' => 'required|exists:exams,id',
-            'class_id' => 'required|exists:school_classes,id',
-            'subject_id' => 'required|exists:subjects,id',
+            'exam_id' => ['required', CampusRule::exists('exams')],
+            'class_id' => ['required', CampusRule::exists('school_classes')],
+            'section_id' => ['nullable', CampusRule::exists('sections')],
+            'subject_id' => ['required', CampusRule::exists('subjects')],
             'marks' => 'required|array',
-            'marks.*.student_id' => 'required|exists:students,id',
+            'marks.*.student_id' => ['required', CampusRule::exists('students')],
             'marks.*.marks_obtained' => 'nullable|numeric|min:0',
             'marks.*.written_marks' => 'nullable|numeric|min:0',
             'marks.*.practical_marks' => 'nullable|numeric|min:0',

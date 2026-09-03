@@ -13,6 +13,7 @@ use App\Models\Event;
 use App\Services\SmsService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Support\CampusRule;
 
 class StudentAttendanceController extends Controller
 {
@@ -64,10 +65,11 @@ class StudentAttendanceController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'class_id' => 'required|exists:school_classes,id',
+            'class_id' => ['required', CampusRule::exists('school_classes')],
+            'section_id' => ['nullable', CampusRule::exists('sections')],
             'date'     => 'required|date',
             'attendances' => 'required|array',
-            'attendances.*.student_id' => 'required|exists:students,id',
+            'attendances.*.student_id' => ['required', CampusRule::exists('students')],
             'attendances.*.status' => 'required|in:present,absent,late,half_day',
         ]);
 

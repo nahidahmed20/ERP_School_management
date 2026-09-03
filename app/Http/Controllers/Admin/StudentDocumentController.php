@@ -8,6 +8,8 @@ use App\Models\StudentDocument;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
+use App\Support\CampusRule;
+use App\Services\MalwareScanner;
 
 class StudentDocumentController extends Controller
 {
@@ -32,10 +34,10 @@ class StudentDocumentController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, MalwareScanner $scanner)
     {
         $request->validate([
-            'student_id' => 'required|exists:students,id',
+            'student_id' => ['required', CampusRule::exists('students')],
             'document_type' => 'required|string|max:255',
             'file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048', 
             'remarks' => 'nullable|string|max:255',
@@ -44,7 +46,8 @@ class StudentDocumentController extends Controller
             'file.mimes' => 'ফাইলটি অবশ্যই PDF বা ছবি (JPG, PNG) হতে হবে!',
         ]);
 
-        $path = $request->file('file')->store('student_documents', 'public');
+        $scanner->assertClean($request->file('file'));
+        $path = $request->file('file')->store('student_documents/'.config('app.active_campus_id'), 'local');
 
         StudentDocument::create([
             'student_id' => $request->student_id,
@@ -60,8 +63,8 @@ class StudentDocumentController extends Controller
     {
         $document = StudentDocument::findOrFail($id);
         
-        if (Storage::disk('public')->exists($document->file_path)) {
-            Storage::disk('public')->delete($document->file_path);
+        if (Storage::disk('local')->exists($document->file_path)) {
+            Storage::disk('local')->delete($document->file_path);
         }
         
         $document->delete();

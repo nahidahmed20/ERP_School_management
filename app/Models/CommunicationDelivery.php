@@ -1,3 +1,3 @@
 <?php
-namespace App\Models;use Illuminate\Database\Eloquent\Model;
-class CommunicationDelivery extends Model{protected $guarded=['id'];protected $casts=['delivered_at'=>'datetime','failed_at'=>'datetime'];public function campaign(){return $this->belongsTo(CommunicationCampaign::class,'communication_campaign_id');}}
+namespace App\Models;use App\Traits\BelongsToCampus;use Illuminate\Database\Eloquent\Model;
+class CommunicationDelivery extends Model{use BelongsToCampus;protected $guarded=['id'];protected $casts=['delivered_at'=>'datetime','failed_at'=>'datetime'];protected static function booted(){static::creating(function($delivery){if(!$delivery->campus_id&&$delivery->communication_campaign_id)$delivery->campus_id=CommunicationCampaign::withoutGlobalScopes()->whereKey($delivery->communication_campaign_id)->value('campus_id');});}public function campaign(){return $this->belongsTo(CommunicationCampaign::class,'communication_campaign_id');}}

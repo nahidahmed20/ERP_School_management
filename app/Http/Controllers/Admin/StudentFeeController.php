@@ -11,6 +11,7 @@ use App\Models\AcademicSession;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
+use App\Support\CampusRule;
 
 class StudentFeeController extends Controller
 {
@@ -44,7 +45,8 @@ class StudentFeeController extends Controller
     {
         $request->validate([
             'student_ids'  => 'required|array|min:1',
-            'fee_group_id' => 'required|exists:fee_groups,id',
+            'student_ids.*' => ['required', CampusRule::exists('students')],
+            'fee_group_id' => ['required', CampusRule::exists('fee_groups')],
             'due_date'     => 'required|date',
             'amount' => 'nullable|numeric|min:0',
             'billing_frequency' => 'required|in:one_time,monthly,quarterly,yearly',

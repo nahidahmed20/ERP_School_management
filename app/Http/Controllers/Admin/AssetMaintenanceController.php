@@ -7,6 +7,7 @@ use App\Models\AssetMaintenance;
 use App\Models\Asset;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Support\CampusRule;
 
 class AssetMaintenanceController extends Controller
 {
@@ -40,7 +41,7 @@ class AssetMaintenanceController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'asset_id' => 'required|exists:assets,id',
+            'asset_id' => ['required', CampusRule::exists('assets')],
             'title' => 'required|string|max:255',
             'maintenance_type' => 'required|string|max:255',
             'service_provider' => 'nullable|string|max:255',
@@ -61,7 +62,7 @@ class AssetMaintenanceController extends Controller
         $maintenance = AssetMaintenance::findOrFail($id);
 
         $request->validate([
-            'asset_id' => 'required|exists:assets,id',
+            'asset_id' => ['required', CampusRule::exists('assets')],
             'title' => 'required|string|max:255',
             'maintenance_type' => 'required|string|max:255',
             'service_provider' => 'nullable|string|max:255',
