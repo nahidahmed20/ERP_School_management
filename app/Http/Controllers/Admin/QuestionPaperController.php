@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
+use App\Support\CampusRule;
 
 class QuestionPaperController extends Controller
 {
@@ -29,7 +30,7 @@ class QuestionPaperController extends Controller
     public function store(Request $request)
     {
         $data=$request->validate([
-            'school_class_id'=>'required|exists:school_classes,id','subject_id'=>'required|exists:subjects,id','exam_name'=>'required|string|max:255',
+            'school_class_id'=>['required',CampusRule::exists('school_classes')],'subject_id'=>['required',CampusRule::exists('subjects')],'exam_name'=>'required|string|max:255',
             'exam_date'=>'nullable|date','duration_minutes'=>'required|integer|min:5|max:600','question_count'=>'required|integer|min:1|max:200',
             'question_type'=>'nullable|in:MCQ,True/False','instructions'=>'nullable|string|max:2000','shuffle'=>'nullable|boolean',
         ]);

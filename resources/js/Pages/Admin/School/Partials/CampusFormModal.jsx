@@ -10,6 +10,9 @@ export default function CampusFormModal({ item, onClose }) {
     phone: item?.phone ?? '',
     email: item?.email ?? '',
     address: item?.address ?? '',
+    public_description: item?.public_description ?? '',
+    facilities: Array.isArray(item?.facilities) ? item.facilities.join(', ') : '',
+    map_url: item?.map_url ?? '',
     established_year: item?.established_year ?? '',
     is_main: item?.is_main ?? false,
     is_active: item?.is_active ?? true,
@@ -120,6 +123,25 @@ export default function CampusFormModal({ item, onClose }) {
                   className={`${inputClass} resize-none`}
                 />
                 {errors.address && <p className="text-rose-500 text-xs mt-1">{errors.address}</p>}
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className={labelClass}>Public Campus Description</label>
+                <textarea rows="3" value={data.public_description} onChange={(e) => setData('public_description', e.target.value)} placeholder="Describe this campus for website visitors..." className={`${inputClass} resize-none`} />
+                {errors.public_description && <p className="text-rose-500 text-xs mt-1">{errors.public_description}</p>}
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className={labelClass}>Campus Facilities</label>
+                <textarea rows="2" value={data.facilities} onChange={(e) => setData('facilities', e.target.value)} placeholder="Smart classrooms, Science lab, Library, Playground" className={`${inputClass} resize-none`} />
+                <p className="text-xs text-slate-400 mt-1">Separate each facility with a comma.</p>
+                {errors.facilities && <p className="text-rose-500 text-xs mt-1">{errors.facilities}</p>}
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className={labelClass}>Google Map Link</label>
+                <input type="url" value={data.map_url} onChange={(e) => setData('map_url', e.target.value)} placeholder="https://maps.google.com/..." className={inputClass} />
+                {errors.map_url && <p className="text-rose-500 text-xs mt-1">{errors.map_url}</p>}
               </div>
 
               <div>

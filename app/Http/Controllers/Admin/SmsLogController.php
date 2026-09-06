@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\{Exam,SchoolClass};
 use App\Services\{SmsCampaignService,SmsService};
+use App\Support\CampusRule;
 
 class SmsLogController extends Controller
 {
@@ -59,7 +60,7 @@ class SmsLogController extends Controller
 
     public function campaign(Request $request,SmsCampaignService $service)
     {
-        $data=$request->validate(['type'=>'required|in:absent,exam_result,fee_due,notice,emergency,homework,meeting,holiday','date'=>'required_if:type,absent|nullable|date','exam_id'=>'required_if:type,exam_result|nullable|exists:exams,id','class_id'=>'nullable|exists:school_classes,id','section_id'=>'nullable|exists:sections,id','message'=>'required_unless:type,absent,exam_result,fee_due|nullable|string|max:1000']);
+        $data=$request->validate(['type'=>'required|in:absent,exam_result,fee_due,notice,emergency,homework,meeting,holiday','date'=>'required_if:type,absent|nullable|date','exam_id'=>['required_if:type,exam_result','nullable',CampusRule::exists('exams')],'class_id'=>['nullable',CampusRule::exists('school_classes')],'section_id'=>['nullable',CampusRule::exists('sections')],'message'=>'required_unless:type,absent,exam_result,fee_due|nullable|string|max:1000']);
         $result=$service->send($data['type'],$data,$request->user()->id);
         return back()->with('success',"{$result['sent']} SMS processed; {$result['skipped']} skipped (missing number, duplicate, or failed).");
     }

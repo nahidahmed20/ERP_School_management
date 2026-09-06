@@ -393,6 +393,9 @@ export default function Index({ staff, departments, designations, filters }) {
                           >
                             <Icon name="edit" className="w-4 h-4" />
                           </Link>
+                          <Link href={route('admin.staff.report',s.id)} className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="Staff Reports"><Icon name="chart" className="w-4 h-4"/></Link>
+                          <Link href={route('admin.staff.id-card',s.id)} className="p-2 text-slate-400 hover:text-violet-600 hover:bg-violet-50 rounded-lg transition-colors" title="Print ID Card"><Icon name="printer" className="w-4 h-4"/></Link>
+                          {s.user_id&&<Link href={route('admin.documents.certificates.index',{user_id:s.user_id})} className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Certificates"><Icon name="document" className="w-4 h-4"/></Link>}
                           <button
                             onClick={() => setDeletingItem(s)}
                             className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"

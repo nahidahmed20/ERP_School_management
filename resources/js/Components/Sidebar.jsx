@@ -5,6 +5,9 @@ import Icon from './Icons';
 export default function Sidebar({ mobileOpen = false, onNavigate }) {
   const { url, props } = usePage();
   const navigation = props.navigation ?? [];
+  const site = props.site_settings ?? {};
+  const shortName = site.school_short_name || site.school_name || 'School';
+  const brandMark = site.logo ? <img src={site.logo} alt={`${shortName} logo`} className="h-full w-full rounded-xl object-contain" /> : <span>{shortName.trim().charAt(0).toUpperCase()}</span>;
 
   // Helper to safely get route name
   const getRoute = (item) => item?.route_name || item?.route || null;
@@ -90,10 +93,10 @@ export default function Sidebar({ mobileOpen = false, onNavigate }) {
     return (
       <aside className={`sidebar ${mobileOpen ? 'mobile-open' : ''}`}>
         <div className="brand">
-          <div className="seal"><span>V</span></div>
+          <div className="seal">{brandMark}</div>
           <div className="brand-text">
-            <div className="name">Verdant</div>
-            <div className="sub">School ERP</div>
+            <div className="name">{shortName}</div>
+            <div className="sub">{site.school_tagline || 'School ERP'}</div>
           </div>
         </div>
         <div className="nav-loading">
@@ -106,10 +109,10 @@ export default function Sidebar({ mobileOpen = false, onNavigate }) {
   return (
     <aside className={`sidebar ${mobileOpen ? 'mobile-open' : ''}`}>
       <div className="brand">
-        <div className="seal"><span>V</span></div>
+        <div className="seal">{brandMark}</div>
         <div className="brand-text">
-          <div className="name">Verdant</div>
-          <div className="sub">School ERP</div>
+          <div className="name">{shortName}</div>
+          <div className="sub">{site.school_tagline || 'School ERP'}</div>
         </div>
       </div>
 

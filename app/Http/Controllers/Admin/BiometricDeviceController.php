@@ -34,7 +34,7 @@ class BiometricDeviceController extends Controller
 
         return Inertia::render('Admin/System/Biometric/Devices/Index', [
             'devices' => $devices,
-            'campuses' => Campus::select('id', 'name')->get(),
+            'campuses' => Campus::when(! $request->user()->hasRole('Super Admin'),fn($q)=>$q->whereKey(config('app.active_campus_id')))->select('id', 'name')->get(),
             'activeCampusId' => session('active_campus_id'),
             'filters' => [
                 'search' => $request->get('search', ''),
@@ -58,7 +58,8 @@ class BiometricDeviceController extends Controller
 
     public function simulate(Request $request,BiometricDevice $device,BiometricAttendanceService $service)
     {
-        $data=$request->validate(['biometric_id'=>'required|exists:biometric_enrolled_users,biometric_id','punch_time'=>'required|date']);
+        $data=$request->validate(['biometric_id'=>'required|string','punch_time'=>'required|date|before_or_equal:now']);
+        abort_unless(BiometricEnrolledUser::where('biometric_id',$data['biometric_id'])->where('campus_id',$device->campus_id)->exists(),422,'Biometric user is not enrolled in this device campus.');
         $log=$service->ingest($device,$data+['state'=>'Simulator']);
         return back()->with($log->sync_status==='Success'?'success':'error',$log->sync_status==='Success'?'Test punch synced successfully.':$log->error_message);
     }
@@ -73,6 +74,7 @@ class BiometricDeviceController extends Controller
             'serial_number' => 'required|string|unique:biometric_devices,serial_number',
             'status' => 'required|string',
         ]);
+        $validated['campus_id']=config('app.active_campus_id');
 
         BiometricDevice::create($validated);
         return back()->with('success', 'Device added successfully.');
@@ -90,6 +92,7 @@ class BiometricDeviceController extends Controller
             'serial_number' => 'required|string|unique:biometric_devices,serial_number,'.$id,
             'status' => 'required|string',
         ]);
+        $validated['campus_id']=config('app.active_campus_id');
 
         $device->update($validated);
         return back()->with('success', 'Device updated successfully.');

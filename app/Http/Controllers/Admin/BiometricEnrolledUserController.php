@@ -30,7 +30,7 @@ class BiometricEnrolledUserController extends Controller
 
         return Inertia::render('Admin/System/Biometric/EnrolledUsers/Index', [
             'enrolledUsers' => $enrolled,
-            'campuses' => Campus::select('id', 'name')->get(),
+            'campuses' => Campus::when(! $request->user()->hasRole('Super Admin'),fn($q)=>$q->whereKey(config('app.active_campus_id')))->select('id', 'name')->get(),
             'activeCampusId' => session('active_campus_id'),
             'filters' => [
                 'search' => $request->get('search', ''),
@@ -43,13 +43,16 @@ class BiometricEnrolledUserController extends Controller
     {
         $validated = $request->validate([
             'campus_id' => 'nullable|exists:campuses,id',
-            'user_type' => 'required|string',
+            'user_type' => 'required|in:staff,student',
             'user_id' => 'required|integer',
             'user_name' => 'required|string|max:255',
             'biometric_id' => 'required|string|unique:biometric_enrolled_users,biometric_id',
             'rfid_card_no' => 'nullable|string|max:100',
             'is_active' => 'boolean',
         ]);
+        $validated['campus_id']=config('app.active_campus_id');
+        $table=$validated['user_type']==='staff'?'staff':'students';
+        abort_unless(\DB::table($table)->where('id',$validated['user_id'])->where('campus_id',$validated['campus_id'])->exists(),422,'Selected user does not belong to the active campus.');
 
         BiometricEnrolledUser::create($validated);
         return back()->with('success', 'User enrolled successfully.');
@@ -61,13 +64,16 @@ class BiometricEnrolledUserController extends Controller
 
         $validated = $request->validate([
             'campus_id' => 'nullable|exists:campuses,id',
-            'user_type' => 'required|string',
+            'user_type' => 'required|in:staff,student',
             'user_id' => 'required|integer',
             'user_name' => 'required|string|max:255',
             'biometric_id' => 'required|string|unique:biometric_enrolled_users,biometric_id,'.$id,
             'rfid_card_no' => 'nullable|string|max:100',
             'is_active' => 'boolean',
         ]);
+        $validated['campus_id']=config('app.active_campus_id');
+        $table=$validated['user_type']==='staff'?'staff':'students';
+        abort_unless(\DB::table($table)->where('id',$validated['user_id'])->where('campus_id',$validated['campus_id'])->exists(),422,'Selected user does not belong to the active campus.');
 
         $enrolled->update($validated);
         return back()->with('success', 'Enrolled user updated successfully.');

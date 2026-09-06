@@ -253,28 +253,26 @@ export default function Index({ transactions, gateways, filters }) {
                       </td>
                       <td className="px-6 py-4 text-center">
                         {/* Inline Status Updater */}
-                        <select
+                        {!item.source_type && ['Pending','Failed'].includes(item.status) ? <select
                           value={item.status}
                           onChange={(e) => handleStatusChange(item.id, e.target.value)}
                           className={`inline-flex px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide uppercase border outline-none cursor-pointer transition-colors focus:ring-2 focus:ring-offset-1 ${getStatusBadge(item.status)}`}
                         >
                           <option value="Pending">Pending</option>
-                          <option value="Completed">Completed</option>
                           <option value="Failed">Failed</option>
-                          <option value="Refunded">Refunded</option>
-                        </select>
+                        </select> : <span className={`inline-flex px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide uppercase border ${getStatusBadge(item.status)}`}>{item.status}</span>}
                       </td>
                       <td className="px-6 py-4 text-right no-print">
                         <div className="flex items-center justify-end gap-1.5">
                           <button onClick={() => setShowItem(item)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="View Details">
                             <Icon name="eye" className="w-4 h-4" />
                           </button>
-                          <button onClick={() => { setEditingItem(item); setFormOpen(true); }} className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Edit Transaction">
+                          {!item.source_type && ['Pending','Failed'].includes(item.status) && <button onClick={() => { setEditingItem(item); setFormOpen(true); }} className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Edit Transaction">
                             <Icon name="edit" className="w-4 h-4" />
-                          </button>
-                          <button onClick={() => setDeleteId(item.id)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Delete Transaction">
+                          </button>}
+                          {!item.source_type && ['Pending','Failed'].includes(item.status) && <button onClick={() => setDeleteId(item.id)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Delete Transaction">
                             <Icon name="trash" className="w-4 h-4" />
-                          </button>
+                          </button>}
                         </div>
                       </td>
                     </tr>

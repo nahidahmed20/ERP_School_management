@@ -8,6 +8,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
 
 class ExamController extends Controller
 {
@@ -69,14 +70,19 @@ class ExamController extends Controller
     public function workflow(Request $request, Exam $exam)
     {
         $data = $request->validate(['action' => ['required', Rule::in(['submit','approve','lock','reopen'])]]);
+        $exam=DB::transaction(function()use($exam,$data,$request){$exam=Exam::whereKey($exam->id)->lockForUpdate()->firstOrFail();
         abort_if($exam->approval_status === 'locked' && $data['action'] !== 'reopen', 422, 'The result is locked.');
+        $allowed=['draft'=>['submit'],'submitted'=>['approve'],'approved'=>['lock'],'locked'=>['reopen']];
+        abort_unless(in_array($data['action'],$allowed[$exam->approval_status]??[],true),422,'Invalid result workflow transition.');
+        abort_if($data['action']==='approve' && (int)$exam->submitted_by===(int)$request->user()->id,403,'Submitter cannot approve their own result.');
         $updates = match ($data['action']) {
-            'submit' => ['approval_status'=>'submitted'],
+            'submit' => ['approval_status'=>'submitted','submitted_by'=>$request->user()->id],
             'approve' => ['approval_status'=>'approved','approved_by'=>$request->user()->id,'approved_at'=>now()],
             'lock' => ['approval_status'=>'locked','locked_at'=>now(),'results_published'=>true,'results_published_at'=>now()],
             'reopen' => ['approval_status'=>'approved','locked_at'=>null,'results_published'=>false,'results_published_at'=>null],
         };
         $exam->update($updates);
+        return $exam;});
         return back()->with('success', 'Result workflow updated.');
     }
 

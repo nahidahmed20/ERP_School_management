@@ -4,8 +4,10 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
-        <link rel="icon" type="image/png"  href="/favicon.png?v=2">
+        @php($branding = app(\App\Services\WebsiteSettingsService::class)->values())
+        <title inertia>{{ $branding['school_name'] }}</title>
+        @if($branding['favicon'])<link rel="icon" href="{{ $branding['favicon'] }}">@endif
+        <script>window.__schoolName = @json($branding['school_name']);</script>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">

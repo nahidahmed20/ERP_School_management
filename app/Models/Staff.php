@@ -1,13 +1,14 @@
 <?php
 
 namespace App\Models;
+use App\Traits\BelongsToCampus;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Staff extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, BelongsToCampus;
 
     protected $table = 'staff';
 

@@ -35,7 +35,9 @@ class IdCardTemplateController extends Controller
         $data = $request->validate([
             'campus_id' => 'required|exists:campuses,id',
             'title' => 'required|string|max:255',
+            'audience'=>'required|in:student,staff,both',
             'layout_type' => 'required|string',
+            'design_template'=>'required|string|max:100','text_align'=>'required|in:left,center,right','photo_align'=>'required|in:left,center,right','field_labels'=>'nullable|array','field_labels.*'=>'nullable|string|max:50',
             'theme_color' => 'required|string',
             'show_blood_group' => 'boolean',
             'show_address' => 'boolean',
@@ -77,7 +79,9 @@ class IdCardTemplateController extends Controller
         $data = $request->validate([
             'campus_id' => 'required|exists:campuses,id',
             'title' => 'required|string|max:255',
+            'audience'=>'required|in:student,staff,both',
             'layout_type' => 'required|string',
+            'design_template'=>'required|string|max:100','text_align'=>'required|in:left,center,right','photo_align'=>'required|in:left,center,right','field_labels'=>'nullable|array','field_labels.*'=>'nullable|string|max:50',
             'theme_color' => 'required|string',
             'show_blood_group' => 'boolean',
             'show_address' => 'boolean',

@@ -6,6 +6,7 @@ use App\Models\MenuItem;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Route;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 
 class PermissionSyncService
@@ -38,6 +39,13 @@ class PermissionSyncService
         ]));
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $branchAdmin = Role::firstOrCreate(['name' => 'Branch Admin', 'guard_name' => 'web']);
+        $centralOnly = ['admin.campus.', 'admin.campuses.', 'admin.saas', 'admin.roles.', 'admin.permissions.', 'admin.menu.', 'admin.menu-groups.', 'admin.security', 'admin.registry.'];
+        $branchPermissions = $permissions->filter(fn (string $name) => $name === 'dashboard' || (
+            str_starts_with($name, 'admin.') && ! collect($centralOnly)->contains(fn ($prefix) => str_starts_with($name, $prefix))
+        ));
+        $branchAdmin->syncPermissions($branchPermissions);
 
         return $permissions;
     }

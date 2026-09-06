@@ -86,6 +86,8 @@ class AdmissionController extends Controller
 
             DB::beginTransaction();
             try {
+                $admission = Admission::whereKey($admission->id)->lockForUpdate()->firstOrFail();
+                abort_if($admission->status === 'Approved', 422, 'Admission has already been activated.');
                 $parentEmail = $admission->email ?? $admission->phone.'@parent.school.com';
                 $guardianUser = User::firstOrCreate(
                     ['email' => $parentEmail],
@@ -110,8 +112,7 @@ class AdmissionController extends Controller
                     ]
                 );
 
-                $lastStudent = Student::latest('id')->first();
-                $admissionNo = 'STU-'.date('Y').'-'.sprintf('%04d', $lastStudent ? $lastStudent->id + 1 : 1);
+                $admissionNo = 'STU-'.date('Y').'-'.sprintf('%06d', $admission->id);
 
                 $studentEmail = $admissionNo.'@student.school.com';
                 $studentUser = User::create([

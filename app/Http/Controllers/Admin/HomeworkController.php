@@ -10,6 +10,8 @@ use App\Models\Campus;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
+use App\Support\CampusRule;
+use App\Services\MalwareScanner;
 
 class HomeworkController extends Controller
 {
@@ -43,28 +45,30 @@ class HomeworkController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, MalwareScanner $scanner)
     {
         $data = $this->validateData($request);
 
         if ($request->hasFile('document')) {
-            $data['document_path'] = $request->file('document')->store('homework_materials', 'public');
+            $scanner->assertClean($request->file('document'));
+            $data['document_path'] = $request->file('document')->store('homework_materials/'.config('app.active_campus_id'), 'local');
         }
 
         Homework::create($data);
         return back()->with('success', 'নতুন হোমওয়ার্ক সফলভাবে যোগ করা হয়েছে।');
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $id, MalwareScanner $scanner)
     {
         $homework = Homework::findOrFail($id);
         $data = $this->validateData($request);
 
         if ($request->hasFile('document')) {
+            $scanner->assertClean($request->file('document'));
             if ($homework->document_path) {
-                Storage::disk('public')->delete($homework->document_path);
+                Storage::disk('local')->delete($homework->document_path);
             }
-            $data['document_path'] = $request->file('document')->store('homework_materials', 'public');
+            $data['document_path'] = $request->file('document')->store('homework_materials/'.config('app.active_campus_id'), 'local');
         }
 
         $homework->update($data);
@@ -75,7 +79,7 @@ class HomeworkController extends Controller
     {
         $homework = Homework::findOrFail($id);
         if ($homework->document_path) {
-            Storage::disk('public')->delete($homework->document_path);
+            Storage::disk('local')->delete($homework->document_path);
         }
         $homework->delete();
         return back()->with('success', 'হোমওয়ার্ক মুছে ফেলা হয়েছে।');
@@ -86,8 +90,8 @@ class HomeworkController extends Controller
         return $request->validate([
             'campus_id' => 'required|exists:campuses,id',
             'title' => 'required|string|max:255',
-            'school_class_id' => 'required|exists:school_classes,id',
-            'subject_id' => 'required|exists:subjects,id',
+            'school_class_id' => ['required', CampusRule::exists('school_classes')],
+            'subject_id' => ['required', CampusRule::exists('subjects')],
             'homework_date' => 'required|date',
             'submission_date' => 'required|date|after_or_equal:homework_date',
             'total_marks' => 'nullable|numeric|min:0',

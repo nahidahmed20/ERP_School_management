@@ -7,6 +7,7 @@ use App\Models\{CommunicationChat, User};
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
+use App\Support\CampusRule;
 
 class CommunicationChatController extends Controller
 {
@@ -51,11 +52,12 @@ class CommunicationChatController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'receiver_id' => 'required|exists:users,id',
+            'receiver_id' => ['required', CampusRule::exists('users')],
             'message' => 'required|string',
         ]);
 
         CommunicationChat::create([
+            'campus_id' => config('app.active_campus_id'),
             'sender_id' => Auth::id(),
             'receiver_id' => $request->receiver_id,
             'message' => $request->message,

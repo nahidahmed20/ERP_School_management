@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Validation\Rule;
 use App\Models\InventoryMovement;
+use App\Models\StockAdjustmentRequest;
 use App\Services\InventoryService;
 use Illuminate\Support\Facades\DB;
 
@@ -37,6 +38,7 @@ class PurchaseItemController extends Controller
             'campuses' => Campus::select('id', 'name')->get(),
             'sizes' => ItemSize::orderBy('name')->get(),
             'colors' => ItemColor::orderBy('name')->get(),
+            'stockAdjustments' => StockAdjustmentRequest::with(['item:id,name,item_code','requester:id,name'])->latest()->take(100)->get(),
             'filters' => $request->only(['search', 'per_page']),
         ]);
     }
@@ -69,16 +71,24 @@ class PurchaseItemController extends Controller
             $data['item_code'] = 'PRD-' . date('Y') . '-' . strtoupper(substr(uniqid(), -4));
         }
 
-        DB::transaction(function () use ($item, $data) {
+        DB::transaction(function () use ($item, $data, $request) {
             $requestedQuantity = (int) $data['quantity'];
             unset($data['quantity']);
             $item->update($data);
             $difference = $requestedQuantity - (int) $item->quantity;
             if ($difference !== 0) {
-                app(InventoryService::class)->move($item, $difference, 'adjustment', $item, 'Manual stock adjustment');
+                StockAdjustmentRequest::updateOrCreate(['purchase_item_id'=>$item->id,'status'=>'pending'],['current_quantity'=>$item->quantity,'requested_quantity'=>$requestedQuantity,'difference'=>$difference,'reason'=>$request->input('adjustment_reason','Manual stock adjustment'),'requested_by'=>$request->user()->id]);
             }
         });
         return back()->with('success', 'আইটেমের তথ্য আপডেট করা হয়েছে।');
+    }
+
+    public function decideAdjustment(Request $request, StockAdjustmentRequest $adjustment)
+    {
+        $data=$request->validate(['decision'=>'required|in:approved,rejected','decision_note'=>'nullable|string|max:1000']);
+        abort_if((int)$adjustment->requested_by===(int)$request->user()->id,403,'Requester cannot approve their own stock adjustment.');
+        DB::transaction(function()use($adjustment,$data,$request){$adjustment=StockAdjustmentRequest::whereKey($adjustment->id)->lockForUpdate()->firstOrFail();abort_unless($adjustment->status==='pending',422,'This adjustment has already been decided.');$item=PurchaseItem::whereKey($adjustment->purchase_item_id)->lockForUpdate()->firstOrFail();if($data['decision']==='approved')app(InventoryService::class)->move($item,$adjustment->difference,'adjustment',$adjustment,'Approved stock adjustment #'.$adjustment->id);$adjustment->update(['status'=>$data['decision'],'decision_note'=>$data['decision_note']??null,'approved_by'=>$request->user()->id,'approved_at'=>now()]);});
+        return back()->with('success','Stock adjustment decision recorded.');
     }
 
     public function destroy($id)
@@ -139,6 +149,7 @@ class PurchaseItemController extends Controller
                 'out_of_stock' => (clone $summaryQuery)->where('quantity', 0)->count(),
             ],
             'recentMovements' => InventoryMovement::with('item:id,name,item_code')->latest()->limit(20)->get(),
+            'stockAdjustments' => StockAdjustmentRequest::with(['item:id,name,item_code','requester:id,name'])->latest()->take(100)->get(),
             'filters' => $request->only(['search', 'status', 'per_page']),
         ]);
     }

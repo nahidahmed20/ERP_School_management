@@ -74,7 +74,7 @@ export default function Index({ student, filters }) {
 
     const selectedFee = student?.fee_assignments?.find(fa => fa.id == assignId);
     if (selectedFee) {
-      const totalAmount = selectedFee.fee_group?.fee_types?.reduce((sum, item) => sum + Number(item.amount), 0) || 0;
+      const totalAmount = Number(selectedFee.outstanding_amount ?? selectedFee.fee_group?.fee_types?.reduce((sum, item) => sum + Number(item.amount), 0) ?? 0);
       setData('amount_paid', totalAmount);
     }
   };
@@ -176,7 +176,7 @@ export default function Index({ student, filters }) {
                 {student.fee_assignments?.length > 0 ? (
                   <div className="space-y-3">
                     {student.fee_assignments.map(assign => {
-                      const totalAmount = assign.fee_group?.fee_types?.reduce((sum, item) => sum + Number(item.amount), 0) || 0;
+                      const totalAmount = Number(assign.outstanding_amount ?? assign.fee_group?.fee_types?.reduce((sum, item) => sum + Number(item.amount), 0) ?? 0);
                       return (
                         <div key={assign.id} className="p-4 rounded-xl border border-rose-200 bg-rose-50 flex justify-between items-center gap-4">
                           <div>

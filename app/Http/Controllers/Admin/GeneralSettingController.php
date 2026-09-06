@@ -70,6 +70,7 @@ class GeneralSettingController extends Controller
             'linkedin_url' => 'nullable|url|max:500',
             'admission_session' => 'nullable|string|max:100',
             'admission_deadline' => 'nullable|string|max:100',
+            'hero_eyebrow'=>'nullable|string|max:120','hero_title'=>'nullable|string|max:255','hero_description'=>'nullable|string|max:1000','principal_name'=>'nullable|string|max:120','principal_message'=>'nullable|string|max:1500','primary_color'=>['nullable','regex:/^#[0-9A-Fa-f]{6}$/'],'accent_color'=>['nullable','regex:/^#[0-9A-Fa-f]{6}$/'],
             'logo' => 'nullable|image|mimes:png,jpg,jpeg,webp|max:4096',
             'footer_logo' => 'nullable|image|mimes:png,jpg,jpeg,webp|max:4096',
             'favicon' => 'nullable|image|mimes:png,jpg,jpeg,webp,ico|max:1024',
@@ -87,6 +88,7 @@ class GeneralSettingController extends Controller
             'facebook_url' => 'Facebook URL', 'youtube_url' => 'YouTube URL',
             'linkedin_url' => 'LinkedIn URL', 'admission_session' => 'Admission Session',
             'admission_deadline' => 'Admission Deadline',
+            'hero_eyebrow'=>'Hero Eyebrow','hero_title'=>'Hero Title','hero_description'=>'Hero Description','principal_name'=>'Principal Name','principal_message'=>'Principal Message','primary_color'=>'Primary Color','accent_color'=>'Accent Color',
         ];
 
         foreach ($labels as $key => $label) {

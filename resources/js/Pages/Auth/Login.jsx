@@ -4,7 +4,7 @@ import InputError from '@/Components/InputError';
 import Checkbox from '@/Components/Checkbox';
 
 const ROLE_THEME = {
-    admin:   { hex: '#2563EB', label: 'Admin Portal', prefix: 'ADM', bg: 'from-blue-600 to-indigo-700' },
+    admin:   { hex: '#2563EB', label: 'Admin / Branch Admin', prefix: 'ADM', bg: 'from-blue-600 to-indigo-700' },
     student: { hex: '#4F46E5', label: 'Student Portal', prefix: 'STU', bg: 'from-indigo-600 to-violet-700' },
     staff:   { hex: '#D97706', label: 'Staff Portal', prefix: 'STF', bg: 'from-amber-600 to-orange-700' },
     parent:  { hex: '#0D9488', label: 'Parent Portal', prefix: 'PAR', bg: 'from-teal-600 to-emerald-700' },

@@ -110,6 +110,7 @@ use App\Http\Controllers\Admin\SecurityOperationsController;
 use App\Http\Controllers\Admin\SecurityFailedLoginController;
 use App\Http\Controllers\Admin\SecurityLoginController;
 use App\Http\Controllers\Admin\SecurityTrustedDeviceController;
+use App\Http\Controllers\Admin\SecureFileController;
 use App\Http\Controllers\Admin\SmsLogController;
 use App\Http\Controllers\Admin\StaffAppraisalController;
 use App\Http\Controllers\Admin\StaffAttendanceController;
@@ -153,11 +154,14 @@ use App\Http\Controllers\Admin\CommunicationCenterController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', fn () => Inertia::render('Site/Home'))->name('home');
-Route::get('/campuses', fn () => Inertia::render('Site/Campuses'))->name('site.campuses');
-Route::get('/academics', fn () => Inertia::render('Site/Academics'))->name('site.academics');
-Route::get('/admissions', fn () => Inertia::render('Site/Admissions'))->name('site.admissions');
-Route::get('/contact', fn () => Inertia::render('Site/Contact'))->name('site.contact');
+Route::get('/', [\App\Http\Controllers\PublicSiteController::class,'home'])->name('home');
+Route::get('/campuses', [\App\Http\Controllers\PublicSiteController::class,'campuses'])->name('site.campuses');
+Route::get('/academics', [\App\Http\Controllers\PublicSiteController::class,'academics'])->name('site.academics');
+Route::get('/admissions', [\App\Http\Controllers\PublicSiteController::class,'admissions'])->name('site.admissions');
+Route::get('/contact', [\App\Http\Controllers\PublicSiteController::class,'contact'])->name('site.contact');
+Route::get('/teachers', [\App\Http\Controllers\PublicSiteController::class,'teachers'])->name('site.teachers');
+Route::get('/blog', [\App\Http\Controllers\PublicSiteController::class,'blogs'])->name('site.blogs');
+Route::get('/blog/{slug}', [\App\Http\Controllers\PublicSiteController::class,'blog'])->name('site.blog.show');
 Route::post('/admissions', [PublicInquiryController::class, 'admission'])
     ->middleware('throttle:5,1')->name('site.admissions.store');
 Route::post('/contact', [PublicInquiryController::class, 'contact'])
@@ -172,7 +176,9 @@ Route::get('/my-results', [DashboardController::class, 'results'])
 Route::middleware(['auth', 'verified', 'permission:portal.services.view'])->group(function () {
     Route::get('/student-services', [StudentPortalController::class, 'index'])->name('portal.services');
     Route::post('/student-services/homework/{homework}', [StudentPortalController::class, 'submitHomework'])->name('portal.homework.submit');
+    Route::get('/student-services/homework-submissions/{submission}/download', [StudentPortalController::class, 'downloadHomeworkSubmission'])->name('portal.homework-submission.download');
     Route::post('/student-services/leave', [StudentPortalController::class, 'leave'])->name('portal.leave.store');
+    Route::get('/student-services/leaves/{leave}/download', [StudentPortalController::class, 'downloadLeaveAttachment'])->name('portal.leave.download');
     Route::post('/student-services/attendance-correction', [StudentPortalController::class, 'attendanceCorrection'])->name('portal.attendance-correction.store');
     Route::post('/student-services/profile-update', [StudentPortalController::class, 'profileUpdate'])->name('portal.profile-update.store');
     Route::post('/student-services/task', [StudentPortalController::class, 'toggleTask'])->name('portal.task.toggle');
@@ -214,6 +220,13 @@ Route::middleware('auth')->group(function () {
 });
 Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('student-service-reviews', [StudentServiceReviewController::class,'index'])->name('student-services.index');
+    Route::get('secure-files/student-documents/{document}', [SecureFileController::class,'studentDocument'])->name('secure-files.student-document');
+    Route::get('secure-files/applicants/{applicant}', [SecureFileController::class,'applicantResume'])->name('secure-files.applicant-resume');
+    Route::get('secure-files/homework/{homework}', [SecureFileController::class,'homework'])->name('secure-files.homework');
+    Route::get('secure-files/homework-submissions/{submission}', [SecureFileController::class,'homeworkSubmission'])->name('secure-files.homework-submission');
+    Route::get('secure-files/lesson-plans/{lessonPlan}', [SecureFileController::class,'lessonPlan'])->name('secure-files.lesson-plan');
+    Route::get('secure-files/staff-leaves/{leave}', [SecureFileController::class,'staffLeave'])->name('secure-files.staff-leave');
+    Route::get('secure-files/student-leaves/{leave}', [SecureFileController::class,'studentLeave'])->name('secure-files.student-leave');
     Route::patch('student-service-reviews/homework/{submission}', [StudentServiceReviewController::class,'homework'])->name('student-services.homework');
     Route::patch('student-service-reviews/leave/{leave}', [StudentServiceReviewController::class,'leave'])->name('student-services.leave');
     Route::patch('student-service-reviews/correction/{correction}', [StudentServiceReviewController::class,'correction'])->name('student-services.correction');
@@ -313,6 +326,8 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
 
     Route::resource('leave-types', LeaveTypeController::class);
     Route::resource('staff', StaffController::class);
+    Route::get('staff/{staff}/report',[StaffController::class,'report'])->name('staff.report');
+    Route::get('staff/{staff}/id-card',[StaffController::class,'generateIdCard'])->name('staff.id-card');
     Route::get('staff-attendance', [StaffAttendanceController::class, 'index'])->name('staff-attendance.index');
     Route::post('staff-attendance', [StaffAttendanceController::class, 'store'])->name('staff-attendance.store');
     Route::resource('staff-leaves', StaffLeaveController::class);
@@ -441,6 +456,7 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
 
     Route::prefix('purchase')->name('purchase.')->group(function () {
         Route::resource('vendors', VendorController::class);
+        Route::patch('items/stock-adjustments/{adjustment}', [PurchaseItemController::class,'decideAdjustment'])->name('items.stock-adjustments.decide');
         Route::resource('items', PurchaseItemController::class);
         Route::patch('requests/{request}/status', [PurchaseRequestController::class, 'updateStatus'])->name('requests.update-status');
         Route::resource('requests', PurchaseRequestController::class);

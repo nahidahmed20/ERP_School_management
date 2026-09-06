@@ -51,6 +51,7 @@ class AccountingChartController extends Controller
     public function update(Request $request, $id)
     {
         $account = Account::findOrFail($id);
+        $hasEntries=$account->debitEntries()->exists()||$account->creditEntries()->exists();
         
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -60,6 +61,7 @@ class AccountingChartController extends Controller
             'description' => 'nullable|string',
             'is_active' => 'boolean',
         ]);
+        abort_if($hasEntries&&($validated['code']!==$account->code||$validated['type']!==$account->type||(float)$validated['opening_balance']!==(float)$account->opening_balance),422,'An account used in journals cannot change code, type, or opening balance.');
 
         $account->update($validated);
         return back()->with('success', 'Account details updated.');
@@ -67,8 +69,9 @@ class AccountingChartController extends Controller
 
     public function destroy($id)
     {
-        // Add check here later if transactions exist
-        Account::findOrFail($id)->delete();
+        $account=Account::findOrFail($id);
+        abort_if($account->debitEntries()->exists()||$account->creditEntries()->exists(),422,'An account used in journals cannot be deleted. Deactivate it instead.');
+        $account->delete();
         return back()->with('success', 'Account deleted from Chart of Accounts.');
     }
 }

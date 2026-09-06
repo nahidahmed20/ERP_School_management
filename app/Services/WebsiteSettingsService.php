@@ -12,24 +12,31 @@ class WebsiteSettingsService
     public const CACHE_KEY = 'website.settings.global';
 
     public const DEFAULTS = [
-        'school_name' => 'Verdant International School & Colleges',
-        'school_short_name' => 'Verdant',
-        'school_tagline' => 'INTERNATIONAL SCHOOL & COLLEGES',
+        'school_name' => 'Your School Name',
+        'school_short_name' => 'School',
+        'school_tagline' => 'SCHOOL MANAGEMENT SYSTEM',
         'logo' => null,
         'footer_logo' => null,
         'favicon' => null,
         'primary_phone' => '+880 1XXX-XXXXXX',
         'secondary_phone' => null,
-        'email' => 'admissions@verdant.edu.bd',
-        'address' => 'House 12, Road 5, Dhanmondi, Dhaka',
-        'footer_description' => 'Four campuses across Bangladesh, one shared standard of care since 2004.',
+        'email' => null,
+        'address' => null,
+        'footer_description' => null,
         'copyright_text' => 'All rights reserved.',
-        'powered_by_text' => 'Powered by Verdant ERP',
+        'powered_by_text' => 'Powered by School ERP',
         'facebook_url' => null,
         'youtube_url' => null,
         'linkedin_url' => null,
         'admission_session' => null,
         'admission_deadline' => null,
+        'hero_eyebrow' => 'Admissions are now open',
+        'hero_title' => 'A school where every learner can thrive.',
+        'hero_description' => 'A caring, future-ready learning community connecting students, teachers and families.',
+        'principal_name' => 'Head of School',
+        'principal_message' => 'We nurture curiosity, character and confidence so every learner is ready for tomorrow.',
+        'primary_color' => '#12372A',
+        'accent_color' => '#E9B949',
     ];
 
     public function values(): array

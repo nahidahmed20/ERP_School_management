@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\Campus;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Support\CampusRule;
 
 class CourseController extends Controller
 {
@@ -70,9 +71,9 @@ class CourseController extends Controller
         return $request->validate([
             'campus_id' => 'required|exists:campuses,id',
             'title' => 'required|string|max:255',
-            'school_class_id' => 'required|exists:school_classes,id',
-            'subject_id' => 'required|exists:subjects,id',
-            'teacher_id' => 'nullable|exists:users,id',
+            'school_class_id' => ['required', CampusRule::exists('school_classes')],
+            'subject_id' => ['required', CampusRule::exists('subjects')],
+            'teacher_id' => ['nullable', CampusRule::exists('users')],
             'description' => 'nullable|string',
             'is_published' => 'boolean',
             'is_active' => 'boolean',

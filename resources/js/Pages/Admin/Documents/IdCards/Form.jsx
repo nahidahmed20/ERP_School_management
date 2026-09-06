@@ -87,6 +87,7 @@ export default function IdCardForm({ item, campuses, activeCampusId }) {
     _method: isEdit ? 'put' : 'post',
     campus_id: item?.campus_id ?? activeCampusId,
     title: item?.title ?? 'Standard Student ID',
+    audience: item?.audience ?? 'student',
     layout_type: item?.layout_type ?? 'Portrait',
     theme_color: item?.theme_color ?? '#1e293b',
     design_template: item?.design_template ?? 'classic-solid',
@@ -265,6 +266,7 @@ export default function IdCardForm({ item, campuses, activeCampusId }) {
                   <input type="text" value={data.title} onChange={(e) => setData('title', e.target.value)} maxLength={100} required className={inputClass} />
                   <FieldError message={errors.title} />
                 </div>
+                <div><label className="block text-sm font-semibold text-slate-700 mb-1.5">Card For *</label><select value={data.audience} onChange={e=>setData('audience',e.target.value)} className={inputClass}><option value="student">Student</option><option value="staff">Staff / Teacher</option><option value="both">Both</option></select><FieldError message={errors.audience}/></div>
 
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-1.5">Layout Orientation *</label>

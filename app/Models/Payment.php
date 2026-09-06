@@ -1,12 +1,13 @@
 <?php
 
 namespace App\Models;
+use App\Traits\BelongsToCampus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Payment extends Model
 {
-    use HasFactory;
+    use BelongsToCampus, HasFactory;
 
     protected $guarded = []; 
 
@@ -19,4 +20,6 @@ class Payment extends Model
     {
         return $this->belongsTo(Student::class, 'student_id');
     }
+    public function invoice(){return $this->belongsTo(Invoice::class);}
+    public function allocations(){return $this->hasMany(PaymentAllocation::class);}
 }

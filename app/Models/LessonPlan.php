@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCampus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class LessonPlan extends Model
 {
-    use HasFactory;
+    use BelongsToCampus, HasFactory;
 
     protected $table = 'lesson_plans';
 

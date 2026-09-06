@@ -9,6 +9,7 @@ use App\Models\Subject;
 use App\Models\Campus;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Support\CampusRule;
 
 class QuestionBankController extends Controller
 {
@@ -69,8 +70,8 @@ class QuestionBankController extends Controller
     {
         return $request->validate([
             'campus_id' => 'required|exists:campuses,id',
-            'school_class_id' => 'required|exists:school_classes,id',
-            'subject_id' => 'required|exists:subjects,id',
+            'school_class_id' => ['required', CampusRule::exists('school_classes')],
+            'subject_id' => ['required', CampusRule::exists('subjects')],
             'question_type' => 'required|string|max:50',
             'question' => 'required|string',
             'option_a' => 'nullable|string',

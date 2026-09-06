@@ -1,33 +1,23 @@
 <?php
-
 namespace App\Services;
-
-use App\Models\{BiometricDevice,BiometricEnrolledUser,BiometricSyncLog,StaffAttendance,StudentAttendance};
-use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
-
-class BiometricAttendanceService
-{
- public function ingest(BiometricDevice $device,array $punch):BiometricSyncLog
- {
-  $biometricId=(string)($punch['biometric_id']??$punch['id']??$punch['uid']??''); $time=Carbon::parse($punch['punch_time']??$punch['timestamp']??$punch['time']??null);
-  return DB::transaction(function()use($device,$punch,$biometricId,$time){
-   $existing=BiometricSyncLog::where('device_id',$device->id)->where('biometric_id',$biometricId)->where('punch_time',$time)->first();if($existing)return $existing;
-   $enrolled=BiometricEnrolledUser::where('biometric_id',$biometricId)->where('is_active',true)->first();
-   $log=BiometricSyncLog::create(['campus_id'=>$device->campus_id,'device_id'=>$device->id,'enrolled_user_id'=>$enrolled?->id,'biometric_id'=>$biometricId,'punch_time'=>$time,'punch_state'=>$punch['state']??'Punch','sync_status'=>$enrolled?'Success':'Failed','error_message'=>$enrolled?null:'Biometric ID is not mapped to a user.','source_uid'=>$punch['uid']??null,'raw_data'=>$punch]);
-   if(!$enrolled)return $log;
-   $date=$time->toDateString();$clock=$time->format('H:i:s');
-   if(strtolower($enrolled->user_type)==='staff'){
-    $attendance=StaffAttendance::where('staff_id',$enrolled->user_id)->whereDate('date',$date)->first();
-    if(!$attendance)$attendance=StaffAttendance::create(['staff_id'=>$enrolled->user_id,'date'=>$date,'status'=>'present','in_time'=>$clock,'source'=>'zkteco']);
-    if(!$attendance->in_time||$clock<$attendance->in_time)$attendance->in_time=$clock;if($clock>$attendance->in_time)$attendance->out_time=$clock;$attendance->source=$attendance->source==='manual'?'manual+zkteco':'zkteco';$attendance->save();
-   } elseif(strtolower($enrolled->user_type)==='student'){
-    $student=\App\Models\Student::with('currentEnrollment')->find($enrolled->user_id);$enrollment=$student?->currentEnrollment;
-    if(!$enrollment){$log->update(['sync_status'=>'Failed','error_message'=>'Student has no current enrollment.']);return $log;}
-    StudentAttendance::firstOrCreate(['student_id'=>$enrolled->user_id,'attendance_date'=>$date],['school_class_id'=>$enrollment->class_id,'section_id'=>$enrollment->section_id,'academic_session_id'=>$enrollment->academic_session_id,'status'=>'present','source'=>'zkteco']);
-   } else {$log->update(['sync_status'=>'Failed','error_message'=>'Unsupported user type.']);}
-   return $log->fresh();
-  });
+use App\Models\{AttendanceDayLock,AttendancePolicy,BiometricDevice,BiometricEnrolledUser,BiometricSyncLog,Event,Staff,StaffAttendance,Student,StudentAttendance};
+use Carbon\Carbon;use Illuminate\Support\Facades\DB;
+class BiometricAttendanceService{
+ public function ingest(BiometricDevice$device,array$punch):BiometricSyncLog{
+  $id=(string)($punch['biometric_id']??$punch['id']??$punch['uid']??'');$time=Carbon::parse($punch['punch_time']??$punch['timestamp']??$punch['time']??null);abort_unless($device->campus_id,422,'Device must be assigned to a campus.');
+  return DB::transaction(function()use($device,$punch,$id,$time){
+   $existing=BiometricSyncLog::withoutGlobalScopes()->where('device_id',$device->id)->where('biometric_id',$id)->where('punch_time',$time)->first();if($existing)return$existing;
+   $enrolled=BiometricEnrolledUser::withoutGlobalScopes()->where('campus_id',$device->campus_id)->where('biometric_id',$id)->where('is_active',true)->first();
+   $log=BiometricSyncLog::create(['campus_id'=>$device->campus_id,'device_id'=>$device->id,'enrolled_user_id'=>$enrolled?->id,'biometric_id'=>$id,'punch_time'=>$time,'punch_state'=>$punch['state']??'Punch','sync_status'=>$enrolled?'Success':'Failed','error_message'=>$enrolled?null:'Biometric ID is not mapped in this device campus.','source_uid'=>$punch['uid']??null,'raw_data'=>$punch]);if(!$enrolled)return$log;
+   $date=$time->toDateString();$clock=$time->format('H:i:s');if($date>now()->toDateString())return$this->fail($log,'Future-dated punches are not accepted.');
+   if($this->blocked($device->campus_id,$date,$enrolled->user_type,$enrolled->user_id))return$this->fail($log,'Attendance is locked or the date is a configured holiday.');
+   if(strtolower($enrolled->user_type)==='staff')$this->staff($device,$enrolled,$date,$clock);elseif(strtolower($enrolled->user_type)==='student'){if(!$this->student($device,$enrolled,$date,$clock))return$this->fail($log,'Student is missing an active enrollment in this campus.');}else return$this->fail($log,'Unsupported user type.');return$log->fresh();
+  },3);
  }
- public function ingestMany(BiometricDevice $device,array $punches):array { $ok=0;$failed=0;foreach($punches as $p){try{$this->ingest($device,$p)->sync_status==='Success'?$ok++:$failed++;}catch(\Throwable $e){$failed++;}}$device->update(['last_sync'=>now(),'status'=>'Online','last_error'=>null]);return compact('ok','failed'); }
+ private function staff($device,$enrolled,$date,$clock):void{$staff=Staff::withoutGlobalScopes()->where('campus_id',$device->campus_id)->find($enrolled->user_id);abort_unless($staff,422,'Staff mapping does not belong to device campus.');$a=StaffAttendance::withoutGlobalScopes()->where('campus_id',$device->campus_id)->where('staff_id',$staff->id)->whereDate('date',$date)->lockForUpdate()->first();if(!$a)$a=StaffAttendance::create(['campus_id'=>$device->campus_id,'staff_id'=>$staff->id,'date'=>$date,'status'=>$this->status($device->campus_id,'staff',$clock),'in_time'=>$clock,'source'=>'zkteco','verified_at'=>now()]);if(!$a->in_time||$clock<$a->in_time){$a->in_time=$clock;$a->status=$this->status($device->campus_id,'staff',$clock);}if($clock>$a->in_time)$a->out_time=$clock;$a->source=str_contains($a->source,'manual')?'manual+zkteco':'zkteco';$a->verified_at=now();$a->save();}
+ private function student($device,$enrolled,$date,$clock):bool{$student=Student::withoutGlobalScopes()->with('currentEnrollment')->where('campus_id',$device->campus_id)->find($enrolled->user_id);$e=$student?->currentEnrollment;if(!$e)return false;$a=StudentAttendance::withoutGlobalScopes()->where('campus_id',$device->campus_id)->where('student_id',$student->id)->whereDate('attendance_date',$date)->lockForUpdate()->first();if(!$a)$a=StudentAttendance::create(['campus_id'=>$device->campus_id,'student_id'=>$student->id,'attendance_date'=>$date,'school_class_id'=>$e->class_id,'section_id'=>$e->section_id,'academic_session_id'=>$e->academic_session_id,'status'=>$this->status($device->campus_id,'student',$clock),'in_time'=>$clock,'source'=>'zkteco','verified_at'=>now()]);if(!$a->in_time||$clock<$a->in_time){$a->in_time=$clock;$a->status=$this->status($device->campus_id,'student',$clock);}if($clock>$a->in_time)$a->out_time=$clock;$a->source=str_contains($a->source,'manual')?'manual+zkteco':'zkteco';$a->verified_at=now();$a->save();return true;}
+ private function status($campus,string$type,string$clock):string{$p=AttendancePolicy::withoutGlobalScopes()->where('campus_id',$campus)->where('is_active',true)->first();if(!$p)return'present';$minutes=Carbon::parse($type==='staff'?$p->staff_start_time:$p->student_start_time)->diffInMinutes(Carbon::parse($clock),false);return$minutes>=$p->half_day_after_minutes?'half_day':($minutes>$p->late_grace_minutes?'late':'present');}
+ private function blocked($campus,$date,$type,$user):bool{$p=AttendancePolicy::withoutGlobalScopes()->where('campus_id',$campus)->where('is_active',true)->first();if($p?->block_holiday_entry){$holiday=Event::withoutGlobalScopes()->where('campus_id',$campus)->where('is_government_holiday',true)->whereDate('start_datetime','<=',$date)->whereDate('end_datetime','>=',$date)->exists();if($holiday||in_array(Carbon::parse($date)->dayOfWeek,$p->weekly_holidays??[]))return true;}$lock=AttendanceDayLock::withoutGlobalScopes()->where('campus_id',$campus)->where('attendance_type',strtolower($type))->whereDate('attendance_date',$date);if(strtolower($type)==='student'){$student=Student::withoutGlobalScopes()->with('currentEnrollment')->find($user);$class=$student?->currentEnrollment?->class_id;$section=$student?->currentEnrollment?->section_id;$lock->where(fn($q)=>$q->whereNull('class_id')->orWhere(fn($sheet)=>$sheet->where('class_id',$class)->where(fn($part)=>$part->whereNull('section_id')->orWhere('section_id',$section))));}return$lock->exists();}
+ private function fail($log,string$message){$log->update(['sync_status'=>'Failed','error_message'=>$message]);return$log;}
+ public function ingestMany(BiometricDevice$device,array$punches):array{$ok=0;$failed=0;foreach($punches as$p){try{$this->ingest($device,$p)->sync_status==='Success'?$ok++:$failed++;}catch(\Throwable$e){report($e);$failed++;}}$device->update(['last_sync'=>now(),'status'=>'Online','last_error'=>$failed?"{$failed} punch(es) failed validation":null]);return compact('ok','failed');}
 }

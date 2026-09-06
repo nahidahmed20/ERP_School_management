@@ -16,7 +16,7 @@
     </style>
 </head>
 <body>
-    <h2>Verdant School ERP — Menu Items</h2>
+    <h2>{{ app(\App\Services\WebsiteSettingsService::class)->values()['school_name'] }} — Menu Items</h2>
     <p>Generated: {{ now()->format('d M Y, h:i A') }}</p>
     <table>
         <thead>

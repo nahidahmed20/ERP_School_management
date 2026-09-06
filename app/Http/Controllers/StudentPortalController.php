@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\{AttendanceCorrectionRequest, Book, BookIssue, HelpdeskTicket, Homework, HomeworkSubmission, HostelAllocation, Invoice, LibraryReservation, OnlineExam, OnlineExamAnswer, PaymentTransaction, QuizAttempt, StudentAttendance, StudentLeaveRequest, StudentProfileUpdateRequest, StudentTaskCompletion, TransportAllocation};
+use App\Services\MalwareScanner;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -42,13 +44,17 @@ class StudentPortalController extends Controller
         ]);
     }
 
-    public function submitHomework(Request $request, Homework $homework)
+    public function submitHomework(Request $request, Homework $homework, MalwareScanner $scanner)
     {
         [$student, $enrollment] = $this->student($request);
         abort_unless((int)$homework->school_class_id === (int)$enrollment?->class_id, 403);
         $data=$request->validate(['answer'=>'nullable|string|max:10000','attachment'=>'nullable|file|max:10240']);
         if (!$request->filled('answer') && !$request->hasFile('attachment')) throw ValidationException::withMessages(['answer'=>'Answer অথবা file দিন।']);
-        $path=$request->file('attachment')?->store('homework-submissions','public');
+        $path=null;
+        if ($request->hasFile('attachment')) {
+            $scanner->assertClean($request->file('attachment'));
+            $path=$request->file('attachment')->store('student/homework-submissions/'.config('app.active_campus_id'),'local');
+        }
         HomeworkSubmission::updateOrCreate(['homework_id'=>$homework->id,'student_id'=>$student->id],[
             'answer'=>$data['answer']??null,'attachment_path'=>$path,'submitted_at'=>now(),
             'status'=>now()->startOfDay()->gt($homework->submission_date)?'Late':'Submitted',
@@ -56,20 +62,39 @@ class StudentPortalController extends Controller
         return back()->with('success','Homework submitted successfully.');
     }
 
-    public function leave(Request $request)
+    public function leave(Request $request, MalwareScanner $scanner)
     {
         [$student]=$this->student($request); $data=$request->validate([
             'leave_type'=>'required|string|max:100','start_date'=>'required|date','end_date'=>'required|date|after_or_equal:start_date',
             'reason'=>'required|string|max:3000','attachment'=>'nullable|file|max:5120']);
-        $data['student_id']=$student->id; $data['attachment_path']=$request->file('attachment')?->store('student-leaves','public'); unset($data['attachment']);
+        $data['student_id']=$student->id; $data['attachment_path']=null;
+        if ($request->hasFile('attachment')) {
+            $scanner->assertClean($request->file('attachment'));
+            $data['attachment_path']=$request->file('attachment')->store('student/leave-attachments/'.config('app.active_campus_id'),'local');
+        }
+        unset($data['attachment']);
         StudentLeaveRequest::create($data); return back()->with('success','Leave application submitted.');
+    }
+
+    public function downloadHomeworkSubmission(Request $request, HomeworkSubmission $submission)
+    {
+        [$student]=$this->student($request);
+        abort_unless((int)$submission->student_id === (int)$student->id, 403);
+        return $this->privateDownload($submission->attachment_path);
+    }
+
+    public function downloadLeaveAttachment(Request $request, StudentLeaveRequest $leave)
+    {
+        [$student]=$this->student($request);
+        abort_unless((int)$leave->student_id === (int)$student->id, 403);
+        return $this->privateDownload($leave->attachment_path);
     }
 
     public function attendanceCorrection(Request $request)
     {
         [$student]=$this->student($request); $data=$request->validate(['attendance_date'=>'required|date|before_or_equal:today','requested_status'=>'required|in:present,absent,late,half_day,leave','reason'=>'required|string|max:2000']);
         $current=StudentAttendance::where('student_id',$student->id)->whereDate('attendance_date',$data['attendance_date'])->value('status');
-        AttendanceCorrectionRequest::updateOrCreate(['student_id'=>$student->id,'attendance_date'=>$data['attendance_date']],$data+['current_status'=>$current,'status'=>'Pending']);
+        AttendanceCorrectionRequest::updateOrCreate(['student_id'=>$student->id,'attendance_date'=>$data['attendance_date']],$data+['campus_id'=>$student->campus_id,'current_status'=>$current,'status'=>'Pending','reviewed_by'=>null,'review_note'=>null]);
         return back()->with('success','Attendance correction request submitted.');
     }
 
@@ -144,5 +169,13 @@ class StudentPortalController extends Controller
     {
         $student=$request->user()->student()->with('currentEnrollment')->first(); abort_unless($student,403,'Student profile is not linked.');
         return [$student,$student->currentEnrollment];
+    }
+
+    private function privateDownload(?string $path)
+    {
+        abort_unless($path && Storage::disk('local')->exists($path), 404);
+        return Storage::disk('local')->download($path, basename($path), [
+            'X-Content-Type-Options'=>'nosniff', 'Cache-Control'=>'private, no-store, max-age=0',
+        ]);
     }
 }

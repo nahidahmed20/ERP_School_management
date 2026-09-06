@@ -8,6 +8,8 @@ use App\Models\User;
 use App\Models\Campus;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Support\CampusRule;
+use Illuminate\Validation\Rule;
 
 class HealthRecordController extends Controller
 {
@@ -50,7 +52,7 @@ class HealthRecordController extends Controller
     {
         $validated = $request->validate([
             'campus_id' => 'required|exists:campuses,id',
-            'user_id' => 'required|exists:users,id|unique:health_records,user_id',
+            'user_id' => ['required', CampusRule::exists('users'), Rule::unique('health_records', 'user_id')->where('campus_id', config('app.active_campus_id'))],
             'blood_group' => 'nullable|string|max:10',
             'height' => 'nullable|string|max:50',
             'weight' => 'nullable|string|max:50',
@@ -70,7 +72,7 @@ class HealthRecordController extends Controller
 
         $validated = $request->validate([
             'campus_id' => 'required|exists:campuses,id',
-            'user_id' => 'required|exists:users,id|unique:health_records,user_id,' . $id,
+            'user_id' => ['required', CampusRule::exists('users'), Rule::unique('health_records', 'user_id')->where('campus_id', config('app.active_campus_id'))->ignore($id)],
             'blood_group' => 'nullable|string|max:10',
             'height' => 'nullable|string|max:50',
             'weight' => 'nullable|string|max:50',

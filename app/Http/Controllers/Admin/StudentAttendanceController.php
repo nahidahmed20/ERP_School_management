@@ -43,8 +43,11 @@ class StudentAttendanceController extends Controller
                                 ->where('attendance_date', $date)
                                 ->first();
 
-                $student->attendance_status = $attendance ? $attendance->status : 'present'; 
+                $student->attendance_status = $attendance?->status;
                 $student->remarks = $attendance ? $attendance->remarks : '';
+                $student->attendance_source = $attendance?->source;
+                $student->attendance_in_time = $attendance?->in_time;
+                $student->attendance_out_time = $attendance?->out_time;
                 
                 $student->has_attendance = $attendance ? true : false; 
                 return $student;
@@ -67,10 +70,11 @@ class StudentAttendanceController extends Controller
         $request->validate([
             'class_id' => ['required', CampusRule::exists('school_classes')],
             'section_id' => ['nullable', CampusRule::exists('sections')],
-            'date'     => 'required|date',
+            'date'     => 'required|date|before_or_equal:today',
             'attendances' => 'required|array',
             'attendances.*.student_id' => ['required', CampusRule::exists('students')],
             'attendances.*.status' => 'required|in:present,absent,late,half_day',
+            'attendances.*.remarks' => 'nullable|string|max:500',
         ]);
 
         if (AttendanceDayLock::where('attendance_type','student')->whereDate('attendance_date',$request->date)->where('class_id',$request->class_id)->where(fn($q)=>$q->whereNull('section_id')->orWhere('section_id',$request->section_id))->exists()) return back()->with('error','This attendance sheet is locked. Reopen it from Attendance Control.');
@@ -82,6 +86,12 @@ class StudentAttendanceController extends Controller
         if (!$activeSession) return back()->with('error', 'কোনো অ্যাক্টিভ শিক্ষাবর্ষ পাওয়া যায়নি!');
 
         foreach ($request->attendances as $att) {
+            abort_unless(Student::whereKey($att['student_id'])->whereHas('currentEnrollment',fn($q)=>$q->where('class_id',$request->class_id)->when($request->section_id,fn($sq,$id)=>$sq->where('section_id',$id)))->exists(),422,'A selected student is not enrolled in this class and section.');
+            $existing=StudentAttendance::where('student_id',$att['student_id'])->whereDate('attendance_date',$request->date)->first();
+            if($existing&&str_contains((string)$existing->source,'zkteco')){
+                abort_if($existing->status!==$att['status']||(string)$existing->remarks!==(string)($att['remarks']??''),422,'Biometric attendance cannot be overwritten manually. Submit an attendance correction request.');
+                continue;
+            }
             StudentAttendance::updateOrCreate(
                 [
                     'student_id'      => $att['student_id'],
@@ -104,6 +114,8 @@ class StudentAttendanceController extends Controller
 
     public function destroy(Request $request)
     {
+        $request->validate(['class_id'=>['required',CampusRule::exists('school_classes')],'section_id'=>['nullable',CampusRule::exists('sections')],'date'=>'required|date|before_or_equal:today']);
+        abort_if(AttendanceDayLock::where('attendance_type','student')->whereDate('attendance_date',$request->date)->where('class_id',$request->class_id)->where(fn($q)=>$q->whereNull('section_id')->orWhere('section_id',$request->section_id))->exists(),422,'This attendance sheet is locked.');
         $query = StudentAttendance::where('school_class_id', $request->class_id)
                                   ->where('attendance_date', $request->date);
 
@@ -111,6 +123,7 @@ class StudentAttendanceController extends Controller
             $query->where('section_id', $request->section_id);
         }
 
+        abort_if((clone $query)->where('source','like','%zkteco%')->exists(),422,'Biometric records cannot be deleted. Use the correction workflow.');
         $query->delete();
 
         return back()->with('success', 'এই দিনের অ্যাটেনডেন্স রেকর্ড মুছে ফেলা (Delete) হয়েছে!');
@@ -119,8 +132,9 @@ class StudentAttendanceController extends Controller
     public function sendAbsentSms(Request $request)
     {
         $request->validate([
-            'date' => 'required|date',
+            'date' => 'required|date|before_or_equal:today',
             'student_ids' => 'required|array',
+            'student_ids.*'=>CampusRule::exists('students'),
         ]);
 
         $date = $request->date;

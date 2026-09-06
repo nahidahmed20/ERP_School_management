@@ -6,7 +6,7 @@ import Pagination from '@/Components/Pagination';
 import Swal from 'sweetalert2';
 
 export default function Index({ payments, filters }) {
-  const { flash } = usePage().props;
+  const { flash, site_settings: site = {} } = usePage().props;
 
   const [search, setSearch] = useState(filters.search ?? '');
   const [perPage, setPerPage] = useState(filters.per_page ?? '10');
@@ -23,8 +23,8 @@ export default function Index({ payments, filters }) {
 
   const printReceipt = (payment) => {
     // Standard ERP variables (Adjust based on your actual backend relationships)
-    const schoolName = "Your School Name Here";
-    const schoolAddress = "123 Education Street, City, Country | Phone: +880 1234 567 890";
+    const schoolName = site.school_name || 'School';
+    const schoolAddress = [site.address, site.primary_phone && `Phone: ${site.primary_phone}`].filter(Boolean).join(' | ');
     const receiptNo = payment.transaction_id || `RCPT-${payment.id}`;
     const studentName = payment.student?.first_name + ' ' + (payment.student?.last_name || '');
     const admissionNo = payment.student?.admission_no || 'N/A';
@@ -42,6 +42,7 @@ export default function Index({ payments, filters }) {
           body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; margin: 0; padding: 0; }
           .receipt-container { max-width: 800px; margin: 20px auto; padding: 30px; border: 1px solid #ccc; background: #fff; }
           .header { text-align: center; border-bottom: 2px solid #2c3e50; padding-bottom: 15px; margin-bottom: 20px; }
+          .school-logo { max-width: 90px; max-height: 70px; object-fit: contain; margin: 0 auto 8px; }
           .school-name { font-size: 26px; font-weight: bold; color: #2c3e50; margin: 0; text-transform: uppercase; }
           .school-address { font-size: 13px; color: #555; margin-top: 5px; }
           .receipt-title { display: inline-block; background: #2c3e50; color: #fff; padding: 6px 20px; font-weight: bold; border-radius: 4px; margin-top: 15px; letter-spacing: 1px; }
@@ -68,6 +69,7 @@ export default function Index({ payments, filters }) {
       <body>
         <div class="receipt-container">
           <div class="header">
+            ${site.logo ? `<img class="school-logo" src="${site.logo}" alt="School logo">` : ''}
             <h1 class="school-name">${schoolName}</h1>
             <div class="school-address">${schoolAddress}</div>
             <div class="receipt-title">MONEY RECEIPT</div>

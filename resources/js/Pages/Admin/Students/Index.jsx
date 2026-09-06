@@ -509,6 +509,7 @@ export default function Index({ students, classes, filters }) {
                                   <Link href={route('admin.students.fees', student.id)} className="flex items-center gap-3 w-full px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors">
                                     <Icon name="wallet" className="w-4 h-4" /> Fees History
                                   </Link>
+                                  {student.user_id&&<Link href={route('admin.documents.certificates.index',{user_id:student.user_id})} className="flex items-center gap-3 w-full px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors"><Icon name="document" className="w-4 h-4"/> Certificates</Link>}
 
                                   <div className="h-px bg-slate-100 my-1"></div>
 

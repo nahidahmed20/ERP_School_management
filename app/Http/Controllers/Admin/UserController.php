@@ -49,7 +49,9 @@ class UserController extends Controller
             $rolesQuery->where('name', '!=', 'Super Admin');
         }
         $roles = $rolesQuery->get();
-        $campuses = Campus::select('id', 'name')->get();
+        $campuses = auth()->user()->hasRole('Super Admin')
+            ? Campus::select('id', 'name')->get()
+            : Campus::whereKey($activeCampusId)->get(['id','name']);
 
         return Inertia::render('Admin/Users/Index', [
             'users' => $users,
@@ -65,19 +67,22 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => ['required', Password::defaults()],
-            'campus_id' => 'required|exists:campuses,id' // Campus Selection
+            'campus_id' => 'required|exists:campuses,id',
+            'roles' => 'required|array|min:1',
+            'roles.*' => 'required|string|exists:roles,name',
         ]);
+
+        $this->assertRoleAssignmentAllowed($request, $validated['roles']);
+        $campusId = $request->user()->hasRole('Super Admin') ? (int)$validated['campus_id'] : (int)config('app.active_campus_id');
 
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
-            'campus_id' => config('app.active_campus_id'),
+            'campus_id' => $campusId,
         ]);
 
-        if (isset($validated['roles'])) {
-            $user->syncRoles($validated['roles']);
-        }
+        $user->syncRoles($validated['roles']);
 
         return back()->with('success', 'User created successfully.');
     }
@@ -91,15 +96,18 @@ class UserController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            'roles' => 'array',
+            'roles' => 'required|array|min:1',
+            'roles.*' => 'required|string|exists:roles,name',
             'campus_id' => 'required|exists:campuses,id', // Campus Update
             'password' => ['nullable', Password::defaults()]
         ]);
 
+        $this->assertRoleAssignmentAllowed($request, $validated['roles']);
+
         $user->update([
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'campus_id' => $validated['campus_id'],
+            'campus_id' => $request->user()->hasRole('Super Admin') ? $validated['campus_id'] : config('app.active_campus_id'),
             'password' => $validated['password'] ? Hash::make($validated['password']) : $user->password,
         ]);
 
@@ -116,5 +124,12 @@ class UserController extends Controller
 
         $user->delete();
         return back()->with('success', 'User deleted successfully.');
+    }
+
+    private function assertRoleAssignmentAllowed(Request $request, array $roles): void
+    {
+        if (! $request->user()->hasRole('Super Admin')) {
+            abort_if(collect($roles)->intersect(['Super Admin','Branch Admin'])->isNotEmpty(), 403, 'Only Super Admin can assign administrator roles.');
+        }
     }
 }

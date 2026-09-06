@@ -245,6 +245,9 @@ class StaffController extends Controller
         }
     }
 
+    public function report(Staff $staff){$staff->load(['campus','department','designation']);return Inertia::render('Admin/Documents/PersonReport',['personType'=>'staff','person'=>$staff,'initialTab'=>request('tab','attendance'),'attendance'=>$staff->attendances()->latest('date')->get(),'results'=>[],'fees'=>[],'leaves'=>$staff->leaves()->latest()->get(),'payrolls'=>$staff->payrolls()->latest()->get(),'hrRecords'=>$staff->hrRecords()->latest()->get()]);}
+    public function generateIdCard(Staff $staff){$staff->load(['campus','department','designation']);$template=\App\Models\IdCardTemplate::where('is_active',true)->whereIn('audience',['staff','both'])->latest()->first();abort_unless($template,422,'Create an active Staff ID card template first.');return Inertia::render('Admin/Documents/PersonIdCard',['personType'=>'staff','person'=>$staff,'template'=>$template,'branding'=>app(\App\Services\WebsiteSettingsService::class)->values()]);}
+
     private function staffValidationRules(bool $isUpdate = false, $staffId = null): array
     {
         $phoneRule = $isUpdate ? "required|string|max:20|unique:staff,phone,{$staffId}" : 'required|string|max:20|unique:staff,phone';

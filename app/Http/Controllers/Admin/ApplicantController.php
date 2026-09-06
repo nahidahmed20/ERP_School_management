@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Applicant;
 use App\Models\JobPost;
+use App\Services\MalwareScanner;
+use App\Support\CampusRule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -39,10 +41,10 @@ class ApplicantController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, MalwareScanner $scanner)
     {
         $request->validate([
-            'job_post_id' => 'required|exists:job_posts,id',
+            'job_post_id' => ['required', CampusRule::exists('job_posts')],
             'name' => 'required|string|max:255',
             'phone' => 'required|string|max:20',
             'email' => 'nullable|email|max:255',
@@ -54,7 +56,8 @@ class ApplicantController extends Controller
         $data = $request->except('resume');
 
         if ($request->hasFile('resume')) {
-            $data['resume'] = $request->file('resume')->store('resumes', 'public');
+            $scanner->assertClean($request->file('resume'));
+            $data['resume'] = $request->file('resume')->store('recruitment/resumes/'.config('app.active_campus_id'), 'local');
         }
 
         Applicant::create($data);
@@ -62,12 +65,12 @@ class ApplicantController extends Controller
         return back()->with('success', 'আবেদনকারীর তথ্য সফলভাবে যুক্ত করা হয়েছে!');
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $id, MalwareScanner $scanner)
     {
         $applicant = Applicant::findOrFail($id);
         
         $request->validate([
-            'job_post_id' => 'required|exists:job_posts,id',
+            'job_post_id' => ['required', CampusRule::exists('job_posts')],
             'name' => 'required|string|max:255',
             'phone' => 'required|string|max:20',
             'email' => 'nullable|email|max:255',
@@ -79,10 +82,11 @@ class ApplicantController extends Controller
         $data = $request->except('resume');
 
         if ($request->hasFile('resume')) {
-            if ($applicant->resume && Storage::disk('public')->exists($applicant->resume)) {
-                Storage::disk('public')->delete($applicant->resume);
+            $scanner->assertClean($request->file('resume'));
+            if ($applicant->resume && Storage::disk('local')->exists($applicant->resume)) {
+                Storage::disk('local')->delete($applicant->resume);
             }
-            $data['resume'] = $request->file('resume')->store('resumes', 'public');
+            $data['resume'] = $request->file('resume')->store('recruitment/resumes/'.config('app.active_campus_id'), 'local');
         }
 
         $applicant->update($data);
@@ -94,8 +98,8 @@ class ApplicantController extends Controller
     {
         $applicant = Applicant::findOrFail($id);
         
-        if ($applicant->resume && Storage::disk('public')->exists($applicant->resume)) {
-            Storage::disk('public')->delete($applicant->resume);
+        if ($applicant->resume && Storage::disk('local')->exists($applicant->resume)) {
+            Storage::disk('local')->delete($applicant->resume);
         }
         
         $applicant->delete();

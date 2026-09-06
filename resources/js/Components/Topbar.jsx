@@ -19,7 +19,7 @@ export default function Topbar({ onHamburgerClick }) {
             {/* Left: Hamburger & Search */}
             <div className="flex items-center gap-4">
                 <button
-                    className="ui-icon-button md:hidden"
+                    className="ui-icon-button mobile-menu-trigger"
                     onClick={onHamburgerClick}
                     title="Toggle Menu"
                 >

@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\Campus;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Support\CampusRule;
 
 class VisitLogController extends Controller
 {
@@ -54,8 +55,8 @@ class VisitLogController extends Controller
     {
         $validated = $request->validate([
             'campus_id' => 'required|exists:campuses,id',
-            'medical_room_id' => 'required|exists:medical_rooms,id',
-            'user_id' => 'required|exists:users,id',
+            'medical_room_id' => ['required', CampusRule::exists('medical_rooms')],
+            'user_id' => ['required', CampusRule::exists('users')],
             'visit_time' => 'required|date',
             'symptoms' => 'required|string',
             'diagnosis' => 'nullable|string',
@@ -74,8 +75,8 @@ class VisitLogController extends Controller
 
         $validated = $request->validate([
             'campus_id' => 'required|exists:campuses,id',
-            'medical_room_id' => 'required|exists:medical_rooms,id',
-            'user_id' => 'required|exists:users,id',
+            'medical_room_id' => ['required', CampusRule::exists('medical_rooms')],
+            'user_id' => ['required', CampusRule::exists('users')],
             'visit_time' => 'required|date',
             'symptoms' => 'required|string',
             'diagnosis' => 'nullable|string',

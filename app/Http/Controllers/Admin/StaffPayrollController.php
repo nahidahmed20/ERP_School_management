@@ -121,6 +121,8 @@ class StaffPayrollController extends Controller
             'payment_date'  => $request->payment_date,
             'status'        => $request->status,
             'note'          => $request->note,
+            'generated_by'  => $request->user()->id,
+            'generated_at'  => now(),
         ]);
 
         return back()->with('success', 'বেতন (Payroll) সফলভাবে জেনারেট হয়েছে!');
@@ -129,6 +131,7 @@ class StaffPayrollController extends Controller
     public function update(Request $request, $id)
     {
         $payroll = StaffPayroll::findOrFail($id);
+        abort_if($payroll->approval_status==='finalized',422,'Finalized payroll cannot be changed.');
 
         $request->validate([
             'basic_salary'  => 'required|numeric|min:0',
@@ -166,6 +169,7 @@ class StaffPayrollController extends Controller
     public function approve(Request $request, StaffPayroll $payroll)
     {
         abort_if($payroll->approval_status==='finalized',422,'Finalized payroll cannot be changed.');
+        abort_if((int)$payroll->generated_by===(int)$request->user()->id,403,'Payroll generator cannot approve the same payroll.');
         $payroll->update(['approval_status'=>'approved','approved_by'=>$request->user()->id,'approved_at'=>now()]);
         return back()->with('success','Payroll approved.');
     }
@@ -173,6 +177,7 @@ class StaffPayrollController extends Controller
     public function finalize(Request $request, StaffPayroll $payroll)
     {
         abort_unless($payroll->approval_status==='approved',422,'Approve payroll before finalizing.');
+        abort_if((int)$payroll->approved_by===(int)$request->user()->id,403,'Payroll approver cannot finalize the same payroll.');
         $data=$request->validate(['payment_method'=>'required|string|max:100','bank_reference'=>'nullable|string|max:255','payment_date'=>'required|date']);
         $payroll->update($data+['approval_status'=>'finalized','finalized_at'=>now(),'status'=>'paid']);
         return back()->with('success','Payroll finalized and locked.');

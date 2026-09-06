@@ -82,17 +82,25 @@ class CampusController extends Controller
 
     private function validateData(Request $request, $ignoreId = null): array
     {
-        return $request->validate([
+        $data = $request->validate([
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:50|unique:campuses,code' . ($ignoreId ? ",{$ignoreId}" : ''),
             'phone' => 'nullable|string|max:30',
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string',
+            'public_description' => 'nullable|string|max:2000',
+            'facilities' => 'nullable|string|max:3000',
+            'map_url' => 'nullable|url|max:1000',
             'established_year' => 'nullable|digits:4',
             'is_main' => 'boolean',
             'is_active' => 'boolean',
             'order' => 'nullable|integer',
         ]);
+
+        $data['facilities'] = collect(explode(',', $data['facilities'] ?? ''))
+            ->map(fn ($facility) => trim($facility))->filter()->unique()->values()->all();
+
+        return $data;
     }
 
     public function switchCampus(Request $request)

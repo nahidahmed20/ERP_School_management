@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\SaasBackup;
+use App\Jobs\GenerateSecureBackup;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -44,11 +45,13 @@ class SaasBackupController extends Controller
 
         $fileName = 'backup_' . strtolower(str_replace(' ', '_', $validated['type'])) . '_' . date('Y_m_d_His') . '.zip';
 
-        SaasBackup::create([
+        $backup = SaasBackup::create([
             'file_name' => $fileName,
             'type' => $validated['type'],
             'status' => 'Pending',
+            'created_by' => $request->user()->id,
         ]);
+        GenerateSecureBackup::dispatch($backup->id)->onQueue('backups');
 
         return back()->with('success', 'Backup generation started in the background.');
     }

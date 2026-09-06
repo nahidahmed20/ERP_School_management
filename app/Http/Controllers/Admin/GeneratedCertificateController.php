@@ -9,12 +9,14 @@ use App\Models\User;
 use App\Models\Campus;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Support\CampusRule;
 
 class GeneratedCertificateController extends Controller
 {
     public function index(Request $request)
     {
         $query = GeneratedCertificate::with(['template', 'student']);
+        if($request->filled('user_id'))$query->where('user_id',$request->user_id);
 
         if ($search = $request->get('search')) {
             $query->where('certificate_no', 'like', "%{$search}%")
@@ -24,11 +26,12 @@ class GeneratedCertificateController extends Controller
         }
 
         $certificates = $query->latest()->paginate(\App\Support\PerPage::resolve())->withQueryString();
+        $certificates->getCollection()->transform(function($certificate){$user=$certificate->student?->loadMissing(['student.currentEnrollment.schoolClass','staff.designation']);$profile=$user?->student?:$user?->staff;$values=['{{name}}'=>$user?->name,'{{id}}'=>$profile?->admission_no?:$profile?->staff_id_no,'{{class}}'=>$user?->student?->currentEnrollment?->schoolClass?->name,'{{designation}}'=>$user?->staff?->designation?->name,'{{school_name}}'=>$certificate->campus?->name?:config('app.name'),'{{purpose}}'=>'official purpose','{{remarks}}'=>''];$certificate->setAttribute('rendered_content',strtr($certificate->template?->content_body??'',$values));return$certificate;});
         $templates = CertificateTemplate::where('is_active', true)->select('id', 'title')->get();
         $campuses = Campus::select('id', 'name')->get();
 
         // Spatie & Student/Staff Mapping
-        $users = User::with(['roles', 'student'])->get()->map(function ($user) {
+        $users = User::with(['roles', 'student','staff'])->get()->map(function ($user) {
             $displayName = $user->name;
             if ($user->student) {
                 $displayName = trim($user->student->first_name . ' ' . $user->student->last_name) . ' (' . $user->student->admission_no . ')';
@@ -50,12 +53,12 @@ class GeneratedCertificateController extends Controller
     {
         $validated = $request->validate([
             'campus_id' => 'required|exists:campuses,id',
-            'certificate_template_id' => 'required|exists:certificate_templates,id',
-            'user_id' => 'required|exists:users,id',
+            'certificate_template_id' => ['required',CampusRule::exists('certificate_templates')],
+            'user_id' => ['required',CampusRule::exists('users')],
             'issue_date' => 'required|date',
         ]);
 
-        $validated['certificate_no'] = 'CERT-' . strtoupper(uniqid());
+        $validated['campus_id']=config('app.active_campus_id');$validated['certificate_no'] = 'CERT-' . strtoupper(uniqid());
         GeneratedCertificate::create($validated);
 
         return back()->with('success', 'Certificate generated successfully.');

@@ -28,7 +28,7 @@ export default function CertificatePrintModal({ item, onClose }) {
         <div className="p-6 bg-slate-200/50 overflow-y-auto flex-1 flex justify-center items-center custom-scrollbar">
           
           {/* Certificate Container (Mimics A4 Landscape) */}
-          <div className="w-full bg-white relative shadow-xl flex flex-col justify-between items-center text-center font-serif aspect-[1.414/1] border-[12px] border-slate-800 p-[clamp(20px,5%,48px)]">
+          <div className="w-full bg-white relative shadow-xl flex flex-col justify-between items-center text-center font-serif aspect-[1.414/1] border-[12px] border-slate-800 p-[clamp(20px,5%,48px)]" style={{backgroundImage:item.template?.background_image?`url(/storage/${item.template.background_image})`:undefined,backgroundSize:'cover'}}>
             
             {/* Top Text */}
             <div className="w-full">
@@ -46,7 +46,7 @@ export default function CertificatePrintModal({ item, onClose }) {
               <h2 className="text-indigo-600 border-b-2 border-slate-300 inline-block pb-1 sm:pb-2 mb-4 sm:mb-8 font-bold text-[clamp(22px,3.5vw,36px)] px-8">
                 {item.student?.name}
               </h2>
-              <div dangerouslySetInnerHTML={{ __html: item.template?.content_body }} className="mx-auto" />
+              <div dangerouslySetInnerHTML={{ __html: item.rendered_content }} className="mx-auto" />
             </div>
 
             {/* Bottom Signatures */}
@@ -55,7 +55,7 @@ export default function CertificatePrintModal({ item, onClose }) {
                 Issued: {new Date(item.issue_date).toLocaleDateString()}
               </div>
               <div className="border-t border-slate-400 w-[120px] sm:w-[180px] pt-2 text-slate-600 text-[clamp(10px,1.2vw,14px)] font-medium">
-                Authorized Signature
+                {item.template?.signature_1_image&&<img src={`/storage/${item.template.signature_1_image}`} className="mx-auto h-8"/>}{item.template?.signature_1_title||'Authorized Signature'}
               </div>
             </div>
 

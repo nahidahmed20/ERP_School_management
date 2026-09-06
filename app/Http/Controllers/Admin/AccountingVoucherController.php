@@ -50,6 +50,7 @@ class AccountingVoucherController extends Controller
         // Generate Voucher Number
         $validated['voucher_no'] = 'VCH-' . date('ymd') . '-' . strtoupper(Str::random(8));
         $validated['created_by'] = auth()->id();
+        $validated['campus_id'] = config('app.active_campus_id');
 
         JournalEntry::create($validated);
         return back()->with('success', 'Accounting Voucher posted successfully.');
@@ -57,7 +58,10 @@ class AccountingVoucherController extends Controller
 
     public function destroy($id)
     {
-        JournalEntry::findOrFail($id)->update(['reversed_at' => now()]);
+        $entry=JournalEntry::findOrFail($id);
+        abort_if($entry->source_key,422,'System-generated vouchers can only be reversed through their source workflow.');
+        abort_if($entry->reversed_at,422,'This voucher is already reversed.');
+        $entry->update(['reversed_at' => now()]);
         return back()->with('success', 'Voucher deleted / reversed.');
     }
 }

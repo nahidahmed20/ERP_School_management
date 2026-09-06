@@ -25,7 +25,7 @@ class AccountingService
         return JournalEntry::updateOrCreate(
             ['source_key' => $sourceKey],
             [
-                'campus_id' => $source->campus_id ?? session('active_campus_id'),
+                'campus_id' => $source->campus_id ?? config('app.active_campus_id'),
                 'voucher_no' => 'AUTO-'.strtoupper(substr(hash('sha256', $sourceKey), 0, 14)),
                 'date' => $date ?? now()->toDateString(),
                 'voucher_type' => $voucherType,

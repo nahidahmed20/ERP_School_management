@@ -91,6 +91,9 @@ export default function CmsFormModal({ item, campuses, activeCampusId, onClose }
                 <label className={labelClass}>Content Type <span className="text-rose-500">*</span></label>
                 <select value={data.content_type} onChange={e => setData('content_type', e.target.value)} className={`${inputClass} bg-white`}>
                   <option value="Page">Custom Page</option>
+                  <option value="Blog">Blog Post</option>
+                  <option value="News">School News</option>
+                  <option value="Article">Article</option>
                   <option value="Notice">Notice / Announcement</option>
                   <option value="Banner">Homepage Banner</option>
                   <option value="Event">Website Event</option>

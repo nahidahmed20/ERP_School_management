@@ -14,8 +14,10 @@ use App\Models\StudentAttendance;
 use App\Models\User;
 use App\Models\Account;
 use App\Models\JournalEntry;
+use App\Models\PaymentTransaction;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class ReportController extends Controller
@@ -40,6 +42,11 @@ class ReportController extends Controller
         $income = $accounts->where('type', 'Income')->sum('balance');
         $expense = $accounts->where('type', 'Expense')->sum('balance');
         $entries = JournalEntry::whereNull('reversed_at')->whereBetween('date', [$startDate, $endDate]);
+        $invalidEntries=(clone $entries)->where(fn($q)=>$q->whereColumn('debit_account_id','credit_account_id')->orWhere('amount','<=',0))->count();
+        $feeCash=(float)PaymentTransaction::whereBetween('transaction_date',[$startDate,$endDate])->whereIn('source_type',[Payment::class,\App\Models\Invoice::class])->whereIn('status',['Completed','Refunded'])->sum(DB::raw('amount-refunded_amount'));
+        $postedFees=(float)JournalEntry::whereNull('reversed_at')->whereBetween('date',[$startDate,$endDate])->where(fn($q)=>$q->where('source_key','like','fee-payment:%')->orWhere('source_key','like','online-payment:%'))->sum('amount');
+        $postedRefunds=(float)JournalEntry::whereNull('reversed_at')->whereBetween('date',[$startDate,$endDate])->where('source_key','like','payment-refund:%')->sum('amount');
+        $reconciliationDifference=round($feeCash-($postedFees-$postedRefunds),2);
 
         return Inertia::render('Admin/Reports/FinancialSummary', [
             'accounts' => $accounts->values(),
@@ -49,7 +56,9 @@ class ReportController extends Controller
                 'income' => (float) $income,
                 'expense' => (float) $expense,
                 'net_profit' => (float) ($income - $expense),
-                'is_balanced' => abs((float) (clone $entries)->sum('amount') - (float) (clone $entries)->sum('amount')) < 0.01,
+                'is_balanced' => $invalidEntries===0 && abs($reconciliationDifference)<0.01,
+                'invalid_entries' => $invalidEntries,
+                'reconciliation_difference' => $reconciliationDifference,
             ],
             'filters' => compact('startDate', 'endDate'),
         ]);
@@ -237,10 +246,13 @@ class ReportController extends Controller
 
     public function saved()
     {
-        $savedReports = []; 
-
         return Inertia::render('Admin/Reports/SavedReports', [
-            'savedReports' => $savedReports
+            'reportGroups'=>[
+                ['name'=>'Students & Academics','items'=>[['Student Directory',route('admin.students.index')],['Student Attendance',route('admin.studentAttendance.report')],['Exam Report Cards',route('admin.exams.reportcards')],['Due Fees',route('admin.due_fees')]]],
+                ['name'=>'Staff & HR','items'=>[['Staff Directory',route('admin.staff.index')],['Staff Attendance',route('admin.staff.attendances-report')],['Payroll',route('admin.staff-payrolls.index')]]],
+                ['name'=>'Finance & Operations','items'=>[['Fee Collection',route('admin.reports.fees')],['Financial Summary',route('admin.reports.financial-summary')],['Stock Movement',route('admin.purchase.items.report')],['Sales Report',route('admin.sales.reports.index')]]],
+                ['name'=>'Advanced Reporting','items'=>[['Custom Report Builder',route('admin.reporting-administration.index')],['Export & Schedule History',route('admin.reporting-administration.index')]]],
+            ]
         ]);
     }
 }

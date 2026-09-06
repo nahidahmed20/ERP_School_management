@@ -39,12 +39,12 @@ class StaffAttendanceController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'date' => 'required|date',
+            'date' => 'required|date|before_or_equal:today',
             'attendances' => 'required|array',
             'attendances.*.staff_id' => ['required', CampusRule::exists('staff')],
             'attendances.*.status' => 'required|in:present,absent,late,half_day',
-            'attendances.*.in_time' => 'nullable',
-            'attendances.*.out_time' => 'nullable',
+            'attendances.*.in_time' => ['nullable','regex:/^([01]\\d|2[0-3]):[0-5]\\d(:[0-5]\\d)?$/'],
+            'attendances.*.out_time' => ['nullable','regex:/^([01]\\d|2[0-3]):[0-5]\\d(:[0-5]\\d)?$/'],
             'attendances.*.note' => 'nullable|string|max:255',
         ]);
 
@@ -57,6 +57,13 @@ class StaffAttendanceController extends Controller
         $upsertData = [];
 
         foreach ($request->attendances as $att) {
+            if(!empty($att['in_time'])&&!empty($att['out_time']))abort_unless(\Carbon\Carbon::parse($att['out_time'])->greaterThan(\Carbon\Carbon::parse($att['in_time'])),422,'Out time must be after in time.');
+            $existing=StaffAttendance::where('staff_id',$att['staff_id'])->whereDate('date',$date)->first();
+            if($existing&&str_contains((string)$existing->source,'zkteco')){
+                $changed=$existing->status!==$att['status']||substr((string)$existing->in_time,0,5)!==(string)($att['in_time']??'')||substr((string)$existing->out_time,0,5)!==(string)($att['out_time']??'')||(string)$existing->note!==(string)($att['note']??'');
+                abort_if($changed,422,'Biometric attendance cannot be overwritten manually. Use the approved payroll attendance adjustment workflow.');
+                continue;
+            }
             $status=$att['status'];
             if ($status==='present' && $policy && !empty($att['in_time'])) {
                 $minutes=\Carbon\Carbon::parse($policy->staff_start_time)->diffInMinutes(\Carbon\Carbon::parse($att['in_time']),false);

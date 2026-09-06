@@ -10,6 +10,8 @@ use App\Models\AcademicSession;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
+use App\Support\CampusRule;
+use App\Services\MalwareScanner;
 
 class LessonPlanController extends Controller
 {
@@ -37,11 +39,11 @@ class LessonPlanController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, MalwareScanner $scanner)
     {
         $request->validate([
-            'class_id' => 'required|exists:school_classes,id',
-            'subject_id' => 'required|exists:subjects,id',
+            'class_id' => ['required', CampusRule::exists('school_classes')],
+            'subject_id' => ['required', CampusRule::exists('subjects')],
             'title' => 'required|string|max:255',
             'status' => 'required|in:Pending,Ongoing,Completed',
             'attachment' => 'nullable|file|mimes:pdf,doc,docx,jpg,png|max:2048',
@@ -51,7 +53,8 @@ class LessonPlanController extends Controller
         $filePath = null;
 
         if ($request->hasFile('attachment')) {
-            $filePath = $request->file('attachment')->store('syllabus_files', 'public');
+            $scanner->assertClean($request->file('attachment'));
+            $filePath = $request->file('attachment')->store('syllabus_files/'.config('app.active_campus_id'), 'local');
         }
 
         LessonPlan::create(array_merge($request->except('attachment'), [
@@ -62,13 +65,13 @@ class LessonPlanController extends Controller
         return back()->with('success', 'লেসন/সিলেবাস সফলভাবে যুক্ত করা হয়েছে!');
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $id, MalwareScanner $scanner)
     {
         $lesson = LessonPlan::findOrFail($id);
         
         $request->validate([
-            'class_id' => 'required|exists:school_classes,id',
-            'subject_id' => 'required|exists:subjects,id',
+            'class_id' => ['required', CampusRule::exists('school_classes')],
+            'subject_id' => ['required', CampusRule::exists('subjects')],
             'title' => 'required|string|max:255',
             'status' => 'required|in:Pending,Ongoing,Completed',
             'attachment' => 'nullable|file|mimes:pdf,doc,docx,jpg,png|max:2048',
@@ -77,10 +80,11 @@ class LessonPlanController extends Controller
         $data = $request->except('attachment');
 
         if ($request->hasFile('attachment')) {
-            if ($lesson->attachment && Storage::disk('public')->exists($lesson->attachment)) {
-                Storage::disk('public')->delete($lesson->attachment);
+            $scanner->assertClean($request->file('attachment'));
+            if ($lesson->attachment && Storage::disk('local')->exists($lesson->attachment)) {
+                Storage::disk('local')->delete($lesson->attachment);
             }
-            $data['attachment'] = $request->file('attachment')->store('syllabus_files', 'public');
+            $data['attachment'] = $request->file('attachment')->store('syllabus_files/'.config('app.active_campus_id'), 'local');
         }
 
         $lesson->update($data);
@@ -92,8 +96,8 @@ class LessonPlanController extends Controller
     {
         $lesson = LessonPlan::findOrFail($id);
         
-        if ($lesson->attachment && Storage::disk('public')->exists($lesson->attachment)) {
-            Storage::disk('public')->delete($lesson->attachment);
+        if ($lesson->attachment && Storage::disk('local')->exists($lesson->attachment)) {
+            Storage::disk('local')->delete($lesson->attachment);
         }
         
         $lesson->delete();

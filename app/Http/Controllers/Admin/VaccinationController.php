@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Campus;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Support\CampusRule;
 
 class VaccinationController extends Controller
 {
@@ -50,7 +51,7 @@ class VaccinationController extends Controller
     {
         $validated = $request->validate([
             'campus_id' => 'required|exists:campuses,id',
-            'user_id' => 'required|exists:users,id',
+            'user_id' => ['required', CampusRule::exists('users')],
             'vaccine_name' => 'required|string|max:255',
             'dose_number' => 'nullable|string|max:50',
             'date_administered' => 'required|date',
@@ -69,7 +70,7 @@ class VaccinationController extends Controller
 
         $validated = $request->validate([
             'campus_id' => 'required|exists:campuses,id',
-            'user_id' => 'required|exists:users,id',
+            'user_id' => ['required', CampusRule::exists('users')],
             'vaccine_name' => 'required|string|max:255',
             'dose_number' => 'nullable|string|max:50',
             'date_administered' => 'required|date',

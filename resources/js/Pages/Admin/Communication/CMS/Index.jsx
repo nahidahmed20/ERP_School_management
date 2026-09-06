@@ -98,6 +98,15 @@ export default function Index({ contents, campuses, activeCampusId, filters }) {
 
       <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8 no-print">
 
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+          {[
+            ['Branding & Hero', 'General → Website Settings', 'Logo, colors, headings and principal message'],
+            ['Campus Content', 'School → Campuses', 'Description, facilities, contacts and map'],
+            ['Teachers', 'People → Staff', 'Active teacher assignments and profiles'],
+            ['News & Blog', 'Communication → CMS', 'Choose Blog, News or Article and publish'],
+          ].map(([title, path, text]) => <div key={title} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><span className="text-[10px] font-black uppercase tracking-widest text-amber-600">Frontend data</span><h2 className="mt-2 text-base font-bold text-slate-900">{title}</h2><b className="mt-2 block text-xs text-emerald-800">{path}</b><p className="mt-1 text-xs leading-5 text-slate-500">{text}</p></div>)}
+        </div>
+
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>

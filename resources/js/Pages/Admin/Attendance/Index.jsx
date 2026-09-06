@@ -28,7 +28,7 @@ export default function Index({ classes, students, filters }) {
         date: attendanceDate,
         attendances: students.map(s => ({
           student_id: s.id,
-          status: s.attendance_status || 'present',
+          status: s.attendance_status || '',
           remarks: s.remarks || ''
         }))
       }));
@@ -294,6 +294,7 @@ export default function Index({ classes, students, filters }) {
                               );
                             })}
                           </div>
+                          {student.attendance_source && <div className="mt-1 text-[10px] font-medium text-slate-500">{student.attendance_source} · {student.attendance_in_time || '--'}–{student.attendance_out_time || '--'}</div>}
                         </td>
                         
                         <td className="px-6 py-4">

@@ -370,6 +370,14 @@ class StudentController extends Controller
         }
     }
 
+    public function generateIdCard(Student $student){return Inertia::render('Admin/Documents/PersonIdCard',$this->studentDocumentData($student));}
+    public function attendanceHistory(Student $student){return $this->studentReport($student,'attendance');}
+    public function academicResults(Student $student){return $this->studentReport($student,'results');}
+    public function feePayments(Student $student){return $this->studentReport($student,'fees');}
+    public function sendMessage(Student $student){return redirect()->route('admin.communication.chat.index',['student_id'=>$student->id]);}
+    private function studentReport(Student $student,string $tab){$student->load(['campus','guardian','currentEnrollment.schoolClass','currentEnrollment.section']);return Inertia::render('Admin/Documents/PersonReport',['personType'=>'student','person'=>$student,'initialTab'=>$tab,'attendance'=>\App\Models\StudentAttendance::where('student_id',$student->id)->latest('attendance_date')->get(),'results'=>\App\Models\ExamMark::with(['exam:id,name','subject:id,name'])->where('student_id',$student->id)->latest()->get(),'fees'=>\App\Models\Invoice::with('feeGroup:id,name')->where('student_id',$student->id)->latest('invoice_date')->get(),'leaves'=>\App\Models\StudentLeaveRequest::where('student_id',$student->id)->latest()->get()]);}
+    private function studentDocumentData(Student $student):array{$student->load(['campus','guardian','currentEnrollment.schoolClass','currentEnrollment.section']);$template=\App\Models\IdCardTemplate::where('is_active',true)->whereIn('audience',['student','both'])->latest()->first();abort_unless($template,422,'Create an active Student ID card template first.');return['personType'=>'student','person'=>$student,'template'=>$template,'branding'=>app(\App\Services\WebsiteSettingsService::class)->values()];}
+
     private function studentValidationRules(bool $isUpdate = false, $studentId = null): array
     {
         $rules = [

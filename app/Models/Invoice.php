@@ -31,4 +31,9 @@ class Invoice extends Model
     {
         return $this->belongsTo(FeeGroup::class);
     }
+
+    public function paymentAllocations()
+    {
+        return $this->hasMany(PaymentAllocation::class);
+    }
 }

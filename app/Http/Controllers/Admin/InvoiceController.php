@@ -44,7 +44,7 @@ class InvoiceController extends Controller
 
         return Inertia::render('Admin/FinanceInvoices/Index', [
             'invoices' => $invoices,
-            'campuses' => Campus::select('id', 'name')->get(),
+            'campuses' => Campus::when(! $request->user()->hasRole('Super Admin'), fn ($q) => $q->whereKey(config('app.active_campus_id')))->select('id', 'name')->get(),
             'students' => Student::select('id', 'first_name', 'last_name', 'admission_no')->get(),
             'feeGroups' => FeeGroup::where('is_active', true)->select('id', 'name')->get(),
             'filters' => $request->only(['search', 'status', 'fee_group_id', 'per_page']),
@@ -54,21 +54,27 @@ class InvoiceController extends Controller
     public function store(Request $request)
     {
         $data = $this->validateData($request);
+        $data['paid_amount'] = 0;
+        $data['status'] = 'Unpaid';
         Invoice::create($data);
         return back()->with('success', 'নতুন ইনভয়েস তৈরি করা হয়েছে।');
     }
 
     public function update(Request $request, $id)
     {
-        $invoice = Invoice::findOrFail($id);
+        $invoice = Invoice::whereKey($id)->lockForUpdate()->firstOrFail();
+        abort_if((float)$invoice->paid_amount > 0 || $invoice->paymentAllocations()->exists(), 422, 'An invoice with payment activity cannot be edited. Use an adjustment or refund workflow.');
         $data = $this->validateData($request, $invoice->id);
+        $data['status'] = $request->input('status') === 'Cancelled' ? 'Cancelled' : 'Unpaid';
         $invoice->update($data);
         return back()->with('success', 'ইনভয়েস আপডেট করা হয়েছে।');
     }
 
     public function destroy($id)
     {
-        Invoice::findOrFail($id)->delete();
+        $invoice=Invoice::findOrFail($id);
+        abort_if((float)$invoice->paid_amount > 0 || $invoice->paymentAllocations()->exists(), 422, 'An invoice with payment activity cannot be deleted.');
+        $invoice->delete();
         return back()->with('success', 'ইনভয়েসটি মুছে ফেলা হয়েছে।');
     }
 

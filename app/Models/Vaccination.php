@@ -1,9 +1,11 @@
 <?php
 namespace App\Models;
+use App\Traits\BelongsToCampus;
 use Illuminate\Database\Eloquent\Model;
 
 class Vaccination extends Model
 {
+    use BelongsToCampus;
     protected $guarded = [];
 
     protected $casts = [

@@ -79,13 +79,15 @@ class DashboardController extends Controller
             'staff.designation',
         ]);
 
-        if ($user->student) {
+        $isAdministrator = $user->hasAnyRole(['Super Admin', 'Branch Admin']);
+
+        if (! $isAdministrator && $user->student) {
             return Inertia::render('Portal/Dashboard', [
                 'portal' => $this->studentPortal($user->student, 'student'),
             ]);
         }
 
-        if ($user->guardian) {
+        if (! $isAdministrator && $user->guardian) {
             $children = $user->guardian->students;
             $student = $children->firstWhere('id', $request->integer('student_id')) ?? $children->first();
 
@@ -96,13 +98,13 @@ class DashboardController extends Controller
             ]);
         }
 
-        if ($user->staff && $this->isFinanceStaff($user)) {
+        if (! $isAdministrator && $user->staff && $this->isFinanceStaff($user)) {
             return Inertia::render('Portal/FinanceDashboard', [
                 'finance' => $this->financePortal($user->staff),
             ]);
         }
 
-        if ($user->staff) {
+        if (! $isAdministrator && $user->staff) {
             return Inertia::render('Portal/Dashboard', [
                 'portal' => $this->staffPortal($user->staff),
             ]);

@@ -75,6 +75,24 @@
     .content th, .content td { padding-left: .875rem !important; padding-right: .875rem !important; }
 }
 
+/* Shared responsive safety for the full ERP backend. */
+.mobile-menu-trigger { display: none; }
+.main, .content, .content > * { min-width: 0; }
+.content .overflow-x-auto { max-width: 100%; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
+.content img, .content video, .content canvas, .content svg { max-width: 100%; }
+
+@media (max-width: 900px) {
+    .mobile-menu-trigger { display: inline-flex; }
+    .content [class*="grid-cols-4"], .content [class*="grid-cols-5"], .content [class*="grid-cols-6"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 520px) {
+    .content { padding-inline: 10px; }
+    .content [class*="grid-cols-2"], .content [class*="grid-cols-3"], .content [class*="grid-cols-4"], .content [class*="grid-cols-5"], .content [class*="grid-cols-6"] { grid-template-columns: minmax(0, 1fr); }
+    .content input, .content select, .content textarea, .content button { max-width: 100%; }
+    .content [role="dialog"] { max-height: calc(100dvh - 16px); }
+}
+
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
 }
