@@ -4,6 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\{AttendanceCorrectionRequest, Book, BookIssue, HelpdeskTicket, Homework, HomeworkSubmission, HostelAllocation, Invoice, LibraryReservation, OnlineExam, OnlineExamAnswer, PaymentTransaction, QuizAttempt, StudentAttendance, StudentLeaveRequest, StudentProfileUpdateRequest, StudentTaskCompletion, TransportAllocation};
 use App\Services\MalwareScanner;
+use App\Services\StudentLearningService;
+use App\Models\Payment;
+use App\Models\Exam;
+use App\Models\ExamMark;
+use App\Support\CampusRule;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -18,14 +25,19 @@ class StudentPortalController extends Controller
     {
         [$student, $enrollment] = $this->student($request);
         $user = $request->user();
-        $homework = Homework::with('subject:id,name')->where('school_class_id', $enrollment?->class_id)
-            ->where('is_active', true)->latest('submission_date')->get();
+        $learning = app(StudentLearningService::class);
+        $homework = $learning->homework($student)->with('subject:id,name')->latest('submission_date')->get();
         $submissions = HomeworkSubmission::where('student_id', $student->id)->get()->keyBy('homework_id');
 
         return Inertia::render('Portal/StudentServices', [
+            'learning' => $learning->overview($student),
+            'canViewResults' => $user->can('portal.results.view'),
+            'canAttemptExams' => $user->can('portal.exams.attempt'),
+            'payments' => Payment::where('student_id', $student->id)->latest('payment_date')->get(['id', 'amount_paid', 'payment_date', 'refunded_amount']),
             'homework' => $homework->map(fn ($item) => [
                 'id'=>$item->id,'title'=>$item->title,'subject'=>$item->subject?->name,'description'=>$item->description,
                 'due'=>$item->submission_date,'total_marks'=>$item->total_marks,'submission'=>$submissions->get($item->id),
+                'document_url'=>$item->document_path ? $learning->downloadUrl($student, 'homework', $item->id) : null,
             ]),
             'leaves' => StudentLeaveRequest::where('student_id',$student->id)->latest()->get(),
             'attendance' => StudentAttendance::where('student_id',$student->id)->latest('attendance_date')->take(60)->get(),
@@ -39,7 +51,7 @@ class StudentPortalController extends Controller
             'hostel' => HostelAllocation::with('room')->where('user_id',$user->id)->where('is_active',true)->first(),
             'tickets' => HelpdeskTicket::where('user_id',$user->id)->latest()->get(),
             'profileRequests' => StudentProfileUpdateRequest::where('student_id',$student->id)->latest()->get(),
-            'onlineExams' => OnlineExam::where('school_class_id',$enrollment?->class_id)->where('is_published',true)->where('is_active',true)
+            'onlineExams' => OnlineExam::where('campus_id', $student->campus_id)->where('school_class_id',$enrollment?->class_id)->when(! $enrollment, fn ($query) => $query->whereRaw('1 = 0'))->where('is_published',true)->where('is_active',true)
                 ->with('subject:id,name')->orderBy('exam_date')->get()->map(function($exam)use($user){$attempt=QuizAttempt::where('online_exam_id',$exam->id)->where('student_id',$user->id)->first();return ['id'=>$exam->id,'title'=>$exam->title,'subject'=>$exam->subject,'exam_date'=>$exam->exam_date,'duration_minutes'=>$exam->duration_minutes,'total_marks'=>$exam->total_marks,'attempt'=>$attempt];}),
         ]);
     }

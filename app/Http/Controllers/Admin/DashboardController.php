@@ -20,6 +20,10 @@ use App\Models\Student;
 use App\Models\StudentAttendance;
 use App\Models\StudyMaterial;
 use App\Models\TimeTable;
+use App\Models\PurchaseItem;
+use App\Models\StockAdjustmentRequest;
+use App\Models\StaffPayroll;
+use App\Models\PaymentRefund;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -172,6 +176,7 @@ class DashboardController extends Controller
                 'today_collection' => (float) $todayCollection,
                 'pending_dues' => (float) $pendingDues,
                 'month_profit' => (float) ($monthCollection - $monthExpense),
+                'inventory_value' => (float) PurchaseItem::selectRaw('COALESCE(SUM(quantity * purchase_price),0) value')->value('value'),
             ],
             'attendance' => [
                 'present' => (int) ($attendanceByStatus['present'] ?? 0),
@@ -187,6 +192,15 @@ class DashboardController extends Controller
                 'overdue_invoices' => Invoice::whereIn('status', ['Unpaid', 'Partial'])->whereDate('due_date', '<', $today)->count(),
                 'device_issues' => BiometricDevice::where('status', '!=', 'Online')->count(),
                 'failed_sms' => SmsLog::whereDate('created_at', $today)->where('status', 'Failed')->count(),
+                'low_stock' => PurchaseItem::whereColumn('quantity', '<=', 'reorder_level')->count(),
+                'failed_payments' => PaymentTransaction::whereDate('transaction_date', $today)->where('status', 'Failed')->count(),
+            ],
+            'operations' => [
+                'payroll_approval' => StaffPayroll::where('approval_status', 'draft')->count(),
+                'payroll_finalize' => StaffPayroll::where('approval_status', 'approved')->count(),
+                'stock_adjustments' => StockAdjustmentRequest::where('status', 'pending')->count(),
+                'sale_voids' => DB::table('sale_void_requests')->where('campus_id', config('app.active_campus_id'))->where('status', 'pending')->count(),
+                'payment_refunds' => PaymentRefund::where('status', 'Pending')->count(),
             ],
             'financeTrend' => $financeTrend,
             'financialStats' => [

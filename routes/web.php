@@ -175,6 +175,9 @@ Route::get('/my-results', [DashboardController::class, 'results'])
     ->name('portal.results.view');
 Route::middleware(['auth', 'verified', 'permission:portal.services.view'])->group(function () {
     Route::get('/student-services', [StudentPortalController::class, 'index'])->name('portal.services');
+    Route::get('/student-services/receipts/{payment}', [StudentPortalController::class, 'receipt'])->name('portal.receipt');
+    Route::get('/student-services/report-card/{exam}', [StudentPortalController::class, 'reportCard'])->middleware('permission:portal.results.view')->name('portal.report-card');
+    Route::get('/student-services/transcript', [StudentPortalController::class, 'transcript'])->middleware('permission:portal.results.view')->name('portal.transcript');
     Route::post('/student-services/homework/{homework}', [StudentPortalController::class, 'submitHomework'])->name('portal.homework.submit');
     Route::get('/student-services/homework-submissions/{submission}/download', [StudentPortalController::class, 'downloadHomeworkSubmission'])->name('portal.homework-submission.download');
     Route::post('/student-services/leave', [StudentPortalController::class, 'leave'])->name('portal.leave.store');
@@ -193,6 +196,8 @@ Route::post('/webhooks/communications/{channel}', [CommunicationWebhookControlle
 Route::match(['get', 'post'], '/payments/sslcommerz/fail', [SslCommerzPaymentController::class, 'failed'])->name('payments.sslcommerz.fail');
 Route::match(['get', 'post'], '/payments/sslcommerz/cancel', [SslCommerzPaymentController::class, 'failed'])->name('payments.sslcommerz.cancel');
 Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/learning/{student}/{kind}/{record}/download', [\App\Http\Controllers\StudentLearningController::class, 'download'])
+        ->whereIn('kind', ['homework', 'syllabus', 'material'])->whereNumber('record')->name('portal.learning.download');
     Route::get('/staff-services', [PortalServiceController::class, 'staff'])->name('portal.staff.services');
     Route::post('/staff-services/leave', [PortalServiceController::class, 'staffLeave'])->name('portal.staff.leave');
     Route::get('/parent-services', [PortalServiceController::class, 'parent'])->name('portal.parent.services');
@@ -513,6 +518,8 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
     });
 
     Route::get('sales/{sale}/invoice', [SaleController::class, 'invoice'])->name('sales.invoice');
+    Route::post('sales/{sale}/void-request', [SaleController::class, 'requestVoid'])->name('sales.void-request');
+    Route::patch('sales/void-requests/{voidRequest}', [SaleController::class, 'decideVoid'])->name('sales.void-decision');
     Route::get('/sales/reports', [SaleController::class, 'report'])->name('sales.reports.index');
     Route::resource('sales', SaleController::class);
 

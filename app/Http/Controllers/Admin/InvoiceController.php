@@ -11,6 +11,9 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Validation\Rule;
 use App\Support\CampusRule;
+use App\Services\FeePaymentService;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class InvoiceController extends Controller
 {
@@ -19,12 +22,14 @@ class InvoiceController extends Controller
         $query = Invoice::with(['student', 'feeGroup']);
 
         if ($search = $request->get('search')) {
-            $query->where('invoice_no', 'like', "%{$search}%")
+            $query->where(function ($query) use ($search) {
+                $query->where('invoice_no', 'like', "%{$search}%")
                   ->orWhereHas('student', function($q) use ($search) {
                       $q->where('first_name', 'like', "%{$search}%")
                         ->orWhere('last_name', 'like', "%{$search}%")
                         ->orWhere('admission_no', 'like', "%{$search}%");
                   });
+            });
         }
 
         if ($request->filled('status')) {
@@ -44,7 +49,7 @@ class InvoiceController extends Controller
 
         return Inertia::render('Admin/FinanceInvoices/Index', [
             'invoices' => $invoices,
-            'campuses' => Campus::when(! $request->user()->hasRole('Super Admin'), fn ($q) => $q->whereKey(config('app.active_campus_id')))->select('id', 'name')->get(),
+            'campuses' => Campus::whereKey(config('app.active_campus_id'))->select('id', 'name')->get(),
             'students' => Student::select('id', 'first_name', 'last_name', 'admission_no')->get(),
             'feeGroups' => FeeGroup::where('is_active', true)->select('id', 'name')->get(),
             'filters' => $request->only(['search', 'status', 'fee_group_id', 'per_page']),
@@ -62,33 +67,40 @@ class InvoiceController extends Controller
 
     public function update(Request $request, $id)
     {
+        DB::transaction(function () use ($request, $id) {
         $invoice = Invoice::whereKey($id)->lockForUpdate()->firstOrFail();
         abort_if((float)$invoice->paid_amount > 0 || $invoice->paymentAllocations()->exists(), 422, 'An invoice with payment activity cannot be edited. Use an adjustment or refund workflow.');
         $data = $this->validateData($request, $invoice->id);
+        abort_if($invoice->fee_assignment_id && ((int) $data['student_id'] !== (int) $invoice->student_id || (int) $data['fee_group_id'] !== (int) $invoice->fee_group_id), 422, 'An assigned invoice cannot be moved to another student or fee group.');
         $data['status'] = $request->input('status') === 'Cancelled' ? 'Cancelled' : 'Unpaid';
         $invoice->update($data);
+        if ($invoice->fee_assignment_id) app(FeePaymentService::class)->syncAssignment($invoice->fee_assignment_id);
+        }, 3);
         return back()->with('success', 'ইনভয়েস আপডেট করা হয়েছে।');
     }
 
     public function destroy($id)
     {
-        $invoice=Invoice::findOrFail($id);
+        DB::transaction(function () use ($id) {
+        $invoice=Invoice::whereKey($id)->lockForUpdate()->firstOrFail();
         abort_if((float)$invoice->paid_amount > 0 || $invoice->paymentAllocations()->exists(), 422, 'An invoice with payment activity cannot be deleted.');
+        abort_if($invoice->fee_assignment_id, 422, 'Cancel generated invoices instead of deleting their billing history.');
         $invoice->delete();
+        }, 3);
         return back()->with('success', 'ইনভয়েসটি মুছে ফেলা হয়েছে।');
     }
 
     private function validateData(Request $request, $ignoreId = null): array
     {
-        $campusId = $request->campus_id ?? session('active_campus_id');
+        $campusId = config('app.active_campus_id');
 
-        return $request->validate([
-            'campus_id' => 'required|exists:campuses,id',
+        $data = $request->validate([
+            'campus_id' => ['required', 'integer', Rule::in([$campusId])],
             'student_id' => ['required', CampusRule::exists('students')],
-            'fee_group_id' => ['required', CampusRule::exists('fee_groups')],
+            'fee_group_id' => ['required', Rule::exists('fee_groups', 'id')],
             'invoice_no' => [
                 'required', 'string', 'max:100',
-                Rule::unique('invoices', 'invoice_no')->where('campus_id', $campusId)->ignore($ignoreId)
+                Rule::unique('invoices', 'invoice_no')->ignore($ignoreId)
             ],
             'invoice_date' => 'required|date',
             'due_date' => 'required|date|after_or_equal:invoice_date',
@@ -98,5 +110,9 @@ class InvoiceController extends Controller
             'status' => 'required|in:Unpaid,Partial,Paid,Cancelled',
             'note' => 'nullable|string',
         ]);
+        if ((float) ($data['discount'] ?? 0) > (float) $data['amount']) {
+            throw ValidationException::withMessages(['discount' => 'Discount cannot exceed the invoice amount.']);
+        }
+        return $data;
     }
 }

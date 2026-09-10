@@ -12,6 +12,9 @@ use App\Services\PayrollService;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Support\CampusRule;
+use App\Models\StaffLoan;
+use App\Services\AccountingService;
+use App\Jobs\SendPayrollPayslip;
 
 class StaffPayrollController extends Controller
 {
@@ -87,6 +90,8 @@ class StaffPayrollController extends Controller
 
     public function store(Request $request)
     {
+        return back()->with('error', 'Manual payroll entry is disabled. Use Automatic Payroll Generator for a complete attendance, leave, loan and overtime calculation.');
+
         $request->validate([
             'staff_id'      => ['required', CampusRule::exists('staff')],
             'salary_month'  => 'required|string', // Format: YYYY-MM
@@ -132,6 +137,8 @@ class StaffPayrollController extends Controller
     {
         $payroll = StaffPayroll::findOrFail($id);
         abort_if($payroll->approval_status==='finalized',422,'Finalized payroll cannot be changed.');
+        abort_unless($payroll->approval_status === 'draft', 422, 'Only a draft payroll can be edited.');
+        abort_if($request->status === 'paid', 422, 'Payroll can only be paid through the approve and finalize workflow.');
 
         $request->validate([
             'basic_salary'  => 'required|numeric|min:0',
@@ -162,25 +169,70 @@ class StaffPayrollController extends Controller
 
     public function destroy($id)
     {
-        $payroll=StaffPayroll::findOrFail($id); abort_if($payroll->approval_status==='finalized',422,'Finalized payroll cannot be deleted.'); $payroll->delete();
+        $payroll=StaffPayroll::findOrFail($id); abort_unless(($payroll->approval_status ?: 'draft') === 'draft',422,'Only draft payroll can be deleted.'); $payroll->delete();
         return back()->with('success', 'বেতনের রেকর্ড মুছে ফেলা হয়েছে!');
     }
 
     public function approve(Request $request, StaffPayroll $payroll)
     {
-        abort_if($payroll->approval_status==='finalized',422,'Finalized payroll cannot be changed.');
-        abort_if((int)$payroll->generated_by===(int)$request->user()->id,403,'Payroll generator cannot approve the same payroll.');
-        $payroll->update(['approval_status'=>'approved','approved_by'=>$request->user()->id,'approved_at'=>now()]);
+        DB::transaction(function () use ($request, $payroll) {
+            $payroll = StaffPayroll::whereKey($payroll->id)->lockForUpdate()->firstOrFail();
+            abort_unless($payroll->approval_status === 'draft', 422, 'Only a draft payroll can be approved.');
+            abort_if((int) $payroll->generated_by === (int) $request->user()->id, 403, 'Payroll generator cannot approve the same payroll.');
+            $payroll->update(['approval_status' => 'approved', 'approved_by' => $request->user()->id, 'approved_at' => now()]);
+        });
         return back()->with('success','Payroll approved.');
     }
 
     public function finalize(Request $request, StaffPayroll $payroll)
     {
-        abort_unless($payroll->approval_status==='approved',422,'Approve payroll before finalizing.');
-        abort_if((int)$payroll->approved_by===(int)$request->user()->id,403,'Payroll approver cannot finalize the same payroll.');
         $data=$request->validate(['payment_method'=>'required|string|max:100','bank_reference'=>'nullable|string|max:255','payment_date'=>'required|date']);
-        $payroll->update($data+['approval_status'=>'finalized','finalized_at'=>now(),'status'=>'paid']);
+
+        DB::transaction(function () use ($request, $payroll, $data) {
+            $payroll = StaffPayroll::with('staff')->whereKey($payroll->id)->lockForUpdate()->firstOrFail();
+            abort_unless($payroll->approval_status === 'approved', 422, 'Approve payroll before finalizing.');
+            abort_if((int) $payroll->approved_by === (int) $request->user()->id, 403, 'Payroll approver cannot finalize the same payroll.');
+
+            $payroll->update($data + ['approval_status' => 'finalized', 'finalized_at' => now(), 'finalized_by' => $request->user()->id, 'status' => 'paid']);
+            $this->recordLoanRepayments($payroll, $request->user()->id);
+            $this->postPayrollAccounting($payroll->fresh(), app(AccountingService::class));
+        });
+
+        SendPayrollPayslip::dispatch($payroll->id, $request->user()->id)->afterCommit();
         return back()->with('success','Payroll finalized and locked.');
+    }
+
+    private function recordLoanRepayments(StaffPayroll $payroll, int $userId): void
+    {
+        $remaining = (float) $payroll->loan_deduction;
+        if ($remaining <= 0) return;
+
+        StaffLoan::where('staff_id', $payroll->staff_id)->whereRaw('LOWER(status) = ?', ['approved'])
+            ->where('outstanding_balance', '>', 0)->orderBy('id')->lockForUpdate()->get()->each(function ($loan) use (&$remaining, $payroll, $userId) {
+                if ($remaining <= 0) return false;
+                $amount = min($remaining, (float) $loan->outstanding_balance, (float) ($loan->monthly_deduction ?: $remaining));
+                if ($amount <= 0) return;
+                DB::table('staff_loan_repayments')->updateOrInsert(
+                    ['staff_loan_id' => $loan->id, 'staff_payroll_id' => $payroll->id],
+                    ['campus_id' => $payroll->campus_id, 'amount' => $amount, 'recorded_by' => $userId, 'created_at' => now(), 'updated_at' => now()]
+                );
+                $balance = max(0, (float) $loan->outstanding_balance - $amount);
+                $loan->update(['outstanding_balance' => $balance, 'status' => $balance <= 0 ? 'Completed' : $loan->status, 'settled_at' => $balance <= 0 ? now() : null]);
+                $remaining -= $amount;
+            });
+    }
+
+    private function postPayrollAccounting(StaffPayroll $payroll, AccountingService $accounting): void
+    {
+        $recognized = (float) $payroll->net_salary + (float) $payroll->loan_deduction + (float) $payroll->provident_fund + (float) $payroll->tax_deduction;
+        $date = $payroll->payment_date?->toDateString() ?? (string) $payroll->payment_date;
+        $description = 'Payroll '.$payroll->salary_month.' - staff #'.$payroll->staff_id;
+        $accounting->post("payroll:{$payroll->id}:gross", $payroll, '5100', '2100', $recognized, $description, $date, 'Payment');
+        $accounting->post("payroll:{$payroll->id}:net", $payroll, '2100', '1000', (float) $payroll->net_salary, $description.' net payment', $date, 'Payment');
+        $accounting->post("payroll:{$payroll->id}:loan", $payroll, '2100', '1300', (float) $payroll->loan_deduction, $description.' loan recovery', $date, 'Journal');
+        $accounting->post("payroll:{$payroll->id}:pf", $payroll, '2100', '2200', (float) $payroll->provident_fund, $description.' provident fund', $date, 'Journal');
+        $accounting->post("payroll:{$payroll->id}:tax", $payroll, '2100', '2300', (float) $payroll->tax_deduction, $description.' payroll tax', $date, 'Journal');
+        $accounting->post("payroll:{$payroll->id}:gratuity", $payroll, '5100', '2400', (float) $payroll->gratuity_provision, $description.' gratuity provision', $date, 'Journal');
     }
 
     public function bankSheet(Request $request)

@@ -3,19 +3,19 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Campus;
+use App\Models\PurchaseItem;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
-use App\Models\PurchaseItem;
 use App\Models\PurchaseRequest;
 use App\Models\Vendor;
-use App\Models\Campus;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
 use App\Services\AccountingService;
 use App\Services\InventoryService;
 use App\Support\CampusRule;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
+use Inertia\Inertia;
 
 class PurchaseOrderController extends Controller
 {
@@ -25,9 +25,9 @@ class PurchaseOrderController extends Controller
 
         if ($search = $request->get('search')) {
             $query->where('order_number', 'like', "%{$search}%")
-                  ->orWhereHas('vendor', function($q) use ($search) {
-                      $q->where('name', 'like', "%{$search}%");
-                  });
+                ->orWhereHas('vendor', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%");
+                });
         }
 
         if ($request->filled('status')) {
@@ -54,7 +54,7 @@ class PurchaseOrderController extends Controller
             'vendors' => Vendor::where('is_active', true)->select('id', 'name')->get(),
             'purchase_requests' => PurchaseRequest::where('status', 'Approved')->select('id', 'title', 'estimated_amount')->get(),
             'inventory_items' => PurchaseItem::where('is_active', true)->select('id', 'name', 'item_code', 'unit', 'purchase_price', 'size', 'color')->get(),
-            'order' => null
+            'order' => null,
         ]);
     }
 
@@ -65,6 +65,7 @@ class PurchaseOrderController extends Controller
         DB::transaction(function () use ($request) {
             $payload = $request->except(['cart', 'total_amount']);
             $payload['campus_id'] = config('app.active_campus_id');
+            $payload['created_by'] = $request->user()->id;
             $payload['total_amount'] = collect($request->cart)->sum(fn ($item) => round((float) $item['quantity'] * (float) $item['unit_price'], 2));
             $order = PurchaseOrder::create($payload);
 
@@ -93,7 +94,7 @@ class PurchaseOrderController extends Controller
             'vendors' => Vendor::where('is_active', true)->select('id', 'name')->get(),
             'purchase_requests' => PurchaseRequest::where('status', 'Approved')->select('id', 'title', 'estimated_amount')->get(),
             'inventory_items' => PurchaseItem::where('is_active', true)->select('id', 'name', 'item_code', 'unit', 'purchase_price', 'size', 'color')->get(),
-            'order' => $order
+            'order' => $order,
         ]);
     }
 
@@ -105,6 +106,7 @@ class PurchaseOrderController extends Controller
         if ($order->status === 'Received') {
             return back()->with('error', 'Received purchase order edit করা যাবে না। আগে status পরিবর্তন করুন।');
         }
+        abort_unless($order->status === 'Pending', 422, 'Only pending purchase orders can be edited.');
 
         DB::transaction(function () use ($request, $order) {
             $payload = $request->except(['cart', 'total_amount', 'campus_id']);
@@ -132,23 +134,20 @@ class PurchaseOrderController extends Controller
     {
         $request->validate(['status' => 'required|in:Pending,Ordered,Received,Cancelled']);
 
-        $order = PurchaseOrder::with('items')->findOrFail($id);
-        $oldStatus = $order->status;
         $newStatus = $request->status;
 
-        DB::transaction(function () use ($order, $oldStatus, $newStatus) {
-            if ($oldStatus !== 'Received' && $newStatus === 'Received') {
-                foreach($order->items as $item) {
+        DB::transaction(function () use ($id, $newStatus, $request) {
+            $order = PurchaseOrder::with('items.purchaseItem')->whereKey($id)->lockForUpdate()->firstOrFail();
+            $allowed = ['Pending' => ['Ordered', 'Cancelled'], 'Ordered' => ['Received', 'Cancelled'], 'Received' => [], 'Cancelled' => []];
+            abort_unless(in_array($newStatus, $allowed[$order->status] ?? [], true), 422, 'Invalid purchase order status transition.');
+            if ($newStatus === 'Received') {
+                abort_if((int) $order->created_by === (int) $request->user()->id, 403, 'Purchase creator cannot receive their own order.');
+                foreach ($order->items as $item) {
                     app(InventoryService::class)->move($item->purchaseItem, $item->quantity, 'purchase_receipt', $item, "Purchase {$order->order_number}");
                 }
                 app(AccountingService::class)->post("purchase:{$order->id}", $order, '1200', '2000', (float) $order->total_amount, "Purchase {$order->order_number}", $order->order_date);
-            } elseif ($oldStatus === 'Received' && $newStatus !== 'Received') {
-                foreach($order->items as $item) {
-                    app(InventoryService::class)->move($item->purchaseItem, -$item->quantity, 'purchase_reversal', $item, "Purchase reversal {$order->order_number}");
-                }
-                app(AccountingService::class)->reverseSource($order);
             }
-            $order->update(['status' => $newStatus]);
+            $order->update(['status' => $newStatus, 'received_by' => $newStatus === 'Received' ? $request->user()->id : null, 'received_at' => $newStatus === 'Received' ? now() : null]);
         });
 
         return back()->with('success', 'অর্ডারের স্ট্যাটাস আপডেট হয়েছে!');
@@ -157,6 +156,7 @@ class PurchaseOrderController extends Controller
     public function destroy($id)
     {
         $order = PurchaseOrder::with('items.purchaseItem')->findOrFail($id);
+        abort_unless(in_array($order->status, ['Pending', 'Cancelled'], true), 422, 'Ordered or received purchases cannot be deleted.');
         DB::transaction(function () use ($order) {
             if ($order->status === 'Received') {
                 foreach ($order->items as $item) {
@@ -166,6 +166,7 @@ class PurchaseOrderController extends Controller
             }
             $order->delete();
         });
+
         return back()->with('success', 'অর্ডারটি মুছে ফেলা হয়েছে।');
     }
 

@@ -276,7 +276,7 @@ export default function Index({ items, groups, parents, permissions, filters }) 
         {/* Main Table Card */}
         <div className="bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 print-table-wrapper">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="min-w-[1120px] w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50/50">
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Label</th>
@@ -285,7 +285,7 @@ export default function Index({ items, groups, parents, permissions, filters }) 
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Key &amp; Route</th>
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Order</th>
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Status</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right no-print">Actions</th>
+                  <th className="sticky right-0 z-20 min-w-[210px] border-l border-slate-200 bg-slate-50 px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider text-right no-print">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -348,18 +348,18 @@ export default function Index({ items, groups, parents, permissions, filters }) 
                           {item.is_active ? 'Active' : 'Inactive'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-right no-print">
+                      <td className="sticky right-0 z-10 min-w-[210px] border-l border-slate-100 bg-white px-4 py-4 text-right shadow-[-8px_0_16px_-14px_rgba(15,23,42,.5)] no-print">
                         <div className="flex items-center justify-end gap-1.5">
-                          <button onClick={() => setViewingItem(item)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="View Details">
+                          <button type="button" onClick={() => setViewingItem(item)} className="rounded-lg border border-indigo-100 bg-indigo-50 p-2 text-indigo-700 transition-colors hover:bg-indigo-100" title="View Details" aria-label={`View ${item.label}`}>
                             <Icon name="eye" className="w-4 h-4" />
                           </button>
-                          <button onClick={() => openEdit(item)} className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Edit Menu">
+                          <button type="button" onClick={() => openEdit(item)} className="rounded-lg border border-amber-100 bg-amber-50 p-2 text-amber-700 transition-colors hover:bg-amber-100" title="Edit Menu" aria-label={`Edit ${item.label}`}>
                             <Icon name="edit" className="w-4 h-4" />
                           </button>
-                          <button onClick={() => toggleItem(item)} className={`p-2 rounded-lg transition-colors ${item.is_active ? 'text-emerald-600 hover:bg-emerald-50' : 'text-slate-400 hover:bg-slate-100'}`} title={item.is_active ? 'Hide Menu' : 'Show Menu'}>
+                          <button type="button" onClick={() => toggleItem(item)} className={`rounded-lg border p-2 transition-colors ${item.is_active ? 'border-emerald-100 bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'border-slate-200 bg-slate-100 text-slate-600 hover:bg-slate-200'}`} title={item.is_active ? 'Hide Menu' : 'Show Menu'} aria-label={`${item.is_active ? 'Hide' : 'Show'} ${item.label}`}>
                             <Icon name={item.is_active ? 'toggle-on' : 'toggle-off'} className="w-5 h-5" />
                           </button>
-                          <button onClick={() => setDeletingItem(item)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Delete Menu">
+                          <button type="button" onClick={() => setDeletingItem(item)} className="rounded-lg border border-rose-100 bg-rose-50 p-2 text-rose-700 transition-colors hover:bg-rose-100" title="Delete Menu" aria-label={`Delete ${item.label}`}>
                             <Icon name="trash" className="w-4 h-4" />
                           </button>
                         </div>

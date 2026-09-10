@@ -7,6 +7,9 @@ use App\Models\{StudyMaterial, SchoolClass, Subject};
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
+use App\Support\CampusRule;
+use App\Services\MalwareScanner;
+use Illuminate\Validation\ValidationException;
 
 class StudyMaterialController extends Controller
 {
@@ -35,18 +38,23 @@ class StudyMaterialController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, MalwareScanner $scanner)
     {
         $request->validate([
             'title' => 'required|string|max:255',
-            'class_id' => 'required|exists:school_classes,id',
-            'subject_id' => 'nullable|exists:subjects,id',
+            'class_id' => ['required', CampusRule::exists('school_classes')],
+            'subject_id' => ['nullable', CampusRule::exists('subjects')],
             'description' => 'nullable|string',
-            'file' => 'required|file|max:10240', // Max 10MB
+            'file' => 'required|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,jpg,jpeg,png|max:10240',
         ]);
 
+        if ($request->filled('subject_id') && ! SchoolClass::findOrFail($request->class_id)->subjects()->whereKey($request->subject_id)->exists()) {
+            throw ValidationException::withMessages(['subject_id' => 'Select a subject assigned to this class.']);
+        }
+
         $file = $request->file('file');
-        $path = $file->store('study_materials', 'public');
+        $scanner->assertClean($file);
+        $path = $file->store('study_materials/'.config('app.active_campus_id'), 'local');
 
         StudyMaterial::create([
             'title' => $request->title,
@@ -64,7 +72,9 @@ class StudyMaterialController extends Controller
     public function download($id)
     {
         $material = StudyMaterial::findOrFail($id);
-        return Storage::disk('public')->download($material->file_path, $material->title . '.' . $material->file_type);
+        $disk = Storage::disk($material->storageDisk());
+        abort_unless($disk->exists($material->file_path), 404);
+        return $disk->download($material->file_path, basename($material->title) . '.' . $material->file_type);
     }
 
     public function destroy($id)
@@ -72,8 +82,8 @@ class StudyMaterialController extends Controller
         $material = StudyMaterial::findOrFail($id);
 
         // Delete file from storage
-        if (Storage::disk('public')->exists($material->file_path)) {
-            Storage::disk('public')->delete($material->file_path);
+        if (Storage::disk($material->storageDisk())->exists($material->file_path)) {
+            Storage::disk($material->storageDisk())->delete($material->file_path);
         }
 
         $material->delete();

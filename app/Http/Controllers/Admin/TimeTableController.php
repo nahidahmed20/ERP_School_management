@@ -3,280 +3,153 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Campus;
-use App\Models\Classroom;
-use App\Models\SchoolClass;
-use App\Models\TimeTable;
-use App\Models\Staff;
-use Carbon\Carbon;
+use App\Models\{Campus, Classroom, SchoolClass, Staff, TimeTable};
+use App\Support\CampusRule;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class TimeTableController extends Controller
 {
+    private const DAYS = 'Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday';
+
     public function index(Request $request)
     {
         $query = TimeTable::with(['schoolClass:id,name', 'section:id,name', 'subject:id,name', 'classroom:id,room_number', 'teacher:id,first_name,last_name,staff_id_no']);
-
-        // Filters
-        if ($request->filled('class_id')) {
-            $query->where('class_id', $request->class_id);
+        foreach (['class_id', 'section_id'] as $field) {
+            $query->when($request->filled($field), fn ($q) => $q->where($field, $request->$field));
         }
-        if ($request->filled('section_id')) {
-            $query->where('section_id', $request->section_id);
-        }
-        if ($request->filled('day')) {
-            $query->where('day_of_week', $request->day);
-        }
-
-        // Sorting by Day logically, then by time
-        $query->orderByRaw("FIELD(day_of_week, 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday')")
-              ->orderBy('start_time', 'asc');
-
-        $timeTables = $query->paginate(50)->withQueryString();
+        $query->when($request->filled('day'), fn ($q) => $q->where('day_of_week', $request->day));
+        $query->orderByRaw("CASE day_of_week WHEN 'Sunday' THEN 0 WHEN 'Monday' THEN 1 WHEN 'Tuesday' THEN 2 WHEN 'Wednesday' THEN 3 WHEN 'Thursday' THEN 4 WHEN 'Friday' THEN 5 WHEN 'Saturday' THEN 6 END")
+            ->orderBy('start_time');
 
         return Inertia::render('Admin/TimeTables/Index', [
-            'timeTables' => $timeTables,
-            // Only sending classes with sections for the filter dropdown
-            'classes' => SchoolClass::with(['sections:id,name'])
-                            ->where('is_active', true)
-                            ->orderBy('numeric_name')
-                            ->get(),
+            'timeTables' => $query->paginate(50)->withQueryString(),
+            'classes' => SchoolClass::with('sections:id,name')->where('is_active', true)->orderBy('numeric_name')->get(),
             'filters' => $request->only(['class_id', 'section_id', 'day']),
         ]);
     }
 
-    public function store(Request $request)
-    {
-        $request->validate([
-            'campus_id' => 'nullable|exists:campuses,id',
-            'class_id' => 'required|exists:school_classes,id',
-            'section_id' => 'required|exists:sections,id',
-            'day_of_week' => 'required|string|in:Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday',
-            'periods' => 'required|array|min:1',
-            'periods.*.subject_id' => 'required|exists:subjects,id|distinct',
-            'periods.*.classroom_id' => 'nullable|exists:classrooms,id',
-            'periods.*.teacher_id' => 'nullable|exists:staff,id',
-            'periods.*.start_time' => 'required|date_format:H:i',
-            'periods.*.end_time' => 'required|date_format:H:i|after:periods.*.start_time',
-        ]);
-
-        $campusId = $request->campus_id ?? config('app.active_campus_id');
-        $periods = $request->periods ?? [];
-
-        for ($i = 0; $i < count($periods); $i++) {
-            for ($j = $i + 1; $j < count($periods); $j++) {
-                $p1Start = Carbon::parse($periods[$i]['start_time'])->format('H:i:s');
-                $p1End = Carbon::parse($periods[$i]['end_time'])->format('H:i:s');
-                $p2Start = Carbon::parse($periods[$j]['start_time'])->format('H:i:s');
-                $p2End = Carbon::parse($periods[$j]['end_time'])->format('H:i:s');
-
-                if ($p1Start < $p2End && $p1End > $p2Start) {
-                    throw ValidationException::withMessages([
-                        'conflict' => "ফর্মের পিরিয়ড " . ($i + 1) . " এবং " . ($j + 1) . " এর সময় ওভারল্যাপ করছে!"
-                    ]);
-                }
-            }
-        }
-
-        foreach ($periods as $period) {
-            if (!empty($period['classroom_id'])) {
-                $start = Carbon::parse($period['start_time'])->format('H:i:s');
-                $end = Carbon::parse($period['end_time'])->format('H:i:s');
-
-                $clash = TimeTable::with(['schoolClass', 'section', 'classroom'])
-                    ->where('campus_id', $campusId)
-                    ->where('day_of_week', $request->day_of_week)
-                    ->where('classroom_id', $period['classroom_id'])
-                    ->where(function($q) use ($start, $end) {
-                        $q->where('start_time', '<', $end)
-                          ->where('end_time', '>', $start);
-                    })->first();
-
-                if ($clash) {
-                    $clashTime = Carbon::parse($clash->start_time)->format('h:i A') . ' - ' . Carbon::parse($clash->end_time)->format('h:i A');
-                    throw ValidationException::withMessages([
-                        'conflict' => "রুম {$clash->classroom->room_number} এই সময়ে ({$clashTime}) {$clash->schoolClass->name} (Sec: {$clash->section->name}) এর জন্য বুক করা আছে!"
-                    ]);
-                }
-            }
-        }
-
-        foreach ($periods as $period) {
-            $this->ensureTeacherAvailable($period, $request->day_of_week, $campusId);
-            TimeTable::create([
-                'campus_id' => $campusId,
-                'class_id' => $request->class_id,
-                'section_id' => $request->section_id,
-                'day_of_week' => $request->day_of_week,
-                'subject_id' => $period['subject_id'],
-                'teacher_id' => $period['teacher_id'] ?? null,
-                'classroom_id' => $period['classroom_id'] ?? null,
-                'start_time' => $period['start_time'],
-                'end_time' => $period['end_time'],
-            ]);
-        }
-
-        return back()->with('success', 'রুটিন সফলভাবে সেভ করা হয়েছে।');
-    }
-
     public function create()
     {
-        return Inertia::render('Admin/TimeTables/Create', [
-            'campuses' => Campus::select('id', 'name')->get(),
-            'classes' => SchoolClass::with(['sections', 'subjects'])
-                            ->where('is_active', true)
-                            ->orderBy('numeric_name')
-                            ->get(),
-            'classrooms' => Classroom::select('id', 'room_number', 'type')
-                            ->where('is_active', true)
-                            ->get(),
-            'staffList' => Staff::where('is_active', true)->orderBy('first_name')->get(['id','first_name','last_name','staff_id_no']),
-        ]);
+        return Inertia::render('Admin/TimeTables/Create', $this->formOptions());
     }
 
     public function editDay(Request $request)
     {
         $request->validate([
-            'class_id' => 'required|exists:school_classes,id',
-            'section_id' => 'required|exists:sections,id',
-            'day' => 'required|string',
+            'class_id' => ['required', CampusRule::exists('school_classes')],
+            'section_id' => ['required', CampusRule::exists('sections')],
+            'day' => 'required|in:'.self::DAYS,
         ]);
+        $this->validateClassSection($request->class_id, $request->section_id);
 
-        $periods = TimeTable::where('class_id', $request->class_id)
-            ->where('section_id', $request->section_id)
-            ->where('day_of_week', $request->day)
-            ->orderBy('start_time', 'asc')
-            ->get();
-
-        return Inertia::render('Admin/TimeTables/Edit', [
-            'campuses' => Campus::select('id', 'name')->get(),
-            'classes' => SchoolClass::with(['sections:id,name', 'subjects:id,name'])
-                            ->where('is_active', true)
-                            ->orderBy('numeric_name')
-                            ->get(),
-            'classrooms' => Classroom::select('id', 'room_number', 'type')
-                            ->where('is_active', true)
-                            ->get(),
-            'staffList' => Staff::where('is_active', true)->orderBy('first_name')->get(['id','first_name','last_name','staff_id_no']),
+        return Inertia::render('Admin/TimeTables/Edit', $this->formOptions() + [
             'editData' => [
                 'class_id' => $request->class_id,
                 'section_id' => $request->section_id,
                 'day_of_week' => $request->day,
-                'periods' => $periods
-            ]
+                'periods' => TimeTable::where('class_id', $request->class_id)->where('section_id', $request->section_id)
+                    ->where('day_of_week', $request->day)->orderBy('start_time')->get(),
+            ],
         ]);
+    }
+
+    public function store(Request $request)
+    {
+        $this->saveDay($request, false);
+        return back()->with('success', 'Class routine saved successfully.');
     }
 
     public function bulkUpdate(Request $request)
     {
-        $request->validate([
-            'campus_id' => 'nullable|exists:campuses,id',
-            'class_id' => 'required|exists:school_classes,id',
-            'section_id' => 'required|exists:sections,id',
-            'day_of_week' => 'required|string|in:Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday',
-            'periods' => 'nullable|array',
-            'periods.*.subject_id' => 'required_with:periods|exists:subjects,id|distinct',
-            'periods.*.teacher_id' => 'nullable|exists:staff,id',
-            'periods.*.start_time' => 'required_with:periods|date_format:H:i',
-            'periods.*.end_time' => 'required_with:periods|date_format:H:i|after:periods.*.start_time',
-        ], [
-            'periods.*.subject_id.distinct' => 'একই দিনে একটি সাবজেক্ট একাধিকবার দেওয়া যাবে না!',
-        ]);
-
-        $campusId = $request->campus_id ?? config('app.active_campus_id');
-        $periods = $request->periods ?? [];
-
-        for ($i = 0; $i < count($periods); $i++) {
-            for ($j = $i + 1; $j < count($periods); $j++) {
-                $p1Start = Carbon::parse($periods[$i]['start_time'])->format('H:i:s');
-                $p1End = Carbon::parse($periods[$i]['end_time'])->format('H:i:s');
-                $p2Start = Carbon::parse($periods[$j]['start_time'])->format('H:i:s');
-                $p2End = Carbon::parse($periods[$j]['end_time'])->format('H:i:s');
-
-                if ($p1Start < $p2End && $p1End > $p2Start) {
-                    throw ValidationException::withMessages([
-                        'conflict' => "ফর্মের পিরিয়ড " . ($i + 1) . " এবং " . ($j + 1) . " এর সময় ওভারল্যাপ করছে!"
-                    ]);
-                }
-            }
-        }
-
-        if (!empty($periods)) {
-            foreach ($periods as $period) {
-                if (!empty($period['classroom_id'])) {
-                    $start = Carbon::parse($period['start_time'])->format('H:i:s');
-                    $end = Carbon::parse($period['end_time'])->format('H:i:s');
-
-                    $clash = TimeTable::with(['schoolClass', 'section', 'classroom'])
-                        ->where('campus_id', $campusId)
-                        ->where('day_of_week', $request->day_of_week)
-                        ->where('classroom_id', $period['classroom_id'])
-                        ->where(function($q) use ($request) {
-                            $q->where('class_id', '!=', $request->class_id)
-                              ->orWhere('section_id', '!=', $request->section_id);
-                        })
-                        ->where(function($q) use ($start, $end) {
-                            $q->where('start_time', '<', $end)
-                              ->where('end_time', '>', $start);
-                        })->first();
-
-                    if ($clash) {
-                        $clashTime = Carbon::parse($clash->start_time)->format('h:i A') . ' - ' . Carbon::parse($clash->end_time)->format('h:i A');
-                        throw ValidationException::withMessages([
-                            'conflict' => "রুম {$clash->classroom->room_number} এই সময়ে ({$clashTime}) {$clash->schoolClass->name} (Sec: {$clash->section->name}) এর জন্য বুক করা আছে!"
-                        ]);
-                    }
-                }
-            }
-        }
-
-        TimeTable::where('class_id', $request->class_id)
-            ->where('section_id', $request->section_id)
-            ->where('day_of_week', $request->day_of_week)
-            ->delete();
-
-        if (!empty($periods)) {
-            foreach ($periods as $period) {
-                $this->ensureTeacherAvailable($period, $request->day_of_week, $campusId);
-                TimeTable::create([
-                    'campus_id' => $campusId,
-                    'class_id' => $request->class_id,
-                    'section_id' => $request->section_id,
-                    'day_of_week' => $request->day_of_week,
-                    'subject_id' => $period['subject_id'],
-                    'teacher_id' => $period['teacher_id'] ?? null,
-                    'classroom_id' => $period['classroom_id'] ?? null,
-                    'start_time' => $period['start_time'],
-                    'end_time' => $period['end_time'],
-                ]);
-            }
-        }
-
-        return back()->with('success', $request->day_of_week . ' এর রুটিন সফলভাবে আপডেট করা হয়েছে।');
+        $this->saveDay($request, true);
+        return back()->with('success', 'Class routine updated successfully.');
     }
 
     public function destroy($id)
     {
-        $timeTable = TimeTable::findOrFail($id);
-        $timeTable->delete();
-
-        return back()->with('success', 'রুটিন থেকে পিরিয়ডটি মুছে ফেলা হয়েছে।');
+        TimeTable::findOrFail($id)->delete();
+        return back()->with('success', 'Period removed from the class routine.');
     }
 
-    private function ensureTeacherAvailable(array $period, string $day, ?int $campusId): void
+    private function formOptions(): array
     {
-        if (empty($period['teacher_id'])) return;
+        return [
+            'campuses' => Campus::select('id', 'name')->get(),
+            'classes' => SchoolClass::with(['sections', 'subjects'])->where('is_active', true)->orderBy('numeric_name')->get(),
+            'classrooms' => Classroom::where('is_active', true)->get(['id', 'room_number', 'type']),
+            'staffList' => Staff::where('is_active', true)->orderBy('first_name')->get(['id', 'first_name', 'last_name', 'staff_id_no']),
+        ];
+    }
 
-        $clash = TimeTable::with('teacher:id,first_name,last_name')
-            ->where('campus_id', $campusId)->where('day_of_week', $day)
-            ->where('teacher_id', $period['teacher_id'])
-            ->where('start_time', '<', Carbon::parse($period['end_time'])->format('H:i:s'))
-            ->where('end_time', '>', Carbon::parse($period['start_time'])->format('H:i:s'))->first();
-
-        if ($clash) {
-            throw ValidationException::withMessages(['conflict' => "Teacher {$clash->teacher?->first_name} {$clash->teacher?->last_name} already has a class during this time."]);
+    private function validateClassSection($classId, $sectionId): SchoolClass
+    {
+        $class = SchoolClass::findOrFail($classId);
+        if (! $class->sections()->whereKey($sectionId)->exists()) {
+            throw ValidationException::withMessages(['section_id' => 'Select a section assigned to this class.']);
         }
+        return $class;
+    }
+
+    private function saveDay(Request $request, bool $replace): void
+    {
+        $data = $request->validate([
+            'class_id' => ['required', CampusRule::exists('school_classes')],
+            'section_id' => ['required', CampusRule::exists('sections')],
+            'day_of_week' => 'required|in:'.self::DAYS,
+            'periods' => $replace ? 'present|array' : 'required|array|min:1',
+            'periods.*.subject_id' => ['required', CampusRule::exists('subjects')],
+            'periods.*.classroom_id' => ['nullable', CampusRule::exists('classrooms')],
+            'periods.*.teacher_id' => ['nullable', CampusRule::exists('staff')],
+            'periods.*.start_time' => 'required|date_format:H:i',
+            'periods.*.end_time' => 'required|date_format:H:i|after:periods.*.start_time',
+        ]);
+        $class = $this->validateClassSection($data['class_id'], $data['section_id']);
+        $subjectIds = $class->subjects()->pluck('subjects.id')->all();
+        foreach ($data['periods'] as $index => $period) {
+            if (! in_array((int) $period['subject_id'], $subjectIds)) {
+                throw ValidationException::withMessages(["periods.$index.subject_id" => 'Select a subject assigned to this class.']);
+            }
+        }
+
+        DB::transaction(function () use ($data, $class, $replace) {
+            // Lock shared resources before checking or replacing any slots.
+            Staff::whereIn('id', collect($data['periods'])->pluck('teacher_id')->filter())->orderBy('id')->lockForUpdate()->get();
+            Classroom::whereIn('id', collect($data['periods'])->pluck('classroom_id')->filter())->orderBy('id')->lockForUpdate()->get();
+            SchoolClass::whereKey($class->id)->lockForUpdate()->firstOrFail();
+
+            if ($replace) {
+                TimeTable::where('class_id', $class->id)->where('section_id', $data['section_id'])
+                    ->where('day_of_week', $data['day_of_week'])->delete();
+            }
+
+            foreach ($data['periods'] as $period) {
+                $start = $period['start_time'].':00';
+                $end = $period['end_time'].':00';
+                $clash = TimeTable::where('day_of_week', $data['day_of_week'])
+                    ->where('start_time', '<', $end)->where('end_time', '>', $start)
+                    ->where(function ($q) use ($period, $data, $class) {
+                        $q->where(fn ($q) => $q->where('class_id', $class->id)->where('section_id', $data['section_id']));
+                        if (! empty($period['teacher_id'])) $q->orWhere('teacher_id', $period['teacher_id']);
+                        if (! empty($period['classroom_id'])) $q->orWhere('classroom_id', $period['classroom_id']);
+                    })->exists();
+                if ($clash) {
+                    throw ValidationException::withMessages(['conflict' => 'This class, teacher or room already has a period during the selected time.']);
+                }
+                TimeTable::create([
+                    'campus_id' => $class->campus_id,
+                    'class_id' => $class->id,
+                    'section_id' => $data['section_id'],
+                    'day_of_week' => $data['day_of_week'],
+                    'subject_id' => $period['subject_id'],
+                    'teacher_id' => $period['teacher_id'] ?? null,
+                    'classroom_id' => $period['classroom_id'] ?? null,
+                    'start_time' => $start,
+                    'end_time' => $end,
+                ]);
+            }
+        });
     }
 }

@@ -7,12 +7,13 @@ import Swal from 'sweetalert2';
 export default function MarksEntry({ exams, classes, subjects, students, filters }) {
   const { flash } = usePage().props;
 
-  const { data, setData, post, processing } = useForm({
+  const { data, setData, post, processing, errors } = useForm({
     exam_id: filters?.exam_id || '',
     class_id: filters?.class_id || '',
     section_id: filters?.section_id || '',
     subject_id: filters?.subject_id || '',
-    marks: []
+    marks: [],
+    correction_reason: ''
   });
 
   const hasSavedMarks = students?.some(s => s.marks_obtained !== null && s.marks_obtained !== '');
@@ -22,7 +23,12 @@ export default function MarksEntry({ exams, classes, subjects, students, filters
       setData('marks', students.map(s => ({
         student_id: s.id,
         marks_obtained: s.marks_obtained !== null ? s.marks_obtained : '',
-        note: s.note || ''
+        note: s.note || '',
+        full_marks: s.full_marks ?? 100,
+        pass_marks: s.pass_marks ?? 33,
+        written_marks: s.written_marks ?? '',
+        practical_marks: s.practical_marks ?? '',
+        viva_marks: s.viva_marks ?? ''
       })));
     } else {
       setData('marks', []);
@@ -75,17 +81,20 @@ export default function MarksEntry({ exams, classes, subjects, students, filters
       }
     }).then((result) => {
       if (result.isConfirmed) {
-        router.delete(route('admin.exams-marks.destroy', ['', {
+        router.delete(route('admin.exams-marks.destroy'), { data: {
           exam_id: data.exam_id,
           class_id: data.class_id,
           section_id: data.section_id,
           subject_id: data.subject_id
-        }]), { preserveScroll: true });
+        }, preserveScroll: true });
       }
     });
   };
 
   const selectedClass = classes?.find(c => c.id == data.class_id);
+  const selectedExam = exams?.find(e => e.id == data.exam_id);
+  const loadedSelection = ['exam_id', 'class_id', 'section_id', 'subject_id'].every(key => String(data[key] || '') === String(filters?.[key] || ''));
+  const editable = loadedSelection && (!selectedExam?.approval_status || selectedExam.approval_status === 'draft') && !selectedExam?.results_published;
   const inputClass = "block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all";
   const labelClass = "block text-sm font-semibold text-slate-700 mb-1.5";
 
@@ -146,7 +155,7 @@ export default function MarksEntry({ exams, classes, subjects, students, filters
               <label className={labelClass}>Subject <span className="text-rose-500">*</span></label>
               <select value={data.subject_id} onChange={e => setData('subject_id', e.target.value)} required className={inputClass}>
                 <option value="" disabled>-- Select Subject --</option>
-                {subjects?.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                {(selectedClass?.subjects || subjects)?.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </div>
 
@@ -177,17 +186,20 @@ export default function MarksEntry({ exams, classes, subjects, students, filters
 
               <div className="flex items-center gap-3">
                 {hasSavedMarks && (
-                  <button type="button" onClick={deleteMarks} className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5 shadow-sm">
+                  <button type="button" onClick={deleteMarks} disabled={!editable} className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5 shadow-sm">
                     <Icon name="trash" className="w-3.5 h-3.5" /> Clear All
                   </button>
                 )}
-                <button type="submit" disabled={processing} className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md shadow-indigo-500/20 disabled:opacity-70 flex items-center gap-2 active:scale-95">
+                <button type="submit" disabled={processing || !editable} className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md shadow-indigo-500/20 disabled:opacity-70 flex items-center gap-2 active:scale-95">
                   <Icon name="check-circle" className="w-4 h-4" />
                   {processing ? 'Saving...' : (hasSavedMarks ? 'Update Marks' : 'Save Marks')}
                 </button>
               </div>
             </div>
 
+            {!editable && <p className="px-6 py-3 text-sm text-amber-800 bg-amber-50">{loadedSelection ? 'Result is submitted, approved or published. Reopen it before changing marks.' : 'Filters changed. Load Students again before saving.'}</p>}
+            {Object.keys(errors).length > 0 && <div role="alert" className="px-6 py-3 bg-rose-50 text-sm text-rose-700">{Object.entries(errors).map(([key, message]) => <p key={key}>{message}</p>)}</div>}
+            {hasSavedMarks && <div className="px-6 py-4"><label className={labelClass} htmlFor="correction-reason">Correction reason</label><input id="correction-reason" value={data.correction_reason} onChange={e => setData('correction_reason', e.target.value)} className={inputClass} placeholder="Explain why the saved marks are changing" /></div>}
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -217,11 +229,17 @@ export default function MarksEntry({ exams, classes, subjects, students, filters
                             type="number"
                             step="0.01"
                             min="0"
+                            max={markData.full_marks}
+                            disabled={!editable}
                             value={markData.marks_obtained}
-                            onChange={(e) => handleMarkChange(student.id, 'marks_obtained', e.target.value)}
+                            onChange={(e) => setData('marks', data.marks.map(m => m.student_id === student.id ? { ...m, marks_obtained: e.target.value, written_marks: '', practical_marks: '', viva_marks: '' } : m))}
                             className="w-full text-center px-3 py-2 font-mono font-bold text-base text-amber-800 bg-white border border-amber-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none transition-all shadow-sm"
                             placeholder="0.00"
                           />
+                          <div className="mt-2 flex gap-2">
+                            <label className="text-xs text-slate-600">Full<input aria-label={`Full marks for ${student.first_name}`} type="number" min="1" max="999.99" step="0.01" value={markData.full_marks} disabled={!editable} onChange={e => handleMarkChange(student.id, 'full_marks', e.target.value)} className="mt-1 w-full rounded border-slate-200 text-xs" /></label>
+                            <label className="text-xs text-slate-600">Pass<input aria-label={`Pass marks for ${student.first_name}`} type="number" min="0" max={markData.full_marks} step="0.01" value={markData.pass_marks} disabled={!editable} onChange={e => handleMarkChange(student.id, 'pass_marks', e.target.value)} className="mt-1 w-full rounded border-slate-200 text-xs" /></label>
+                          </div>
                         </td>
                         <td className="px-6 py-4">
                           <input

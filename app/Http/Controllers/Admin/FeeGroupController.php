@@ -27,13 +27,13 @@ class FeeGroupController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $data = $request->validate([
             'name' => 'required|string|max:255|unique:fee_groups,name',
             'description' => 'nullable|string',
             'is_active' => 'boolean'
         ]);
 
-        FeeGroup::create($request->all());
+        FeeGroup::create($data);
 
         return back()->with('success', 'Fee Group তৈরি সফল হয়েছে!');
     }
@@ -42,13 +42,13 @@ class FeeGroupController extends Controller
     {
         $group = FeeGroup::findOrFail($id);
 
-        $request->validate([
+        $data = $request->validate([
             'name' => 'required|string|max:255|unique:fee_groups,name,' . $group->id,
             'description' => 'nullable|string',
             'is_active' => 'boolean'
         ]);
 
-        $group->update($request->all());
+        $group->update($data);
 
         return back()->with('success', 'Fee Group আপডেট সফল হয়েছে!');
     }
@@ -56,6 +56,9 @@ class FeeGroupController extends Controller
     public function destroy($id)
     {
         $group = FeeGroup::findOrFail($id);
+        abort_if($group->feeAssignments()->withoutGlobalScopes()->exists()
+            || \App\Models\Invoice::withoutGlobalScopes()->where('fee_group_id', $group->id)->exists(),
+            422, 'This fee group has billing history. Deactivate it instead of deleting it.');
         $group->delete();
 
         return back()->with('success', 'Fee Group মুছে ফেলা হয়েছে!');

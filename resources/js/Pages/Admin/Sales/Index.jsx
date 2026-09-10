@@ -3,17 +3,15 @@ import { Head, router, usePage, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
 import Pagination from '@/Components/Pagination';
-import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 import SaleShowModal from './Partials/SaleShowModal';
 import Swal from 'sweetalert2';
 
-export default function Index({ sales, filters }) {
+export default function Index({ sales, filters, voidRequests = [] }) {
   const { flash } = usePage().props;
 
   const [search, setSearch] = useState(filters.search ?? '');
   const [perPage, setPerPage] = useState(filters.per_page ?? '10');
 
-  const [deletingItem, setDeletingItem] = useState(null);
   const [viewingItem, setViewingItem] = useState(null);
 
   useEffect(() => {
@@ -231,12 +229,9 @@ export default function Index({ sales, filters }) {
                           <Link href={route('admin.sales.invoice', sale.id)} target="_blank" rel="noreferrer" className="p-2 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors" title="Print Invoice">
                             <Icon name="printer" className="w-4 h-4" />
                           </Link>
-                          <Link href={route('admin.sales.edit', sale.id)} className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Edit Sale">
-                            <Icon name="edit" className="w-4 h-4" />
-                          </Link>
-                          <button onClick={() => setDeletingItem(sale)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Delete Sale">
-                            <Icon name="trash" className="w-4 h-4" />
-                          </button>
+                           {!sale.voided_at && <button onClick={async () => { const result=await Swal.fire({title:'Request sale void',input:'textarea',inputLabel:'Reason',showCancelButton:true,inputValidator:v=>!v?'Reason is required':undefined});if(result.isConfirmed)router.post(route('admin.sales.void-request',sale.id),{reason:result.value},{preserveScroll:true}); }} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Request approved void">
+                             <Icon name="trash" className="w-4 h-4" />
+                           </button>}
                         </div>
                       </td>
                     </tr>
@@ -252,17 +247,9 @@ export default function Index({ sales, filters }) {
         </div>
       </div>
 
-      {viewingItem && <SaleShowModal sale={viewingItem} onClose={() => setViewingItem(null)} />}
+      {voidRequests.length > 0 && <div className="mx-auto mb-6 max-w-7xl rounded-2xl border border-amber-200 bg-amber-50 p-5 no-print"><h2 className="font-bold text-amber-900">Pending sale void approvals</h2><div className="mt-3 space-y-2">{voidRequests.map(v=><div key={v.id} className="flex flex-col justify-between gap-2 rounded-xl bg-white p-3 text-sm sm:flex-row sm:items-center"><span><b>{v.invoice_number}</b> · ৳{Number(v.total_amount).toFixed(2)}<small className="block text-slate-500">{v.reason}</small></span><span className="flex gap-3"><button onClick={()=>router.patch(route('admin.sales.void-decision',v.id),{decision:'approved'},{preserveScroll:true})} className="font-bold text-emerald-700">Approve</button><button onClick={()=>router.patch(route('admin.sales.void-decision',v.id),{decision:'rejected'},{preserveScroll:true})} className="font-bold text-rose-700">Reject</button></span></div>)}</div></div>}
 
-      {deletingItem && (
-        <ConfirmDeleteModal
-          item={{ name: `Invoice ${deletingItem.invoice_number}` }}
-          onCancel={() => setDeletingItem(null)}
-          onConfirm={() => {
-            router.delete(route('admin.sales.destroy', deletingItem.id), { onSuccess: () => setDeletingItem(null) });
-          }}
-        />
-      )}
+      {viewingItem && <SaleShowModal sale={viewingItem} onClose={() => setViewingItem(null)} />}
     </AuthenticatedLayout>
   );
 }

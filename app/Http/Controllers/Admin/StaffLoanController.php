@@ -7,6 +7,7 @@ use App\Models\{StaffLoan, Staff};
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Support\CampusRule;
+use Illuminate\Support\Facades\DB;
 
 class StaffLoanController extends Controller
 {
@@ -51,6 +52,7 @@ class StaffLoanController extends Controller
 
         if ($validated['status'] === 'Approved') {
             $validated['approved_by'] = auth()->id();
+            $validated['outstanding_balance'] = $validated['amount'];
         }
 
         StaffLoan::create($validated);
@@ -72,6 +74,12 @@ class StaffLoanController extends Controller
 
         if ($validated['status'] === 'Approved' && $loan->status !== 'Approved') {
             $validated['approved_by'] = auth()->id();
+            $validated['outstanding_balance'] = $validated['amount'];
+            $validated['settled_at'] = null;
+        } elseif ($loan->status === 'Approved') {
+            $repaid = max(0, (float) $loan->amount - (float) $loan->outstanding_balance);
+            abort_if((float) $validated['amount'] < $repaid, 422, 'Loan amount cannot be lower than the amount already recovered.');
+            $validated['outstanding_balance'] = max(0, (float) $validated['amount'] - $repaid);
         }
 
         $loan->update($validated);
@@ -80,7 +88,9 @@ class StaffLoanController extends Controller
 
     public function destroy($id)
     {
-        StaffLoan::findOrFail($id)->delete();
+        $loan = StaffLoan::findOrFail($id);
+        abort_if(DB::table('staff_loan_repayments')->where('staff_loan_id', $loan->id)->exists(), 422, 'A loan with payroll repayments cannot be deleted.');
+        $loan->delete();
         return back()->with('success', 'Record deleted successfully.');
     }
 }

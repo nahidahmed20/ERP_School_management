@@ -2,6 +2,8 @@
 namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Storage;
 
 class StudyMaterial extends Model {
     use HasFactory;
@@ -10,6 +12,16 @@ class StudyMaterial extends Model {
         'title', 'class_id', 'subject_id', 'description',
         'file_path', 'file_type', 'uploaded_by'
     ];
+
+    protected static function booted(): void
+    {
+        static::addGlobalScope('campus', fn (Builder $query) => $query->whereHas('schoolClass'));
+    }
+
+    public function storageDisk(): string
+    {
+        return Storage::disk('local')->exists($this->file_path) ? 'local' : 'public';
+    }
 
     public function schoolClass() {
         return $this->belongsTo(SchoolClass::class, 'class_id');

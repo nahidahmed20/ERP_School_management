@@ -84,6 +84,25 @@
 @media (max-width: 900px) {
     .mobile-menu-trigger { display: inline-flex; }
     .content [class*="grid-cols-4"], .content [class*="grid-cols-5"], .content [class*="grid-cols-6"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    /* Keep the action column visible while wide ERP tables scroll underneath it. */
+    .content table th:last-child,
+    .content table td:last-child {
+        position: sticky;
+        right: 0;
+        z-index: 2;
+        min-width: 112px;
+        background: #fff;
+        box-shadow: -8px 0 14px -12px rgba(15, 23, 42, .55);
+    }
+    .content table thead th:last-child { z-index: 3; background: #f8fafc; }
+    .content table td:last-child button,
+    .content table td:last-child a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 32px;
+        white-space: nowrap;
+    }
 }
 
 @media (max-width: 520px) {

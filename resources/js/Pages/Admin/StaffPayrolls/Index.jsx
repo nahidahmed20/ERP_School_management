@@ -382,12 +382,6 @@ export default function Index({ payrolls = { data: [] }, staffs = [], filters = 
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Staff Payroll Management</h1>
             <p className="text-sm text-slate-500 mt-1">শিক্ষক ও কর্মচারীদের মাসিক বেতনের রেকর্ড তৈরি ও ব্যবস্থাপনা করুন।</p>
           </div>
-          <button
-            onClick={() => { setEditingItem(null); setFormOpen(true); }}
-            className="w-full sm:w-auto inline-flex justify-center items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md shadow-indigo-500/20 active:scale-95"
-          >
-            <Icon name="plus" className="w-4 h-4" /> Generate Payroll
-          </button>
           <a href={route('admin.staff-payrolls.bank-sheet',{month:month||new Date().toISOString().slice(0,7)})} className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-2.5 text-sm font-bold text-emerald-700"><Icon name="download" className="h-4 w-4"/>Bank Sheet</a>
         </div>
 
@@ -530,12 +524,9 @@ export default function Index({ payrolls = { data: [] }, staffs = [], filters = 
                           <button onClick={() => setViewingItem(payroll)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="View Slip">
                             <Icon name="eye" className="w-4 h-4" />
                           </button>
-                          <button onClick={() => { setEditingItem(payroll); setFormOpen(true); }} className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Edit Payroll">
-                            <Icon name="edit" className="w-4 h-4" />
-                          </button>
-                          <button onClick={() => setDeletingItem(payroll)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Delete Payroll">
+                          {(payroll.approval_status||'draft')==='draft'&&<button onClick={() => setDeletingItem(payroll)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Delete draft payroll">
                             <Icon name="trash" className="w-4 h-4" />
-                          </button>
+                          </button>}
                         </div>
                       </td>
                     </tr>
@@ -553,7 +544,6 @@ export default function Index({ payrolls = { data: [] }, staffs = [], filters = 
 
       {/* Modals */}
       {viewingItem && <PayrollViewModal item={viewingItem} onClose={() => setViewingItem(null)} />}
-      {formOpen && <PayrollFormModal item={editingItem} staffs={staffs} onClose={() => setFormOpen(false)} />}
       
       {deletingItem && (
         <ConfirmDeleteModal 

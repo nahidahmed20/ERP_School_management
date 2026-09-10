@@ -55,10 +55,18 @@ class AccountingService
             '1000' => ['Cash & Bank', 'Asset'],
             '1100' => ['Accounts Receivable', 'Asset'],
             '1200' => ['Inventory', 'Asset'],
+            '1300' => ['Staff Loan Receivable', 'Asset'],
             '2000' => ['Accounts Payable', 'Liability'],
+            '2100' => ['Salary Payable', 'Liability'],
+            '2200' => ['Provident Fund Payable', 'Liability'],
+            '2300' => ['Payroll Tax Payable', 'Liability'],
+            '2400' => ['Gratuity Payable', 'Liability'],
+            '2500' => ['Cafeteria Wallet Liability', 'Liability'],
             '4000' => ['Fee Income', 'Income'],
             '4100' => ['Sales Income', 'Income'],
+            '4200' => ['Cafeteria Income', 'Income'],
             '5000' => ['Cost of Goods Sold', 'Expense'],
+            '5100' => ['Salary Expense', 'Expense'],
         ];
         [$name, $type] = $defaults[$code];
 

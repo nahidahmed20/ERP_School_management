@@ -17,7 +17,7 @@ class PayrollService
         $existing=StaffPayroll::where('staff_id',$staff->id)->where('salary_month',$month)->first();
         if ($existing?->status === 'paid') return $existing;
         $start=Carbon::createFromFormat('Y-m-d',$month.'-01')->startOfMonth(); $end=$start->copy()->endOfMonth();
-        $workingDays=(int)($options['working_days'] ?: $this->weekdays($start,$end));
+        $workingDays=(int)(($options['working_days'] ?? null) ?: $this->weekdays($start,$end));
         $basic=(float)$staff->basic_salary; $daily=$workingDays ? $basic/$workingDays : 0;
         $attendances=StaffAttendance::where('staff_id',$staff->id)->whereBetween('date',[$start,$end])->get();
         $absentRows=$attendances->where('status','absent')->where('salary_paid_override',false); $halfRows=$attendances->where('status','half_day')->where('salary_paid_override',false);
@@ -27,8 +27,8 @@ class PayrollService
         $absenceDays=min($workingDays,$absent+$half+$unpaidLeave); $absenceDeduction=$daily*$absenceDays;
         $otEnabled=(bool)($options['overtime_enabled']??false); $mode=$otEnabled?($options['overtime_mode']??'hour'):null;
         $units=$otEnabled?(float)$attendances->sum($mode==='day'?'overtime_days':'overtime_hours'):0;
-        $defaultRate=$mode==='day'?$daily:($daily/8); $otRate=(float)($options['overtime_rate']?:$defaultRate)*(float)($options['overtime_multiplier']??1.5); $otAmount=$units*$otRate;
-        $loan=(float)StaffLoan::where('staff_id',$staff->id)->where('status','Approved')->sum('monthly_deduction');
+        $defaultRate=$mode==='day'?$daily:($daily/8); $otRate=(float)(($options['overtime_rate'] ?? null) ?: $defaultRate)*(float)($options['overtime_multiplier']??1.5); $otAmount=$units*$otRate;
+        $loan=(float)StaffLoan::where('staff_id',$staff->id)->whereRaw('LOWER(status) = ?', ['approved'])->where('outstanding_balance','>',0)->get()->sum(fn($item)=>min((float)$item->monthly_deduction,(float)$item->outstanding_balance));
         $allowance=(float)($options['allowance']??0); $bonus=(float)($options['bonus']??0); $arrears=(float)($options['arrears']??0);
         $pf=round($basic*(float)($options['provident_fund_rate']??$staff->provident_fund_rate??0)/100,2); $tax=round($basic*(float)($options['tax_rate']??$staff->tax_rate??0)/100,2); $gratuity=round($basic*(float)($options['gratuity_rate']??0)/100,2);
         $manualDeduction=(float)($options['deduction']??0); $deduction=$absenceDeduction+$loan+$manualDeduction+$pf+$tax;

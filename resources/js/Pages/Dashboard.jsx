@@ -34,7 +34,7 @@ function Panel({ title, subtitle, action, children, className = '' }) {
     </section>;
 }
 
-export default function Dashboard({ overview = {}, attendance = {}, alerts = {}, financeTrend = [], recentAdmissions = [], pendingLeaves = [], upcomingExams = [], notices = [] }) {
+export default function Dashboard({ overview = {}, attendance = {}, alerts = {}, operations = {}, financeTrend = [], recentAdmissions = [], pendingLeaves = [], upcomingExams = [], notices = [] }) {
     const { auth } = usePage().props;
     const maxFinance = Math.max(1, ...financeTrend.flatMap((item) => [Number(item.income), Number(item.expense)]));
     const quickActions = [
@@ -51,6 +51,15 @@ export default function Dashboard({ overview = {}, attendance = {}, alerts = {},
         ['Overdue invoices', alerts.overdue_invoices, 'Fee invoices past their due date', 'rose', 'admin.studentfees.index'],
         ['Device issues', alerts.device_issues, 'Biometric devices need attention', 'indigo', 'admin.biometric-devices.index'],
         ['Failed SMS', alerts.failed_sms, 'Messages that failed today', 'amber', 'admin.sms-logs.index'],
+        ['Low stock', alerts.low_stock, 'Products at or below reorder level', 'rose', 'admin.purchase.items.report'],
+        ['Failed payments', alerts.failed_payments, 'Payment attempts failed today', 'amber', 'admin.payments.transactions.index'],
+    ];
+    const operationItems = [
+        ['Payroll approval', operations.payroll_approval, 'admin.staff-payrolls.index'],
+        ['Payroll finalization', operations.payroll_finalize, 'admin.staff-payrolls.index'],
+        ['Stock adjustments', operations.stock_adjustments, 'admin.purchase.items.index'],
+        ['Sale void requests', operations.sale_voids, 'admin.sales.index'],
+        ['Payment refunds', operations.payment_refunds, 'admin.payments.refunds.index'],
     ];
 
     return <AuthenticatedLayout>
@@ -65,11 +74,13 @@ export default function Dashboard({ overview = {}, attendance = {}, alerts = {},
                 </div>
             </section>
 
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
                 <MetricCard title="Total students" value={Number(overview.students || 0).toLocaleString()} detail="Currently registered students" icon="users" href={getRoute('admin.students.index')} />
                 <MetricCard title="Today attendance" value={`${overview.attendance_percentage || 0}%`} detail={`${attendance.present || 0} present · ${attendance.absent || 0} absent`} icon="activity" tone="indigo" href={getRoute('admin.student-attendance.index')} />
                 <MetricCard title="Today's collection" value={money(overview.today_collection)} detail="Fee payments received today" icon="wallet" tone="amber" href={getRoute('admin.fees.ledger')} />
                 <MetricCard title="Outstanding dues" value={money(overview.pending_dues)} detail="Unpaid and partially paid invoices" icon="alert-circle" tone="rose" href={getRoute('admin.studentfees.index')} />
+                <MetricCard title="Total staff" value={Number(overview.staff || 0).toLocaleString()} detail="Teachers and operational staff" icon="briefcase" tone="indigo" href={getRoute('admin.staff.index')} />
+                <MetricCard title="Inventory value" value={money(overview.inventory_value)} detail="Current stock at purchase cost" icon="package" tone="emerald" href={getRoute('admin.purchase.items.report')} />
             </div>
 
             <Panel title="Quick actions" subtitle="Your most-used daily tasks">
@@ -92,6 +103,10 @@ export default function Dashboard({ overview = {}, attendance = {}, alerts = {},
                     </div>
                 </Panel>
             </div>
+
+            <Panel title="Approval command center" subtitle="Finance and stock decisions waiting for action">
+                <div className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-5">{operationItems.map(([label,value,routeName]) => <Link key={label} href={getRoute(routeName)} className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 transition hover:border-emerald-200 hover:bg-emerald-50"><span className="text-sm font-bold text-slate-700">{label}</span><b className={`grid h-8 min-w-8 place-items-center rounded-full px-2 text-sm ${Number(value)>0?'bg-amber-100 text-amber-800':'bg-emerald-100 text-emerald-800'}`}>{value || 0}</b></Link>)}</div>
+            </Panel>
 
             <div className="grid gap-6 xl:grid-cols-3">
                 <Panel title="Needs attention" subtitle="Items requiring an admin decision">

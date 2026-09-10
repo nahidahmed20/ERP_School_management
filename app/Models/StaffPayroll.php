@@ -18,7 +18,7 @@ class StaffPayroll extends Model
         'overtime_rate'=>'decimal:2', 'overtime_amount'=>'decimal:2',
         'bonus'=>'decimal:2', 'arrears'=>'decimal:2', 'provident_fund'=>'decimal:2',
         'tax_deduction'=>'decimal:2', 'gratuity_provision'=>'decimal:2',
-        'approved_at'=>'datetime', 'finalized_at'=>'datetime',
+        'payment_date'=>'date', 'approved_at'=>'datetime', 'finalized_at'=>'datetime', 'payslip_emailed_at'=>'datetime',
     ];
 
     public function staff()

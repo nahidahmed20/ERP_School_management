@@ -4,13 +4,20 @@ namespace App\Services;
 
 use App\Models\InventoryMovement;
 use App\Models\PurchaseItem;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class InventoryService
 {
     public function move(PurchaseItem $item, int $change, string $type, object $reference, ?string $note = null): InventoryMovement
     {
+        if (DB::transactionLevel() === 0) {
+            return DB::transaction(fn () => $this->move($item, $change, $type, $reference, $note), 3);
+        }
         $item = PurchaseItem::query()->lockForUpdate()->findOrFail($item->id);
+        if (isset($reference->campus_id) && (int) $reference->campus_id !== (int) $item->campus_id) {
+            throw ValidationException::withMessages(['inventory' => 'Inventory reference belongs to another campus.']);
+        }
         $before = (int) $item->quantity;
         $after = $before + $change;
 

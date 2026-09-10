@@ -3,17 +3,18 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\PaymentTransaction;
+use App\Models\PurchaseItem;
 use App\Models\Sale;
 use App\Models\SaleItem;
-use App\Models\PurchaseItem;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-use App\Models\PaymentTransaction;
 use App\Services\AccountingService;
 use App\Services\InventoryService;
+use App\Support\CampusRule;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
 
 class SaleController extends Controller
 {
@@ -23,8 +24,8 @@ class SaleController extends Controller
 
         if ($search = $request->get('search')) {
             $query->where('invoice_number', 'like', "%{$search}%")
-                  ->orWhere('customer_name', 'like', "%{$search}%")
-                  ->orWhere('customer_phone', 'like', "%{$search}%");
+                ->orWhere('customer_name', 'like', "%{$search}%")
+                ->orWhere('customer_phone', 'like', "%{$search}%");
         }
 
         $query->latest();
@@ -36,6 +37,9 @@ class SaleController extends Controller
 
         return Inertia::render('Admin/Sales/Index', [
             'sales' => $sales,
+            'voidRequests' => DB::table('sale_void_requests')->join('sales', 'sales.id', '=', 'sale_void_requests.sale_id')
+                ->where('sale_void_requests.campus_id', config('app.active_campus_id'))->where('sale_void_requests.status', 'pending')
+                ->select('sale_void_requests.*', 'sales.invoice_number', 'sales.total_amount')->latest('sale_void_requests.id')->get(),
             'filters' => $request->only(['search', 'per_page']),
         ]);
     }
@@ -43,13 +47,13 @@ class SaleController extends Controller
     public function create()
     {
         $inventory_items = PurchaseItem::where('is_active', true)
-                                       ->where('quantity', '>', 0)
-                                       ->select('id', 'name', 'item_code', 'unit', 'selling_price', 'size', 'color', 'quantity')
-                                       ->get();
+            ->where('quantity', '>', 0)
+            ->select('id', 'name', 'item_code', 'unit', 'selling_price', 'size', 'color', 'quantity')
+            ->get();
 
         return Inertia::render('Admin/Sales/POS', [
             'inventory_items' => $inventory_items,
-            'sale' => null
+            'sale' => null,
         ]);
     }
 
@@ -58,7 +62,7 @@ class SaleController extends Controller
         $validated = $this->validateSale($request);
 
         DB::transaction(function () use ($request, $validated) {
-            $invoice_number = 'INV-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
+            $invoice_number = 'INV-'.date('Ymd').'-'.strtoupper(substr(uniqid(), -4));
 
             $lines = $this->prepareLines($validated['cart']);
             $subtotal = collect($lines)->sum('subtotal');
@@ -68,7 +72,7 @@ class SaleController extends Controller
 
             $sale = Sale::create([
                 'invoice_number' => $invoice_number,
-                'campus_id' => session('active_campus_id'),
+                'campus_id' => config('app.active_campus_id'),
                 'user_id' => Auth::id(),
                 'customer_name' => $request->customer_name ?? 'Walk-in Customer',
                 'customer_phone' => $request->customer_phone,
@@ -104,6 +108,7 @@ class SaleController extends Controller
     public function invoice($id)
     {
         $sale = Sale::with(['items.product', 'seller'])->findOrFail($id);
+
         return Inertia::render('Admin/Sales/Invoice', ['sale' => $sale]);
     }
 
@@ -111,17 +116,18 @@ class SaleController extends Controller
     {
         $sale = Sale::with('items')->findOrFail($id);
         $inventory_items = PurchaseItem::where('is_active', true)
-                                       ->select('id', 'name', 'item_code', 'unit', 'selling_price', 'size', 'color', 'quantity')
-                                       ->get();
+            ->select('id', 'name', 'item_code', 'unit', 'selling_price', 'size', 'color', 'quantity')
+            ->get();
 
         return Inertia::render('Admin/Sales/POS', [
             'inventory_items' => $inventory_items,
-            'sale' => $sale
+            'sale' => $sale,
         ]);
     }
 
     public function update(Request $request, $id)
     {
+        abort(422, 'Posted sales cannot be edited. Submit a void request and create a corrected sale.');
         $validated = $this->validateSale($request);
         $sale = Sale::with('items')->findOrFail($id);
 
@@ -172,6 +178,7 @@ class SaleController extends Controller
 
     public function destroy($id)
     {
+        return back()->with('error', 'Direct sale deletion is disabled. Use the approved void workflow.');
         $sale = Sale::with('items')->findOrFail($id);
 
         DB::transaction(function () use ($sale) {
@@ -187,6 +194,39 @@ class SaleController extends Controller
         return back()->with('success', 'বিল মুছে ফেলা হয়েছে এবং স্টক ফেরত এসেছে।');
     }
 
+    public function requestVoid(Request $request, Sale $sale)
+    {
+        $data = $request->validate(['reason' => 'required|string|max:1000']);
+        abort_if($sale->voided_at, 422, 'This sale is already voided.');
+        abort_if(DB::table('sale_void_requests')->where('sale_id', $sale->id)->where('status', 'pending')->exists(), 422, 'A void request is already pending.');
+        DB::table('sale_void_requests')->insert(['campus_id' => $sale->campus_id, 'sale_id' => $sale->id, 'reason' => $data['reason'], 'status' => 'pending', 'requested_by' => $request->user()->id, 'created_at' => now(), 'updated_at' => now()]);
+
+        return back()->with('success', 'Sale void request submitted for approval.');
+    }
+
+    public function decideVoid(Request $request, int $voidRequest)
+    {
+        $data = $request->validate(['decision' => 'required|in:approved,rejected']);
+        DB::transaction(function () use ($request, $voidRequest, $data) {
+            $void = DB::table('sale_void_requests')->where('campus_id', config('app.active_campus_id'))->where('id', $voidRequest)->lockForUpdate()->first();
+            abort_unless($void && $void->status === 'pending', 422, 'Void request is unavailable or already decided.');
+            abort_if((int) $void->requested_by === (int) $request->user()->id, 403, 'Requester cannot decide their own void request.');
+            $sale = Sale::with('items.product')->whereKey($void->sale_id)->lockForUpdate()->firstOrFail();
+            if ($data['decision'] === 'approved') {
+                abort_if($sale->voided_at, 422, 'This sale is already voided.');
+                foreach ($sale->items as $item) {
+                    app(InventoryService::class)->move($item->product, $item->quantity, 'sale_void', $item, "Approved void {$sale->invoice_number}");
+                }
+                app(AccountingService::class)->reverseSource($sale);
+                PaymentTransaction::where('source_type', Sale::class)->where('source_id', $sale->id)->update(['status' => 'Refunded', 'refunded_amount' => DB::raw('amount')]);
+                $sale->update(['voided_at' => now(), 'voided_by' => $request->user()->id]);
+            }
+            DB::table('sale_void_requests')->where('id', $voidRequest)->update(['status' => $data['decision'], 'approved_by' => $request->user()->id, 'decided_at' => now(), 'updated_at' => now()]);
+        });
+
+        return back()->with('success', 'Sale void decision recorded.');
+    }
+
     // --- Validation Logic ---
     private function validateSale(Request $request): array
     {
@@ -197,7 +237,7 @@ class SaleController extends Controller
             'paid_amount' => 'required|numeric|min:0',
             'payment_method' => 'required|string',
             'cart' => 'required|array|min:1',
-            'cart.*.purchase_item_id' => 'required|exists:purchase_items,id',
+            'cart.*.purchase_item_id' => ['required', CampusRule::exists('purchase_items')],
             'cart.*.quantity' => 'required|integer|min:1',
             'cart.*.unit_price' => 'required|numeric|min:0',
         ]);
@@ -219,6 +259,7 @@ class SaleController extends Controller
                 'subtotal' => round($quantity * $price, 2),
             ];
         }
+
         return $lines;
     }
 
@@ -235,21 +276,21 @@ class SaleController extends Controller
             PaymentTransaction::updateOrCreate(
                 ['source_type' => Sale::class, 'source_id' => $sale->id],
                 ['transaction_id' => 'SALE-'.$sale->invoice_number, 'reference_no' => $sale->invoice_number,
-                 'amount' => $sale->paid_amount, 'currency' => 'BDT', 'payment_method' => $sale->payment_method,
-                 'status' => 'Completed', 'transaction_date' => $sale->created_at?->toDateString() ?? now()->toDateString()]
+                    'amount' => $sale->paid_amount, 'currency' => 'BDT', 'payment_method' => $sale->payment_method,
+                    'status' => 'Completed', 'transaction_date' => $sale->created_at?->toDateString() ?? now()->toDateString()]
             );
         }
     }
 
     public function report(Request $request)
     {
-        $query = Sale::with('items.product', 'seller');
+        $query = Sale::with('items.product', 'seller')->whereNull('voided_at');
 
         // Date range filter
         if ($request->filled('start_date') && $request->filled('end_date')) {
             $query->whereBetween('created_at', [
-                $request->start_date . ' 00:00:00',
-                $request->end_date . ' 23:59:59'
+                $request->start_date.' 00:00:00',
+                $request->end_date.' 23:59:59',
             ]);
         }
 
