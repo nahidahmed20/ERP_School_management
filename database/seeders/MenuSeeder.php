@@ -53,7 +53,7 @@ class MenuSeeder extends Seeder
                     ['key' => 'admin.time-tables.index', 'label' => 'Class Timetable', 'route' => 'admin.time-tables.index'],
                     ['key' => 'admin.lesson-plans.index', 'label' => 'Lesson & Syllabus', 'route' => 'admin.lesson-plans.index'],
                     ['key' => 'admin.academic-operations.index', 'label' => 'Academic Operations', 'route' => 'admin.academic-operations.index'],
-                    ['key' => 'admin.study-materials.index', 'label' => 'Study Materials / Downloads', 'route' => 'admin.study-materials.index'], 
+                    ['key' => 'admin.study-materials.index', 'label' => 'Study Materials / Downloads', 'route' => 'admin.study-materials.index'],
                     ['key' => 'admin.sessions.index', 'label' => 'Academic Sessions', 'route' => 'admin.sessions.index'],
                 ]],
                 ['key' => 'attendance', 'label' => 'Attendance', 'icon' => 'calendar', 'count' => 5, 'children' => [
@@ -105,8 +105,8 @@ class MenuSeeder extends Seeder
                     ['key' => 'admin.studentfees.index', 'label' => 'Student Fee Assignment', 'route' => 'admin.studentfees.index'],
                     ['key' => 'admin.fees.invoices', 'label' => 'Invoices', 'route' => 'admin.fees.invoices'],
                     ['key' => 'admin.fees.payments', 'label' => 'Payments', 'route' => 'admin.fees.payments'],
-                    ['key' => 'admin.accounting.chart.index', 'label' => 'Chart of Accounts & Banks', 'route' => 'admin.accounting.chart.index'], 
-                    ['key' => 'admin.accounting.vouchers.index', 'label' => 'Accounting Vouchers', 'route' => 'admin.accounting.vouchers.index'], 
+                    ['key' => 'admin.accounting.chart.index', 'label' => 'Chart of Accounts & Banks', 'route' => 'admin.accounting.chart.index'],
+                    ['key' => 'admin.accounting.vouchers.index', 'label' => 'Accounting Vouchers', 'route' => 'admin.accounting.vouchers.index'],
                     ['key' => 'admin.fees.ledger', 'label' => 'Income / Expense Ledger', 'route' => 'admin.fees.ledger'],
                     ['key' => 'admin.reports.financial-summary', 'label' => 'Financial Reports', 'route' => 'admin.reports.financial-summary'],
                 ]],
@@ -119,7 +119,6 @@ class MenuSeeder extends Seeder
                     ['key' => 'admin.purchase.items.index', 'label' => 'Products & Items', 'route' => 'admin.purchase.items.index'],
                     ['key' => 'admin.purchase.items.report', 'label' => 'Stock & Movement Report', 'route' => 'admin.purchase.items.report'],
                     ['key' => 'admin.purchase.suppliers.index', 'label' => 'Suppliers ', 'route' => 'admin.purchase.suppliers.index'],
-                    ['key' => 'admin.purchase.vendors.index', 'label' => 'Vendors', 'route' => 'admin.purchase.vendors.index'],
                     ['key' => 'admin.purchase.requests.index', 'label' => 'Purchase Requests', 'route' => 'admin.purchase.requests.index'],
                     ['key' => 'admin.purchase.orders.index', 'label' => 'Purchase Orders', 'route' => 'admin.purchase.orders.index'],
                     ['key' => 'admin.purchase.orders.create', 'label' => 'Purchase Orders Create', 'route' => 'admin.purchase.orders.create'],
@@ -142,7 +141,7 @@ class MenuSeeder extends Seeder
                 ]],
                 ['key' => 'transport', 'label' => 'Transport', 'icon' => 'bus', 'count' => 4, 'children' => [
                     ['key' => 'admin.transport.operations', 'label' => 'Transport Operations', 'route' => 'admin.transport.operations'],
-                    ['key' => 'admin.transport.routes.index', 'label' => 'Routes & Stops', 'route' => 'admin.transport.routes.index'], 
+                    ['key' => 'admin.transport.routes.index', 'label' => 'Routes & Stops', 'route' => 'admin.transport.routes.index'],
                     ['key' => 'admin.vehicles.index', 'label' => 'Vehicles', 'route' => 'admin.vehicles.index'],
                     ['key' => 'admin.transports.index', 'label' => 'Transport Allocation', 'route' => 'admin.transports.index'],
                 ]],
@@ -150,7 +149,7 @@ class MenuSeeder extends Seeder
                     ['key' => 'admin.hostel.operations', 'label' => 'Hostel Operations', 'route' => 'admin.hostel.operations'],
                     ['key' => 'admin.hostel-rooms.index', 'label' => 'Hostels & Rooms', 'route' => 'admin.hostel-rooms.index'],
                     ['key' => 'admin.hostel-allocations.index', 'label' => 'Room Allocation', 'route' => 'admin.hostel-allocations.index'],
-                    ['key' => 'admin.hostel-fees.index', 'label' => 'Hostel Fee Collection', 'route' => 'admin.hostel-fees.index'], 
+                    ['key' => 'admin.hostel-fees.index', 'label' => 'Hostel Fee Collection', 'route' => 'admin.hostel-fees.index'],
                 ]],
                 ['key' => 'cafeteria', 'label' => 'Cafeteria', 'icon' => 'cutlery', 'count' => 5, 'children' => [
                     ['key' => 'admin.cafeteria.operations', 'label' => 'Cafeteria & Wallet POS', 'route' => 'admin.cafeteria.operations'],
@@ -200,7 +199,7 @@ class MenuSeeder extends Seeder
                     ['key' => 'admin.communication-calendars.index', 'label' => 'Calendar & Events', 'route' => 'admin.communication-calendars.index'],
                     ['key' => 'admin.communication.cms.index', 'label' => 'Website CMS', 'route' => 'admin.communication.cms.index'],
                     ['key' => 'admin.communication.helpdesk.index', 'label' => 'Helpdesk / Tickets', 'route' => 'admin.communication.helpdesk.index'],
-                    ['key' => 'admin.email-logs.index', 'label' => 'Email Logs & Templates', 'route' => 'admin.email-logs.index'], 
+                    ['key' => 'admin.email-logs.index', 'label' => 'Email Logs & Templates', 'route' => 'admin.email-logs.index'],
                     ['key' => 'admin.sms-logs.index', 'label' => 'SMS Logs', 'route' => 'admin.sms-logs.index'],
                 ]],
             ]],
@@ -262,7 +261,7 @@ class MenuSeeder extends Seeder
             foreach ($group['items'] as $iOrder => $item) {
                 // Use updateOrCreate for main menu items
                 $parent = MenuItem::updateOrCreate(
-                    ['key' => $item['key']], 
+                    ['key' => $item['key']],
                     [
                         'menu_group_id' => $g->id,
                         'parent_id'     => null,
@@ -277,7 +276,7 @@ class MenuSeeder extends Seeder
                 foreach ($item['children'] ?? [] as $cOrder => $child) {
                     // Use updateOrCreate for child menu items
                     MenuItem::updateOrCreate(
-                        ['key' => $child['key']], 
+                        ['key' => $child['key']],
                         [
                             'menu_group_id' => $g->id,
                             'parent_id'     => $parent->id,

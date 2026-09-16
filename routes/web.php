@@ -299,7 +299,7 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
 
     Route::resource('grades', GradeController::class);
     Route::delete('exams-marks/clear', [MarksController::class, 'destroy'])->name('exams-marks.destroy');
-    Route::resource('exams-marks', MarksController::class);
+    Route::resource('exams-marks', MarksController::class)->only(['index', 'store']);
     Route::get('exams/report/cards', [MarksController::class, 'examsReportcards'])->name('exams.reportcards');
     Route::get('exams/tabulation/sheet', [TabulationSheetController::class, 'index'])->name('exams.tabulation');
 

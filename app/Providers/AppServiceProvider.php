@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Http\Resources\Json\JsonResource;
 use App\Models\MenuGroup;
@@ -31,7 +30,8 @@ class AppServiceProvider extends ServiceProvider
     {
         JsonResource::withoutWrapping();
 
-        Vite::prefetch(concurrency: 3);
+        // Pages are already lazy-loaded by Vite. Prefetching every dynamic import
+        // here downloads hundreds of ERP chunks even on the login page.
         MenuItem::observe(MenuItemObserver::class);
         MenuGroup::observe(MenuGroupObserver::class);
 

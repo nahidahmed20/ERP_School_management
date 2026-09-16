@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\SendStudentSms;
 use App\Models\AcademicSession;
 use App\Models\Campus;
 use App\Models\Enrollment;
@@ -12,8 +13,9 @@ use App\Models\SchoolClass;
 use App\Models\Student;
 use App\Models\StudentCategory;
 use App\Models\User;
-use App\Services\SmsService;
+use App\Support\PerPage;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -23,10 +25,10 @@ class StudentController extends Controller
 {
     public function index(Request $request)
     {
-        $perPage = $request->input('per_page', 10);
+        $perPage = PerPage::resolve();
         $search = $request->input('search');
 
-        $query = Student::with(['currentEnrollment.schoolClass', 'currentEnrollment.section', 'guardian.students', 'campus'])->latest();
+        $query = Student::with(['currentEnrollment.schoolClass', 'currentEnrollment.section', 'guardian', 'campus'])->latest();
 
         if ($request->filled('class_id')) {
             $query->whereHas('currentEnrollment', function($q) use ($request) {
@@ -51,9 +53,7 @@ class StudentController extends Controller
             });
         }
 
-        $students = ($perPage === 'all')
-            ? $query->paginate($query->count())->withQueryString()
-            : $query->paginate($perPage)->withQueryString();
+        $students = $query->paginate($perPage)->withQueryString();
 
         return Inertia::render('Admin/Students/Index', [
             'students' => $students,
@@ -224,22 +224,31 @@ class StudentController extends Controller
             ]);
 
             DB::commit();
-            $parentPhone = $request->father_phone ?? $request->mother_phone;
-            if ($parentPhone) {
-                $smsMsg = "Welcome to our School! {$request->first_name} has been successfully admitted. Admission No: {$admissionNo}";
-                SmsService::send($parentPhone, $smsMsg);
-            }
-            return redirect()->route('admin.students.index')->with('success', 'স্টুডেন্ট ভর্তি এবং অ্যাকাউন্ট তৈরি সফল হয়েছে!');
-
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'সমস্যা হয়েছে: ' . $e->getMessage());
         }
+
+        $response = redirect()->route('admin.students.index')
+            ->with('success', 'স্টুডেন্ট ভর্তি এবং অ্যাকাউন্ট তৈরি সফল হয়েছে!');
+
+        try {
+            $student->load('guardian');
+            if (SendStudentSms::hasConsent($student, 'admission')) {
+                Bus::dispatch(new SendStudentSms((int) $student->campus_id, $student->id, $request->user()->id));
+                $response->with('success', 'স্টুডেন্ট ভর্তি এবং অ্যাকাউন্ট তৈরি সফল হয়েছে! Admission SMS queued.');
+            }
+        } catch (\Throwable $e) {
+            report($e);
+            $response->with('error', 'Admission saved successfully, but the admission SMS could not be queued.');
+        }
+
+        return $response;
     }
 
     public function edit($id)
     {
-        $student = Student::with(['guardian.students', 'currentEnrollment'])->findOrFail($id);
+        $student = Student::with(['guardian.students:id,guardian_id', 'currentEnrollment'])->findOrFail($id);
 
         return Inertia::render('Admin/Students/Edit', [
             'student' => $student,

@@ -25,7 +25,18 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
 
             'auth' => [
-                'user' => $request->user() ? $request->user()->loadMissing('roles', 'permissions') : null,
+                'user' => function () use ($request) {
+                    $user = $request->user();
+                    if (! $user) return null;
+                    $user->loadMissing('roles', 'permissions');
+
+                    // Controllers load large student/guardian/staff graphs on the
+                    // authenticated model. Do not serialize those again as auth.
+                    return $user->attributesToArray() + [
+                        'roles' => $user->roles->map->only(['id', 'name', 'guard_name'])->all(),
+                        'permissions' => $user->permissions->map->only(['id', 'name', 'guard_name'])->all(),
+                    ];
+                },
                 'active_campus_id' => config('app.active_campus_id'),
             ],
 

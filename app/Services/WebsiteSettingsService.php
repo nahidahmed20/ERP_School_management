@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Schema;
 class WebsiteSettingsService
 {
     public const CACHE_KEY = 'website.settings.global';
+    private const REQUEST_KEY = 'website.settings.resolved';
 
     public const DEFAULTS = [
         'school_name' => 'Your School Name',
@@ -41,16 +42,22 @@ class WebsiteSettingsService
 
     public function values(): array
     {
-        if (! Schema::hasTable('settings')) {
-            return self::DEFAULTS;
+        // Inertia and the root Blade view both request branding. Keep the resolved
+        // value on this request, never in a process-wide user/campus singleton.
+        $request = app()->bound('request') ? request() : null;
+        if ($request?->attributes->has(self::REQUEST_KEY)) {
+            return $request->attributes->get(self::REQUEST_KEY);
         }
 
-        $values = Cache::rememberForever(self::CACHE_KEY, fn () => Setting::withoutGlobalScopes()
-            ->whereNull('campus_id')
-            ->where('group', 'website')
-            ->where('is_active', true)
-            ->pluck('value', 'key')
-            ->all());
+        $values = Cache::get(self::CACHE_KEY);
+        if ($values === null) {
+            if (! Schema::hasTable('settings')) {
+                return self::DEFAULTS;
+            }
+            $values = Setting::withoutGlobalScopes()->whereNull('campus_id')
+                ->where('group', 'website')->where('is_active', true)->pluck('value', 'key')->all();
+            Cache::forever(self::CACHE_KEY, $values);
+        }
 
         $settings = array_merge(self::DEFAULTS, $values);
 
@@ -58,11 +65,16 @@ class WebsiteSettingsService
             $settings[$key] = $settings[$key] ? Storage::disk('public')->url($settings[$key]) : null;
         }
 
+        $request?->attributes->set(self::REQUEST_KEY, $settings);
+
         return $settings;
     }
 
     public function clearCache(): void
     {
         Cache::forget(self::CACHE_KEY);
+        if (app()->bound('request')) {
+            request()->attributes->remove(self::REQUEST_KEY);
+        }
     }
 }

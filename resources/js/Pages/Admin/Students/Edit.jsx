@@ -237,7 +237,6 @@ export default function Edit({ student, classes, campuses, categories, houses })
         .mod-alert-warning strong { color: #92400e; }
 
         .mod-layout { display: grid; grid-template-columns: 200px 1fr; gap: 40px; align-items: start; }
-        @media (max-width: 900px) { .mod-layout { grid-template-columns: 1fr; } .mod-rail { display: none; } }
 
         .mod-rail { position: sticky; top: 32px; display: flex; flex-direction: column; gap: 0; }
         .mod-rail-item { display: flex; align-items: flex-start; gap: 16px; background: none; border: none; cursor: pointer; text-align: left; padding: 0 0 32px 0; position: relative; width: 100%; opacity: 0.6; transition: opacity 0.3s; }
@@ -280,27 +279,64 @@ export default function Edit({ student, classes, campuses, categories, houses })
         .mod-avatar { width: 90px; height: 90px; border-radius: 50%; background: var(--bg-card); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; flex-shrink: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .mod-avatar img { width: 100%; height: 100%; object-fit: cover; }
         .mod-avatar input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+        .mod-photo-info { flex: 1; }
         .mod-photo-info h4 { margin: 0 0 4px; font-size: 15px; font-weight: 600; }
         .mod-photo-info p { margin: 0; font-size: 13px; color: var(--text-muted); line-height: 1.5; }
 
         .mod-footer { display: flex; justify-content: flex-end; align-items: center; gap: 16px; padding: 16px 0 0; }
         .mod-btn-cancel { color: var(--text-muted); font-weight: 500; text-decoration: none; font-size: 14px; padding: 12px 20px; border-radius: 10px; transition: all 0.2s; }
         .mod-btn-cancel:hover { color: var(--text-main); background: var(--bg-main); }
-        .mod-btn-submit { background: var(--brand); color: white; padding: 12px 28px; font-size: 15px; font-weight: 600; border: none; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 6px -1px rgba(79,70,229,0.3); transition: all 0.2s; }
+        .mod-btn-submit { background: var(--brand); color: white; padding: 12px 28px; font-size: 15px; font-weight: 600; border: none; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 6px -1px rgba(79,70,229,0.3); transition: all 0.2s; }
         .mod-btn-submit:hover:not(:disabled) { background: var(--brand-hover); transform: translateY(-1px); box-shadow: 0 6px 8px -1px rgba(79,70,229,0.3); }
         .mod-btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
 
         /* --- Camera Modal CSS --- */
-        .mod-camera-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
-        .mod-camera-container { background: #1e293b; padding: 24px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; gap: 20px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); }
-        .mod-camera-video { width: 100%; max-width: 500px; border-radius: 12px; background: #000; transform: scaleX(-1); box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .mod-camera-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(4px); padding: 16px; }
+        .mod-camera-container { background: #1e293b; padding: 24px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; gap: 20px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); width: 100%; max-width: 500px; }
+        .mod-camera-video { width: 100%; border-radius: 12px; background: #000; transform: scaleX(-1); box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         .mod-camera-actions { display: flex; gap: 16px; width: 100%; justify-content: center; }
-        .mod-btn-capture { background: var(--brand); color: white; padding: 12px 24px; border-radius: 10px; border: none; cursor: pointer; font-weight: 600; font-size: 15px; transition: all 0.2s; }
+        .mod-btn-capture { background: var(--brand); color: white; padding: 12px 24px; border-radius: 10px; border: none; cursor: pointer; font-weight: 600; font-size: 15px; transition: all 0.2s; flex: 1; }
         .mod-btn-capture:hover { background: var(--brand-hover); }
-        .mod-btn-close-cam { background: #ef4444; color: white; padding: 12px 24px; border-radius: 10px; border: none; cursor: pointer; font-weight: 600; font-size: 15px; transition: all 0.2s; }
+        .mod-btn-close-cam { background: #ef4444; color: white; padding: 12px 24px; border-radius: 10px; border: none; cursor: pointer; font-weight: 600; font-size: 15px; transition: all 0.2s; flex: 1; }
         .mod-btn-close-cam:hover { background: #dc2626; }
-        .mod-cam-trigger { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--brand); background: var(--brand-light); border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; margin-top: 10px; transition: all 0.2s; }
+        .mod-cam-trigger { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--brand); background: var(--brand-light); border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; margin-top: 12px; transition: all 0.2s; }
         .mod-cam-trigger:hover { background: #c7d2fe; }
+
+        /* ========================================================
+           RESPONSIVE MEDIA QUERIES
+           ======================================================== */
+        @media (max-width: 1024px) {
+          .mod-layout { grid-template-columns: 1fr; gap: 24px; }
+          .mod-rail { display: none; } /* Hide sidebar on tablets and below */
+        }
+
+        @media (max-width: 768px) {
+          .mod-scope { padding: 24px 16px 48px; }
+          .mod-title { font-size: 24px; }
+          .mod-card { padding: 24px 20px; }
+        }
+
+        @media (max-width: 576px) {
+          .mod-scope { padding: 16px 12px 32px; }
+          .mod-mast { flex-direction: column; gap: 16px; align-items: stretch; margin-bottom: 24px; }
+          .mod-mast-actions { flex-direction: column; align-items: stretch; gap: 12px; }
+          .mod-date-pill { align-items: center; }
+
+          .mod-card { padding: 20px 16px; border-radius: 12px; }
+          .mod-grid { grid-template-columns: 1fr; gap: 16px; } /* Single column form */
+
+          .mod-photo-area { flex-direction: column; text-align: center; gap: 16px; padding: 20px 16px; }
+          .mod-cam-trigger { width: 100%; }
+
+          .mod-alert { flex-direction: column; align-items: center; text-align: center; }
+          .mod-alert > div { width: 100%; }
+
+          .mod-footer { flex-direction: column-reverse; align-items: stretch; gap: 12px; }
+          .mod-btn-submit, .mod-btn-cancel { width: 100%; justify-content: center; text-align: center; }
+
+          .mod-camera-container { padding: 16px; gap: 16px; }
+          .mod-camera-actions { flex-direction: column-reverse; gap: 12px; }
+        }
       `}</style>
 
       {/* --- Camera Modal --- */}
@@ -542,7 +578,7 @@ export default function Edit({ student, classes, campuses, categories, houses })
 
                 {hasSiblings && (
                   <div className="mod-alert mod-alert-warning">
-                    <Icon name="warning" style={{ fontSize: '20px', marginTop: '2px' }} />
+                    <Icon name="warning" style={{ fontSize: '20px', marginTop: '2px', flexShrink: 0 }} />
                     <div>
                       <strong>লক্ষ্য করুন (Shared Guardian Info)</strong>
                       <span style={{ fontSize: '14px', lineHeight: '1.5' }}>

@@ -3,14 +3,15 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\SendStudentSms;
 use App\Models\SchoolClass;
 use App\Models\Student;
 use App\Models\StudentAttendance;
 use App\Models\StudentLeaveRequest;
-use App\Services\SmsService;
 use App\Services\StudentAttendanceService;
 use App\Support\CampusRule;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
@@ -131,27 +132,24 @@ class StudentAttendanceController extends Controller
         ]);
         $records = StudentAttendance::whereDate('attendance_date', $data['date'])->whereIn('student_id', $data['student_ids'])
             ->where('status', 'absent')->where('is_excused', false)->with('student.guardian')->get();
-        $sent = 0;
+        $queued = 0;
+        $failed = 0;
         foreach ($records as $attendance) {
             $student = $attendance->student;
-            $guardian = $student?->guardian;
-            if (! $student || ! $guardian) continue;
-            $preferences = $guardian->notification_preferences ?? [];
-            if (! (bool) ($preferences['sms'] ?? true) || ! (bool) ($preferences['attendance'] ?? true)) continue;
-            $consent = DB::table('communication_preferences')->where('campus_id', $student->campus_id)
-                ->where(['recipient_type' => 'guardian', 'recipient_id' => $guardian->id, 'channel' => 'sms'])
-                ->whereIn('category', ['*', 'attendance'])->orderByRaw("category = '*' asc")->first();
-            if ($consent && ! $consent->is_opted_in) continue;
-            $phone = $guardian->father_phone ?: $guardian->mother_phone;
-            if (! $phone) continue;
-            $message = "সম্মানিত অভিভাবক, আপনার সন্তান {$student->first_name} {$student->last_name} {$data['date']} তারিখে বিদ্যালয়ে অনুপস্থিত।";
-            if (SmsService::send($phone, $message, [
-                'campus_id' => $student->campus_id, 'recipient_name' => $guardian->father_name ?: $guardian->mother_name,
-                'recipient_type' => 'guardian', 'recipient_id' => $guardian->id, 'student_id' => $student->id,
-                'category' => 'attendance', 'reference_key' => 'absent:'.$attendance->id, 'sent_by' => $request->user()->id,
-            ])) $sent++;
+            if (! $student || ! SendStudentSms::hasConsent($student, 'attendance')) continue;
+            try {
+                Bus::dispatch(new SendStudentSms((int) $student->campus_id, $student->id, $request->user()->id, $attendance->id));
+                $queued++;
+            } catch (\Throwable $e) {
+                report($e);
+                $failed++;
+            }
         }
-        return back()->with('success', "Absent SMS processed for {$sent} guardian(s). Approved leave and opted-out guardians are excluded.");
+        $response = back()->with('success', "Absent SMS queued for {$queued} guardian(s). Approved leave and opted-out guardians are excluded.");
+        if ($failed) {
+            $response->with('error', "SMS could not be queued for {$failed} guardian(s). Please try again.");
+        }
+        return $response;
     }
 
     private function assertSection(int $classId, ?int $sectionId): void

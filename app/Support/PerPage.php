@@ -9,11 +9,14 @@ class PerPage
 
     public static function resolve(int $default = 10): int
     {
-        if (strtolower((string) request()->input('per_page')) === 'all') {
-            return PHP_INT_MAX;
+        $default = in_array($default, self::OPTIONS, true) ? $default : self::OPTIONS[0];
+        $input = request()->input('per_page');
+
+        if (is_string($input) && strtolower($input) === 'all') {
+            return max(self::OPTIONS);
         }
 
-        $requested = request()->integer('per_page', $default);
+        $requested = is_scalar($input) ? filter_var($input, FILTER_VALIDATE_INT) : false;
 
         return in_array($requested, self::OPTIONS, true) ? $requested : $default;
     }

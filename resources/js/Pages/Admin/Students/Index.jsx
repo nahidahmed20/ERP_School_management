@@ -413,6 +413,10 @@ export default function Index({ students, classes, filters }) {
                                   <img
                                     src={`/storage/${student.photo}`}
                                     alt="Avatar"
+                                    loading="lazy"
+                                    decoding="async"
+                                    width="40"
+                                    height="40"
                                     className="w-full h-full object-cover"
                                     onError={(e) => {
                                       e.target.onerror = null;
