@@ -6,7 +6,7 @@
 
 @layer components {
     .mobile-nav-backdrop {
-        @apply fixed inset-0 z-[39] bg-slate-950/50 backdrop-blur-sm md:hidden;
+        @apply fixed inset-0 z-[39] bg-slate-950/50 backdrop-blur-sm min-[901px]:hidden;
         animation: ui-fade-in .2s ease-out;
     }
 

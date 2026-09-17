@@ -5,7 +5,7 @@ import Icon from '@/Components/Icons';
 import SessionFormModal from './Partials/SessionFormModal';
 import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 import Pagination from '@/Components/Pagination';
-import Swal from 'sweetalert2'; 
+import Swal from 'sweetalert2';
 
 export default function Index({ sessions, campuses, filters }) {
   const { flash } = usePage().props;
@@ -58,10 +58,10 @@ export default function Index({ sessions, campuses, filters }) {
     if (!sessions.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
     const headers = ['Session Name', 'Campus', 'Start Date', 'End Date', 'Current', 'Status'];
     const rows = sessions.data.map(item => [
-      item.name || 'N/A', 
-      item.campus?.name || 'All Campuses', 
-      item.start_date || 'N/A', 
-      item.end_date || 'N/A', 
+      item.name || 'N/A',
+      item.campus?.name || 'All Campuses',
+      item.start_date || 'N/A',
+      item.end_date || 'N/A',
       item.is_current ? 'Yes' : 'No',
       item.is_active ? 'Active' : 'Inactive'
     ]);
@@ -102,7 +102,7 @@ export default function Index({ sessions, campuses, filters }) {
       <div className="print-title">Academic Sessions - {new Date().toLocaleDateString('en-GB')}</div>
 
       <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8 no-print">
-        
+
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
@@ -121,7 +121,7 @@ export default function Index({ sessions, campuses, filters }) {
         {/* Unified Modern Toolbar */}
         <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-            
+
             {/* Per Page */}
             <select
               value={perPage}
@@ -138,8 +138,8 @@ export default function Index({ sessions, campuses, filters }) {
             <div className="hidden sm:block w-px h-6 bg-slate-200"></div>
 
             {/* Campus Filter */}
-            <select 
-              value={campusId} 
+            <select
+              value={campusId}
               onChange={(e) => { setCampusId(e.target.value); applyFilters({ campus_id: e.target.value }); }}
               className="w-full sm:w-40 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
             >
@@ -148,8 +148,8 @@ export default function Index({ sessions, campuses, filters }) {
             </select>
 
             {/* Status Filter */}
-            <select 
-              value={status} 
+            <select
+              value={status}
               onChange={(e) => { setStatus(e.target.value); applyFilters({ status: e.target.value }); }}
               className="w-full sm:w-36 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
             >

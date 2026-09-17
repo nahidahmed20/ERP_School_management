@@ -2,7 +2,7 @@ import { Link, usePage, router } from '@inertiajs/react';
 import Icon from './Icons';
 import Dropdown from '@/Components/Dropdown';
 
-export default function Topbar({ onHamburgerClick }) {
+export default function Topbar({ onHamburgerClick, sidebarOpen = false }) {
     const { auth, all_campuses } = usePage().props;
     const user = auth?.user;
 
@@ -19,6 +19,10 @@ export default function Topbar({ onHamburgerClick }) {
             {/* Left: Hamburger & Search */}
             <div className="flex items-center gap-3 sm:gap-6">
                 <button
+                    type="button"
+                    aria-label={sidebarOpen ? 'Close navigation' : 'Open navigation'}
+                    aria-expanded={sidebarOpen}
+                    aria-controls="school-sidebar"
                     className="p-2 -ml-2 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
                     onClick={onHamburgerClick}
                     title="Toggle Menu"

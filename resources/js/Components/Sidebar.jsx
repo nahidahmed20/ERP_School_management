@@ -1,189 +1,88 @@
-import { useState, useEffect } from 'react';
+import { memo, useCallback, useEffect, useId, useMemo, useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import Icon from './Icons';
+import { activeSidebarKey, buildSidebarNavigation, toggleSidebarKey } from '@/Utils/sidebarNavigation';
 
-export default function Sidebar({ mobileOpen = false, onNavigate }) {
+const EMPTY_NAVIGATION = [];
+const resolveRoute = (...args) => route(...args);
+
+const SubmenuLinks = memo(function SubmenuLinks({ children, onNavigate }) {
+  return children.map((child) => (
+    <Link key={child.menuKey} href={child.href}
+      className={'nav-subitem' + (child.active ? ' active' : '')}
+      aria-current={child.active ? 'page' : undefined} onClick={onNavigate}>
+      <span className="dot" />
+      <span>{child.label}</span>
+    </Link>
+  ));
+});
+
+const MenuEntry = memo(function MenuEntry({ item, isOpen, onToggle, onNavigate }) {
+  const submenuId = useId();
+
+  if (!item.children.length) {
+    return <Link href={item.href} className={'nav-item' + (item.active ? ' active' : '')}
+      aria-current={item.active ? 'page' : undefined} onClick={onNavigate}>
+      <Icon name={item.icon} />
+      <span>{item.label}</span>
+      {item.count ? <span className="nav-count">{item.count}</span> : null}
+    </Link>;
+  }
+
+  return <div className="nav-parent">
+    <button type="button"
+      className={'nav-item nav-toggle' + (isOpen ? ' open' : '') + (item.active ? ' active' : '')}
+      onClick={() => onToggle(item.menuKey)} aria-expanded={isOpen} aria-controls={submenuId}>
+      <Icon name={item.icon} />
+      <span>{item.label}</span>
+      {item.count ? <span className="nav-count">{item.count}</span> : null}
+      <Icon name="chevron" className="nav-chevron" />
+    </button>
+    {/* Keep links mounted, but remove closed menus from layout and keyboard focus.
+        No fixed-height animation or route work runs when toggling. */}
+    <div id={submenuId} className="nav-submenu" hidden={!isOpen}>
+      <SubmenuLinks children={item.children} onNavigate={onNavigate} />
+    </div>
+  </div>;
+});
+
+export default memo(function Sidebar({ mobileOpen = false, desktopCollapsed = false, onNavigate }) {
   const { url, props } = usePage();
-  const navigation = props.navigation ?? [];
+  const navigation = props.navigation ?? EMPTY_NAVIGATION;
   const site = props.site_settings ?? {};
   const shortName = site.school_short_name || site.school_name || 'School';
-  const brandMark = site.logo ? <img src={site.logo} alt={`${shortName} logo`} className="h-full w-full rounded-xl object-contain" /> : <span>{shortName.trim().charAt(0).toUpperCase()}</span>;
+  const groups = useMemo(() => buildSidebarNavigation(navigation, url, resolveRoute), [navigation, url]);
+  const activeKey = useMemo(() => activeSidebarKey(groups), [groups]);
+  const [openKey, setOpenKey] = useState(activeKey);
 
-  // Helper to safely get route name
-  const getRoute = (item) => item?.route_name || item?.route || null;
-
-  // ১. নির্দিষ্ট Child Menu Active করার জন্য (Exact Match)
-  function isChildActive(routeName) {
-    if (!routeName) return false;
-    try {
-      // এক্সাক্ট রাউট ম্যাচ
-      if (route().current(routeName)) return true;
-
-      // যদি এডিট বা শো পেজ হয় (admin.students.edit), তবে শুধু 'Student List' (admin.students.index) সিলেক্ট হবে
-      if (
-        (route().current('admin.students.edit') || route().current('admin.students.show')) &&
-        routeName === 'admin.students.index'
-      ) {
-        return true;
-      }
-
-      return false;
-    } catch {
-      return url === '/' + routeName.replaceAll('.', '/');
-    }
-  }
-
-  // ২. Parent Menu ওপেন বা হাইলাইট করার জন্য
-  function isParentActive(item) {
-    if (!item.children || item.children.length === 0) {
-      return isChildActive(getRoute(item));
-    }
-    
-    // যদি চাইল্ডের কোনো একটা অ্যাক্টিভ থাকে অথবা বর্তমান রাউটের গ্রুপ ম্যাচ করে
-    return item.children.some(child => {
-      const childRoute = getRoute(child);
-      return isChildActive(childRoute) || (childRoute && route().current(childRoute.split('.').slice(0, 2).join('.') + '.*'));
-    });
-  }
-
-  const [openKeys, setOpenKeys] = useState(() => {
-    const initialKeys = new Set();
-    navigation.forEach(group => {
-      group.items?.forEach(item => {
-        if (isParentActive(item)) {
-          initialKeys.add(item.key);
-        }
-      });
-    });
-    return initialKeys;
-  });
-
-  // Automatically expand active parent when navigation or url changes
   useEffect(() => {
-    navigation.forEach(group => {
-      group.items?.forEach(item => {
-        if (isParentActive(item)) {
-          setOpenKeys(prev => new Set(prev).add(item.key));
-        }
-      });
-    });
-  }, [url, navigation]);
+    // One update per navigation, not one update per matching parent menu.
+    setOpenKey((previous) => activeKey ?? (groups.some((group) => group.items.some(
+      (item) => item.menuKey === previous && item.children.length,
+    )) ? previous : null));
+  }, [url, groups, activeKey]);
 
-  function toggle(key) {
-    setOpenKeys(prev => {
-      const next = new Set();
-      if (!prev.has(key)) {
-        next.add(key);
-      }
-      return next;
-    });
-  }
+  const toggle = useCallback((key) => setOpenKey((previous) => toggleSidebarKey(previous, key)), []);
 
-  function hrefFor(item) {
-    const routeName = getRoute(item);
-    if (!routeName) return '#';
-    try {
-      return route(routeName);
-    } catch {
-      return '/' + routeName.replaceAll('.', '/');
-    }
-  }
-
-  if (!navigation || navigation.length === 0) {
-    return (
-      <aside className={`sidebar ${mobileOpen ? 'mobile-open' : ''}`}>
-        <div className="brand">
-          <div className="seal">{brandMark}</div>
-          <div className="brand-text">
-            <div className="name">{shortName}</div>
-            <div className="sub">{site.school_tagline || 'School ERP'}</div>
-          </div>
-        </div>
-        <div className="nav-loading">
-          {Array.from({ length: 6 }).map((_, i) => <div key={i} className="nav-skel" />)}
-        </div>
-      </aside>
-    );
-  }
-
-  return (
-    <aside className={`sidebar ${mobileOpen ? 'mobile-open' : ''}`}>
-      <div className="brand">
-        <div className="seal">{brandMark}</div>
-        <div className="brand-text">
-          <div className="name">{shortName}</div>
-          <div className="sub">{site.school_tagline || 'School ERP'}</div>
-        </div>
+  return <aside id="school-sidebar" className={'sidebar' + (mobileOpen ? ' mobile-open' : '') + (desktopCollapsed ? ' desktop-collapsed' : '')} aria-label="School navigation">
+    <div className="brand">
+      <div className="seal">{site.logo
+        ? <img src={site.logo} alt={shortName + ' logo'} className="h-full w-full rounded-xl object-contain" />
+        : <span>{shortName.trim().charAt(0).toUpperCase()}</span>}</div>
+      <div className="brand-text">
+        <div className="name">{shortName}</div>
+        <div className="sub">{site.school_tagline || 'School ERP'}</div>
       </div>
+    </div>
 
-      <nav className="nav">
-        {navigation.map(group => (
-          <div className="nav-group" key={group.label}>
-            <div className="nav-label">{group.label}</div>
-            {group.items?.map(item => {
-              const hasActiveChildren = isParentActive(item);
-              const isOpen = openKeys.has(item.key);
+    {groups.length ? <nav className="nav" aria-label="Main menu">
+      {groups.map((group) => <div className="nav-group" key={group.menuKey}>
+        <div className="nav-label">{group.label}</div>
+        {group.items.map((item) => <MenuEntry key={item.menuKey} item={item}
+          isOpen={openKey === item.menuKey} onToggle={toggle} onNavigate={onNavigate} />)}
+      </div>)}
+    </nav> : <p className="nav-empty">No menus are available for this account.</p>}
 
-              return item.children?.length ? (
-                <div className="nav-parent" key={item.key}>
-                  <button
-                    type="button"
-                    className={`nav-item nav-toggle ${isOpen ? 'open' : ''} ${hasActiveChildren ? 'active' : ''}`}
-                    onClick={() => toggle(item.key)}
-                    aria-expanded={isOpen}
-                  >
-                    <Icon name={item.icon} />
-                    <span>{item.label}</span>
-                    {item.count ? <span className="nav-count">{item.count}</span> : null}
-                    <Icon name="chevron" className="nav-chevron" />
-                  </button>
-
-                  <div
-                    className="nav-submenu"
-                    style={{
-                      maxHeight: isOpen ? '600px' : '0px',
-                      overflow: 'hidden',
-                      transition: 'max-height 0.3s ease'
-                    }}
-                  >
-                    {item.children.map(child => {
-                      const childRoute = getRoute(child);
-                      const active = isChildActive(childRoute);
-
-                      return (
-                        <Link
-                          key={child.key || childRoute}
-                          href={hrefFor(child)}
-                          className={`nav-subitem ${active ? 'active' : ''}`}
-                          onClick={onNavigate}
-                        >
-                          <span className="dot" />
-                          <span>{child.label}</span>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-              ) : (
-                <Link
-                  key={item.key || getRoute(item)}
-                  href={hrefFor(item)}
-                  className={`nav-item ${isChildActive(getRoute(item)) ? 'active' : ''}`}
-                  onClick={onNavigate}
-                >
-                  <Icon name={item.icon} />
-                  <span>{item.label}</span>
-                  {item.count ? <span className="nav-count">{item.count}</span> : null}
-                </Link>
-              );
-            })}
-          </div>
-        ))}
-      </nav>
-
-      <div className="sidebar-foot">
-        <span><span className="dot-online" /> All systems normal</span>
-      </div>
-    </aside>
-  );
-}
+    <div className="sidebar-foot"><span><span className="dot-online" /> School ERP</span></div>
+  </aside>;
+});

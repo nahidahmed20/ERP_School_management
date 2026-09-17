@@ -26,8 +26,8 @@ class DesignationController extends Controller
         $query->latest();
 
         $perPage = $request->get('per_page', 10);
-        $designations = $perPage === 'all' 
-            ? ['data' => $query->get(), 'links' => [], 'meta' => ['total' => $query->count()]] 
+        $designations = $perPage === 'all'
+            ? ['data' => $query->get(), 'links' => [], 'meta' => ['total' => $query->count()]]
             : $query->paginate((int) $perPage)->withQueryString();
 
         return Inertia::render('Admin/Designation/Index', [
@@ -59,15 +59,29 @@ class DesignationController extends Controller
         return back()->with('success', 'ডিপার্টমেন্ট মুছে ফেলা হয়েছে।');
     }
 
+
     private function validateData(Request $request, $ignoreId = null): array
     {
-        $campusId = $request->campus_id ?? config('app.active_campus_id');
+        $user = auth()->user();
+        $isSuperAdmin = $user->hasRole('Super Admin') || $user->role === 'super_admin';
+
+        if (!$isSuperAdmin || !$request->filled('campus_id')) {
+            $request->merge([
+                'campus_id' => $user->campus_id
+            ]);
+        }
+
+        $campusId = $request->campus_id;
 
         return $request->validate([
             'campus_id' => 'required|exists:campuses,id',
             'name' => [
-                'required', 'string', 'max:255',
-                Rule::unique('designations', 'name')->where('campus_id', $campusId)->ignore($ignoreId)
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('designations', 'name')
+                    ->where('campus_id', $campusId)
+                    ->ignore($ignoreId)
             ],
             'description' => 'nullable|string',
             'is_active' => 'boolean',

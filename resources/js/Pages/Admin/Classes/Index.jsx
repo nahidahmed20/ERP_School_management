@@ -255,21 +255,37 @@ export default function Index({ classes, campuses, allSections, allSubjects, fil
                       </td>
 
                       <td className="px-6 py-4 text-right no-print">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button onClick={() => setAssigningSectionClass(item)} className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="Assign Sections">
-                            <Icon name="users" className="w-4 h-4" />
-                          </button>
-                          <button onClick={() => setAssigningSubjectClass(item)} className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="Assign Subjects">
-                            <Icon name="book" className="w-4 h-4" />
-                          </button>
-                          <button onClick={() => { setEditingItem(item); setFormOpen(true); }} className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Edit Class">
-                            <Icon name="edit" className="w-4 h-4" />
-                          </button>
-                          <button onClick={() => setDeletingItem(item)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Delete Class">
-                            <Icon name="trash" className="w-4 h-4" />
-                          </button>
+                        <div className="flex items-center justify-end gap-3">
+                            <button
+                            onClick={() => setAssigningSectionClass(item)}
+                            className="p-3 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-colors"
+                            title="Assign Sections"
+                            >
+                            <Icon name="users" className="!w-7 !h-7" />
+                            </button>
+                            <button
+                            onClick={() => setAssigningSubjectClass(item)}
+                            className=" text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors"
+                            title="Assign Subjects"
+                            >
+                            <Icon name="book" className="!w-7 !h-7" />
+                            </button>
+                            <button
+                            onClick={() => { setEditingItem(item); setFormOpen(true); }}
+                            className=" text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition-colors"
+                            title="Edit Class"
+                            >
+                            <Icon name="edit" className="!w-7 !h-7" />
+                            </button>
+                            <button
+                            onClick={() => setDeletingItem(item)}
+                            className=" text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"
+                            title="Delete Class"
+                            >
+                            <Icon name="trash" className="!w-7 !h-7" />
+                            </button>
                         </div>
-                      </td>
+                    </td>
                     </tr>
                   ))
                 )}
