@@ -12,7 +12,6 @@ export default function EventFormModal({ item, classrooms, activeCampusId, onClo
   }
 
   const { data, setData, post, put, processing, errors, reset } = useForm({
-    campus_id: item?.campus_id ?? activeCampusId,
     title: item?.title || '',
     type: item?.type || 'Event',
     start_datetime: toDatetimeLocal(item?.start_datetime),
@@ -22,16 +21,20 @@ export default function EventFormModal({ item, classrooms, activeCampusId, onClo
     is_active: item?.is_active ?? true,
     show_on_dashboard: item?.show_on_dashboard ?? true,
     audience: item?.audience || 'all',
+    is_government_holiday: item?.is_government_holiday ?? false,
   });
 
   function submit(e) {
     e.preventDefault();
+
+    if (data.type !== 'Holiday') data.is_government_holiday = false;
+
     const options = { onSuccess: () => { reset(); onClose(); } };
 
     if (isEdit) {
-      put(route('admin.communication.calendar.update', item.id), options);
+      put(route('admin.communication-calendars.update', item.id), options);
     } else {
-      post(route('admin.communication.calendar.store'), options);
+      post(route('admin.communication-calendars.store'), options);
     }
   }
 
@@ -39,11 +42,9 @@ export default function EventFormModal({ item, classrooms, activeCampusId, onClo
   const labelClass = "block text-sm font-semibold text-slate-700 mb-1.5";
 
   return (
-    // Responsive Overlay
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
-      
-      {/* Responsive Modal Box */}
-      <div 
+
+      <div
         className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
@@ -58,36 +59,23 @@ export default function EventFormModal({ item, classrooms, activeCampusId, onClo
           </button>
         </div>
 
-        {/* Form Body (Scrollable) */}
+        {/* Form Body */}
         <form onSubmit={submit} className="flex flex-col flex-1 overflow-hidden">
           <div className="p-6 overflow-y-auto space-y-5 flex-1 custom-scrollbar">
-            
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              
+
               {/* Title */}
               <div className="sm:col-span-2">
                 <label className={labelClass}>Title <span className="text-rose-500">*</span></label>
-                <input
-                  type="text"
-                  value={data.title}
-                  onChange={(e) => setData('title', e.target.value)}
-                  placeholder="যেমন: Parent-Teacher Meeting"
-                  required
-                  autoFocus
-                  className={inputClass}
-                />
+                <input type="text" value={data.title} onChange={(e) => setData('title', e.target.value)} placeholder="যেমন: Parent-Teacher Meeting" required autoFocus className={inputClass} />
                 {errors.title && <p className="text-rose-500 text-xs mt-1">{errors.title}</p>}
               </div>
 
               {/* Type */}
               <div>
                 <label className={labelClass}>Type <span className="text-rose-500">*</span></label>
-                <select
-                  value={data.type}
-                  onChange={(e) => setData('type', e.target.value)}
-                  required
-                  className={`${inputClass} bg-white`}
-                >
+                <select value={data.type} onChange={(e) => setData('type', e.target.value)} required className={`${inputClass} bg-white`}>
                   <option value="Event">Event</option>
                   <option value="Meeting">Meeting</option>
                   <option value="Holiday">Holiday</option>
@@ -99,11 +87,7 @@ export default function EventFormModal({ item, classrooms, activeCampusId, onClo
               {/* Room */}
               <div>
                 <label className={labelClass}>Room <span className="text-slate-400 font-normal">(Optional)</span></label>
-                <select
-                  value={data.classroom_id}
-                  onChange={(e) => setData('classroom_id', e.target.value)}
-                  className={`${inputClass} bg-white`}
-                >
+                <select value={data.classroom_id} onChange={(e) => setData('classroom_id', e.target.value)} className={`${inputClass} bg-white`}>
                   <option value="">Not Assigned</option>
                   {classrooms.map(r => <option key={r.id} value={r.id}>Room: {r.room_number}</option>)}
                 </select>
@@ -113,43 +97,36 @@ export default function EventFormModal({ item, classrooms, activeCampusId, onClo
               {/* Schedule Dates */}
               <div>
                 <label className={labelClass}>Starts At <span className="text-rose-500">*</span></label>
-                <input
-                  type="datetime-local"
-                  value={data.start_datetime}
-                  onChange={(e) => setData('start_datetime', e.target.value)}
-                  required
-                  className={`${inputClass} font-mono`}
-                />
+                <input type="datetime-local" value={data.start_datetime} onChange={(e) => setData('start_datetime', e.target.value)} required className={`${inputClass} font-mono`} />
                 {errors.start_datetime && <p className="text-rose-500 text-xs mt-1">{errors.start_datetime}</p>}
               </div>
 
               <div>
                 <label className={labelClass}>Ends At <span className="text-rose-500">*</span></label>
-                <input
-                  type="datetime-local"
-                  value={data.end_datetime}
-                  onChange={(e) => setData('end_datetime', e.target.value)}
-                  required
-                  className={`${inputClass} font-mono`}
-                />
+                <input type="datetime-local" value={data.end_datetime} onChange={(e) => setData('end_datetime', e.target.value)} required className={`${inputClass} font-mono`} />
                 {errors.end_datetime && <p className="text-rose-500 text-xs mt-1">{errors.end_datetime}</p>}
               </div>
 
               {/* Description */}
               <div className="sm:col-span-2">
                 <label className={labelClass}>Description <span className="text-slate-400 font-normal">(Optional)</span></label>
-                <textarea
-                  rows="3"
-                  value={data.description}
-                  onChange={(e) => setData('description', e.target.value)}
-                  placeholder="ইভেন্ট সম্পর্কে অতিরিক্ত তথ্য..."
-                  className={`${inputClass} resize-none`}
-                />
+                <textarea rows="3" value={data.description} onChange={(e) => setData('description', e.target.value)} placeholder="ইভেন্ট সম্পর্কে অতিরিক্ত তথ্য..." className={`${inputClass} resize-none`} />
                 {errors.description && <p className="text-rose-500 text-xs mt-1">{errors.description}</p>}
               </div>
 
+              {/* 💡 Government Holiday Toggle (Only shows if type is Holiday) */}
+              {data.type === 'Holiday' && (
+                <div className="sm:col-span-2 pt-3 pb-1 border-t border-slate-100">
+                  <label className="flex items-center gap-3 cursor-pointer group w-max bg-rose-50 px-4 py-2.5 rounded-xl border border-rose-100">
+                    <input type="checkbox" checked={data.is_government_holiday} onChange={(e) => setData('is_government_holiday', e.target.checked)} className="h-5 w-5 rounded border-rose-300 text-rose-600 focus:ring-rose-600" />
+                    <span className="text-sm font-bold text-rose-800">Mark as Academic / Government Holiday</span>
+                  </label>
+                  <p className="text-xs text-slate-500 mt-2 ml-1">এটি সিলেক্ট করলে এই ছুটির দিনগুলোতে Attendance Control থেকে হাজিরার এন্ট্রি ব্লক হয়ে যাবে।</p>
+                </div>
+              )}
+
               {/* Active Toggle */}
-              <div className="sm:col-span-2 pt-2 border-t border-slate-100">
+              <div className="sm:col-span-2 pt-3 border-t border-slate-100">
                 <div className="mb-4">
                   <label className={labelClass}>Visible to</label>
                   <select value={data.audience} onChange={(e) => setData('audience', e.target.value)} className={`${inputClass} bg-white`}>
@@ -160,7 +137,7 @@ export default function EventFormModal({ item, classrooms, activeCampusId, onClo
                   </select>
                 </div>
                 <label className="mb-4 flex items-center gap-3 cursor-pointer group w-max">
-                  <input type="checkbox" checked={data.show_on_dashboard} onChange={(e) => setData('show_on_dashboard', e.target.checked)} className="h-5 w-5 rounded border-slate-300 text-emerald-700 focus:ring-emerald-600" />
+                  <input type="checkbox" checked={data.show_on_dashboard} onChange={(e) => setData('show_on_dashboard', e.target.checked)} className="h-5 w-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-600" />
                   <span className="text-sm font-semibold text-slate-700">Show as login/dashboard announcement</span>
                 </label>
                 <label className="flex items-center gap-3 cursor-pointer group w-max">

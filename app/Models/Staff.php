@@ -1,8 +1,8 @@
 <?php
 
 namespace App\Models;
-use App\Traits\BelongsToCampus;
 
+use App\Traits\BelongsToCampus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -13,6 +13,17 @@ class Staff extends Model
     protected $table = 'staff';
 
     protected $guarded = ['id'];
+
+    protected $appends = ['photo_url'];
+
+    public function getPhotoUrlAttribute()
+    {
+        if ($this->photo) {
+            return filter_var($this->photo, FILTER_VALIDATE_URL) ? $this->photo
+                : request()->getBaseUrl().'/storage/'.ltrim(preg_replace('#^(?:/?storage/)+#', '', $this->photo), '/');
+        }
+        return request()->getBaseUrl().'/images/default-avatar.svg';
+    }
 
     public function user()
     {

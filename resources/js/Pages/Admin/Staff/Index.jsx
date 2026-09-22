@@ -5,17 +5,24 @@ import Icon from '@/Components/Icons';
 import Pagination from '@/Components/Pagination';
 import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 import Swal from 'sweetalert2';
+import { publicMediaUrl } from '@/Utils/publicMediaUrl';
+
+const getPhotoUrl = (path) => publicMediaUrl(path, '/images/default-avatar.svg');
+const showPhotoFallback = (event) => {
+  const image = event.currentTarget;
+  if (image.getAttribute('src') !== '/images/default-avatar.svg') image.src = '/images/default-avatar.svg';
+};
 
 // --- Staff View Modal Component ---
 function StaffViewModal({ staff, onClose }) {
   if (!staff) return null;
 
   return (
-    <div 
+    <div
       className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 transition-opacity animate-in fade-in duration-200"
       onClick={onClose}
     >
-      <div 
+      <div
         className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] shadow-2xl overflow-hidden transform transition-all flex flex-col ring-1 ring-slate-900/5 animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
@@ -31,12 +38,13 @@ function StaffViewModal({ staff, onClose }) {
 
         {/* Modal Body */}
         <div className="p-6 overflow-y-auto space-y-6 flex-1">
-          
+
           {/* Top Info Banner */}
           <div className="flex flex-col sm:flex-row items-center gap-5 bg-gradient-to-r from-slate-50 to-indigo-50/30 p-6 rounded-2xl border border-slate-200">
             <div className="w-24 h-24 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center overflow-hidden border-4 border-white shadow-md shrink-0">
               {staff.photo ? (
-                <img src={`/storage/${staff.photo}`} alt="Profile" className="w-full h-full object-cover" />
+                // 💡 Updated Here
+                <img src={getPhotoUrl(staff.photo)} onError={showPhotoFallback} alt="Profile" className="w-full h-full object-cover" />
               ) : (
                 <Icon name="user" className="w-12 h-12 text-indigo-400" />
               )}
@@ -54,7 +62,7 @@ function StaffViewModal({ staff, onClose }) {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            
+
             {/* Employment Info */}
             <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm space-y-4">
               <h4 className="text-sm font-bold text-indigo-600 border-b border-indigo-100 pb-2.5 uppercase tracking-wider">Employment Details</h4>
@@ -214,7 +222,7 @@ export default function Index({ staff, departments, designations, filters }) {
       <div className="print-title">Staff & Teachers Directory - {new Date().toLocaleDateString('en-GB')}</div>
 
       <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8 no-print">
-        
+
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
@@ -233,7 +241,7 @@ export default function Index({ staff, departments, designations, filters }) {
         {/* Unified Modern Toolbar */}
         <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-            
+
             {/* Per Page */}
             <select
               value={perPage}
@@ -250,8 +258,8 @@ export default function Index({ staff, departments, designations, filters }) {
             <div className="hidden sm:block w-px h-6 bg-slate-200"></div>
 
             {/* Department Filter */}
-            <select 
-              value={departmentId} 
+            <select
+              value={departmentId}
               onChange={e => setDepartmentId(e.target.value)}
               className="w-full sm:w-44 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
             >
@@ -260,8 +268,8 @@ export default function Index({ staff, departments, designations, filters }) {
             </select>
 
             {/* Designation Filter */}
-            <select 
-              value={designationId} 
+            <select
+              value={designationId}
               onChange={e => setDesignationId(e.target.value)}
               className="w-full sm:w-44 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
             >
@@ -350,9 +358,10 @@ export default function Index({ staff, departments, designations, filters }) {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <img
-                            src={s.photo ? `/storage/${s.photo}` : '/images/default-avatar.png'}
-                            alt="Staff"
+                            src={getPhotoUrl(s.photo)}
+                            alt={`${s.first_name} ${s.last_name || ''}`.trim()}
                             className="w-10 h-10 rounded-full object-cover border border-slate-200 shrink-0"
+                            onError={showPhotoFallback}
                           />
                           <div>
                             <span className="text-sm font-bold text-slate-900 block">{s.first_name} {s.last_name || ''}</span>
@@ -381,24 +390,24 @@ export default function Index({ staff, departments, designations, filters }) {
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => setViewingItem(s)}
-                            className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                            className=" text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
                             title="View Profile"
                           >
                             <Icon name="eye" className="w-4 h-4" />
                           </button>
                           <Link
                             href={route('admin.staff.edit', s.id)}
-                            className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            className=" text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                             title="Edit Staff"
                           >
                             <Icon name="edit" className="w-4 h-4" />
                           </Link>
-                          <Link href={route('admin.staff.report',s.id)} className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="Staff Reports"><Icon name="chart" className="w-4 h-4"/></Link>
-                          <Link href={route('admin.staff.id-card',s.id)} className="p-2 text-slate-400 hover:text-violet-600 hover:bg-violet-50 rounded-lg transition-colors" title="Print ID Card"><Icon name="printer" className="w-4 h-4"/></Link>
-                          {s.user_id&&<Link href={route('admin.documents.certificates.index',{user_id:s.user_id})} className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Certificates"><Icon name="document" className="w-4 h-4"/></Link>}
+                          <Link href={route('admin.staff.report',s.id)} className=" text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="Staff Reports"><Icon name="chart" className="w-4 h-4"/></Link>
+                          <Link href={route('admin.staff.id-card',s.id)} className=" text-slate-500 hover:text-violet-600 hover:bg-violet-50 rounded-lg transition-colors" title="Print ID Card"><Icon name="printer" className="w-4 h-4"/></Link>
+                          {s.user_id&&<Link href={route('admin.documents.certificates.index',{user_id:s.user_id})} className=" text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Certificates"><Icon name="document" className="w-4 h-4"/></Link>}
                           <button
                             onClick={() => setDeletingItem(s)}
-                            className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                            className=" text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
                             title="Delete Staff"
                           >
                             <Icon name="trash" className="w-4 h-4" />

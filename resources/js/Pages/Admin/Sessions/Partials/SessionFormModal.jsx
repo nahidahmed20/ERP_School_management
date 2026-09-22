@@ -1,11 +1,13 @@
-import { useForm } from '@inertiajs/react';
+import { useForm, usePage } from '@inertiajs/react';
+import WorkingCampusField from '@/Components/WorkingCampusField';
 import Icon from '@/Components/Icons';
 
 export default function SessionFormModal({ item, campuses, onClose }) {
   const isEdit = !!item;
+  const { auth } = usePage().props;
 
   const { data, setData, post, put, processing, errors, reset } = useForm({
-    campus_id: item?.campus_id ?? '',
+    campus_id: item?.campus_id ?? auth?.active_campus_id ?? '',
     name: item?.name ?? '',
     start_date: item?.start_date ?? '',
     end_date: item?.end_date ?? '',
@@ -72,16 +74,7 @@ export default function SessionFormModal({ item, campuses, onClose }) {
               {/* Campus */}
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1.5">Campus <span className="text-slate-400 font-normal">(Optional)</span></label>
-                <select 
-                  value={data.campus_id} 
-                  onChange={(e) => setData('campus_id', e.target.value)}
-                  className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
-                >
-                  <option value="">All Campuses</option>
-                  {campuses.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
+                <WorkingCampusField value={data.campus_id} campuses={campuses} className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer" />
                 {errors.campus_id && <p className="text-rose-500 text-xs mt-1">{errors.campus_id}</p>}
               </div>
 

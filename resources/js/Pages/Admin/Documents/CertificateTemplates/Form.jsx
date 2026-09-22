@@ -1,39 +1,33 @@
 import React, { useState } from 'react';
+import WorkingCampusField from '@/Components/WorkingCampusField';
 import { Head, useForm, usePage, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
 
 const CERTIFICATE_DESIGNS = [
-  { key: 'classic',   name: 'Classic Gold',    blurb: 'Ivory & gold, ornate border',   swatch: 'linear-gradient(135deg,#FBF8F1,#EFE3C8)' },
-  { key: 'modern',    name: 'Modern Minimal',  blurb: 'Clean lines, left-aligned',     swatch: 'linear-gradient(135deg,#FFFFFF,#EDEFF2)' },
-  { key: 'academic',  name: 'Academic Navy',   blurb: 'Formal banner & seal',          swatch: 'linear-gradient(135deg,#1E3A5F,#274a75)' },
-  { key: 'playful',   name: 'Playful Kids',    blurb: 'Bright, scalloped border',      swatch: 'linear-gradient(135deg,#FFE3B0,#FBC7DE)' },
-  { key: 'corporate', name: 'Corporate Pro',   swatch: 'linear-gradient(135deg,#1F2937,#33465b)', blurb: 'Charcoal sidebar, bold' },
+  { key: 'orange_bevel', name: 'Orange Bevel (Img 1)', blurb: 'Orange frame, corner clips & gold ribbon badge', swatch: 'linear-gradient(135deg, #ea580c, #f97316)' },
+  { key: 'green_gold',   name: 'Green & Gold (Img 2)',   blurb: 'Green curves, gold banner & center star seal', swatch: 'linear-gradient(135deg, #047857, #eab308)' },
+  { key: 'classic_gold', name: 'Classic Ornamental (Img 3)', blurb: 'Ivory background & ornate gold filigree corners', swatch: 'linear-gradient(135deg, #fef3c7, #b45309)' },
+  { key: 'academic_navy',name: 'Academic Navy (Img 4)', blurb: 'Navy geometric angles & grad cap badge', swatch: 'linear-gradient(135deg, #1e3a8a, #d97706)' },
+  { key: 'blue_orange',  name: 'Modern Waves (Img 5)',   blurb: 'Wavy blue corners & top hanging ribbon', swatch: 'linear-gradient(135deg, #0284c7, #ea580c)' },
 ];
 
-/* Small shared bits used inside multiple preview designs */
-const SigImg = ({ src, height = 38 }) =>
+const SigImg = ({ src, height = 26 }) =>
   src ? <img src={src} alt="signature" style={{ height, objectFit: 'contain' }} /> : <div style={{ height }} />;
 
-const FlourishCorner = ({ style }) => (
-  <svg width="34" height="34" viewBox="0 0 34 34" style={style} fill="none">
-    <path d="M2 2 Q2 18 18 18" stroke="#B08D57" strokeWidth="1.4" />
-    <circle cx="2" cy="2" r="2.2" fill="#B08D57" />
+const FiligreeHeader = () => (
+  <svg width="110" height="18" viewBox="0 0 200 30" fill="none" className="mx-auto my-0.5">
+    <path d="M100 20 C80 20, 70 5, 40 10 C20 15, 10 5, 0 15 C20 15, 35 25, 60 15 C80 5, 90 15, 100 20 Z" fill="#3f3f46" />
+    <path d="M100 20 C120 20, 130 5, 160 10 C180 15, 190 5, 200 15 C180 15, 165 25, 140 15 C120 5, 110 15, 100 20 Z" fill="#3f3f46" />
+    <circle cx="100" cy="10" r="3.5" fill="#3f3f46" />
   </svg>
 );
 
-const ShieldIcon = ({ color = '#C9A227', size = 26 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-    <path d="M12 2 L20 5 V11 C20 16 16.5 20 12 22 C7.5 20 4 16 4 11 V5 Z" fill={color} opacity="0.95" />
-    <path d="M8.5 12 L11 14.5 L16 9" stroke="#1E3A5F" strokeWidth="1.6" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
-
-const MedalBadge = ({ size = 46 }) => (
-  <svg width={size} height={size} viewBox="0 0 60 60" fill="none">
-    <path d="M20 30 L14 52 L24 47 L30 56 L36 47 L46 52 L40 30 Z" fill="#F59E0B" />
-    <circle cx="30" cy="22" r="15" fill="#FBBF24" stroke="#F59E0B" strokeWidth="3" />
-    <path d="M30 13 L32.3 18.8 L38.5 19.3 L33.8 23.4 L35.2 29.5 L30 26.2 L24.8 29.5 L26.2 23.4 L21.5 19.3 L27.7 18.8 Z" fill="#fff" />
+const CornerFiligree = ({ className }) => (
+  <svg width="45" height="45" viewBox="0 0 100 100" fill="#b45309" className={className}>
+    <path d="M0,0 L40,0 C35,15 25,25 0,40 Z M10,0 C10,20 20,30 0,30" />
+    <path d="M5,5 C25,5 35,15 35,35 C25,25 15,25 5,5 Z" opacity="0.6" />
+    <circle cx="18" cy="18" r="2.5" />
   </svg>
 );
 
@@ -42,15 +36,17 @@ export default function CertificateForm({ item, campuses, activeCampusId }) {
   const { auth } = usePage().props;
   const isSuperAdmin = auth?.user?.role === 'super_admin' || auth?.user?.roles?.some(r => r.name === 'Super Admin');
 
+  const defaultCampusId = item?.campus_id ?? auth?.active_campus_id ?? activeCampusId ?? '';
+
   const { data, setData, post, processing, errors } = useForm({
     _method: isEdit ? 'put' : 'post',
-    campus_id: item?.campus_id ?? activeCampusId,
-    title: item?.title ?? 'Certificate of Excellence',
+    campus_id: defaultCampusId,
+    title: item?.title ?? 'CERTIFICATE',
     template_type: item?.template_type ?? 'Merit',
-    design_style: item?.design_style ?? 'classic',
-    content_body: item?.content_body ?? 'For outstanding academic performance and dedication during the semester.',
-    signature_1_title: item?.signature_1_title ?? 'Principal',
-    signature_2_title: item?.signature_2_title ?? 'Director',
+    design_style: item?.design_style ?? 'orange_bevel',
+    content_body: item?.content_body ?? 'Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.',
+    signature_1_title: item?.signature_1_title ?? 'Date',
+    signature_2_title: item?.signature_2_title ?? 'Manager',
     is_active: item?.is_active ?? true,
     background_image: null,
     signature_1_image: null,
@@ -68,64 +64,168 @@ export default function CertificateForm({ item, campuses, activeCampusId }) {
 
   function submit(e) {
     e.preventDefault();
-    post(isEdit ? route('admin.documents.certificatetemplates.update', item.id) : route('admin.documents.certificatetemplates.store'));
+    
+    const url = isEdit 
+      ? route('admin.documents.certificatetemplates.update', item.id) 
+      : route('admin.documents.certificatetemplates.store');
+    
+    post(url);
   }
 
-  /* Live preview styles generated dynamically */
   function renderCertificatePreview() {
     const style = data.design_style;
     const customBg = bgPreview ? { backgroundImage: `url(${bgPreview})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {};
 
-    if (style === 'modern') {
+    if (style === 'orange_bevel') {
       return (
-        <div style={{ width: '100%', aspectRatio: '1.414 / 1', background: '#fff', ...customBg, borderLeft: '6px solid #6B8F71', overflow: 'hidden', position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: 'clamp(20px,5%,48px)', fontFamily: "'Inter', sans-serif" }}>
-          <div>
-            <div style={{ fontSize: 'clamp(10px,1.3vw,12px)', letterSpacing: '3px', textTransform: 'uppercase', color: '#6B7280', fontWeight: 600 }}>Certificate</div>
-            <h1 style={{ fontSize: 'clamp(22px,3.4vw,32px)', color: '#111827', margin: '8px 0 0 0', fontWeight: 700, letterSpacing: '-0.5px' }}>{data.title}</h1>
-          </div>
-          <div style={{ fontSize: 'clamp(12px,1.6vw,14px)', color: '#374151', lineHeight: 1.7, maxWidth: '75%' }}>
-            <p style={{ margin: '0 0 6px 0', color: '#6B7280' }}>Presented to</p>
-            <h2 style={{ fontSize: 'clamp(18px,2.6vw,24px)', color: '#111827', borderBottom: '2px solid #111827', display: 'inline-block', paddingBottom: '4px', margin: '0 0 14px 0', fontWeight: 700 }}>[ Student Name ]</h2>
-            <div>{data.content_body}</div>
-          </div>
-          <div style={{ display: 'flex', gap: '48px', marginTop: '16px' }}>
-            <div style={{ textAlign: 'left' }}>
-              <SigImg src={sig1Preview} />
-              <div style={{ borderTop: '1px solid #111827', paddingTop: '5px', marginTop: '5px', fontSize: '11px', color: '#111827', fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase' }}>{data.signature_1_title || 'Signature'}</div>
+        <div className="w-full aspect-[1.414/1] bg-gradient-to-br from-amber-500 via-orange-500 to-amber-600 p-4 relative overflow-hidden flex flex-col justify-between shadow-md" style={customBg}>
+          <div 
+            className="w-full h-full bg-white relative p-5 flex flex-col justify-between text-center"
+            style={{ clipPath: 'polygon(16px 0, calc(100% - 16px) 0, 100% 16px, 100% calc(100% - 16px), calc(100% - 16px) 100%, 16px 100%, 0 calc(100% - 16px), 0 16px)' }}
+          >
+            <div 
+              className="absolute inset-2 border-[1px] border-zinc-400 pointer-events-none"
+              style={{ clipPath: 'polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px)' }}
+            />
+            <div className="absolute top-2 left-2 z-10 flex flex-col items-center pointer-events-none">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-600 via-yellow-300 to-amber-200 border border-amber-700 shadow-sm flex items-center justify-center font-bold text-[7px] text-zinc-900 uppercase">
+                Gold
+              </div>
+              <div className="w-5 h-5 bg-amber-500 -mt-1.5 rotate-45 border-b border-r border-amber-700"></div>
             </div>
-            <div style={{ textAlign: 'left' }}>
-              <SigImg src={sig2Preview} />
-              <div style={{ borderTop: '1px solid #111827', paddingTop: '5px', marginTop: '5px', fontSize: '11px', color: '#111827', fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase' }}>{data.signature_2_title || 'Signature'}</div>
-            </div>
-          </div>
-        </div>
-      );
-    }
 
-    if (style === 'academic') {
-      return (
-        <div style={{ width: '100%', aspectRatio: '1.414 / 1', background: '#F7F5EF', ...customBg, overflow: 'hidden', position: 'relative', display: 'flex', flexDirection: 'column', fontFamily: "'EB Garamond', Georgia, serif" }}>
-          <div style={{ background: '#1E3A5F', padding: 'clamp(10px,2%,16px) 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
-            <ShieldIcon />
-            <span style={{ color: '#C9A227', fontSize: 'clamp(10px,1.3vw,13px)', letterSpacing: '3px', textTransform: 'uppercase', fontWeight: 600 }}>Official Certificate</span>
-          </div>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', textAlign: 'center', padding: 'clamp(16px,4%,36px)' }}>
-            <h1 style={{ fontSize: 'clamp(20px,3vw,28px)', color: '#1E3A5F', margin: '4px 0 0 0', fontWeight: 700 }}>{data.title}</h1>
-            <div style={{ fontSize: 'clamp(12px,1.6vw,14px)', color: '#3b3b3b', lineHeight: 1.8, maxWidth: '80%' }}>
-              <p style={{ margin: '0 0 8px 0', fontStyle: 'italic' }}>This certifies that</p>
-              <h2 style={{ fontSize: 'clamp(18px,2.6vw,23px)', color: '#1E3A5F', borderBottom: '2px solid #C9A227', display: 'inline-block', paddingBottom: '4px', margin: '0 0 12px 0', minWidth: '220px' }}>[ Student Name ]</h2>
-              <div>{data.content_body}</div>
+            <div className="relative z-10 pt-1">
+              <FiligreeHeader />
+              <p className="text-[10px] font-bold text-zinc-800 uppercase tracking-widest mt-0.5">Institute Name Here</p>
+              <h1 className="text-2xl font-black text-zinc-900 tracking-wider font-serif uppercase mt-0.5">{data.title}</h1>
+              <p className="text-[10px] font-bold text-zinc-700 uppercase tracking-widest">Of Achievement</p>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'flex-end' }}>
-              <div style={{ textAlign: 'left', fontSize: '10px', color: '#9CA3AF' }}>Certificate No. ______</div>
-              <div style={{ display: 'flex', gap: '40px' }}>
-                <div style={{ textAlign: 'center', width: '130px' }}>
+
+            <div className="my-auto relative z-10">
+              <p className="text-[8px] font-bold text-zinc-600 tracking-widest uppercase mb-1">This Certificate is Proudly Presented To</p>
+              <div className="text-2xl font-serif italic text-zinc-900 border-b border-zinc-400 pb-0.5 px-6 inline-block min-w-[200px]">
+                Name Here
+              </div>
+              <p className="text-[8px] text-zinc-600 max-w-md mx-auto leading-relaxed mt-2 px-4">
+                {data.content_body}
+              </p>
+            </div>
+
+            <div className="relative z-10 pb-0.5">
+              <div className="flex justify-between items-end px-10 mb-1">
+                <div className="w-28 text-center border-b border-zinc-400 pb-0.5">
                   <SigImg src={sig1Preview} />
-                  <div style={{ borderTop: '1px solid #1E3A5F', paddingTop: '4px', fontSize: '11px', color: '#1E3A5F', fontWeight: 600 }}>{data.signature_1_title || 'Signature'}</div>
+                  <p className="text-[8px] text-zinc-600 font-medium mt-0.5">{data.signature_1_title}</p>
                 </div>
-                <div style={{ textAlign: 'center', width: '130px' }}>
+                <div className="w-28 text-center border-b border-zinc-400 pb-0.5">
                   <SigImg src={sig2Preview} />
-                  <div style={{ borderTop: '1px solid #1E3A5F', paddingTop: '4px', fontSize: '11px', color: '#1E3A5F', fontWeight: 600 }}>{data.signature_2_title || 'Signature'}</div>
+                  <p className="text-[8px] text-zinc-600 font-medium mt-0.5">{data.signature_2_title}</p>
+                </div>
+              </div>
+              <FiligreeHeader />
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (style === 'green_gold') {
+      return (
+        <div className="w-full aspect-[1.414/1] bg-white relative overflow-hidden p-5 flex flex-col justify-between text-center" style={customBg}>
+          <div className="absolute -bottom-8 -left-8 w-40 h-64 bg-emerald-900 rounded-full mix-blend-multiply opacity-90 transform rotate-45 pointer-events-none"></div>
+          <div className="absolute -bottom-10 -left-2 w-36 h-64 bg-amber-500 rounded-full transform rotate-45 pointer-events-none"></div>
+
+          <div className="absolute -bottom-8 -right-8 w-40 h-64 bg-emerald-900 rounded-full mix-blend-multiply opacity-90 transform -rotate-45 pointer-events-none"></div>
+          <div className="absolute -bottom-10 -right-2 w-36 h-64 bg-amber-500 rounded-full transform -rotate-45 pointer-events-none"></div>
+
+          <div className="absolute inset-3 border border-amber-500/60 pointer-events-none"></div>
+          <div className="absolute inset-4 border-[1.5px] border-emerald-900/80 pointer-events-none"></div>
+
+          <div className="relative z-10 flex flex-col justify-between h-full py-1">
+            <div>
+              <p className="text-[9px] font-bold text-zinc-700 uppercase tracking-widest mt-1">Company Name</p>
+              <h1 className="text-2xl font-black text-emerald-900 tracking-wider uppercase font-sans">{data.title}</h1>
+              <p className="text-[10px] font-extrabold text-zinc-800 tracking-widest uppercase">Of Achievement</p>
+            </div>
+
+            <div className="my-auto">
+              <div className="bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-white text-[8px] font-bold tracking-widest uppercase py-0.5 px-5 inline-block rounded-xs shadow-xs mb-1.5">
+                The Certificate Proudly Presented To
+              </div>
+              <h2 className="text-2xl font-serif italic text-emerald-950 my-0.5">Itsname Surname</h2>
+              <div className="w-1/2 h-[1px] bg-zinc-300 mx-auto my-1.5"></div>
+              <p className="text-[8px] text-zinc-600 italic max-w-sm mx-auto leading-relaxed px-2">
+                {data.content_body}
+              </p>
+            </div>
+
+            <div className="flex justify-between items-end px-12 relative z-10">
+              <div className="w-24 text-center border-b border-zinc-700 pb-0.5">
+                <SigImg src={sig1Preview} />
+                <p className="text-[8px] font-bold text-zinc-800 uppercase mt-0.5">{data.signature_1_title}</p>
+              </div>
+
+              <div className="w-9 h-9 rounded-full bg-amber-500 border-2 border-amber-300 shadow flex items-center justify-center -mb-1">
+                <Icon name="star" className="w-4 h-4 fill-white text-white" />
+              </div>
+
+              <div className="w-24 text-center border-b border-zinc-700 pb-0.5">
+                <SigImg src={sig2Preview} />
+                <p className="text-[8px] font-bold text-zinc-800 uppercase mt-0.5">{data.signature_2_title}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (style === 'classic_gold') {
+      return (
+        <div className="w-full aspect-[1.414/1] bg-[#fdfbf7] relative p-5 flex flex-col justify-between text-center overflow-hidden" style={customBg}>
+          <div className="absolute inset-3 border-[1px] border-amber-600/70 pointer-events-none"></div>
+          <div className="absolute inset-4 border-[0.5px] border-amber-600/40 pointer-events-none"></div>
+
+          <CornerFiligree className="absolute top-3 left-3" />
+          <CornerFiligree className="absolute top-3 right-3 transform scale-x-[-1]" />
+          <CornerFiligree className="absolute bottom-3 left-3 transform scale-y-[-1]" />
+          <CornerFiligree className="absolute bottom-3 right-3 transform scale-x-[-1] scale-y-[-1]" />
+
+          <div className="relative z-10 flex flex-col justify-between h-full py-2">
+            <div>
+              <h1 className="text-2xl font-serif font-bold text-zinc-900 tracking-widest uppercase">{data.title}</h1>
+              <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider mt-0.5">of achievement</p>
+              
+              <div className="flex items-center justify-center gap-2 my-1">
+                <div className="w-10 h-[1px] bg-amber-600"></div>
+                <div className="w-1 h-1 rotate-45 bg-amber-600"></div>
+                <div className="w-10 h-[1px] bg-amber-600"></div>
+              </div>
+            </div>
+
+            <div className="my-auto">
+              <p className="text-[9px] text-zinc-700 font-serif mb-0.5">This certificate is proudly presented to</p>
+              <h2 className="text-2xl font-serif italic text-amber-800 my-0.5">Michael Sprague</h2>
+              <p className="text-[8px] text-zinc-600 max-w-xs mx-auto leading-relaxed my-1.5 px-4">
+                {data.content_body}
+              </p>
+              <p className="text-[9px] font-bold text-zinc-800">Thank you lorem ipsum dolor sit amet!</p>
+            </div>
+
+            <div className="flex justify-between items-end px-10">
+              <div className="flex items-center gap-1">
+                <div className="w-9 h-9 rounded-full bg-amber-600 border border-amber-300 shadow flex items-center justify-center text-[6px] font-bold text-white uppercase text-center leading-tight">
+                  Best<br />Award
+                </div>
+              </div>
+
+              <div className="flex gap-8">
+                <div className="w-20 text-center border-b border-zinc-400 pb-0.5">
+                  <SigImg src={sig1Preview} />
+                  <p className="text-[7px] text-zinc-600 mt-0.5">{data.signature_1_title}</p>
+                </div>
+                <div className="w-20 text-center border-b border-zinc-400 pb-0.5">
+                  <SigImg src={sig2Preview} />
+                  <p className="text-[7px] text-zinc-600 mt-0.5">{data.signature_2_title}</p>
                 </div>
               </div>
             </div>
@@ -134,56 +234,44 @@ export default function CertificateForm({ item, campuses, activeCampusId }) {
       );
     }
 
-    if (style === 'playful') {
+    if (style === 'academic_navy') {
       return (
-        <div style={{ width: '100%', aspectRatio: '1.414 / 1', background: bgPreview ? undefined : 'linear-gradient(135deg, #FFF4D6 0%, #FFD9C2 55%, #FFE3F1 100%)', ...customBg, border: '6px dashed #7C3AED', borderRadius: '26px', overflow: 'hidden', position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', textAlign: 'center', padding: 'clamp(18px,4.5%,40px)', fontFamily: "'Baloo 2', sans-serif" }}>
-          <div style={{ position: 'absolute', top: '10px', right: '16px' }}><MedalBadge /></div>
-          <div>
-            <div style={{ fontSize: 'clamp(10px,1.3vw,12px)', letterSpacing: '2px', textTransform: 'uppercase', color: '#7C3AED', fontWeight: 700 }}>Great Job!</div>
-            <h1 style={{ fontSize: 'clamp(22px,3.4vw,30px)', color: '#7C3AED', margin: '6px 0 0 0', fontWeight: 700 }}>{data.title}</h1>
-          </div>
-          <div style={{ fontSize: 'clamp(12px,1.6vw,14px)', color: '#4B5563', lineHeight: 1.7, maxWidth: '82%' }}>
-            <p style={{ margin: '0 0 8px 0' }}>This certificate is awarded to</p>
-            <h2 style={{ fontSize: 'clamp(18px,2.6vw,24px)', color: '#0D9488', display: 'inline-block', padding: '4px 18px', margin: '0 0 14px 0', background: '#fff', borderRadius: '999px', boxShadow: '0 2px 6px rgba(0,0,0,0.08)' }}>[ Student Name ]</h2>
-            <div>{data.content_body}</div>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', width: '100%' }}>
-            <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.7)', borderRadius: '14px', padding: '8px 16px' }}>
-              <SigImg src={sig1Preview} />
-              <div style={{ fontSize: '11px', color: '#7C3AED', fontWeight: 700, marginTop: '4px' }}>{data.signature_1_title || 'Signature'}</div>
-            </div>
-            <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.7)', borderRadius: '14px', padding: '8px 16px' }}>
-              <SigImg src={sig2Preview} />
-              <div style={{ fontSize: '11px', color: '#7C3AED', fontWeight: 700, marginTop: '4px' }}>{data.signature_2_title || 'Signature'}</div>
-            </div>
-          </div>
-        </div>
-      );
-    }
+        <div className="w-full aspect-[1.414/1] bg-slate-50 relative p-5 flex flex-col justify-between overflow-hidden" style={customBg}>
+          <div className="absolute top-0 left-0 w-1/3 h-1/2 bg-blue-950 pointer-events-none" style={{ clipPath: 'polygon(0 0, 100% 0, 0 100%)' }}></div>
+          <div className="absolute top-0 left-0 w-1/3 h-1/2 bg-amber-500 pointer-events-none" style={{ clipPath: 'polygon(0 0, 104% 0, 0 104%)', zIndex: -1 }}></div>
 
-    if (style === 'corporate') {
-      return (
-        <div style={{ width: '100%', aspectRatio: '1.414 / 1', background: '#fff', ...customBg, overflow: 'hidden', position: 'relative', display: 'flex', fontFamily: "'Inter', sans-serif" }}>
-          <div style={{ width: '30%', background: '#1F2937', color: '#fff', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: 'clamp(12px,3%,24px)', position: 'relative' }}>
-            <div style={{ position: 'absolute', top: 0, right: 0, width: '10px', height: '100%', background: '#D97706' }} />
-            <div style={{ fontSize: 'clamp(9px,1.2vw,11px)', letterSpacing: '2px', textTransform: 'uppercase', color: '#D97706', fontWeight: 700 }}>Certificate</div>
-            <div style={{ fontSize: 'clamp(10px,1.3vw,12px)', color: '#9CA3AF', lineHeight: 1.5 }}>{data.template_type}</div>
+          <div className="absolute bottom-0 right-0 w-1/2 h-1/2 bg-blue-950 pointer-events-none" style={{ clipPath: 'polygon(100% 0, 100% 100%, 0 100%)' }}></div>
+          <div className="absolute bottom-0 right-0 w-1/2 h-1/2 bg-amber-500 pointer-events-none opacity-80" style={{ clipPath: 'polygon(100% 8%, 100% 100%, 8% 100%)' }}></div>
+
+          <div className="absolute inset-4 border-[1px] border-amber-600/80 pointer-events-none"></div>
+
+          <div className="absolute top-5 right-5 z-10 w-8 h-8 rounded-full bg-amber-500 border border-blue-950 flex items-center justify-center shadow-xs">
+            <Icon name="academic-cap" className="w-4 h-4 text-blue-950" />
           </div>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: 'clamp(16px,4%,36px)' }}>
-            <h1 style={{ fontSize: 'clamp(20px,3vw,28px)', color: '#111827', margin: 0, fontWeight: 800, letterSpacing: '-0.5px' }}>{data.title}</h1>
-            <div style={{ fontSize: 'clamp(12px,1.6vw,14px)', color: '#374151', lineHeight: 1.7 }}>
-              <p style={{ margin: '0 0 6px 0', color: '#6B7280' }}>This is to certify that</p>
-              <h2 style={{ fontSize: 'clamp(18px,2.6vw,23px)', color: '#111827', borderBottom: '3px solid #D97706', display: 'inline-block', paddingBottom: '4px', margin: '0 0 12px 0', fontWeight: 700 }}>[ Student Name ]</h2>
-              <div>{data.content_body}</div>
+
+          <div className="relative z-10 flex flex-col justify-between h-full py-1 text-center">
+            <div className="mt-1">
+              <h1 className="text-2xl font-black text-blue-950 tracking-wider uppercase font-sans">{data.title}</h1>
+              <p className="text-[9px] font-bold text-blue-900 uppercase tracking-widest">Of High School Graduation</p>
+              <div className="w-1/3 h-[1.5px] bg-amber-500 mx-auto mt-1"></div>
             </div>
-            <div style={{ display: 'flex', gap: '40px' }}>
-              <div style={{ textAlign: 'left' }}>
+
+            <div className="my-auto">
+              <p className="text-[8px] font-bold text-zinc-800 uppercase tracking-wider mb-0.5">Proudly Present To:</p>
+              <h2 className="text-2xl font-serif italic text-zinc-900 my-0.5">Name Surname</h2>
+              <p className="text-[7.5px] font-semibold text-zinc-600 uppercase max-w-xs mx-auto leading-relaxed mt-1">
+                {data.content_body}
+              </p>
+            </div>
+
+            <div className="flex justify-around items-end px-10 mb-1">
+              <div className="w-24 text-center border-b border-blue-950 pb-0.5">
                 <SigImg src={sig1Preview} />
-                <div style={{ borderTop: '2px solid #D97706', paddingTop: '4px', marginTop: '4px', fontSize: '11px', color: '#111827', fontWeight: 700 }}>{data.signature_1_title || 'Signature'}</div>
+                <p className="text-[7.5px] font-bold text-blue-950 uppercase mt-0.5">{data.signature_1_title}</p>
               </div>
-              <div style={{ textAlign: 'left' }}>
+              <div className="w-24 text-center border-b border-blue-950 pb-0.5">
                 <SigImg src={sig2Preview} />
-                <div style={{ borderTop: '2px solid #D97706', paddingTop: '4px', marginTop: '4px', fontSize: '11px', color: '#111827', fontWeight: 700 }}>{data.signature_2_title || 'Signature'}</div>
+                <p className="text-[7.5px] font-bold text-blue-950 uppercase mt-0.5">{data.signature_2_title}</p>
               </div>
             </div>
           </div>
@@ -191,30 +279,48 @@ export default function CertificateForm({ item, campuses, activeCampusId }) {
       );
     }
 
-    /* default: classic */
     return (
-      <div style={{ width: '100%', aspectRatio: '1.414 / 1', background: '#FBF8F1', ...customBg, boxShadow: 'inset 0 0 0 3px #FBF8F1, inset 0 0 0 5px #B08D57', padding: 'clamp(20px,5%,44px)', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', textAlign: 'center', fontFamily: "'EB Garamond', Georgia, serif" }}>
-        <FlourishCorner style={{ position: 'absolute', top: '10px', left: '10px' }} />
-        <FlourishCorner style={{ position: 'absolute', top: '10px', right: '10px', transform: 'scaleX(-1)' }} />
-        <FlourishCorner style={{ position: 'absolute', bottom: '10px', left: '10px', transform: 'scaleY(-1)' }} />
-        <FlourishCorner style={{ position: 'absolute', bottom: '10px', right: '10px', transform: 'scale(-1,-1)' }} />
-        <div>
-          <h4 style={{ letterSpacing: '3px', textTransform: 'uppercase', color: '#B08D57', fontSize: 'clamp(10px,1.3vw,13px)', margin: 0, fontFamily: "'Playfair Display', serif" }}>Certificate of Achievement</h4>
-          <h1 style={{ fontSize: 'clamp(22px,3.4vw,30px)', color: '#1F2937', margin: '10px 0 0 0', fontWeight: 700, fontFamily: "'Playfair Display', serif" }}>{data.title}</h1>
+      <div className="w-full aspect-[1.414/1] bg-white relative p-4 flex flex-col justify-between overflow-hidden" style={customBg}>
+        <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-orange-500 to-amber-500"></div>
+        <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-orange-500 to-amber-500"></div>
+
+        <div className="absolute top-0 right-0 w-32 h-28 bg-sky-900 rounded-bl-full opacity-90 pointer-events-none"></div>
+        <div className="absolute bottom-0 left-0 w-36 h-32 bg-sky-900 rounded-tr-full opacity-90 pointer-events-none"></div>
+
+        <div className="absolute top-0 left-8 w-3 h-20 bg-sky-900 z-10"></div>
+        <div className="absolute top-10 left-4 z-20 w-11 h-11 rounded-full bg-sky-950 border-2 border-amber-500 flex flex-col items-center justify-center text-amber-400 font-bold shadow">
+          <span className="text-[8px] leading-tight">2030</span>
+          <span className="text-[5px] tracking-tighter uppercase">Award</span>
         </div>
-        <div style={{ fontSize: 'clamp(12px,1.6vw,14px)', color: '#334155', lineHeight: 1.8, maxWidth: '80%' }}>
-          <p style={{ margin: '0 0 10px 0', fontStyle: 'italic' }}>This is proudly presented to</p>
-          <h2 style={{ fontSize: 'clamp(18px,2.6vw,24px)', color: '#7C2D3A', borderBottom: '2px solid #B08D57', display: 'inline-block', paddingBottom: '5px', margin: '0 0 15px 0', minWidth: '220px', fontFamily: "'Playfair Display', serif" }}>[ Student Name ]</h2>
-          <div>{data.content_body}</div>
+
+        <div className="absolute bottom-3 left-3 z-10 text-[7px] font-bold text-white uppercase tracking-wider">
+          Logo Here
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'flex-end', marginTop: '16px' }}>
-          <div style={{ textAlign: 'center', width: '140px' }}>
-            <SigImg src={sig1Preview} />
-            <div style={{ borderTop: '1px solid #B08D57', paddingTop: '5px', fontSize: '12px', color: '#1F2937', fontWeight: 700 }}>{data.signature_1_title || 'Signature'}</div>
+
+        <div className="relative z-10 pl-20 pr-4 py-3 flex flex-col justify-between h-full">
+          <div>
+            <h1 className="text-2xl font-serif font-bold text-amber-600 tracking-wide">{data.title}</h1>
+            <p className="text-[9px] font-bold text-zinc-700 tracking-widest uppercase">Of Appreciation</p>
           </div>
-          <div style={{ textAlign: 'center', width: '140px' }}>
-            <SigImg src={sig2Preview} />
-            <div style={{ borderTop: '1px solid #B08D57', paddingTop: '5px', fontSize: '12px', color: '#1F2937', fontWeight: 700 }}>{data.signature_2_title || 'Signature'}</div>
+
+          <div className="my-auto">
+            <h2 className="text-2xl font-serif italic text-sky-950 mb-0.5">Name Surname</h2>
+            <div className="w-full h-[1px] bg-amber-500 mb-1.5"></div>
+            <p className="text-[8px] font-bold text-zinc-800 leading-tight">Lorem Ipsum is simply dummy text of the printing and typesetting</p>
+            <p className="text-[7.5px] text-zinc-500 leading-relaxed mt-1 max-w-xs">
+              {data.content_body}
+            </p>
+          </div>
+
+          <div className="flex justify-end gap-8 items-end mb-1">
+            <div className="w-20 text-center border-b border-amber-500 pb-0.5">
+              <SigImg src={sig1Preview} />
+              <p className="text-[7px] text-zinc-700 mt-0.5">{data.signature_1_title}</p>
+            </div>
+            <div className="w-20 text-center border-b border-amber-500 pb-0.5">
+              <SigImg src={sig2Preview} />
+              <p className="text-[7px] text-zinc-700 mt-0.5">{data.signature_2_title}</p>
+            </div>
           </div>
         </div>
       </div>
@@ -226,15 +332,9 @@ export default function CertificateForm({ item, campuses, activeCampusId }) {
 
   return (
     <AuthenticatedLayout>
-      <Head title={isEdit ? 'Edit Certificate' : 'Create Certificate'}>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=EB+Garamond:ital@0;1&family=Inter:wght@400;500;600;700;800&family=Baloo+2:wght@600;700&display=swap" rel="stylesheet" />
-      </Head>
+      <Head title={isEdit ? 'Edit Certificate' : 'Create Certificate'} />
 
       <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8">
-        
-        {/* Page Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">Documents / Certificates</span>
@@ -245,129 +345,84 @@ export default function CertificateForm({ item, campuses, activeCampusId }) {
           </Link>
         </div>
 
-        {/* Split Layout: Form & Preview */}
         <div className="flex flex-col lg:flex-row gap-8 items-start">
-          
-          {/* ================= LEFT SIDE: EDIT FORM ================= */}
-          <div className="w-full lg:w-[500px] xl:w-[600px] shrink-0 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="w-full lg:w-[480px] xl:w-[540px] shrink-0 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/50">
                <h3 className="text-lg font-bold text-slate-900">Template Settings</h3>
             </div>
 
             <form onSubmit={submit} className="p-6 space-y-6">
-              
-              {/* Design Picker */}
               <div className="pb-6 border-b border-slate-100">
                 <div className="mb-3">
-                  <strong className="text-sm font-semibold text-slate-800">Choose a Design</strong>
-                  <p className="text-xs text-slate-500 mt-1">Pick a starting look — a custom background image below will override it.</p>
+                  <strong className="text-sm font-semibold text-slate-800">Select Design Style</strong>
+                  <p className="text-xs text-slate-500 mt-0.5">Choose layout matching your reference certificate style.</p>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {CERTIFICATE_DESIGNS.map(d => (
                     <div
                       key={d.key}
                       onClick={() => setData('design_style', d.key)}
-                      className={`cursor-pointer border-2 rounded-xl p-3 transition-all bg-white hover:-translate-y-0.5 ${data.design_style === d.key ? 'border-indigo-600 ring-2 ring-indigo-600/20' : 'border-slate-200 hover:border-indigo-300'}`}
+                      className={`cursor-pointer border-2 rounded-xl p-2.5 transition-all bg-white hover:-translate-y-0.5 ${data.design_style === d.key ? 'border-indigo-600 ring-2 ring-indigo-600/20' : 'border-slate-200 hover:border-indigo-300'}`}
                     >
-                      <div className="w-full h-10 rounded-lg mb-2 relative" style={{ background: d.swatch }}>
-                        {data.design_style === d.key && <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-indigo-600 text-white text-[10px] flex items-center justify-center font-bold">✓</span>}
+                      <div className="w-full h-8 rounded-lg mb-2 relative" style={{ background: d.swatch }}>
+                        {data.design_style === d.key && <span className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-indigo-600 text-white text-[9px] flex items-center justify-center font-bold">✓</span>}
                       </div>
-                      <div className="font-bold text-xs text-slate-800 leading-tight">{d.name}</div>
-                      <div className="text-[10px] text-slate-500 mt-0.5 leading-tight">{d.blurb}</div>
+                      <div className="font-bold text-[11px] text-slate-800 leading-tight">{d.name}</div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="sm:col-span-2">
                   <label className={labelClass}>Campus *</label>
-                  <select value={data.campus_id} onChange={(e) => setData('campus_id', e.target.value)} disabled={!isSuperAdmin} required className={`${inputClass} ${!isSuperAdmin ? 'bg-slate-100 opacity-70' : 'bg-white'}`}>
-                    <option value="" disabled>Select Campus</option>
-                    {campuses?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
+                  <WorkingCampusField value={data.campus_id} campuses={campuses} className={`${inputClass} bg-white`} />
+                  {errors.campus_id && <span className="text-red-500 text-xs mt-1 block">{errors.campus_id}</span>}
                 </div>
 
                 <div className="sm:col-span-2">
                   <label className={labelClass}>Template Title (Headline) *</label>
                   <input type="text" value={data.title} onChange={e => setData('title', e.target.value)} required className={inputClass} />
+                  {errors.title && <span className="text-red-500 text-xs mt-1 block">{errors.title}</span>}
                 </div>
 
                 <div className="sm:col-span-2">
                   <label className={labelClass}>Template Type *</label>
                   <select value={data.template_type} onChange={e => setData('template_type', e.target.value)} required className={`${inputClass} bg-white`}>
-                    <option value="Merit">Merit / Academic Excellence</option>
-                    <option value="Course Completion">Course Completion</option>
+                    <option value="Merit">Merit / Excellence</option>
+                    <option value="Achievement">Achievement</option>
+                    <option value="Completion">Completion</option>
                     <option value="Participation">Participation</option>
                   </select>
+                  {errors.template_type && <span className="text-red-500 text-xs mt-1 block">{errors.template_type}</span>}
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className={labelClass}>Main Content Body *</label>
+                  <label className={labelClass}>Main Body Content *</label>
                   <textarea rows="3" value={data.content_body} onChange={e => setData('content_body', e.target.value)} required className={`${inputClass} resize-none`}></textarea>
+                  {errors.content_body && <span className="text-red-500 text-xs mt-1 block">{errors.content_body}</span>}
                 </div>
 
-                {/* Background File Upload */}
                 <div className="sm:col-span-2">
-                  <label className={labelClass}>Background Border Image (A4 Landscape)</label>
-                  <input 
-                    type="file" 
-                    accept="image/*" 
-                    onChange={e => handleImageChange('background_image', e.target.files[0], setBgPreview)} 
-                    className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition-all border border-slate-200 rounded-xl bg-slate-50 cursor-pointer"
-                  />
-                  <small className="text-xs text-slate-500 mt-1.5 block">Optional — overrides the chosen design's default background.</small>
+                  <label className={labelClass}>Custom Background Overlay</label>
+                  <input type="file" accept="image/*" onChange={e => handleImageChange('background_image', e.target.files[0], setBgPreview)} className="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition-all border border-slate-200 rounded-xl bg-slate-50 cursor-pointer" />
                 </div>
 
-                {/* Signature 1 */}
-                <div className="bg-slate-50 p-4 border border-slate-200 rounded-xl space-y-3">
-                  <strong className="text-sm font-bold text-slate-800 block border-b border-slate-200 pb-2">Left Signature</strong>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-600 mb-1">Title (e.g. Principal)</label>
-                    <input type="text" value={data.signature_1_title} onChange={e => setData('signature_1_title', e.target.value)} className={`${inputClass} py-2 px-3 text-xs`} />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-600 mb-1">Upload Signature</label>
-                    <input type="file" accept="image/*" onChange={e => handleImageChange('signature_1_image', e.target.files[0], setSig1Preview)} className="block w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 cursor-pointer border border-slate-200 rounded-lg bg-white" />
-                  </div>
+                <div className="bg-slate-50 p-3.5 border border-slate-200 rounded-xl space-y-2.5">
+                  <strong className="text-xs font-bold text-slate-800 block border-b border-slate-200 pb-1.5">Left Signature / Date</strong>
+                  <input type="text" value={data.signature_1_title} onChange={e => setData('signature_1_title', e.target.value)} className={`${inputClass} py-1.5 px-3 text-xs`} />
+                  <input type="file" accept="image/*" onChange={e => handleImageChange('signature_1_image', e.target.files[0], setSig1Preview)} className="block w-full text-[11px] text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[11px] file:font-semibold file:bg-indigo-50 file:text-indigo-700 cursor-pointer border border-slate-200 rounded-lg bg-white" />
                 </div>
 
-                {/* Signature 2 */}
-                <div className="bg-slate-50 p-4 border border-slate-200 rounded-xl space-y-3">
-                  <strong className="text-sm font-bold text-slate-800 block border-b border-slate-200 pb-2">Right Signature</strong>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-600 mb-1">Title (e.g. Director)</label>
-                    <input type="text" value={data.signature_2_title} onChange={e => setData('signature_2_title', e.target.value)} className={`${inputClass} py-2 px-3 text-xs`} />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-600 mb-1">Upload Signature</label>
-                    <input type="file" accept="image/*" onChange={e => handleImageChange('signature_2_image', e.target.files[0], setSig2Preview)} className="block w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 cursor-pointer border border-slate-200 rounded-lg bg-white" />
-                  </div>
+                <div className="bg-slate-50 p-3.5 border border-slate-200 rounded-xl space-y-2.5">
+                  <strong className="text-xs font-bold text-slate-800 block border-b border-slate-200 pb-1.5">Right Signature / Manager</strong>
+                  <input type="text" value={data.signature_2_title} onChange={e => setData('signature_2_title', e.target.value)} className={`${inputClass} py-1.5 px-3 text-xs`} />
+                  <input type="file" accept="image/*" onChange={e => handleImageChange('signature_2_image', e.target.files[0], setSig2Preview)} className="block w-full text-[11px] text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[11px] file:font-semibold file:bg-indigo-50 file:text-indigo-700 cursor-pointer border border-slate-200 rounded-lg bg-white" />
                 </div>
-
-                {/* Active Toggle */}
-                <div className="sm:col-span-2 pt-2 border-t border-slate-100">
-                  <label className="flex items-center gap-3 cursor-pointer group w-max">
-                    <div className="relative flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={data.is_active}
-                        onChange={(e) => setData('is_active', e.target.checked)}
-                        className="peer appearance-none w-5 h-5 border-2 border-slate-300 rounded focus:ring-0 checked:bg-emerald-600 checked:border-emerald-600 cursor-pointer transition-colors"
-                      />
-                      <svg className="absolute w-3.5 h-3.5 top-[3px] left-[3px] text-white pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <span className="text-sm font-semibold text-slate-700 group-hover:text-slate-900 transition-colors">Active Template</span>
-                  </label>
-                </div>
-
               </div>
 
-              {/* Action Button */}
-              <div className="pt-6 border-t border-slate-100 flex justify-end">
-                <button type="submit" disabled={processing} className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md shadow-indigo-500/20 disabled:opacity-70 active:scale-95">
+              <div className="pt-4 border-t border-slate-100 flex justify-end">
+                <button type="submit" disabled={processing} className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md shadow-indigo-500/25 disabled:opacity-70">
                   <Icon name="save" className="w-4 h-4" />
                   {processing ? 'Saving...' : 'Save Template'}
                 </button>
@@ -375,16 +430,14 @@ export default function CertificateForm({ item, campuses, activeCampusId }) {
             </form>
           </div>
 
-          {/* ================= RIGHT SIDE: LIVE PREVIEW ================= */}
           <div className="w-full flex-1 lg:sticky lg:top-24 flex flex-col items-center">
-            <div className="w-full flex items-center justify-center gap-2 mb-4 bg-slate-900 text-white py-2 rounded-xl text-xs font-bold uppercase tracking-widest shadow-md">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Live Preview
+            <div className="w-full flex items-center justify-center gap-2 mb-3 bg-slate-900 text-white py-2 rounded-xl text-xs font-bold uppercase tracking-widest shadow-md">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Certificate Live Preview
             </div>
-            <div className="w-full rounded-2xl shadow-xl border border-slate-200 overflow-hidden bg-white ring-8 ring-slate-50">
+            <div className="w-full rounded-2xl shadow-xl border border-slate-200 overflow-hidden bg-white ring-8 ring-slate-100">
               {renderCertificatePreview()}
             </div>
           </div>
-
         </div>
       </div>
     </AuthenticatedLayout>

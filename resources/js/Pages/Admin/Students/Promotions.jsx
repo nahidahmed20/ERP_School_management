@@ -9,7 +9,7 @@ const selectCls = "block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 
 
 const STATUS_OPTS = [
   { key: 'promote', label: 'Promote', active: 'bg-emerald-600 text-white shadow-md shadow-emerald-500/20 border-emerald-600' },
-  { key: 'retain', label: 'Retain', active: 'bg-amber-500 text-white shadow-md shadow-amber-500/20 border-amber-500' },
+  { key: 'repeat', label: 'Retain / Repeat', active: 'bg-amber-500 text-white shadow-md shadow-amber-500/20 border-amber-500' },
   { key: 'leave', label: 'Leave', active: 'bg-rose-600 text-white shadow-md shadow-rose-500/20 border-rose-600' },
 ];
 
@@ -34,8 +34,7 @@ export default function Promotions({ sessions, classes, students, filters }) {
     }, { preserveState: true });
   };
 
-  // Promotion Form (Submit to next class)
-  const { data, setData, post, processing } = useForm({
+  const { data, setData, post, processing, transform } = useForm({
     next_session_id: '',
     next_class_id: '',
     next_section_id: '',
@@ -63,12 +62,16 @@ export default function Promotions({ sessions, classes, students, filters }) {
       Swal.fire({ icon: 'error', title: 'Action Denied', text: 'পরবর্তী সেশন, ক্লাস এবং সেকশন সিলেক্ট করা বাধ্যতামূলক!', customClass: { popup: 'rounded-2xl' } });
       return;
     }
+
+    transform((currentData) => ({
+      ...currentData,
+      current_session_id: currentSession,
+      current_class_id: currentClass,
+      current_section_id: currentSection
+    }));
+
     post(route('admin.students.promotions.store'), {
-      data: {
-        ...data,
-        current_class_id: currentClass,
-        current_section_id: currentSection
-      }
+      preserveScroll: true
     });
   };
 

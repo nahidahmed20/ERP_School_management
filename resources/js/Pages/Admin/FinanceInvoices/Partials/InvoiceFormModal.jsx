@@ -1,4 +1,5 @@
 import { useForm, usePage } from '@inertiajs/react';
+import WorkingCampusField from '@/Components/WorkingCampusField';
 import Icon from '@/Components/Icons';
 
 export default function InvoiceFormModal({ item, students, feeGroups, campuses, activeCampusId, onClose }) {
@@ -9,7 +10,7 @@ export default function InvoiceFormModal({ item, students, feeGroups, campuses, 
   const defaultInvoiceNo = `INV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
   const { data, setData, post, put, processing, errors, reset } = useForm({
-    campus_id: item?.campus_id ?? activeCampusId,
+    campus_id: item?.campus_id ?? auth?.active_campus_id ?? activeCampusId ?? '',
     student_id: item?.student_id ?? '',
     fee_group_id: item?.fee_group_id ?? '',
     invoice_no: item?.invoice_no ?? defaultInvoiceNo,
@@ -42,10 +43,7 @@ export default function InvoiceFormModal({ item, students, feeGroups, campuses, 
             
             <label style={{ gridColumn: '1 / -1' }}>
               <span>Campus *</span>
-              <select value={data.campus_id || ''} onChange={(e) => setData('campus_id', e.target.value)} disabled={!isSuperAdmin} required>
-                <option value="" disabled>Select Campus</option>
-                {campuses?.map(campus => <option key={campus.id} value={campus.id}>{campus.name}</option>)}
-              </select>
+              <WorkingCampusField value={data.campus_id} campuses={campuses}  />
               {errors.campus_id && <em>{errors.campus_id}</em>}
             </label>
 

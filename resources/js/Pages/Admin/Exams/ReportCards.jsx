@@ -2,7 +2,7 @@ import { Head, useForm, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
 
-export default function ReportCards({ exams, classes, students, reportCard, filters }) {
+export default function ReportCards({ schoolName, exams, classes, students, reportCard, filters }) {
   const { data, setData, get, processing } = useForm({
     exam_id: filters?.exam_id || '',
     class_id: filters?.class_id || '',
@@ -46,9 +46,7 @@ export default function ReportCards({ exams, classes, students, reportCard, filt
           </div>
           {reportCard && (
             <button onClick={handlePrint} className="no-print inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md shadow-indigo-500/20 active:scale-95">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-              </svg>
+              <Icon name="printer" className="w-4 h-4" />
               Print Marksheet
             </button>
           )}
@@ -104,14 +102,24 @@ export default function ReportCards({ exams, classes, students, reportCard, filt
           </form>
         </div>
 
+        {!reportCard && !processing && (
+          <div className="bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 p-16 text-center no-print">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo-50 mb-4 border border-indigo-100">
+              <Icon name="document-text" className="w-8 h-8 text-indigo-300" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-800 mb-1">No Report Card Generated</h3>
+            <p className="text-slate-500 text-sm max-w-sm mx-auto">দয়া করে উপরের ফিল্টার থেকে Exam, Class এবং Student সিলেক্ট করে "Generate Report Card" বাটনে ক্লিক করুন।</p>
+          </div>
+        )}
+
         {/* 📄 Official Marksheet Area */}
         {reportCard && (
           <div className="printable-area max-w-4xl mx-auto bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 p-8 sm:p-10 space-y-6 relative overflow-hidden">
             
             {/* School Header */}
             <div className="text-center border-b border-slate-100 pb-5 space-y-1">
-              <h2 className="text-2xl font-black text-slate-900 tracking-wide">IDEAL SCHOOL & COLLEGE</h2>
-              <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">Main Campus, Dhaka • Academic Transcript</p>
+              <h2 className="text-2xl font-black text-slate-900 tracking-wide uppercase">{schoolName}</h2>
+              <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">Main Campus • Academic Transcript</p>
               <div className="inline-block bg-indigo-50 text-indigo-700 font-extrabold px-3 py-1 rounded-full text-xs mt-2 border border-indigo-100">
                 Official Academic Report Card
               </div>
@@ -197,7 +205,6 @@ export default function ReportCards({ exams, classes, students, reportCard, filt
 
       </div>
 
-      {/* 🖨️ Advanced Print Custom CSS */}
       <style>{`
         @media print {
           @page { size: A4; margin: 15mm; }

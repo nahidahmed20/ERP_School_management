@@ -1,4 +1,5 @@
 import { useForm, usePage } from '@inertiajs/react';
+import WorkingCampusField from '@/Components/WorkingCampusField';
 import Icon from '@/Components/Icons';
 
 export default function UploadFormModal({ folders, campuses, activeCampusId, onClose }) {
@@ -8,7 +9,7 @@ export default function UploadFormModal({ folders, campuses, activeCampusId, onC
   const { data, setData, post, processing, errors, reset } = useForm({
     file: null,
     folder_id: '',
-    campus_id: activeCampusId || '', 
+    campus_id: auth?.active_campus_id ?? activeCampusId ?? '', 
   });
 
   const submit = (e) => {
@@ -51,17 +52,7 @@ export default function UploadFormModal({ folders, campuses, activeCampusId, onC
             {/* Campus Select */}
             <div>
               <label className={labelClass}>Assign to Campus</label>
-              <select 
-                value={data.campus_id} 
-                onChange={(e) => setData('campus_id', e.target.value)}
-                disabled={!isSuperAdmin}
-                className={`${inputClass} ${!isSuperAdmin ? 'opacity-70 bg-slate-100 cursor-not-allowed' : 'bg-white cursor-pointer'}`}
-              >
-                <option value="" disabled>Select Campus</option>
-                {campuses?.map(campus => (
-                  <option key={campus.id} value={campus.id}>{campus.name}</option>
-                ))}
-              </select>
+              <WorkingCampusField value={data.campus_id} campuses={campuses} className={`${inputClass} ${!isSuperAdmin ? 'opacity-70 bg-slate-100 cursor-not-allowed' : 'bg-white cursor-pointer'}`} />
               {errors.campus_id && <p className="text-rose-500 text-xs font-medium mt-1.5">{errors.campus_id}</p>}
             </div>
 

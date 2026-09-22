@@ -194,6 +194,9 @@ class ReportController extends Controller
     // ৫. Student Attendance Report (GET)
     public function studentReport(Request $request)
     {
+        $campusId = config('app.active_campus_id');
+        $filter = fn($q) => $campusId ? $q->where('campus_id', $campusId) : $q;
+
         $classId = $request->class_id;
         $sectionId = $request->section_id;
 
@@ -203,7 +206,9 @@ class ReportController extends Controller
         $reportData = [];
 
         if ($classId) {
-            $students = Student::with(['currentEnrollment.school_class', 'currentEnrollment.section'])
+            $students = Student::with(['currentEnrollment.schoolClass', 'currentEnrollment.section'])
+                ->where('status', true)
+                ->where($filter)
                 ->whereHas('currentEnrollment', function($q) use ($classId, $sectionId) {
                     $q->where('class_id', $classId);
                     if ($sectionId) {
@@ -211,18 +216,22 @@ class ReportController extends Controller
                     }
                 })->get();
 
+            $studentIds = $students->pluck('id');
+            $allAttendances = StudentAttendance::whereIn('student_id', $studentIds)
+                ->whereMonth('attendance_date', $month)
+                ->whereYear('attendance_date', $year)
+                ->get()
+                ->groupBy('student_id');
+
             foreach ($students as $student) {
-                $attendances = StudentAttendance::where('student_id', $student->id)
-                    ->whereMonth('attendance_date', $month)
-                    ->whereYear('attendance_date', $year)
-                    ->get();
+                $attendances = $allAttendances->get($student->id, collect());
 
                 $reportData[] = [
                     'id' => $student->id,
-                    'name' => $student->first_name . ' ' . $student->last_name,
+                    'name' => trim($student->first_name . ' ' . $student->last_name),
                     'admission_no' => $student->admission_no,
-                    'roll_no' => $student->currentEnrollment->roll_no,
-                    'class_name' => $student->currentEnrollment->school_class->name,
+                    'roll_no' => $student->currentEnrollment?->roll_no,
+                    'class_name' => $student->currentEnrollment?->schoolClass?->name,
                     'total_present' => $attendances->where('status', 'present')->count(),
                     'total_absent' => $attendances->where('status', 'absent')->count(),
                     'total_late' => $attendances->where('status', 'late')->count(),
@@ -233,7 +242,7 @@ class ReportController extends Controller
         }
 
         return Inertia::render('Admin/Reports/StudentAttendance', [
-            'classes' => SchoolClass::with('sections')->where('is_active', true)->get(),
+            'classes' => SchoolClass::with('sections')->where('is_active', true)->where($filter)->get(),
             'reportData' => $reportData,
             'filters' => [
                 'class_id' => $classId ?? '',

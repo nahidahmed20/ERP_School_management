@@ -17,7 +17,7 @@ class DepartmentController extends Controller
         $query = Department::query();
 
         if (!$user->hasRole('Super Admin') && $user->role !== 'super_admin') {
-            $query->where('campus_id', $user->active_campus_id);
+            $query->where('campus_id', config('app.active_campus_id'));
         }
 
         if ($search = $request->get('search')) {
@@ -37,7 +37,7 @@ class DepartmentController extends Controller
 
         $campuses = ($user->hasRole('Super Admin') || $user->role === 'super_admin')
                     ? Campus::select('id', 'name')->get()
-                    : Campus::where('id', $user->active_campus_id)->select('id', 'name')->get();
+                    : Campus::where('id', config('app.active_campus_id'))->select('id', 'name')->get();
 
         return Inertia::render('Admin/Departments/Index', [
             'departments' => $departments,
@@ -57,7 +57,7 @@ class DepartmentController extends Controller
     public function update(Request $request, Department $department)
     {
         $user = auth()->user();
-        if (!$user->hasRole('Super Admin') && $user->role !== 'super_admin' && $department->campus_id != $user->active_campus_id) {
+        if (!$user->hasRole('Super Admin') && $user->role !== 'super_admin' && $department->campus_id != config('app.active_campus_id')) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -71,7 +71,7 @@ class DepartmentController extends Controller
     {
         // Security Check
         $user = auth()->user();
-        if (!$user->hasRole('Super Admin') && $user->role !== 'super_admin' && $department->campus_id != $user->active_campus_id) {
+        if (!$user->hasRole('Super Admin') && $user->role !== 'super_admin' && $department->campus_id != config('app.active_campus_id')) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -81,14 +81,7 @@ class DepartmentController extends Controller
 
     private function validateData(Request $request, $ignoreId = null): array
     {
-        $user = auth()->user();
-        $isSuperAdmin = $user->hasRole('Super Admin') || $user->role === 'super_admin';
-
-        if (!$isSuperAdmin || !$request->filled('campus_id')) {
-            $request->merge([
-                'campus_id' => $user->campus_id
-            ]);
-        }
+        $request->merge(['campus_id' => config('app.active_campus_id')]);
 
         $campusId = $request->campus_id;
 

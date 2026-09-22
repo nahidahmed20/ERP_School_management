@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import WorkingCampusField from '@/Components/WorkingCampusField';
 import { Head, useForm, usePage, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
@@ -317,9 +318,7 @@ export default function CreateEdit({ order, vendors, purchase_requests, inventor
 
               <div>
                 <label className={labelClass}>Campus <span className="text-rose-500">*</span></label>
-                <select className={inputClass} value={data.campus_id || ''} onChange={(e) => setData('campus_id', e.target.value)} disabled={!isSuperAdmin} required>
-                  {campuses?.map(campus => <option key={campus.id} value={campus.id}>{campus.name}</option>)}
-                </select>
+                <WorkingCampusField value={data.campus_id} campuses={campuses} className={inputClass} />
                 {errors.campus_id && <p className="text-rose-500 text-xs mt-1">{errors.campus_id}</p>}
               </div>
 

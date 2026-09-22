@@ -13,17 +13,22 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
 use Inertia\Inertia;
+use Illuminate\Validation\Rule; 
 
 class StaffController extends Controller
 {
     public function index(Request $request)
     {
+        $campusId = config('app.active_campus_id');
+        $filter = fn($q) => $campusId ? $q->where('campus_id', $campusId) : $q;
+        $globalFilter = fn($q) => $campusId ? $q->where(fn($q2) => $q2->where('campus_id', $campusId)->orWhereNull('campus_id')) : $q;
+
         $perPage = $request->input('per_page', 10);
         $search = $request->input('search');
         $departmentId = $request->input('department_id');
         $designationId = $request->input('designation_id');
 
-        $query = Staff::with(['department', 'designation', 'user'])->latest();
+        $query = Staff::where($filter)->with(['department', 'designation', 'user'])->latest();
 
         // Search Logic
         if ($search) {
@@ -49,16 +54,19 @@ class StaffController extends Controller
 
         return Inertia::render('Admin/Staff/Index', [
             'staff' => $staff,
-            'departments' => Department::where('is_active', true)->get(),
-            'designations' => Designation::where('is_active', true)->get(),
+            'departments' => Department::where('is_active', true)->where($globalFilter)->get(),
+            'designations' => Designation::where('is_active', true)->where($globalFilter)->get(),
             'filters' => $request->only(['search', 'department_id', 'designation_id', 'per_page']),
         ]);
     }
 
     public function create()
     {
-        $departments = Department::where('is_active', true)->get();
-        $designations = Designation::where('is_active', true)->get();
+        $campusId = config('app.active_campus_id');
+        $globalFilter = fn($q) => $campusId ? $q->where(fn($q2) => $q2->where('campus_id', $campusId)->orWhereNull('campus_id')) : $q;
+
+        $departments = Department::where('is_active', true)->where($globalFilter)->get();
+        $designations = Designation::where('is_active', true)->where($globalFilter)->get();
 
         $roles = Role::where('name', '!=', 'super_admin')->get();
 
@@ -75,7 +83,7 @@ class StaffController extends Controller
 
         DB::beginTransaction();
         try {
-            $lastStaff = Staff::latest('id')->first();
+            $lastStaff = Staff::withoutGlobalScope('campus')->withTrashed()->latest('id')->first();
             $staffIdNo = 'EMP-' . date('Y') . '-' . sprintf('%04d', $lastStaff ? $lastStaff->id + 1 : 1);
 
             $userId = null;
@@ -86,7 +94,7 @@ class StaffController extends Controller
                     'name' => $request->first_name . ' ' . $request->last_name,
                     'email' => $staffEmail,
                     'password' => Hash::make($staffIdNo),
-                    'campus_id' => $request->user()->campus_id,
+                    'campus_id' => config('app.active_campus_id'),
                 ]);
 
                 if ($request->role_name) {
@@ -102,7 +110,7 @@ class StaffController extends Controller
             }
 
             Staff::create([
-                'campus_id'         => $request->user()->campus_id,
+                'campus_id'         => config('app.active_campus_id'),
                 'user_id'           => $userId,
                 'department_id'     => $request->department_id,
                 'designation_id'    => $request->designation_id,
@@ -139,7 +147,11 @@ class StaffController extends Controller
 
     public function edit($id)
     {
-        $staff = Staff::findOrFail($id);
+        $campusId = config('app.active_campus_id');
+        $filter = fn($q) => $campusId ? $q->where('campus_id', $campusId) : $q;
+        $globalFilter = fn($q) => $campusId ? $q->where(fn($q2) => $q2->where('campus_id', $campusId)->orWhereNull('campus_id')) : $q;
+
+        $staff = Staff::where($filter)->findOrFail($id);
 
         $currentRole = '';
         if ($staff->user_id) {
@@ -151,8 +163,8 @@ class StaffController extends Controller
 
         return Inertia::render('Admin/Staff/Edit', [
             'staff' => $staff,
-            'departments' => Department::where('is_active', true)->get(),
-            'designations' => Designation::where('is_active', true)->get(),
+            'departments' => Department::where('is_active', true)->where($globalFilter)->get(),
+            'designations' => Designation::where('is_active', true)->where($globalFilter)->get(),
             'roles' => Role::where('name', '!=', 'super_admin')->get(),
             'currentRole' => $currentRole
         ]);
@@ -160,7 +172,10 @@ class StaffController extends Controller
 
     public function update(Request $request, $id)
     {
-        $staff = Staff::findOrFail($id);
+        $campusId = config('app.active_campus_id');
+        $filter = fn($q) => $campusId ? $q->where('campus_id', $campusId) : $q;
+
+        $staff = Staff::where($filter)->findOrFail($id);
         $request->validate($this->staffValidationRules(isUpdate: true, staffId: $staff->id));
 
         DB::beginTransaction();
@@ -223,7 +238,10 @@ class StaffController extends Controller
 
     public function destroy($id)
     {
-        $staff = Staff::findOrFail($id);
+        $campusId = config('app.active_campus_id');
+        $filter = fn($q) => $campusId ? $q->where('campus_id', $campusId) : $q;
+
+        $staff = Staff::where($filter)->findOrFail($id);
 
         DB::beginTransaction();
         try {
@@ -245,8 +263,53 @@ class StaffController extends Controller
         }
     }
 
-    public function report(Staff $staff){$staff->load(['campus','department','designation']);return Inertia::render('Admin/Documents/PersonReport',['personType'=>'staff','person'=>$staff,'initialTab'=>request('tab','attendance'),'attendance'=>$staff->attendances()->latest('date')->get(),'results'=>[],'fees'=>[],'leaves'=>$staff->leaves()->latest()->get(),'payrolls'=>$staff->payrolls()->latest()->get(),'hrRecords'=>$staff->hrRecords()->latest()->get()]);}
-    public function generateIdCard(Staff $staff){$staff->load(['campus','department','designation']);$template=\App\Models\IdCardTemplate::where('is_active',true)->whereIn('audience',['staff','both'])->latest()->first();abort_unless($template,422,'Create an active Staff ID card template first.');return Inertia::render('Admin/Documents/PersonIdCard',['personType'=>'staff','person'=>$staff,'template'=>$template,'branding'=>app(\App\Services\WebsiteSettingsService::class)->values()]);}
+    public function report($id)
+    {
+        $campusId = config('app.active_campus_id');
+        $filter = fn($q) => $campusId ? $q->where('campus_id', $campusId) : $q;
+
+        $staff = Staff::where($filter)->with(['campus','department','designation'])->findOrFail($id);
+
+        return Inertia::render('Admin/Documents/PersonReport',[
+            'personType'=>'staff',
+            'person'=>$staff,
+            'initialTab'=>request('tab','attendance'),
+            'attendance'=>$staff->attendances()->latest('date')->get(),
+            'results'=>[],
+            'fees'=>[],
+            'leaves'=>$staff->leaves()->latest()->get(),
+            'payrolls'=>$staff->payrolls()->latest()->get(),
+            'hrRecords'=>$staff->hrRecords()->latest()->get()
+        ]);
+    }
+
+    public function generateIdCard($id)
+    {
+        $campusId = config('app.active_campus_id');
+        $filter = fn($q) => $campusId ? $q->where('campus_id', $campusId) : $q;
+
+        $staff = Staff::where($filter)->with(['campus','department','designation'])->findOrFail($id);
+
+        $template = \App\Models\IdCardTemplate::where('is_active',true)->whereIn('audience',['staff','both'])->latest()->first();
+        abort_unless($template, 422, 'Create an active Staff ID card template first.');
+
+        return Inertia::render('Admin/Documents/PersonIdCard',[
+            'personType'=>'staff',
+            'person'=>$staff,
+            'template'=>$template,
+            'branding'=>app(\App\Services\WebsiteSettingsService::class)->values()
+        ]);
+    }
+
+    private function existsRule(string $table)
+    {
+        $campusId = config('app.active_campus_id');
+        return Rule::exists($table, 'id')->where(function ($query) use ($campusId) {
+            if ($campusId) {
+                $query->where('campus_id', $campusId)->orWhereNull('campus_id');
+            }
+        });
+    }
 
     private function staffValidationRules(bool $isUpdate = false, $staffId = null): array
     {
@@ -254,8 +317,8 @@ class StaffController extends Controller
         $emailRule = $isUpdate ? "nullable|email|unique:staff,email,{$staffId}" : 'nullable|email|unique:staff,email';
 
         return [
-            'department_id'     => 'required|exists:departments,id',
-            'designation_id'    => 'required|exists:designations,id',
+            'department_id'     => ['required', $this->existsRule('departments')],
+            'designation_id'    => ['required', $this->existsRule('designations')],
             'first_name'        => 'required|string|max:255',
             'last_name'         => 'nullable|string|max:255',
             'father_name'       => 'nullable|string|max:255',

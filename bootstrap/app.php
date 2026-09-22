@@ -25,16 +25,20 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => PermissionMiddleware::class,
         ]);
 
-        // Campus context must exist before SubstituteBindings so every
-        // BelongsToCampus route model is scoped during implicit binding.
-        $middleware->web(prepend: [SetActiveCampus::class]);
-
         $middleware->web(append: [
+            SetActiveCampus::class,
             EnforceTenantSubscription::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
             EnforcePasswordExpiry::class,
         ]);
+
+        // Resolve the authenticated working campus AFTER StartSession, but
+        // BEFORE authentication/bindings query campus-scoped models.
+        $middleware->prependToPriorityList(
+            \Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests::class,
+            SetActiveCampus::class,
+        );
 
         $middleware->validateCsrfTokens(except: [
             'payments/sslcommerz/success',

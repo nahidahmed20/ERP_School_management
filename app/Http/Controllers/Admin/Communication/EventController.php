@@ -12,33 +12,40 @@ class EventController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Event::with('classroom')->orderBy('start_datetime', 'asc');
+        $campusId = config('app.active_campus_id');
+
+        // 🔒 Data Leak Protection Logic
+        $filter = fn($q) => $campusId ? $q->where('campus_id', $campusId) : $q;
+
+        $query = Event::with('classroom')->where($filter)->orderBy('start_datetime', 'asc');
 
         if ($request->filled('type')) {
             $query->where('type', $request->type);
         }
-        
+
         if ($request->get('filter') === 'upcoming') {
             $query->where('start_datetime', '>=', now());
         }
 
         return Inertia::render('Admin/Communication/Events/Index', [
-    'events' => $query->paginate(\App\Support\PerPage::resolve(15))->withQueryString(),
-    'classrooms' => Classroom::select('id', 'room_number', 'type')->where('is_active', true)->get(),
-    'filters' => [
-        'type' => $request->input('type', ''),
-        'filter' => $request->input('filter', 'upcoming'),
-    ],
-]);
+            'events' => $query->paginate(\App\Support\PerPage::resolve(15))->withQueryString(),
+            'classrooms' => Classroom::select('id', 'room_number', 'type')->where('is_active', true)->where($filter)->get(),
+            'filters' => [
+                'type' => $request->input('type', ''),
+                'filter' => $request->input('filter', 'upcoming'),
+            ],
+        ]);
     }
 
     public function store(Request $request)
     {
         $data = $this->validateData($request);
-        
+
         if ($this->checkRoomClash($request)) {
-            return back()->with('error', 'এই সময়ে নির্বাচিত রুমটি অন্য কোনো ক্লাস বা ইভেন্টের জন্য বুক করা আছে!');
+            return back()->with('error', 'এই সময়ে নির্বাচিত রুমটি অন্য কোনো ক্লাস বা ইভেন্টের জন্য বুক করা আছে!');
         }
+
+        $data['campus_id'] = config('app.active_campus_id') ?? auth()->user()->campus_id;
 
         Event::create($data);
         return back()->with('success', 'ইভেন্ট সফলভাবে তৈরি করা হয়েছে।');
@@ -50,7 +57,7 @@ class EventController extends Controller
         $data = $this->validateData($request);
 
         if ($this->checkRoomClash($request, $id)) {
-            return back()->with('error', 'এই সময়ে নির্বাচিত রুমটি অন্য কোনো ক্লাস বা ইভেন্টের জন্য বুক করা আছে!');
+            return back()->with('error', 'এই সময়ে নির্বাচিত রুমটি অন্য কোনো ক্লাস বা ইভেন্টের জন্য বুক করা আছে!');
         }
 
         $event->update($data);
@@ -67,7 +74,6 @@ class EventController extends Controller
     private function validateData(Request $request): array
     {
         return $request->validate([
-            'campus_id' => 'nullable|exists:campuses,id',
             'title' => 'required|string|max:255',
             'type' => 'required|in:Event,Meeting,Holiday,Other',
             'start_datetime' => 'required|date',
@@ -77,6 +83,7 @@ class EventController extends Controller
             'is_active' => 'boolean',
             'show_on_dashboard' => 'boolean',
             'audience' => 'required|in:all,student,parent,staff',
+            'is_government_holiday' => 'boolean',
         ]);
     }
 
@@ -89,7 +96,7 @@ class EventController extends Controller
                 $q->where('start_datetime', '<', $request->end_datetime)
                   ->where('end_datetime', '>', $request->start_datetime);
             });
-            
+
         if ($ignoreId) {
             $query->where('id', '!=', $ignoreId);
         }

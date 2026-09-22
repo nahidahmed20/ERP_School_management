@@ -8,7 +8,7 @@ import Pagination from '@/Components/Pagination';
 import Swal from 'sweetalert2'; 
 import WebsiteSettingsForm from './Partials/WebsiteSettingsForm';
 
-export default function Index({ settings, groups, campuses, filters, websiteSettings }) {
+export default function Index({ settings, groups, campuses, filters, websiteSettings, canManageBranding = false }) {
   const { flash, auth } = usePage().props;
 
   const [search, setSearch] = useState(filters.search ?? '');
@@ -20,6 +20,15 @@ export default function Index({ settings, groups, campuses, filters, websiteSett
   const [editingItem, setEditingItem] = useState(null);
   const [deletingItem, setDeletingItem] = useState(null);
   const [websiteFormOpen, setWebsiteFormOpen] = useState(false);
+
+  useEffect(() => {
+    const openBranding = () => {
+      if (canManageBranding && window.location.hash === '#branding') setWebsiteFormOpen(true);
+    };
+    openBranding();
+    window.addEventListener('hashchange', openBranding);
+    return () => window.removeEventListener('hashchange', openBranding);
+  }, [canManageBranding]);
 
   // --- SweetAlert2 Toast Message ---
   useEffect(() => {
@@ -113,7 +122,7 @@ export default function Index({ settings, groups, campuses, filters, websiteSett
             <p className="text-sm text-slate-500 mt-1">সিস্টেমের key-value ভিত্তিক configuration এখান থেকে নিয়ন্ত্রণ করুন।</p>
           </div>
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-            <button onClick={() => setWebsiteFormOpen(true)} className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700"><Icon name="settings" className="h-4 w-4" /> Website & Footer</button>
+            {canManageBranding && <button onClick={() => setWebsiteFormOpen(true)} className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700"><Icon name="settings" className="h-4 w-4" /> School Logo & Website</button>}
             <button onClick={openCreate} className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"><Icon name="plus" className="h-4 w-4" /> Add Setting</button>
           </div>
         </div>

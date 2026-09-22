@@ -14,6 +14,7 @@ use App\Models\Student;
 use App\Models\StudentCategory;
 use App\Models\User;
 use App\Support\PerPage;
+use App\Support\CampusRule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
@@ -31,25 +32,25 @@ class StudentController extends Controller
         $query = Student::with(['currentEnrollment.schoolClass', 'currentEnrollment.section', 'guardian', 'campus'])->latest();
 
         if ($request->filled('class_id')) {
-            $query->whereHas('currentEnrollment', function($q) use ($request) {
+            $query->whereHas('currentEnrollment', function ($q) use ($request) {
                 $q->where('class_id', $request->class_id);
             });
         }
         if ($request->filled('section_id')) {
-            $query->whereHas('currentEnrollment', function($q) use ($request) {
+            $query->whereHas('currentEnrollment', function ($q) use ($request) {
                 $q->where('section_id', $request->section_id);
             });
         }
 
         if ($request->filled('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('admission_no', 'like', "%{$search}%")
-                  ->orWhereHas('guardian', function($gQ) use ($search) {
-                      $gQ->where('father_name', 'like', "%{$search}%")
-                         ->orWhere('father_phone', 'like', "%{$search}%");
-                  });
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('admission_no', 'like', "%{$search}%")
+                    ->orWhereHas('guardian', function ($gQ) use ($search) {
+                        $gQ->where('father_name', 'like', "%{$search}%")
+                            ->orWhere('father_phone', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -66,8 +67,9 @@ class StudentController extends Controller
     {
         return Inertia::render('Admin/Students/Create', [
             'classes' => SchoolClass::with('sections')->where('is_active', true)->get(),
-            'active_session' => AcademicSession::where('is_active', 1)->where('is_current', 1)->first(),
-            'campuses' => Campus::all(),
+            'active_session' => AcademicSession::where('campus_id', config('app.active_campus_id'))->where('is_active', 1)->where('is_current', 1)->first(),
+            'campuses' => Campus::whereKey(config('app.active_campus_id'))->get(),
+            'activeCampusId' => config('app.active_campus_id'),
             'categories' => StudentCategory::all(),
             'houses' => House::all(),
         ]);
@@ -81,7 +83,7 @@ class StudentController extends Controller
             return response()->json(['guardian' => null]);
         }
         $guardian = Guardian::where('father_phone', $query)
-            ->orWhereHas('students', function($q) use ($query) {
+            ->orWhereHas('students', function ($q) use ($query) {
                 $q->where('admission_no', $query);
             })
             ->first();
@@ -91,8 +93,11 @@ class StudentController extends Controller
 
     public function store(Request $request)
     {
+        // 🟢 FIX: ব্যাকএন্ডে ফলব্যাক লজিক
+        $request->merge(['campus_id' => config('app.active_campus_id')]);
+
         $data = $request->validate($this->studentValidationRules());
-        $activeSession = AcademicSession::where('is_active', 1)->where('is_current', 1)->first();
+        $activeSession = AcademicSession::where('campus_id', config('app.active_campus_id'))->where('is_active', 1)->where('is_current', 1)->first();
 
         if (!$activeSession) {
             return back()->with('error', 'কোনো অ্যাক্টিভ শিক্ষাবর্ষ পাওয়া যায়নি! আগে একটি শিক্ষাবর্ষ চালু করুন।');
@@ -123,8 +128,7 @@ class StudentController extends Controller
                     }
                     $guardian->update(['user_id' => $guardianUser->id]);
                 }
-            }
-            else {
+            } else {
                 if ($request->create_parent_user) {
                     $parentEmail = $request->guardian_email ?? $request->father_phone . '@parent.school.com';
 
@@ -150,7 +154,7 @@ class StudentController extends Controller
                         'father_name'   => $request->father_name,
                         'mother_name'   => $request->mother_name,
                         'mother_phone'  => $request->mother_phone,
-                        'guardian_email'=> $request->guardian_email,
+                        'guardian_email' => $request->guardian_email,
                         'address'       => $request->present_address,
                     ]
                 );
@@ -158,7 +162,7 @@ class StudentController extends Controller
                 $guardianId = $guardian->id;
             }
 
-            $lastStudent = Student::latest('id')->first();
+            $lastStudent = Student::withoutGlobalScope('campus')->withTrashed()->latest('id')->first();
             $admissionNo = 'STU-' . date('Y') . '-' . sprintf('%04d', $lastStudent ? $lastStudent->id + 1 : 1);
 
             $studentUserId = null;
@@ -210,8 +214,11 @@ class StudentController extends Controller
             ]);
 
             $student->guardians()->syncWithoutDetaching([$guardianId => [
-                'relationship' => 'primary guardian', 'is_primary' => true,
-                'can_pickup' => true, 'receives_sms' => true, 'receives_email' => true,
+                'relationship' => 'primary guardian',
+                'is_primary' => true,
+                'can_pickup' => true,
+                'receives_sms' => true,
+                'receives_email' => true,
             ]]);
 
             Enrollment::create([
@@ -261,6 +268,9 @@ class StudentController extends Controller
 
     public function update(Request $request, $id)
     {
+        // 🟢 FIX: ব্যাকএন্ডে ফলব্যাক লজিক
+        $request->merge(['campus_id' => config('app.active_campus_id')]);
+
         $student = Student::with(['guardian', 'currentEnrollment'])->findOrFail($id);
         $data = $request->validate($this->studentValidationRules(isUpdate: true, studentId: $student->id));
 
@@ -272,7 +282,7 @@ class StudentController extends Controller
                     'father_phone'  => $request->father_phone,
                     'mother_name'   => $request->mother_name,
                     'mother_phone'  => $request->mother_phone,
-                    'guardian_email'=> $request->guardian_email,
+                    'guardian_email' => $request->guardian_email,
                 ]);
 
                 if ($student->guardian->user_id) {
@@ -337,7 +347,6 @@ class StudentController extends Controller
 
             DB::commit();
             return redirect()->route('admin.students.index')->with('success', 'স্টুডেন্টের তথ্য এবং ইউজার অ্যাকাউন্ট সফলভাবে আপডেট হয়েছে!');
-
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'আপডেট করতে সমস্যা হয়েছে: ' . $e->getMessage());
@@ -372,32 +381,66 @@ class StudentController extends Controller
 
             DB::commit();
             return back()->with('success', 'স্টুডেন্ট এবং তার অ্যাক্সেস মুছে ফেলা হয়েছে!');
-
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'ডিলিট করতে সমস্যা হয়েছে: ' . $e->getMessage());
         }
     }
 
-    public function generateIdCard(Student $student){return Inertia::render('Admin/Documents/PersonIdCard',$this->studentDocumentData($student));}
-    public function attendanceHistory(Student $student){return $this->studentReport($student,'attendance');}
-    public function academicResults(Student $student){return $this->studentReport($student,'results');}
-    public function feePayments(Student $student){return $this->studentReport($student,'fees');}
-    public function sendMessage(Student $student){return redirect()->route('admin.communication.chat.index',['student_id'=>$student->id]);}
-    private function studentReport(Student $student,string $tab){$student->load(['campus','guardian','currentEnrollment.schoolClass','currentEnrollment.section']);return Inertia::render('Admin/Documents/PersonReport',['personType'=>'student','person'=>$student,'initialTab'=>$tab,'attendance'=>\App\Models\StudentAttendance::where('student_id',$student->id)->latest('attendance_date')->get(),'results'=>\App\Models\ExamMark::with(['exam:id,name','subject:id,name'])->where('student_id',$student->id)->latest()->get(),'fees'=>\App\Models\Invoice::with('feeGroup:id,name')->where('student_id',$student->id)->latest('invoice_date')->get(),'leaves'=>\App\Models\StudentLeaveRequest::where('student_id',$student->id)->latest()->get()]);}
-    private function studentDocumentData(Student $student):array{$student->load(['campus','guardian','currentEnrollment.schoolClass','currentEnrollment.section']);$template=\App\Models\IdCardTemplate::where('is_active',true)->whereIn('audience',['student','both'])->latest()->first();abort_unless($template,422,'Create an active Student ID card template first.');return['personType'=>'student','person'=>$student,'template'=>$template,'branding'=>app(\App\Services\WebsiteSettingsService::class)->values()];}
+    public function generateIdCard(Student $student)
+    {
+        $template = \App\Models\IdCardTemplate::where('is_active', true)
+            ->whereIn('audience', ['student', 'both'])
+            ->latest()
+            ->first();
+
+        if (!$template) {
+            return back()->with('error', 'কোনো অ্যাক্টিভ Student ID Card টেমপ্লেট পাওয়া যায়নি! আগে একটি টেমপ্লেট তৈরি করুন।');
+        }
+
+        return Inertia::render('Admin/Documents/PersonIdCard', $this->studentDocumentData($student, $template));
+    }
+    public function attendanceHistory(Student $student)
+    {
+        return $this->studentReport($student, 'attendance');
+    }
+    public function academicResults(Student $student)
+    {
+        return $this->studentReport($student, 'results');
+    }
+    public function feePayments(Student $student)
+    {
+        return $this->studentReport($student, 'fees');
+    }
+    public function sendMessage(Student $student)
+    {
+        return redirect()->route('admin.communication.chat.index', ['student_id' => $student->id]);
+    }
+    private function studentReport(Student $student, string $tab)
+    {
+        $student->load(['campus', 'guardian', 'currentEnrollment.schoolClass', 'currentEnrollment.section']);
+        return Inertia::render('Admin/Documents/PersonReport', ['personType' => 'student', 'person' => $student, 'initialTab' => $tab, 'attendance' => \App\Models\StudentAttendance::where('student_id', $student->id)->latest('attendance_date')->get(), 'results' => \App\Models\ExamMark::with(['exam:id,name', 'subject:id,name'])->where('student_id', $student->id)->latest()->get(), 'fees' => \App\Models\Invoice::with('feeGroup:id,name')->where('student_id', $student->id)->latest('invoice_date')->get(), 'leaves' => \App\Models\StudentLeaveRequest::where('student_id', $student->id)->latest()->get()]);
+    }
+    private function studentDocumentData(Student $student): array
+    {
+        $student->load(['campus', 'guardian', 'currentEnrollment.schoolClass', 'currentEnrollment.section']);
+        $template = \App\Models\IdCardTemplate::where('is_active', true)->whereIn('audience', ['student', 'both'])->latest()->first();
+        abort_unless($template, 422, 'Create an active Student ID card template first.');
+        return ['personType' => 'student', 'person' => $student, 'template' => $template, 'branding' => app(\App\Services\WebsiteSettingsService::class)->values()];
+    }
 
     private function studentValidationRules(bool $isUpdate = false, $studentId = null): array
     {
         $rules = [
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'campus_id'     => 'required|exists:campuses,id',
-            'class_id'      => 'required|exists:school_classes,id',
-            'section_id'    => 'required|exists:sections,id',
+            'class_id'      => ['required', CampusRule::exists('school_classes')],
+            'section_id'    => ['required', CampusRule::exists('sections')],
+            'guardian_id'   => ['nullable', CampusRule::exists('guardians')],
             'roll_no'       => 'nullable|string|max:50',
 
-            'category_id'   => 'nullable|integer',
-            'house_id'      => 'nullable|integer',
+            'category_id'   => ['nullable', CampusRule::exists('student_categories')],
+            'house_id'      => ['nullable', CampusRule::exists('houses')],
             'birth_certificate_no' => 'nullable|string|max:100' . ($isUpdate ? "|unique:students,birth_certificate_no,{$studentId}" : '|unique:students,birth_certificate_no'),
             'national_id'   => 'nullable|string|max:100' . ($isUpdate ? "|unique:students,national_id,{$studentId}" : '|unique:students,national_id'),
             'mother_tongue' => 'nullable|string|max:100',
@@ -420,7 +463,7 @@ class StudentController extends Controller
             'father_phone'  => 'required|string|max:20',
             'mother_name'   => 'required|string|max:255',
             'mother_phone'  => 'nullable|string|max:20',
-            'guardian_email'=> 'nullable|email|max:255',
+            'guardian_email' => 'nullable|email|max:255',
         ];
 
         if (!$isUpdate) {

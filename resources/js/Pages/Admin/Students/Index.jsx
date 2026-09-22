@@ -5,6 +5,7 @@ import Icon from '@/Components/Icons';
 import Pagination from '@/Components/Pagination';
 import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 import Swal from 'sweetalert2';
+import { publicMediaUrl } from '@/Utils/publicMediaUrl';
 
 function StudentViewModal({ student, onClose }) {
   const [imageError, setImageError] = useState(false);
@@ -35,7 +36,7 @@ function StudentViewModal({ student, onClose }) {
           <div className="w-32 h-32 rounded-full overflow-hidden bg-white ring-4 ring-white shadow-sm border border-slate-100 flex items-center justify-center text-slate-300 mb-5 relative group">
             {student.photo && !imageError ? (
               <img
-                src={`/storage/${student.photo}`}
+                src={publicMediaUrl(student.photo)}
                 alt="Profile"
                 className="w-full h-full object-cover"
                 onError={() => setImageError(true)}
@@ -259,12 +260,17 @@ export default function Index({ students, classes, filters }) {
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Student Directory</h1>
             <p className="text-sm text-slate-500 mt-1">Manage enrollments, view profiles, and update records.</p>
           </div>
+          <div className="flex flex-wrap gap-3">
+          <Link href={route('admin.students.import.create')} className="inline-flex items-center justify-center rounded-xl border border-indigo-200 bg-white px-5 py-2.5 text-sm font-semibold text-indigo-700 hover:bg-indigo-50">
+            Import CSV
+          </Link>
           <Link
             href={route('admin.students.create')}
             className="inline-flex w-full sm:w-auto justify-center items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md shadow-indigo-500/20 active:scale-95"
           >
             <Icon name="plus" className="w-4 h-4" /> New Admission
           </Link>
+          </div>
         </div>
 
         {/* ----------------------------------------------------- */}
@@ -411,7 +417,7 @@ export default function Index({ students, classes, filters }) {
                             <div className="relative w-10 h-10 rounded-full bg-slate-100 ring-2 ring-white shadow-sm flex items-center justify-center overflow-hidden shrink-0">
                                 {student.photo ? (
                                   <img
-                                    src={`/storage/${student.photo}`}
+                                    src={publicMediaUrl(student.photo)}
                                     alt="Avatar"
                                     loading="lazy"
                                     decoding="async"

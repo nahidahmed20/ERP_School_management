@@ -22,7 +22,7 @@ export default function Index({ backups, filters }) {
   }, [flash]);
 
   function applyFilters(overrides = {}) {
-    router.get(route('admin.saas.backups'), { 
+    router.get(route('admin.saas.backups.index'), {
       search, per_page: perPage, ...overrides 
     }, { preserveState: true, replace: true });
   }

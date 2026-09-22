@@ -23,9 +23,9 @@ export default function SiteLayout({ children, activePage = "" }) {
             href={route("home")}
             className={`sf-brand ${light ? "sf-brand-light" : ""}`}
         >
-            {settings.logo ? (
+            {(light ? settings.footer_logo || settings.logo : settings.logo) ? (
                 <img
-                    src={settings.logo}
+                    src={light ? settings.footer_logo || settings.logo : settings.logo}
                     alt={settings.school_name || "School logo"}
                 />
             ) : (

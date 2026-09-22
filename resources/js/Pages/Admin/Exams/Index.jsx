@@ -101,7 +101,6 @@ export default function Index({ exams, filters }) {
         <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
             
-            {/* Per Page */}
             <select
               value={perPage}
               onChange={e => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}
@@ -116,7 +115,6 @@ export default function Index({ exams, filters }) {
 
             <div className="hidden sm:block w-px h-6 bg-slate-200"></div>
 
-            {/* Status Filter */}
             <select 
               value={status} 
               onChange={(e) => { setStatus(e.target.value); applyFilters({ status: e.target.value }); }}
@@ -127,7 +125,6 @@ export default function Index({ exams, filters }) {
               <option value="inactive">Inactive</option>
             </select>
 
-            {/* Search Input */}
             <div className="relative flex-1 min-w-[200px] sm:w-64">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Icon name="search" className="w-4 h-4 text-slate-400" />
@@ -142,7 +139,6 @@ export default function Index({ exams, filters }) {
               />
             </div>
 
-            {/* Apply Button */}
             <button
               onClick={() => applyFilters()}
               className="w-full sm:w-auto px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
@@ -151,7 +147,6 @@ export default function Index({ exams, filters }) {
             </button>
           </div>
 
-          {/* Export Actions */}
           <div className="flex items-center justify-end gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-xl w-full xl:w-auto shadow-sm shrink-0 ml-auto">
             <button onClick={copyToClipboard} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Copy to Clipboard">
               Copy
@@ -159,14 +154,6 @@ export default function Index({ exams, filters }) {
             <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
             <button onClick={exportToCSV} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-emerald-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export CSV">
               CSV
-            </button>
-            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-            <button onClick={() => alert('Backend Excel plugin needed')} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-green-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export Excel">
-              Excel
-            </button>
-            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-            <button onClick={() => alert('Backend PDF plugin needed')} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-rose-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export PDF">
-              PDF
             </button>
             <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
             <button onClick={handlePrint} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-amber-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Print List">
@@ -227,7 +214,28 @@ export default function Index({ exams, filters }) {
                             {item.is_active ? 'Active' : 'Inactive'}
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-center"><span className={`inline-flex rounded-md border px-2.5 py-1 text-[11px] font-bold uppercase ${item.results_published ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-amber-200 bg-amber-50 text-amber-700'}`}>{item.results_published ? 'Published' : 'Hidden'}</span></td>
+                        {/* Student Result Column */}
+                        <td className="px-6 py-4 text-center">
+                        <button
+                            type="button"
+                            onClick={() => {
+                            router.patch(route('admin.exams.toggle-publish', item.id), {}, {
+                                preserveScroll: true,
+                                onSuccess: () => {
+                                }
+                            });
+                            }}
+                            title="Click to toggle publish status"
+                            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold uppercase transition-all shadow-sm active:scale-95 cursor-pointer ${
+                            item.results_published 
+                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 hover:bg-emerald-200' 
+                                : 'bg-amber-100 text-amber-800 border border-amber-300 hover:bg-amber-200'
+                            }`}
+                        >
+                            <span className={`w-2 h-2 rounded-full ${item.results_published ? 'bg-emerald-600 animate-pulse' : 'bg-amber-600'}`}></span>
+                            {item.results_published ? 'Published' : 'Hidden'}
+                        </button>
+                        </td>
                         <td className="px-6 py-4 text-right no-print">
                           <div className="flex items-center justify-end gap-1.5">
                             <button onClick={() => { setEditingItem(item); setFormOpen(true); }} className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Edit Exam">

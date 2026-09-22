@@ -62,14 +62,7 @@ class DesignationController extends Controller
 
     private function validateData(Request $request, $ignoreId = null): array
     {
-        $user = auth()->user();
-        $isSuperAdmin = $user->hasRole('Super Admin') || $user->role === 'super_admin';
-
-        if (!$isSuperAdmin || !$request->filled('campus_id')) {
-            $request->merge([
-                'campus_id' => $user->campus_id
-            ]);
-        }
+        $request->merge(['campus_id' => config('app.active_campus_id')]);
 
         $campusId = $request->campus_id;
 

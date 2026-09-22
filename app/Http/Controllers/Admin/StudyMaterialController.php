@@ -7,15 +7,28 @@ use App\Models\{StudyMaterial, SchoolClass, Subject};
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
-use App\Support\CampusRule;
+use Illuminate\Validation\Rule;
 use App\Services\MalwareScanner;
 use Illuminate\Validation\ValidationException;
 
 class StudyMaterialController extends Controller
 {
+    
+    private function existsRule(string $table)
+    {
+        $campusId = config('app.active_campus_id');
+        $rule = Rule::exists($table, 'id');
+        return $campusId ? $rule->where('campus_id', $campusId) : $rule;
+    }
+
     public function index(Request $request)
     {
-        $query = StudyMaterial::with(['schoolClass', 'subject', 'uploader:id,name']);
+        $campusId = config('app.active_campus_id');
+
+        // 🔒 Data Leak Protection Logic
+        $filter = fn($q) => $campusId ? $q->where('campus_id', $campusId) : $q;
+
+        $query = StudyMaterial::with(['schoolClass', 'subject', 'uploader:id,name'])->where($filter);
 
         if ($classId = $request->get('class_id')) {
             $query->where('class_id', $classId);
@@ -29,8 +42,8 @@ class StudyMaterialController extends Controller
 
         return Inertia::render('Admin/Academics/StudyMaterials/Index', [
             'materials' => $materials,
-            'classes' => SchoolClass::where('is_active', true)->get(),
-            'subjects' => Subject::where('is_active', true)->get(),
+            'classes' => SchoolClass::where('is_active', true)->where($filter)->get(),
+            'subjects' => Subject::where('is_active', true)->where($filter)->get(),
             'filters' => [
                 'class_id' => $request->get('class_id', ''),
                 'search' => $request->get('search', ''),
@@ -42,28 +55,33 @@ class StudyMaterialController extends Controller
     {
         $request->validate([
             'title' => 'required|string|max:255',
-            'class_id' => ['required', CampusRule::exists('school_classes')],
-            'subject_id' => ['nullable', CampusRule::exists('subjects')],
+            'class_id' => ['required', $this->existsRule('school_classes')],
+            'subject_id' => ['nullable', $this->existsRule('subjects')],
             'description' => 'nullable|string',
             'file' => 'required|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,jpg,jpeg,png|max:10240',
         ]);
 
-        if ($request->filled('subject_id') && ! SchoolClass::findOrFail($request->class_id)->subjects()->whereKey($request->subject_id)->exists()) {
+        $class = SchoolClass::findOrFail($request->class_id);
+        $campusId = $class->campus_id; 
+
+        if ($request->filled('subject_id') && ! $class->subjects()->whereKey($request->subject_id)->exists()) {
             throw ValidationException::withMessages(['subject_id' => 'Select a subject assigned to this class.']);
         }
 
         $file = $request->file('file');
         $scanner->assertClean($file);
-        $path = $file->store('study_materials/'.config('app.active_campus_id'), 'local');
+        
+        $path = $file->store('study_materials/' . $campusId, 'local');
 
         StudyMaterial::create([
+            'campus_id' => $campusId, 
             'title' => $request->title,
             'class_id' => $request->class_id,
             'subject_id' => $request->subject_id,
             'description' => $request->description,
             'file_path' => $path,
             'file_type' => $file->getClientOriginalExtension(),
-            'uploaded_by' => auth()->id(), // Assuming logged-in user is uploading
+            'uploaded_by' => auth()->id(),
         ]);
 
         return back()->with('success', 'Study material uploaded successfully.');
@@ -81,7 +99,6 @@ class StudyMaterialController extends Controller
     {
         $material = StudyMaterial::findOrFail($id);
 
-        // Delete file from storage
         if (Storage::disk($material->storageDisk())->exists($material->file_path)) {
             Storage::disk($material->storageDisk())->delete($material->file_path);
         }

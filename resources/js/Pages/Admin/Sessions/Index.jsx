@@ -30,7 +30,7 @@ export default function Index({ sessions, campuses, filters }) {
   }, [flash]);
 
   function applyFilters(overrides = {}) {
-    router.get(route('admin.sessions'), {
+    router.get(route('admin.sessions.index'), {
       search, campus_id: campusId, status, per_page: perPage, ...overrides,
     }, { preserveState: true, replace: true });
   }

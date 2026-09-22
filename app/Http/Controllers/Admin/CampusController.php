@@ -7,6 +7,7 @@ use App\Models\Campus;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB; 
+use Illuminate\Validation\Rule;
 
 class CampusController extends Controller
 {
@@ -105,17 +106,14 @@ class CampusController extends Controller
 
     public function switchCampus(Request $request)
     {
-        $request->validate(['campus_id' => 'nullable|exists:campuses,id']);
-        
-        $user = auth()->user();
-        
-        if ($user->hasRole('Super Admin')) {
-            session()->put('active_campus_id', $request->campus_id);
-            session()->save(); 
-        } else {
-            abort(403, 'Unauthorized action.');
-        }
+        abort_unless($request->user()->hasRole('Super Admin'), 403, 'Unauthorized action.');
+        $data = $request->validate([
+            'campus_id' => ['required', 'integer', Rule::exists('campuses', 'id')->where('is_active', true)],
+        ]);
 
-        return back();
+        $request->session()->put('active_campus_id', (int) $data['campus_id']);
+
+        // Do not revisit an edit URL or preserve form options from the old campus.
+        return redirect()->route('dashboard')->with('success', 'Working campus changed successfully.');
     }
 }

@@ -1,4 +1,5 @@
 import { useForm, usePage } from '@inertiajs/react';
+import WorkingCampusField from '@/Components/WorkingCampusField';
 import Icon from '@/Components/Icons';
 
 export default function DeviceFormModal({ item, campuses, activeCampusId, onClose }) {
@@ -7,7 +8,7 @@ export default function DeviceFormModal({ item, campuses, activeCampusId, onClos
   const isSuperAdmin = auth?.user?.role === 'super_admin';
 
   const { data, setData, post, put, processing, reset, errors } = useForm({
-    campus_id: item?.campus_id ?? activeCampusId,
+    campus_id: item?.campus_id ?? auth?.active_campus_id ?? activeCampusId ?? '',
     name: item?.name ?? '',
     ip_address: item?.ip_address ?? '',
     port: item?.port ?? '4370', // 4370 is standard for ZKTeco devices
@@ -53,15 +54,7 @@ export default function DeviceFormModal({ item, campuses, activeCampusId, onClos
 
               <div className="sm:col-span-2">
                 <label className={labelClass}>Campus Assignment</label>
-                <select
-                  value={data.campus_id || ''}
-                  onChange={(e) => setData('campus_id', e.target.value)}
-                  disabled={!isSuperAdmin}
-                  className={`${inputClass} ${!isSuperAdmin ? 'bg-slate-100 opacity-70' : 'bg-white'}`}
-                >
-                  <option value="">Global (All Campuses)</option>
-                  {campuses?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
+                <WorkingCampusField value={data.campus_id} campuses={campuses} className={`${inputClass} ${!isSuperAdmin ? 'bg-slate-100 opacity-70' : 'bg-white'}`} />
                 {errors.campus_id && <p className="text-rose-500 text-xs mt-1">{errors.campus_id}</p>}
               </div>
 

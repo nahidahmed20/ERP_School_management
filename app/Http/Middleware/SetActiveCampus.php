@@ -10,24 +10,36 @@ class SetActiveCampus
 {
     public function handle(Request $request, Closure $next)
     {
-        if (auth()->check()) {
-            $user = auth()->user();
-            
-            if ($user->hasRole('Super Admin')) {
-                if (session()->exists('active_campus_id')) {
-                    $activeCampusId = session('active_campus_id');
-                } else {
-                    $mainCampus = Campus::where('is_main', true)->first();
-                    $activeCampusId = $mainCampus->id ?? null;
-                    session(['active_campus_id' => $activeCampusId]);
-                }
-            } else {
-                $activeCampusId = $user->campus_id;
-            }
+        // User itself is campus-scoped. Never authenticate using a previous
+        // request's working campus (important for long-lived workers too).
+        config(['app.active_campus_id' => null]);
+        $user = $request->user();
+        $campus = null;
 
-            config(['app.active_campus_id' => $activeCampusId]);
+        if ($user?->hasRole('Super Admin')) {
+            $selectedId = $request->session()->get('active_campus_id');
+            if (filter_var($selectedId, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]])) {
+                $campus = Campus::where('is_active', true)->find($selectedId);
+            }
+        } elseif ($user?->campus_id) {
+            // Branch users cannot change context through a forged session/form.
+            $campus = Campus::find($user->campus_id);
         }
 
-        return $next($request);
+        if ($campus) {
+            $request->session()->put('active_campus_id', $campus->id);
+        } else {
+            // No implicit Main Campus fallback. A super admin must choose.
+            $request->session()->forget('active_campus_id');
+        }
+
+        config(['app.active_campus_id' => $campus?->id]);
+        $request->attributes->set('active_campus', $campus);
+
+        try {
+            return $next($request);
+        } finally {
+            config(['app.active_campus_id' => null]);
+        }
     }
 }

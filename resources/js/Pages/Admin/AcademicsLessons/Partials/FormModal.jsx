@@ -1,10 +1,10 @@
-import { useForm, router } from '@inertiajs/react';
+import { useForm } from '@inertiajs/react';
 import Icon from '@/Components/Icons';
 
 export default function FormModal({ item, classes, subjects, onClose }) {
   const isEdit = !!item;
   
-  const { data, setData, post, processing, errors } = useForm({
+  const { data, setData, post, processing, errors, transform } = useForm({
     class_id: item?.class_id || '',
     subject_id: item?.subject_id || '',
     title: item?.title || '',
@@ -15,15 +15,23 @@ export default function FormModal({ item, classes, subjects, onClose }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
     if (isEdit) {
-      router.post(route('admin.lesson-plans.update', item.id), {
-        ...data,
+      transform((currentData) => ({
+        ...currentData,
         _method: 'PUT',
-      }, {
+      }));
+
+      post(route('admin.lesson-plans.update', item.id), {
+        preserveScroll: true,
         onSuccess: () => onClose(),
       });
+      
     } else {
+      transform((currentData) => currentData);
+      
       post(route('admin.lesson-plans.store'), {
+        preserveScroll: true,
         onSuccess: () => onClose(),
       });
     }
@@ -146,7 +154,7 @@ export default function FormModal({ item, classes, subjects, onClose }) {
               Cancel
             </button>
             <button type="submit" disabled={processing} className="flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md shadow-indigo-500/20 disabled:opacity-70 disabled:cursor-not-allowed active:scale-95">
-              {processing ? 'Saving...' : 'Save Lesson'}
+              {processing ? 'Saving...' : (isEdit ? 'Update Lesson' : 'Save Lesson')}
             </button>
           </div>
         </form>

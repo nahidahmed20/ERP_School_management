@@ -1,4 +1,5 @@
 import { useForm, usePage } from '@inertiajs/react';
+import WorkingCampusField from '@/Components/WorkingCampusField';
 import Icon from '@/Components/Icons';
 
 export default function ItemFormModal({ item, campuses, sizes, colors, activeCampusId, onClose }) {
@@ -11,7 +12,7 @@ export default function ItemFormModal({ item, campuses, sizes, colors, activeCam
   };
 
   const { data, setData, post, put, processing, errors, reset } = useForm({
-    campus_id: item?.campus_id ?? activeCampusId,
+    campus_id: item?.campus_id ?? auth?.active_campus_id ?? activeCampusId ?? '',
     item_code: item?.item_code || generateSKU(),
     name: item?.name ?? '',
     category: item?.category ?? 'Stationery',
@@ -179,16 +180,7 @@ export default function ItemFormModal({ item, campuses, sizes, colors, activeCam
 
               <div>
                 <label className={labelClass}>Assign to Campus <span className="text-rose-500">*</span></label>
-                <select
-                  value={data.campus_id || ''}
-                  onChange={(e) => setData('campus_id', e.target.value)}
-                  disabled={!isSuperAdmin}
-                  required
-                  className={`${inputClass} ${!isSuperAdmin ? 'bg-slate-100 opacity-70' : 'bg-white'}`}
-                >
-                  <option value="" disabled>Select Campus</option>
-                  {campuses?.map(campus => <option key={campus.id} value={campus.id}>{campus.name}</option>)}
-                </select>
+                <WorkingCampusField value={data.campus_id} campuses={campuses} className={`${inputClass} ${!isSuperAdmin ? 'bg-slate-100 opacity-70' : 'bg-white'}`} />
               </div>
 
               <div>

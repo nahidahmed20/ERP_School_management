@@ -38,7 +38,7 @@ export default function Index({ logs, filters, diagnostics }) {
   }, [flash]);
 
   function applyFilters(overrides = {}) {
-    router.get(route('admin.registry'), {
+    router.get(route('admin.registry.index'), {
       search, level, per_page: perPage, ...overrides,
     }, { preserveState: true, replace: true });
   }

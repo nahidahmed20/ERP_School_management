@@ -30,7 +30,7 @@ export default function Index({ vehicles, campuses, filters }) {
   }, [flash]);
 
   function applyFilters(overrides = {}) {
-    router.get(route('admin.transport.vehicles.index'), {
+    router.get(route('admin.vehicles.index'), {
       search, status, per_page: perPage, ...overrides,
     }, { preserveState: true, replace: true });
   }
@@ -141,7 +141,7 @@ export default function Index({ vehicles, campuses, filters }) {
 
       {deletingItem && (
         <ConfirmDeleteModal item={deletingItem} onCancel={() => setDeletingItem(null)} onConfirm={() => {
-            router.delete(route('admin.transport.vehicles.destroy', deletingItem.id), { onSuccess: () => setDeletingItem(null) });
+            router.delete(route('admin.vehicles.destroy', deletingItem.id), { onSuccess: () => setDeletingItem(null) });
         }} />
       )}
       {viewingItem && (

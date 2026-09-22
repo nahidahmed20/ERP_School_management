@@ -5,6 +5,7 @@ import Icon from '@/Components/Icons';
 import Pagination from '@/Components/Pagination';
 import FormModal from './Partials/FormModal';
 import ShowModal from './Partials/ShowModal';
+import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal'; 
 import Swal from 'sweetalert2';
 
 export default function Index({ records, students, filters }) {
@@ -17,6 +18,8 @@ export default function Index({ records, students, filters }) {
   const [formOpen, setFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [showItem, setShowItem] = useState(null);
+  
+  const [deleteId, setDeleteId] = useState(null); 
 
   useEffect(() => {
     if (flash?.success) {
@@ -29,7 +32,7 @@ export default function Index({ records, students, filters }) {
   }, [flash]);
 
   const applyFilters = (overrides = {}) => {
-    router.get(route('admin.students.discipline'), { 
+    router.get(route('admin.students.discipline.index'), {
       search, 
       type: typeFilter,
       per_page: perPage,
@@ -37,22 +40,13 @@ export default function Index({ records, students, filters }) {
     }, { preserveState: true, replace: true });
   };
 
-  const handleDelete = (id) => {
-    Swal.fire({
-      title: 'Are you sure?',
-      text: "এই রেকর্ডটি মুছে ফেলতে চান? এটি রিকভার করা যাবে না!",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#e11d48',
-      cancelButtonColor: '#94a3b8',
-      confirmButtonText: 'Yes, delete it!',
-      cancelButtonText: 'Cancel',
-      customClass: { popup: 'rounded-2xl' }
-    }).then((result) => {
-      if (result.isConfirmed) {
-        router.delete(route('admin.students.discipline.destroy', id));
-      }
-    });
+  const handleDeleteConfirm = () => {
+    if (deleteId) {
+      router.delete(route('admin.students.discipline.destroy', deleteId), {
+        preserveScroll: true,
+        onSuccess: () => setDeleteId(null),
+      });
+    }
   };
 
   const getTypeStyle = (type) => {
@@ -263,15 +257,16 @@ export default function Index({ records, students, filters }) {
                         {item.reported_by || '—'}
                       </td>
                       <td className="px-6 py-4 text-right no-print">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button onClick={() => setShowItem(item)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="View Details">
-                            <Icon name="eye" className="w-4 h-4" />
+                        <div className="flex items-center justify-end gap-2">
+                          <button onClick={() => setShowItem(item)} className="p-2.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="View Details">
+                            <Icon name="eye" className="w-5 h-5" />
                           </button>
-                          <button onClick={() => { setEditingItem(item); setFormOpen(true); }} className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Edit Record">
-                            <Icon name="edit" className="w-4 h-4" />
+                          <button onClick={() => { setEditingItem(item); setFormOpen(true); }} className="p-2.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Edit Record">
+                            <Icon name="edit" className="w-5 h-5" />
                           </button>
-                          <button onClick={() => handleDelete(item.id)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Delete Record">
-                            <Icon name="trash" className="w-4 h-4" />
+                          
+                          <button onClick={() => setDeleteId(item.id)} className="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Delete Record">
+                            <Icon name="trash" className="w-5 h-5" />
                           </button>
                         </div>
                       </td>
@@ -291,6 +286,15 @@ export default function Index({ records, students, filters }) {
       {formOpen && <FormModal item={editingItem} students={students} onClose={() => setFormOpen(false)} />}
       
       {showItem && <ShowModal item={showItem} onClose={() => setShowItem(null)} />}
+
+   
+      {deleteId && (
+        <ConfirmDeleteModal
+            item={{ name: "এই ডিসিপ্লিনারি রেকর্ডটি" }}
+            onCancel={() => setDeleteId(null)}
+            onConfirm={handleDeleteConfirm}
+        />
+      )}
 
     </AuthenticatedLayout>
   );

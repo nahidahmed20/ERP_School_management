@@ -13,6 +13,9 @@ class IdCardTemplateController extends Controller
     public function index(Request $request)
     {
         $query = IdCardTemplate::query();
+        if (config('app.active_campus_id')) {
+            $query->where('campus_id', config('app.active_campus_id'));
+        }
         if ($search = $request->get('search')) {
             $query->where('title', 'like', "%{$search}%");
         }
@@ -26,18 +29,28 @@ class IdCardTemplateController extends Controller
     {
         return Inertia::render('Admin/Documents/IdCards/Form', [
             'campuses' => Campus::select('id', 'name')->get(),
-            'activeCampusId' => session('active_campus_id'),
+            'activeCampusId' => config('app.active_campus_id') ?? Campus::first()->id ?? null,
         ]);
     }
 
     public function store(Request $request)
     {
+        // 🟢 FIX 3: Ultimate Fallback for Backend
+        if (empty($request->campus_id)) {
+            $fallback = config('app.active_campus_id') ?? Campus::first()->id ?? null;
+            $request->merge(['campus_id' => $fallback]);
+        }
+
         $data = $request->validate([
             'campus_id' => 'required|exists:campuses,id',
             'title' => 'required|string|max:255',
             'audience'=>'required|in:student,staff,both',
             'layout_type' => 'required|string',
-            'design_template'=>'required|string|max:100','text_align'=>'required|in:left,center,right','photo_align'=>'required|in:left,center,right','field_labels'=>'nullable|array','field_labels.*'=>'nullable|string|max:50',
+            'design_template'=>'required|string|max:100',
+            'text_align'=>'required|in:left,center,right',
+            'photo_align'=>'required|in:left,center,right',
+            'field_labels'=>'nullable|array',
+            'field_labels.*'=>'nullable|string|max:50',
             'theme_color' => 'required|string',
             'show_blood_group' => 'boolean',
             'show_address' => 'boolean',
@@ -68,12 +81,18 @@ class IdCardTemplateController extends Controller
         return Inertia::render('Admin/Documents/IdCards/Form', [
             'item' => IdCardTemplate::findOrFail($id),
             'campuses' => Campus::select('id', 'name')->get(),
-            'activeCampusId' => session('active_campus_id'),
+            'activeCampusId' => config('app.active_campus_id') ?? Campus::first()->id ?? null,
         ]);
     }
 
     public function update(Request $request, $id)
     {
+        // 🟢 FIX 3: Ultimate Fallback for Backend
+        if (empty($request->campus_id)) {
+            $fallback = config('app.active_campus_id') ?? Campus::first()->id ?? null;
+            $request->merge(['campus_id' => $fallback]);
+        }
+
         $template = IdCardTemplate::findOrFail($id);
 
         $data = $request->validate([
@@ -81,14 +100,18 @@ class IdCardTemplateController extends Controller
             'title' => 'required|string|max:255',
             'audience'=>'required|in:student,staff,both',
             'layout_type' => 'required|string',
-            'design_template'=>'required|string|max:100','text_align'=>'required|in:left,center,right','photo_align'=>'required|in:left,center,right','field_labels'=>'nullable|array','field_labels.*'=>'nullable|string|max:50',
+            'design_template'=>'required|string|max:100',
+            'text_align'=>'required|in:left,center,right',
+            'photo_align'=>'required|in:left,center,right',
+            'field_labels'=>'nullable|array',
+            'field_labels.*'=>'nullable|string|max:50',
             'theme_color' => 'required|string',
             'show_blood_group' => 'boolean',
             'show_address' => 'boolean',
             'show_phone' => 'boolean',
             'back_side_content' => 'nullable|string',
             'is_active' => 'boolean',
-            'logo_image' => 'nullable', // Can be string or file
+            'logo_image' => 'nullable', 
             'signature_image' => 'nullable',
             'background_image' => 'nullable',
         ]);
@@ -97,7 +120,7 @@ class IdCardTemplateController extends Controller
             if ($template->logo_image) Storage::disk('public')->delete($template->logo_image);
             $data['logo_image'] = $request->file('logo_image')->store('templates/idcards', 'public');
         } else {
-            unset($data['logo_image']); // Keep old
+            unset($data['logo_image']); 
         }
 
         if ($request->hasFile('signature_image')) {
@@ -115,7 +138,7 @@ class IdCardTemplateController extends Controller
         }
 
         $template->update($data);
-        return redirect()->route('admin.documents.idcards.index')->with('success', 'Template updated.');
+        return redirect()->route('admin.documents.idcards.index')->with('success', 'Template updated successfully.');
     }
 
     public function destroy($id)
@@ -125,6 +148,6 @@ class IdCardTemplateController extends Controller
         if ($template->signature_image) Storage::disk('public')->delete($template->signature_image);
         if ($template->background_image) Storage::disk('public')->delete($template->background_image);
         $template->delete();
-        return back()->with('success', 'Template deleted.');
+        return back()->with('success', 'Template deleted successfully.');
     }
 }

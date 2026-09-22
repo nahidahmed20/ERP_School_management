@@ -1,4 +1,5 @@
 import { useForm, usePage } from '@inertiajs/react';
+import WorkingCampusField from '@/Components/WorkingCampusField';
 import Icon from '@/Components/Icons';
 
 export default function StudentCategoryFormModal({ item, campuses, activeCampusId, onClose }) {
@@ -7,7 +8,7 @@ export default function StudentCategoryFormModal({ item, campuses, activeCampusI
   const isSuperAdmin = auth?.user?.role === 'super_admin' || auth?.user?.roles?.some(r => r.name === 'Super Admin');
 
   const { data, setData, post, put, processing, errors, reset } = useForm({
-    campus_id: item?.campus_id ?? activeCampusId,
+    campus_id: item?.campus_id ?? auth?.active_campus_id ?? activeCampusId ?? '',
     name: item?.name ?? '',
     description: item?.description ?? '',
     is_active: item?.is_active ?? true,
@@ -56,18 +57,7 @@ export default function StudentCategoryFormModal({ item, campuses, activeCampusI
               {/* Campus Selection */}
               <div className="sm:col-span-2">
                 <label className="block text-sm font-semibold text-slate-700 mb-1.5">Assign to Campus <span className="text-rose-500">*</span></label>
-                <select
-                  value={data.campus_id || ''}
-                  onChange={(e) => setData('campus_id', e.target.value)}
-                  disabled={!isSuperAdmin}
-                  className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
-                  required
-                >
-                  <option value="" disabled>Select Campus</option>
-                  {campuses?.map(campus => (
-                    <option key={campus.id} value={campus.id}>{campus.name}</option>
-                  ))}
-                </select>
+                <WorkingCampusField value={data.campus_id} campuses={campuses} className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed" />
                 {errors.campus_id && <p className="text-rose-500 text-xs mt-1">{errors.campus_id}</p>}
               </div>
 

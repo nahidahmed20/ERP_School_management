@@ -12,12 +12,14 @@ trait BelongsToCampus
             $activeCampusId = config('app.active_campus_id');
             
             if ($activeCampusId) {
-                $builder->where('campus_id', $activeCampusId);
+                $builder->where($builder->getModel()->qualifyColumn('campus_id'), $activeCampusId);
             }
         });
 
         static::creating(function (Model $model) {
-            if (! $model->getAttribute('campus_id') && config('app.active_campus_id')) {
+            // Explicit null represents a central/global record (for example
+            // website branding or a Super Admin account), not a missing field.
+            if (! array_key_exists('campus_id', $model->getAttributes()) && config('app.active_campus_id')) {
                 $model->setAttribute('campus_id', config('app.active_campus_id'));
             }
         });

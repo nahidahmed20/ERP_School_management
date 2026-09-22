@@ -23,7 +23,7 @@ export default function Index({ jobs, filters }) {
   }, [flash]);
 
   function applyFilters(overrides = {}) {
-    router.get(route('admin.saas.queue'), { 
+    router.get(route('admin.saas.queue.index'), {
       search, status: statusFilter, per_page: perPage, ...overrides 
     }, { preserveState: true, replace: true });
   }

@@ -13,7 +13,12 @@ class StudentCategoryController extends Controller
 {
     public function index(Request $request)
     {
+        $campusId = config('app.active_campus_id');
         $query = StudentCategory::query();
+
+        if ($campusId) {
+            $query->where('campus_id', $campusId);
+        }
 
         if ($search = $request->get('search')) {
             $query->where('name', 'like', "%{$search}%");
@@ -62,13 +67,17 @@ class StudentCategoryController extends Controller
 
     private function validateData(Request $request, $ignoreId = null): array
     {
-        $campusId = $request->campus_id ?? config('app.active_campus_id');
+        $campusId = $request->campus_id ?? config('app.active_campus_id') ?? auth()->user()->campus_id;
+
+        $request->merge(['campus_id' => $campusId]);
 
         return $request->validate([
             'campus_id' => 'required|exists:campuses,id',
             'name' => [
                 'required', 'string', 'max:255',
-                Rule::unique('student_categories', 'name')->where('campus_id', $campusId)->ignore($ignoreId)
+                Rule::unique('student_categories', 'name')
+                    ->where('campus_id', $campusId)
+                    ->ignore($ignoreId)
             ],
             'description' => 'nullable|string',
             'is_active' => 'boolean',

@@ -66,7 +66,9 @@ class SectionController extends Controller
 
     private function validateData(Request $request, $ignoreId = null): array
     {
-        $campusId = $request->campus_id ?? config('app.active_campus_id');
+        $campusId = $request->campus_id ?? config('app.active_campus_id') ?? auth()->user()->campus_id;
+
+        $request->merge(['campus_id' => $campusId]);
 
         return $request->validate([
             'campus_id' => 'required|exists:campuses,id',

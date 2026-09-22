@@ -56,7 +56,7 @@ export default function Index({ student, filters }) {
   const searchStudent = (e) => {
     e.preventDefault();
     if (!admissionNo) return;
-    router.get(route('admin.fees.payments.create'), { search: admissionNo }, { preserveState: true });
+    router.get(route('admin.fees.payments'), { admission_no: admissionNo }, { preserveState: true });
   };
 
   const handlePaymentSubmit = (e) => {

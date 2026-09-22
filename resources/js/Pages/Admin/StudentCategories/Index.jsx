@@ -16,7 +16,7 @@ export default function Index({ categories, campuses, filters }) {
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
-  const [deletingItem, setDeletingItem] = useState(null);
+  const [deletingItem, setDeletingItem] = useState(null); // ডিলিট মডালের স্টেট
 
   useEffect(() => {
     if (flash?.success) {
@@ -32,24 +32,6 @@ export default function Index({ categories, campuses, filters }) {
       search, status, per_page: perPage, ...overrides,
     }, { preserveState: true, replace: true });
   }
-
-  const handleDelete = (item) => {
-    Swal.fire({
-      title: 'Are you sure?',
-      text: "এই ক্যাটাগরিটি মুছে ফেলতে চান? এটি রিকভার করা সম্ভব নয়!",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#e11d48',
-      cancelButtonColor: '#94a3b8',
-      confirmButtonText: 'Yes, delete it!',
-      cancelButtonText: 'Cancel',
-      customClass: { popup: 'rounded-2xl' }
-    }).then((result) => {
-      if (result.isConfirmed) {
-        router.delete(route('admin.student-categories.destroy', item.id));
-      }
-    });
-  };
 
   // --- Export Functions ---
   const handlePrint = () => window.print();
@@ -233,12 +215,13 @@ export default function Index({ categories, campuses, filters }) {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right no-print">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button onClick={() => { setEditingItem(item); setFormOpen(true); }} className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Edit Category">
-                            <Icon name="edit" className="w-4 h-4" />
+                        <div className="flex items-center justify-end gap-2">
+                          <button onClick={() => { setEditingItem(item); setFormOpen(true); }} className="p-2.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Edit Category">
+                            <Icon name="edit" className="w-5 h-5" />
                           </button>
-                          <button onClick={() => handleDelete(item)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Delete Category">
-                            <Icon name="trash" className="w-4 h-4" />
+                          {/* কাস্টম ডিলিট মডাল ওপেন করার বাটন */}
+                          <button onClick={() => setDeletingItem(item)} className="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Delete Category">
+                            <Icon name="trash" className="w-5 h-5" />
                           </button>
                         </div>
                       </td>
@@ -255,6 +238,7 @@ export default function Index({ categories, campuses, filters }) {
         </div>
       </div>
 
+      {/* Form Modal */}
       {formOpen && (
         <StudentCategoryFormModal
           item={editingItem}
@@ -264,12 +248,14 @@ export default function Index({ categories, campuses, filters }) {
         />
       )}
 
+      {/* কাস্টম ডিলিট মডাল */}
       {deletingItem && (
         <ConfirmDeleteModal
           item={deletingItem}
           onCancel={() => setDeletingItem(null)}
           onConfirm={() => {
             router.delete(route('admin.student-categories.destroy', deletingItem.id), {
+              preserveScroll: true,
               onSuccess: () => setDeletingItem(null),
             });
           }}

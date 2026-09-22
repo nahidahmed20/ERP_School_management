@@ -10,6 +10,8 @@ use Inertia\Inertia;
 use Illuminate\Validation\Rule;
 use App\Services\WebsiteSettingsService;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+use App\Services\MalwareScanner;
 
 class GeneralSettingController extends Controller
 {
@@ -49,11 +51,14 @@ class GeneralSettingController extends Controller
             'campuses' => $campuses, 
             'filters' => $request->only(['search', 'group', 'status', 'per_page']),
             'websiteSettings' => $websiteSettings->values(),
+            'canManageBranding' => $request->user()->hasRole('Super Admin'),
         ]);
     }
 
     public function updateWebsite(Request $request, WebsiteSettingsService $websiteSettings)
     {
+        // Branding is shared by the public site and all campus portals.
+        abort_unless($request->user()->hasRole('Super Admin'), 403, 'Only Super Admin can change school-wide branding.');
         $data = $request->validate([
             'school_name' => 'required|string|max:255',
             'school_short_name' => 'required|string|max:80',
@@ -73,7 +78,7 @@ class GeneralSettingController extends Controller
             'hero_eyebrow'=>'nullable|string|max:120','hero_title'=>'nullable|string|max:255','hero_description'=>'nullable|string|max:1000','principal_name'=>'nullable|string|max:120','principal_message'=>'nullable|string|max:1500','primary_color'=>['nullable','regex:/^#[0-9A-Fa-f]{6}$/'],'accent_color'=>['nullable','regex:/^#[0-9A-Fa-f]{6}$/'],
             'logo' => 'nullable|image|mimes:png,jpg,jpeg,webp|max:4096',
             'footer_logo' => 'nullable|image|mimes:png,jpg,jpeg,webp|max:4096',
-            'favicon' => 'nullable|image|mimes:png,jpg,jpeg,webp,ico|max:1024',
+            'favicon' => 'nullable|file|mimes:png,jpg,jpeg,webp,ico|max:1024',
             'remove_logo' => 'nullable|boolean',
             'remove_footer_logo' => 'nullable|boolean',
             'remove_favicon' => 'nullable|boolean',
@@ -91,29 +96,47 @@ class GeneralSettingController extends Controller
             'hero_eyebrow'=>'Hero Eyebrow','hero_title'=>'Hero Title','hero_description'=>'Hero Description','principal_name'=>'Principal Name','principal_message'=>'Principal Message','primary_color'=>'Primary Color','accent_color'=>'Accent Color',
         ];
 
-        foreach ($labels as $key => $label) {
-            Setting::withoutGlobalScopes()->updateOrCreate(
-                ['key' => $key],
-                ['campus_id' => null, 'group' => 'website', 'value' => $data[$key] ?? null,
-                    'type' => in_array($key, ['address', 'footer_description']) ? 'textarea' : 'text',
-                    'label' => $label, 'is_active' => true]
-            );
-        }
-
-        foreach (['logo', 'footer_logo', 'favicon'] as $key) {
-            $setting = Setting::withoutGlobalScopes()->where('key', $key)->first();
-            if ($request->boolean('remove_'.$key) || $request->hasFile($key)) {
-                if ($setting?->value) {
-                    Storage::disk('public')->delete($setting->value);
+        $uploaded = [];
+        $obsolete = [];
+        try {
+            // Scan every upload before changing settings or removing old media.
+            foreach (['logo', 'footer_logo', 'favicon'] as $key) {
+                if ($request->hasFile($key)) {
+                    app(MalwareScanner::class)->assertClean($request->file($key));
+                    $uploaded[$key] = $request->file($key)->store('branding', 'public');
+                    if (! $uploaded[$key]) {
+                        throw new \RuntimeException('Unable to save branding image. Check public storage permissions.');
+                    }
                 }
-                $path = $request->hasFile($key) ? $request->file($key)->store('branding', 'public') : null;
-                Setting::withoutGlobalScopes()->updateOrCreate(
-                    ['key' => $key],
-                    ['campus_id' => null, 'group' => 'website', 'value' => $path, 'type' => 'image',
-                        'label' => ucwords(str_replace('_', ' ', $key)), 'is_active' => true]
-                );
             }
+
+            DB::transaction(function () use ($labels, $data, $request, $uploaded, &$obsolete) {
+                foreach ($labels as $key => $label) {
+                    Setting::withoutGlobalScope('campus')->updateOrCreate(
+                        ['key' => $key, 'campus_id' => null],
+                        ['group' => 'website', 'value' => $data[$key] ?? null,
+                            'type' => in_array($key, ['address', 'footer_description']) ? 'textarea' : 'text',
+                            'label' => $label, 'is_active' => true]
+                    );
+                }
+
+                foreach (['logo', 'footer_logo', 'favicon'] as $key) {
+                    if ($request->boolean('remove_'.$key) || isset($uploaded[$key])) {
+                        $old = Setting::withoutGlobalScope('campus')->whereNull('campus_id')->where('key', $key)->value('value');
+                        if ($old && str_starts_with($old, 'branding/')) $obsolete[] = $old;
+                        Setting::withoutGlobalScope('campus')->updateOrCreate(
+                            ['key' => $key, 'campus_id' => null],
+                            ['group' => 'website', 'value' => $uploaded[$key] ?? null, 'type' => 'image',
+                                'label' => ucwords(str_replace('_', ' ', $key)), 'is_active' => true]
+                        );
+                    }
+                }
+            });
+        } catch (\Throwable $exception) {
+            Storage::disk('public')->delete(array_values(array_filter($uploaded)));
+            throw $exception;
         }
+        Storage::disk('public')->delete($obsolete);
 
         $websiteSettings->clearCache();
 

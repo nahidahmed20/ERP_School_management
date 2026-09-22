@@ -12,8 +12,11 @@ export default function ExamScheduleFormModal({ editingConfig, exams, classes, c
 
   const initialPeriods = isEdit && editingConfig.periods.length > 0
     ? editingConfig.periods.map(p => ({
-        subject_id: p.subject_id, classroom_id: p.classroom_id || '',
-        exam_date: p.exam_date, start_time: p.start_time.substring(0, 5), end_time: p.end_time.substring(0, 5)
+        subject_id: p.subject_id, 
+        classroom_id: p.classroom_id || '',
+        exam_date: p.exam_date, 
+        start_time: p.start_time ? p.start_time.substring(0, 5) : '', 
+        end_time: p.end_time ? p.end_time.substring(0, 5) : ''
       }))
     : [{ subject_id: '', classroom_id: '', exam_date: '', start_time: '', end_time: '' }];
 
@@ -27,6 +30,10 @@ export default function ExamScheduleFormModal({ editingConfig, exams, classes, c
   const selectedClass = classes.find(c => c.id == data.class_id);
   const availableSections = selectedClass?.sections || [];
   const availableSubjects = selectedClass?.subjects || [];
+
+  const selectedExam = exams.find(e => e.id == data.exam_id);
+  const minDate = selectedExam?.start_date || '';
+  const maxDate = selectedExam?.end_date || '';
 
   const addPeriod = () => setData('periods', [...data.periods, { subject_id: '', classroom_id: '', exam_date: '', start_time: '', end_time: '' }]);
   const removePeriod = (index) => setData('periods', data.periods.filter((_, i) => i !== index));
@@ -44,6 +51,11 @@ export default function ExamScheduleFormModal({ editingConfig, exams, classes, c
 
   const inputClass = "block w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all";
   const labelClass = "block text-xs font-semibold text-slate-700 mb-1.5";
+
+  const formatDateForHint = (dateStr) => {
+    if (!dateStr) return '';
+    return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  };
 
   return (
     <div 
@@ -84,14 +96,25 @@ export default function ExamScheduleFormModal({ editingConfig, exams, classes, c
                   <select
                     className={inputClass}
                     value={data.exam_id}
-                    onChange={(e) => setData('exam_id', e.target.value)}
+                    onChange={(e) => {
+                      setData('exam_id', e.target.value);
+                      const updatedPeriods = data.periods.map(p => ({ ...p, exam_date: '' }));
+                      setData('periods', updatedPeriods);
+                    }}
                     required
                     disabled={isEdit}
                   >
-                    <option value="" disabled>Select</option>
+                    <option value="" disabled>Select Exam</option>
                     {exams.map(ex => <option key={ex.id} value={ex.id}>{ex.name}</option>)}
                   </select>
                   {errors.exam_id && <p className="text-rose-500 text-xs mt-1">{errors.exam_id}</p>}
+                  
+                  {selectedExam && (minDate || maxDate) && (
+                    <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-md text-[11px] font-bold">
+                      <Icon name="calendar" className="w-3 h-3" />
+                      {formatDateForHint(minDate)} থেকে {formatDateForHint(maxDate)}
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -149,6 +172,7 @@ export default function ExamScheduleFormModal({ editingConfig, exams, classes, c
                       {String(index + 1).padStart(2, '0')}
                     </span>
 
+                    {/* Subject - 3 Columns */}
                     <div className="lg:col-span-3">
                       <label className={labelClass}>Subject</label>
                       <select className={inputClass} value={period.subject_id} onChange={(e) => handlePeriodChange(index, 'subject_id', e.target.value)} required>
@@ -157,11 +181,22 @@ export default function ExamScheduleFormModal({ editingConfig, exams, classes, c
                       </select>
                     </div>
 
-                    <div className="lg:col-span-3">
+                    {/* Date - 2 Columns */}
+                    <div className="lg:col-span-2">
                       <label className={labelClass}>Date</label>
-                      <input className={`${inputClass} font-mono`} type="date" value={period.exam_date} onChange={(e) => handlePeriodChange(index, 'exam_date', e.target.value)} required />
+                      <input 
+                        className={`${inputClass} font-mono cursor-pointer`} 
+                        type="date" 
+                        value={period.exam_date} 
+                        min={minDate} 
+                        max={maxDate}
+                        onChange={(e) => handlePeriodChange(index, 'exam_date', e.target.value)} 
+                        required 
+                      />
+                      {errors[`periods.${index}.exam_date`] && <p className="text-rose-500 text-[10px] mt-1">{errors[`periods.${index}.exam_date`]}</p>}
                     </div>
 
+                    {/* Room - 2 Columns */}
                     <div className="lg:col-span-2">
                       <label className={labelClass}>Room <span className="text-slate-400 font-normal">(Seating)</span></label>
                       <select className={inputClass} value={period.classroom_id} onChange={(e) => handlePeriodChange(index, 'classroom_id', e.target.value)}>
@@ -170,16 +205,19 @@ export default function ExamScheduleFormModal({ editingConfig, exams, classes, c
                       </select>
                     </div>
 
-                    <div className="lg:col-span-1.5">
+                    {/* Start Time - 2 Columns */}
+                    <div className="lg:col-span-2">
                       <label className={labelClass}>Start Time</label>
-                      <input className={`${inputClass} font-mono`} type="time" value={period.start_time} onChange={(e) => handlePeriodChange(index, 'start_time', e.target.value)} required />
+                      <input className={`${inputClass} font-mono cursor-pointer`} type="time" value={period.start_time} onChange={(e) => handlePeriodChange(index, 'start_time', e.target.value)} required />
                     </div>
 
-                    <div className="lg:col-span-1.5">
+                    {/* End Time - 2 Columns */}
+                    <div className="lg:col-span-2">
                       <label className={labelClass}>End Time</label>
-                      <input className={`${inputClass} font-mono`} type="time" value={period.end_time} onChange={(e) => handlePeriodChange(index, 'end_time', e.target.value)} required />
+                      <input className={`${inputClass} font-mono cursor-pointer`} type="time" value={period.end_time} onChange={(e) => handlePeriodChange(index, 'end_time', e.target.value)} required />
                     </div>
 
+                    {/* Delete Button - 1 Column */}
                     <div className="lg:col-span-1 flex justify-end">
                       <button type="button" onClick={() => removePeriod(index)} className="w-full h-[42px] bg-white border border-rose-200 text-rose-500 hover:bg-rose-50 rounded-xl transition-all shadow-sm flex items-center justify-center" title="Remove Subject">
                         <Icon name="trash" className="w-4 h-4" />

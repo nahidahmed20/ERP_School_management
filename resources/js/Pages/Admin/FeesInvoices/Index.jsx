@@ -18,7 +18,7 @@ export default function Index({ payments, filters }) {
   }, [flash]);
 
   const applyFilters = (overrides = {}) => {
-    router.get(route('admin.fees.payments.index'), { search, per_page: perPage, ...overrides }, { preserveState: true, replace: true });
+    router.get(route('admin.fees.invoices'), { search, per_page: perPage, ...overrides }, { preserveState: true, replace: true });
   };
 
   const printReceipt = (payment) => {

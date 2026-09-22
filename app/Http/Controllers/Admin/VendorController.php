@@ -62,6 +62,14 @@ class VendorController extends Controller
         return back()->with('success', 'ভেন্ডর মুছে ফেলা হয়েছে।');
     }
 
+    public function updateStatus(Request $request, Vendor $vendor)
+    {
+        $data = $request->validate(['is_active' => 'required|boolean']);
+        $vendor->update($data);
+
+        return back()->with('success', 'Vendor status updated successfully.');
+    }
+
     private function validateData(Request $request, $ignoreId = null): array
     {
         $campusId = $request->campus_id ?? session('active_campus_id');

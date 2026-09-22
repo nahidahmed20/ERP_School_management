@@ -2,7 +2,7 @@ import { Head, useForm, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
 
-export default function TabulationSheet({ exams, classes, subjects, tabulationData, filters }) {
+export default function TabulationSheet({ schoolName, exams, classes, subjects, tabulationData, filters }) {
   const { data, setData, get, processing } = useForm({
     exam_id: filters?.exam_id || '',
     class_id: filters?.class_id || '',
@@ -96,13 +96,23 @@ export default function TabulationSheet({ exams, classes, subjects, tabulationDa
           </form>
         </div>
 
+        {tabulationData.length === 0 && !processing && (
+          <div className="bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 p-16 text-center no-print">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo-50 mb-4 border border-indigo-100">
+              <Icon name="document-text" className="w-8 h-8 text-indigo-300" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-800 mb-1">No Tabulation Data Found</h3>
+            <p className="text-slate-500 text-sm max-w-sm mx-auto">দয়া করে উপরের ফিল্টার থেকে Exam, Class এবং Section সিলেক্ট করে "Generate Sheet" বাটনে ক্লিক করুন।</p>
+          </div>
+        )}
+
         {/* 📊 Printable Tabulation Sheet */}
         {tabulationData.length > 0 && (
           <div className="printable-area bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 p-6 sm:p-8 relative overflow-hidden">
 
             {/* Header for Print */}
             <div className="text-center mb-6 border-b border-slate-200 pb-5 space-y-1">
-              <h2 className="text-2xl font-black text-slate-900 tracking-wide">IDEAL SCHOOL & COLLEGE</h2>
+              <h2 className="text-2xl font-black text-slate-900 tracking-wide uppercase">{schoolName}</h2>
               <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">Master Tabulation Sheet</p>
               <div className="flex flex-wrap justify-center gap-3 mt-2 text-xs font-bold text-indigo-700">
                 <span className="bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-100">Exam: {selectedExam?.name}</span>
@@ -190,7 +200,6 @@ export default function TabulationSheet({ exams, classes, subjects, tabulationDa
 
       </div>
 
-      {/* 🖨️ Landscape Print CSS */}
       <style>{`
         @media print {
           @page { size: A4 landscape; margin: 10mm; }

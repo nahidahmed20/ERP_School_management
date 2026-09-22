@@ -8,13 +8,34 @@ use Illuminate\Support\Facades\Storage;
 
 class SecureFileController extends Controller
 {
-    public function studentDocument(StudentDocument $document) { return $this->ownedDownload($document, $document->file_path); }
-    public function applicantResume(Applicant $applicant) { return $this->ownedDownload($applicant, $applicant->resume); }
-    public function homework(Homework $homework) { return $this->ownedDownload($homework, $homework->document_path); }
-    public function homeworkSubmission(HomeworkSubmission $submission) { return $this->ownedDownload($submission, $submission->attachment_path); }
-    public function lessonPlan(LessonPlan $lessonPlan) { return $this->ownedDownload($lessonPlan, $lessonPlan->attachment); }
-    public function staffLeave(StaffLeave $leave) { return $this->ownedDownload($leave, $leave->attachment); }
-    public function studentLeave(StudentLeaveRequest $leave) { return $this->ownedDownload($leave, $leave->attachment_path); }
+    public function studentDocument(StudentDocument $document)
+    {
+        return $this->ownedDownload($document, $document->file_path);
+    }
+    public function applicantResume(Applicant $applicant)
+    {
+        return $this->ownedDownload($applicant, $applicant->resume);
+    }
+    public function homework(Homework $homework)
+    {
+        return $this->ownedDownload($homework, $homework->document_path);
+    }
+    public function homeworkSubmission(HomeworkSubmission $submission)
+    {
+        return $this->ownedDownload($submission, $submission->attachment_path);
+    }
+    public function lessonPlan(LessonPlan $lessonPlan)
+    {
+        return $this->ownedDownload($lessonPlan, $lessonPlan->attachment);
+    }
+    public function staffLeave(StaffLeave $leave)
+    {
+        return $this->ownedDownload($leave, $leave->attachment);
+    }
+    public function studentLeave(StudentLeaveRequest $leave)
+    {
+        return $this->ownedDownload($leave, $leave->attachment_path);
+    }
 
     private function ownedDownload($record, ?string $path)
     {
@@ -26,8 +47,9 @@ class SecureFileController extends Controller
     {
         abort_unless($path && Storage::disk('local')->exists($path), 404);
         return Storage::disk('local')->download($path, basename($path), [
-            'X-Content-Type-Options'=>'nosniff', 'Cache-Control'=>'private, no-store, max-age=0',
-            'Content-Security-Policy'=>"default-src 'none'; sandbox",
+            'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'private, no-store, max-age=0',
+            'Content-Security-Policy' => "default-src 'none'; sandbox",
         ]);
     }
 }

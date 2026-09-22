@@ -62,7 +62,15 @@ class WebsiteSettingsService
         $settings = array_merge(self::DEFAULTS, $values);
 
         foreach (['logo', 'footer_logo', 'favicon'] as $key) {
-            $settings[$key] = $settings[$key] ? Storage::disk('public')->url($settings[$key]) : null;
+            $path = $settings[$key];
+            // Local public images use the current origin, not a stale APP_URL
+            // (which otherwise breaks HTTPS or a moved deployment).
+            $settings[$key] = ! $path ? null : (
+                filter_var($path, FILTER_VALIDATE_URL) ? $path :
+                (config('filesystems.disks.public.driver') === 'local'
+                    ? request()->getBaseUrl().'/storage/'.ltrim(preg_replace('#^(?:/?storage/)+#', '', $path), '/')
+                    : Storage::disk('public')->url($path))
+            );
         }
 
         $request?->attributes->set(self::REQUEST_KEY, $settings);

@@ -25,13 +25,15 @@ class TranscriptTemplateController extends Controller
     public function create()
     {
         return Inertia::render('Admin/Documents/Transcripts/Form', [
-            'campuses' => Campus::select('id', 'name')->get(),
-            'activeCampusId' => session('active_campus_id'),
+            'campuses' => Campus::whereKey(config('app.active_campus_id'))->select('id', 'name')->get(),
+            'activeCampusId' => config('app.active_campus_id'),
         ]);
     }
 
     public function store(Request $request)
     {
+        $request->merge(['campus_id' => config('app.active_campus_id')]);
+
         $data = $request->validate([
             'campus_id' => 'required|exists:campuses,id',
             'title' => 'required|string|max:255',
@@ -55,14 +57,16 @@ class TranscriptTemplateController extends Controller
     {
         return Inertia::render('Admin/Documents/Transcripts/Form', [
             'item' => TranscriptTemplate::findOrFail($id),
-            'campuses' => Campus::select('id', 'name')->get(),
-            'activeCampusId' => session('active_campus_id'),
+            'campuses' => Campus::whereKey(config('app.active_campus_id'))->select('id', 'name')->get(),
+            'activeCampusId' => config('app.active_campus_id'),
         ]);
     }
 
     public function update(Request $request, $id)
     {
         $template = TranscriptTemplate::findOrFail($id);
+
+        $request->merge(['campus_id' => config('app.active_campus_id')]);
 
         $data = $request->validate([
             'campus_id' => 'required|exists:campuses,id',
@@ -79,12 +83,16 @@ class TranscriptTemplateController extends Controller
         if ($request->hasFile('watermark_image')) {
             if ($template->watermark_image) Storage::disk('public')->delete($template->watermark_image);
             $data['watermark_image'] = $request->file('watermark_image')->store('templates/transcripts', 'public');
-        } else { unset($data['watermark_image']); }
+        } else {
+            unset($data['watermark_image']);
+        }
 
         if ($request->hasFile('authorized_signature_image')) {
             if ($template->authorized_signature_image) Storage::disk('public')->delete($template->authorized_signature_image);
             $data['authorized_signature_image'] = $request->file('authorized_signature_image')->store('templates/transcripts', 'public');
-        } else { unset($data['authorized_signature_image']); }
+        } else {
+            unset($data['authorized_signature_image']);
+        }
 
         $template->update($data);
         return redirect()->route('admin.documents.transcripts.index')->with('success', 'Transcript Template updated.');

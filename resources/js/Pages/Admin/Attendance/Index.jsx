@@ -4,7 +4,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
 import Swal from 'sweetalert2';
 
-export default function Index({ classes, students, filters }) {
+export default function Index({ classes, students, filters, sheetLocked, isHoliday }) {
   const { flash } = usePage().props;
 
   const [classId, setClassId] = useState(filters.class_id ?? '');
@@ -74,7 +74,30 @@ export default function Index({ classes, students, filters }) {
 
   const submitAttendance = (e) => {
     e.preventDefault();
-    post(route('admin.student-attendance.store'));
+    
+    const unMarked = data.attendances.filter(a => !a.status);
+    if (unMarked.length > 0) {
+      return Swal.fire({ 
+        icon: 'warning', 
+        title: 'অপেক্ষা করুন!', 
+        text: `এখনও ${unMarked.length} জন শিক্ষার্থীর হাজিরার স্ট্যাটাস দেওয়া হয়নি। দয়া করে সবার স্ট্যাটাস দিন অথবা 'Mark All' ব্যবহার করুন।`, 
+        customClass: { popup: 'rounded-2xl' }
+      });
+    }
+
+    post(route('admin.student-attendance.store'), { 
+      preserveScroll: true,
+      onError: (errors) => {
+        const errorMsg = Object.values(errors).join('<br><br>');
+        Swal.fire({
+          icon: 'error',
+          title: 'অ্যাকশন বাতিল করা হয়েছে!',
+          html: `<span style="color: #ef4444; font-weight: 500;">${errorMsg}</span>`,
+          confirmButtonColor: '#4f46e5',
+          customClass: { popup: 'rounded-2xl shadow-xl' }
+        });
+      }
+    });
   };
 
   const handleSendAbsentSms = () => {
@@ -114,20 +137,14 @@ export default function Index({ classes, students, filters }) {
 
   const selectedClass = classes.find(c => c.id == classId);
 
-  // Status Badge Colors for Buttons
   const getStatusStyle = (status, currentStatus) => {
     const isSelected = status === currentStatus;
     switch(status) {
-      case 'present': 
-        return isSelected ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-500/20' : 'bg-white text-emerald-600 border-emerald-200 hover:bg-emerald-50';
-      case 'absent': 
-        return isSelected ? 'bg-rose-600 text-white border-rose-600 shadow-md shadow-rose-500/20' : 'bg-white text-rose-600 border-rose-200 hover:bg-rose-50';
-      case 'late': 
-        return isSelected ? 'bg-amber-500 text-white border-amber-500 shadow-md shadow-amber-500/20' : 'bg-white text-amber-600 border-amber-200 hover:bg-amber-50';
-      case 'half_day': 
-        return isSelected ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20' : 'bg-white text-blue-600 border-blue-200 hover:bg-blue-50';
-      default: 
-        return 'bg-white text-slate-700 border-slate-200';
+      case 'present': return isSelected ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-500/20' : 'bg-white text-emerald-600 border-emerald-200 hover:bg-emerald-50';
+      case 'absent': return isSelected ? 'bg-rose-600 text-white border-rose-600 shadow-md shadow-rose-500/20' : 'bg-white text-rose-600 border-rose-200 hover:bg-rose-50';
+      case 'late': return isSelected ? 'bg-amber-500 text-white border-amber-500 shadow-md shadow-amber-500/20' : 'bg-white text-amber-600 border-amber-200 hover:bg-amber-50';
+      case 'half_day': return isSelected ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20' : 'bg-white text-blue-600 border-blue-200 hover:bg-blue-50';
+      default: return 'bg-white text-slate-700 border-slate-200';
     }
   };
 
@@ -137,7 +154,6 @@ export default function Index({ classes, students, filters }) {
 
       <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8">
         
-        {/* Page Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">Attendance</span>
@@ -153,7 +169,6 @@ export default function Index({ classes, students, filters }) {
           </button>
         </div>
 
-        {/* Filter Card */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 border-t-4 border-t-slate-900">
           <form onSubmit={fetchStudents} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 items-end">
             <div>
@@ -199,16 +214,29 @@ export default function Index({ classes, students, filters }) {
           </form>
         </div>
 
-        {/* Attendance Form & Table */}
+        {sheetLocked && (
+          <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-xl flex items-center gap-3">
+            <Icon name="lock" className="w-5 h-5 text-amber-600" />
+            <span className="text-sm font-semibold">এই দিনের হাজিরা শিট লক করা আছে। নতুন করে কোনো হাজিরা সেভ করা যাবে না।</span>
+          </div>
+        )}
+
+        {isHoliday && (
+          <div className="bg-rose-50 border border-rose-200 text-rose-800 px-4 py-3 rounded-xl flex items-center gap-3">
+            <Icon name="calendar" className="w-5 h-5 text-rose-600" />
+            <span className="text-sm font-semibold">এই দিনটি সরকারি/একাডেমিক ছুটি হিসেবে সেট করা আছে। তাই হাজিরা নেওয়া যাবে না।</span>
+          </div>
+        )}
+
         {students && students.length > 0 && (
           <form onSubmit={submitAttendance} className="bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 overflow-hidden">
             <div className="px-6 py-4 bg-slate-50/70 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <h3 className="text-base font-bold text-slate-900">Student List <span className="text-indigo-600">(Total: {students.length})</span></h3>
               <div className="flex items-center gap-2 w-full sm:w-auto">
-                <button type="button" onClick={() => markAll('present')} className="flex-1 sm:flex-none px-3.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold transition-colors shadow-sm">
+                <button type="button" disabled={sheetLocked || isHoliday} onClick={() => markAll('present')} className="flex-1 sm:flex-none px-3.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold transition-colors shadow-sm disabled:opacity-50">
                   Mark All Present
                 </button>
-                <button type="button" onClick={() => markAll('absent')} className="flex-1 sm:flex-none px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-bold transition-colors shadow-sm">
+                <button type="button" disabled={sheetLocked || isHoliday} onClick={() => markAll('absent')} className="flex-1 sm:flex-none px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-bold transition-colors shadow-sm disabled:opacity-50">
                   Mark All Absent
                 </button>
               </div>
@@ -223,11 +251,8 @@ export default function Index({ classes, students, filters }) {
                         type="checkbox" 
                         title="Select All"
                         onChange={(e) => {
-                          if (e.target.checked) {
-                            setData('selected_students', students.map(s => s.id));
-                          } else {
-                            setData('selected_students', []);
-                          }
+                          if (e.target.checked) setData('selected_students', students.map(s => s.id));
+                          else setData('selected_students', []);
                         }}
                         checked={data.selected_students?.length === students.length && students.length > 0}
                         className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 cursor-pointer"
@@ -245,34 +270,29 @@ export default function Index({ classes, students, filters }) {
                     if (!currentAtt) return null;
 
                     const isChecked = data.selected_students?.includes(student.id) || false;
+                    const isReadOnly = student.attendance_read_only || sheetLocked || isHoliday;
 
                     return (
                       <tr key={student.id} className="hover:bg-slate-50/60 transition-colors">
-                        
                         <td className="px-6 py-4 text-center">
                           <input 
                             type="checkbox"
                             checked={isChecked}
                             onChange={(e) => {
-                              if (e.target.checked) {
-                                setData('selected_students', [...(data.selected_students || []), student.id]);
-                              } else {
-                                setData('selected_students', (data.selected_students || []).filter(id => id !== student.id));
-                              }
+                              if (e.target.checked) setData('selected_students', [...(data.selected_students || []), student.id]);
+                              else setData('selected_students', (data.selected_students || []).filter(id => id !== student.id));
                             }}
                             className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 cursor-pointer"
                           />
                         </td>
-
                         <td className="px-6 py-4">
                           <span className="text-sm font-bold text-slate-900 block">{student.current_enrollment?.roll_no || '--'}</span>
                           <span className="text-xs font-medium text-slate-500">{student.admission_no}</span>
                         </td>
-                        
                         <td className="px-6 py-4">
                           <span className="text-sm font-bold text-slate-900">{student.first_name} {student.last_name}</span>
+                          {student.attendance_is_excused && <span className="ml-2 px-1.5 py-0.5 bg-sky-50 text-sky-600 border border-sky-100 rounded text-[10px] font-bold">ON LEAVE</span>}
                         </td>
-                        
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-1.5">
                             {[
@@ -286,8 +306,9 @@ export default function Index({ classes, students, filters }) {
                                   key={opt.value}
                                   type="button"
                                   title={opt.title}
+                                  disabled={isReadOnly}
                                   onClick={() => handleStatusChange(student.id, opt.value)}
-                                  className={`w-9 h-9 flex items-center justify-center rounded-xl text-xs font-bold border transition-all ${getStatusStyle(opt.value, currentAtt.status)}`}
+                                  className={`w-9 h-9 flex items-center justify-center rounded-xl text-xs font-bold border transition-all disabled:opacity-50 disabled:cursor-not-allowed ${getStatusStyle(opt.value, currentAtt.status)}`}
                                 >
                                   {opt.label}
                                 </button>
@@ -296,14 +317,14 @@ export default function Index({ classes, students, filters }) {
                           </div>
                           {student.attendance_source && <div className="mt-1 text-[10px] font-medium text-slate-500">{student.attendance_source} · {student.attendance_in_time || '--'}–{student.attendance_out_time || '--'}</div>}
                         </td>
-                        
                         <td className="px-6 py-4">
                           <input 
                             type="text" 
                             placeholder="Reason / Remarks..." 
                             value={currentAtt.remarks} 
+                            disabled={isReadOnly}
                             onChange={(e) => handleRemarksChange(student.id, e.target.value)}
-                            className="block w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                            className="block w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 outline-none transition-all disabled:opacity-50"
                           />
                         </td>
                       </tr>
@@ -316,11 +337,11 @@ export default function Index({ classes, students, filters }) {
             <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end">
               <button 
                 type="submit" 
-                disabled={processing} 
+                disabled={processing || sheetLocked || isHoliday} 
                 className="flex items-center gap-2 px-8 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md shadow-indigo-500/20 disabled:opacity-70 disabled:cursor-not-allowed active:scale-95"
               >
-                <Icon name="check-circle" className="w-4 h-4" />
-                {processing ? 'Saving...' : 'Save Attendance'}
+                <Icon name={sheetLocked || isHoliday ? "lock" : "check-circle"} className="w-4 h-4" />
+                {processing ? 'Saving...' : (isHoliday ? 'Holiday Set' : (sheetLocked ? 'Sheet Locked' : 'Save Attendance'))}
               </button>
             </div>
           </form>

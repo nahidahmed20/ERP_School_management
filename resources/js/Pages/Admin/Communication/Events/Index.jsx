@@ -27,8 +27,8 @@ export default function Index({ events, classrooms, filters }) {
   }, [flash]);
 
   function applyFilters(overrides = {}) {
-    router.get(route('admin.communication.calendar.index'), { 
-      type, filter, per_page: perPage, ...overrides 
+    router.get(route('admin.communication-calendars.index'), {
+      type, filter, per_page: perPage, ...overrides
     }, { preserveState: true, replace: true });
   }
 
@@ -45,10 +45,10 @@ export default function Index({ events, classrooms, filters }) {
     if (!events.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
     const headers = ['Event Title', 'Type', 'Starts At', 'Ends At', 'Location / Room'];
     const rows = events.data.map(item => [
-      item.title || 'N/A', 
-      item.type || 'Event', 
-      formatDate(item.start_datetime), 
-      formatDate(item.end_datetime), 
+      item.title || 'N/A',
+      item.type || 'Event',
+      formatDate(item.start_datetime),
+      formatDate(item.end_datetime),
       item.classroom?.room_number || 'Not Assigned'
     ]);
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows.map(e => e.map(val => `"${val}"`).join(','))].join('\n');
@@ -88,7 +88,7 @@ export default function Index({ events, classrooms, filters }) {
       <div className="print-title">Calendar &amp; Events Directory - {new Date().toLocaleDateString('en-GB')}</div>
 
       <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8 no-print">
-        
+
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
@@ -107,7 +107,7 @@ export default function Index({ events, classrooms, filters }) {
         {/* Unified Modern Toolbar */}
         <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-            
+
             {/* Per Page */}
             <select
               value={perPage}
@@ -262,14 +262,14 @@ export default function Index({ events, classrooms, filters }) {
       </div>
 
       {formOpen && <EventFormModal item={editingItem} classrooms={classrooms} activeCampusId={auth?.active_campus_id} onClose={() => setFormOpen(false)} />}
-      
+
       {deletingItem && (
-        <ConfirmDeleteModal 
-          item={deletingItem} 
-          onCancel={() => setDeletingItem(null)} 
+        <ConfirmDeleteModal
+          item={deletingItem}
+          onCancel={() => setDeletingItem(null)}
           onConfirm={() => {
-            router.delete(route('admin.communication.calendar.destroy', deletingItem.id), { onSuccess: () => setDeletingItem(null) });
-          }} 
+            router.delete(route('admin.communication-calendars.destroy', deletingItem.id), { onSuccess: () => setDeletingItem(null) });
+          }}
         />
       )}
     </AuthenticatedLayout>

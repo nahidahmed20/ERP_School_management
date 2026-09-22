@@ -14,7 +14,7 @@ export default function Report({ staffs, reportData, reportType, filters }) {
 
   const submit = (e) => {
     e.preventDefault();
-    post(route('attendance-report.generate'));
+    post(route('admin.attendance-report.generate'));
   };
 
   const handlePrint = () => {

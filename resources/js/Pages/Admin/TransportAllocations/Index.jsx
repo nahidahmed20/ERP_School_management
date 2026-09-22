@@ -30,7 +30,7 @@ export default function Index({ allocations, vehicles, users, campuses, filters 
   }, [flash]);
 
   function applyFilters(overrides = {}) {
-    router.get(route('admin.transport.allocations.index'), {
+    router.get(route('admin.transports.index'), {
       search, vehicle_id: vehicleId, per_page: perPage, ...overrides,
     }, { preserveState: true, replace: true });
   }
@@ -270,7 +270,7 @@ export default function Index({ allocations, vehicles, users, campuses, filters 
           item={{ name: `${deletingItem.user?.name}'s Allocation` }}
           onCancel={() => setDeletingItem(null)}
           onConfirm={() => {
-            router.delete(route('admin.transport.allocations.destroy', deletingItem.id), { onSuccess: () => setDeletingItem(null) });
+            router.delete(route('admin.transports.destroy', deletingItem.id), { onSuccess: () => setDeletingItem(null) });
           }}
         />
       )}

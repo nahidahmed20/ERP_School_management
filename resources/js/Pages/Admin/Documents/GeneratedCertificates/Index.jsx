@@ -29,7 +29,6 @@ export default function Index({ certificates, templates, users, campuses, active
     }, { preserveState: true, replace: true });
   }
 
-  // --- Export Functions ---
   const handlePrint = () => window.print();
 
   const exportToCSV = () => {
@@ -64,7 +63,6 @@ export default function Index({ certificates, templates, users, campuses, active
     <AuthenticatedLayout>
       <Head title="Generated Certificates" />
 
-      {/* Print Specific CSS */}
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
           nav, aside, header, .no-print, button, a, select, input { display: none !important; }
@@ -79,7 +77,6 @@ export default function Index({ certificates, templates, users, campuses, active
 
       <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8 no-print">
         
-        {/* Page Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">Documents &amp; Certificates</span>
@@ -94,16 +91,13 @@ export default function Index({ certificates, templates, users, campuses, active
           </button>
         </div>
 
-        {/* Unified Modern Toolbar */}
         <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
             
-            {/* Per Page */}
             <select
               value={perPage}
               onChange={e => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}
               className="appearance-none bg-none pr-3 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer text-center font-mono"
-              style={{ backgroundImage: 'none' }}
             >
               <option value="10">10 / Page</option>
               <option value="20">20 / Page</option>
@@ -113,7 +107,6 @@ export default function Index({ certificates, templates, users, campuses, active
 
             <div className="hidden sm:block w-px h-6 bg-slate-200"></div>
 
-            {/* Search Input */}
             <div className="relative flex-1 min-w-[200px] sm:w-80">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Icon name="search" className="w-4 h-4 text-slate-400" />
@@ -128,7 +121,6 @@ export default function Index({ certificates, templates, users, campuses, active
               />
             </div>
 
-            {/* Apply Button */}
             <button
               onClick={() => applyFilters()}
               className="w-full sm:w-auto px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
@@ -137,7 +129,6 @@ export default function Index({ certificates, templates, users, campuses, active
             </button>
           </div>
 
-          {/* Export Actions */}
           <div className="flex items-center justify-end gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-xl w-full xl:w-auto shadow-sm shrink-0 ml-auto">
             <button onClick={copyToClipboard} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Copy to Clipboard">
               Copy
@@ -147,21 +138,12 @@ export default function Index({ certificates, templates, users, campuses, active
               CSV
             </button>
             <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-            <button onClick={() => alert('Backend Excel plugin needed')} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-green-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export Excel">
-              Excel
-            </button>
-            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-            <button onClick={() => alert('Backend PDF plugin needed')} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-rose-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export PDF">
-              PDF
-            </button>
-            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
             <button onClick={handlePrint} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-amber-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Print List">
               Print
             </button>
           </div>
         </div>
 
-        {/* Main Table Card */}
         <div className="bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 print-table-wrapper">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">

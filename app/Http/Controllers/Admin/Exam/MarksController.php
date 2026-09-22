@@ -14,11 +14,11 @@ use App\Models\Subject;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Carbon\Carbon; 
-use App\Support\CampusRule;
 use App\Models\Enrollment;
 use App\Services\ExamResultService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Validation\Rule; 
 
 class MarksController extends Controller
 {
@@ -51,7 +51,9 @@ class MarksController extends Controller
                 $student->note = $mark ? $mark->note : '';
                 $student->full_marks = $mark?->full_marks ?? 100;
                 $student->pass_marks = $mark?->pass_marks ?? 33;
-                foreach (['written_marks', 'practical_marks', 'viva_marks'] as $component) $student->$component = $mark?->$component;
+                foreach (['written_marks', 'practical_marks', 'viva_marks'] as $component) {
+                    $student->$component = $mark?->$component;
+                }
                 return $student;
             });
         }
@@ -68,12 +70,12 @@ class MarksController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'exam_id' => ['required', CampusRule::exists('exams')],
-            'class_id' => ['required', CampusRule::exists('school_classes')],
-            'section_id' => ['nullable', CampusRule::exists('sections')],
-            'subject_id' => ['required', CampusRule::exists('subjects')],
+            'exam_id' => ['required', $this->existsRule('exams')],
+            'class_id' => ['required', $this->existsRule('school_classes')],
+            'section_id' => ['nullable', $this->existsRule('sections')],
+            'subject_id' => ['required', $this->existsRule('subjects')],
             'marks' => 'required|array|min:1',
-            'marks.*.student_id' => ['required', 'distinct', CampusRule::exists('students')],
+            'marks.*.student_id' => ['required', 'distinct', $this->existsRule('students')],
             'marks.*.marks_obtained' => 'nullable|numeric|min:0|max:999.99',
             'marks.*.written_marks' => 'nullable|numeric|min:0|max:999.99',
             'marks.*.practical_marks' => 'nullable|numeric|min:0|max:999.99',
@@ -83,6 +85,7 @@ class MarksController extends Controller
             'marks.*.note' => 'nullable|string|max:255',
             'correction_reason' => 'nullable|string|max:1000',
         ]);
+
         $class = SchoolClass::findOrFail($data['class_id']);
         if (! empty($data['section_id']) && ! $class->sections()->whereKey($data['section_id'])->exists()) {
             throw ValidationException::withMessages(['section_id' => 'Select a section assigned to this class.']);
@@ -99,45 +102,61 @@ class MarksController extends Controller
                 ->whereIn('student_id', collect($data['marks'])->pluck('student_id'))
                 ->whereHas('student', fn ($q) => $q->where('status', true))
                 ->get()->keyBy('student_id');
+                
             $schedules = ExamSchedule::where('exam_id', $exam->id)->where('class_id', $data['class_id'])
                 ->where('subject_id', $data['subject_id'])->get()->keyBy('section_id');
+                
             $grades = Grade::orderByDesc('min_marks')->get();
+            
             foreach ($data['marks'] as $index => $row) {
                 $enrollment = $enrollments->get($row['student_id']);
                 if (! $enrollment) {
                     throw ValidationException::withMessages(["marks.$index.student_id" => 'Student is not currently enrolled in the selected class and section.']);
                 }
-                $schedule = $schedules->get($enrollment->section_id);
-                if (! $schedule || Carbon::parse($schedule->exam_date)->startOfDay()->isFuture()) {
-                    throw ValidationException::withMessages(['subject_id' => 'Marks require a scheduled exam on or before today for every selected section.']);
+                
+                $schedule = $schedules->get($enrollment->section_id) ?? $schedules->first(); // সেকশন না থাকলে গ্লোবাল রুটিন নেবে
+                if (! $schedule) {
+                    throw ValidationException::withMessages(['subject_id' => 'এই বিষয়ের জন্য পরীক্ষার রুটিন (Schedule) খুঁজে পাওয়া যায়নি। আগে রুটিন তৈরি করুন।']);
                 }
+                
                 $identity = ['exam_id' => $exam->id, 'subject_id' => $data['subject_id'], 'student_id' => $row['student_id']];
                 $existing = ExamMark::where($identity)->first();
                 $full = (float) ($row['full_marks'] ?? $existing?->full_marks ?? 100);
                 $pass = (float) ($row['pass_marks'] ?? $existing?->pass_marks ?? ($full * .33));
+                
                 $hasComponents = collect(['written_marks', 'practical_marks', 'viva_marks'])
                     ->contains(fn ($key) => isset($row[$key]) && $row[$key] !== '');
+                    
                 $obtained = $hasComponents
                     ? collect(['written_marks', 'practical_marks', 'viva_marks'])->sum(fn ($key) => (float) ($row[$key] ?? 0))
                     : ($row['marks_obtained'] ?? null);
+                    
                 if ($pass > $full || ($obtained !== null && (float) $obtained > $full)) {
                     throw ValidationException::withMessages(["marks.$index.marks_obtained" => 'Obtained marks and pass marks cannot exceed full marks.']);
                 }
+                
                 $grade = $obtained === null ? null : $grades->first(fn ($grade) =>
                     (float) $grade->min_marks <= ((float) $obtained / $full * 100)
                     && (float) $grade->max_marks >= ((float) $obtained / $full * 100));
+                    
                 if ($obtained !== null && ! $grade) {
                     throw ValidationException::withMessages(["marks.$index.marks_obtained" => 'Configure a grade range covering this percentage before saving marks.']);
                 }
+                
                 $values = [
-                    'school_class_id' => $data['class_id'], 'section_id' => $enrollment->section_id,
-                    'marks_obtained' => $obtained, 'grade' => $obtained !== null && $obtained < $pass ? 'F' : $grade?->name,
+                    'school_class_id' => $data['class_id'], 
+                    'section_id' => $enrollment->section_id,
+                    'marks_obtained' => $obtained, 
+                    'grade' => $obtained !== null && $obtained < $pass ? 'F' : $grade?->name,
                     'grade_point' => $obtained !== null && $obtained < $pass ? 0 : $grade?->grade_point,
-                    'note' => $row['note'] ?? null, 'full_marks' => $full, 'pass_marks' => $pass,
+                    'note' => $row['note'] ?? null, 
+                    'full_marks' => $full, 
+                    'pass_marks' => $pass,
                     'written_marks' => $hasComponents ? ($row['written_marks'] ?? null) : null,
                     'practical_marks' => $hasComponents ? ($row['practical_marks'] ?? null) : null,
                     'viva_marks' => $hasComponents ? ($row['viva_marks'] ?? null) : null,
                 ];
+                
                 if ($existing) {
                     $oldValues = $existing->only(array_keys($values));
                     $existing->fill($values);
@@ -163,11 +182,12 @@ class MarksController extends Controller
     public function destroy(Request $request)
     {
         $data = $request->validate([
-            'exam_id' => ['required', CampusRule::exists('exams')],
-            'class_id' => ['required', CampusRule::exists('school_classes')],
-            'section_id' => ['nullable', CampusRule::exists('sections')],
-            'subject_id' => ['required', CampusRule::exists('subjects')],
+            'exam_id' => ['required', $this->existsRule('exams')],
+            'class_id' => ['required', $this->existsRule('school_classes')],
+            'section_id' => ['nullable', $this->existsRule('sections')],
+            'subject_id' => ['required', $this->existsRule('subjects')],
         ]);
+
         DB::transaction(function () use ($data) {
             $exam = Exam::whereKey($data['exam_id'])->lockForUpdate()->firstOrFail();
             if ($exam->approval_status !== 'draft' || $exam->results_published) {
@@ -182,25 +202,37 @@ class MarksController extends Controller
 
     public function examsReportcards(Request $request)
     {
+        $campusId = config('app.active_campus_id');
+        
+        $filter = fn($q) => $campusId ? $q->where('campus_id', $campusId) : $q;
+        $globalFilter = fn($q) => $campusId ? $q->where('campus_id', $campusId)->orWhereNull('campus_id') : $q;
+
         $examId = $request->exam_id;
         $classId = $request->class_id;
         $sectionId = $request->section_id;
         $studentId = $request->student_id;
 
+        $schoolName = \Illuminate\Support\Facades\DB::table('settings')
+            ->where('key', 'school_name')
+            ->where($globalFilter)
+            ->value('value') ?? config('app.name', 'IDEAL SCHOOL & COLLEGE');
+
         $students = [];
         $reportCard = null;
 
         if ($classId) {
-            $students = Student::whereHas('currentEnrollment', function($q) use ($classId, $sectionId) {
-                $q->where('class_id', $classId);
-                if ($sectionId) {
-                    $q->where('section_id', $sectionId);
-                }
-            })->get();
+            $students = Student::where('status', true)
+                ->where($filter) 
+                ->whereHas('currentEnrollment', function($q) use ($classId, $sectionId) {
+                    $q->where('class_id', $classId)->where('is_current', true);
+                    if ($sectionId) {
+                        $q->where('section_id', $sectionId);
+                    }
+                })->get();
         }
 
         if ($examId && $classId && $studentId) {
-            $student = Student::with(['currentEnrollment.schoolClass', 'currentEnrollment.section'])->findOrFail($studentId);
+            $student = Student::where($filter)->with(['currentEnrollment.schoolClass', 'currentEnrollment.section'])->findOrFail($studentId);
 
             $marks = ExamMark::where('exam_id', $examId)
                              ->where('school_class_id', $classId)
@@ -211,16 +243,28 @@ class MarksController extends Controller
             $expectedSubjects = ExamSchedule::where('exam_id', $examId)->where('class_id', $classId)
                 ->when($sectionId, fn ($q) => $q->where('section_id', $sectionId))
                 ->distinct()->count('subject_id');
+                
             $reportCard = ['student' => $student, 'marks' => $marks]
-                + app(ExamResultService::class)->summary($marks, $expectedSubjects);
+                + app(\App\Services\ExamResultService::class)->summary($marks, $expectedSubjects);
         }
 
         return Inertia::render('Admin/Exams/ReportCards', [
-            'exams' => Exam::latest()->get(),
-            'classes' => SchoolClass::with('sections')->where('is_active', true)->get(),
+            'schoolName' => $schoolName, 
+            'exams' => Exam::where('is_active', true)->where($globalFilter)->orderByDesc('start_date')->get(),
+            'classes' => SchoolClass::with('sections')->where('is_active', true)->where($globalFilter)->orderBy('numeric_name')->get(),
             'students' => $students,
             'reportCard' => $reportCard,
             'filters' => $request->only(['exam_id', 'class_id', 'section_id', 'student_id'])
         ]);
+    }
+
+    private function existsRule(string $table)
+    {
+        $campusId = config('app.active_campus_id');
+        return Rule::exists($table, 'id')->where(function ($query) use ($campusId) {
+            if ($campusId) {
+                $query->where('campus_id', $campusId)->orWhereNull('campus_id'); 
+            }
+        });
     }
 }

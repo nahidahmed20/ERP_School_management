@@ -7,28 +7,41 @@ use App\Models\DisciplinaryRecord;
 use App\Models\Student;
 use App\Models\AcademicSession;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule; 
 use Inertia\Inertia;
-use App\Support\CampusRule;
 
 class DisciplinaryRecordController extends Controller
 {
     public function index(Request $request)
     {
-        $query = DisciplinaryRecord::with(['student.currentEnrollment.schoolClass']);
+        $campusId = config('app.active_campus_id');
+
+        $query = DisciplinaryRecord::with(['student.currentEnrollment.schoolClass'])
+            ->latest('incident_date');
+
+        $studentQuery = Student::select('id', 'first_name', 'last_name', 'admission_no')
+            ->where('status', true);
+
+        if ($campusId) {
+            $query->where('campus_id', $campusId);
+            $studentQuery->where('campus_id', $campusId);
+        }
 
         if ($search = $request->search) {
-            $query->whereHas('student', function($q) use ($search) {
-                $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('admission_no', 'like', "%{$search}%");
-            })->orWhere('title', 'like', "%{$search}%");
+            $query->where(function($q) use ($search) {
+                $q->whereHas('student', function($sq) use ($search) {
+                    $sq->where('first_name', 'like', "%{$search}%")
+                      ->orWhere('admission_no', 'like', "%{$search}%");
+                })->orWhere('title', 'like', "%{$search}%");
+            });
         }
 
         if ($request->filled('type')) {
             $query->where('type', $request->type);
         }
 
-        $records = $query->latest('incident_date')->paginate(\App\Support\PerPage::resolve())->withQueryString();
-        $students = Student::select('id', 'first_name', 'last_name', 'admission_no')->where('status', true)->get();
+        $records = $query->paginate(\App\Support\PerPage::resolve())->withQueryString();
+        $students = $studentQuery->get();
 
         return Inertia::render('Admin/StudentsDiscipline/Index', [
             'records' => $records,
@@ -39,16 +52,25 @@ class DisciplinaryRecordController extends Controller
 
     public function store(Request $request)
     {
+        $campusId = config('app.active_campus_id');
+
+        $studentRule = Rule::exists('students', 'id');
+        if ($campusId) {
+            $studentRule->where('campus_id', $campusId);
+        }
+
         $request->validate([
-            'student_id' => ['required', CampusRule::exists('students')],
+            'student_id' => ['required', $studentRule],
             'title' => 'required|string|max:255',
             'type' => 'required|in:Complaint,Warning,Suspension,Reward,Other',
             'incident_date' => 'required|date',
         ]);
 
         $activeSession = AcademicSession::where('is_current', 1)->first();
+        $student = Student::findOrFail($request->student_id);
 
         DisciplinaryRecord::create(array_merge($request->all(), [
+            'campus_id' => $student->campus_id, 
             'academic_session_id' => $activeSession?->id
         ]));
 

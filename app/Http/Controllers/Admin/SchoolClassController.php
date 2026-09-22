@@ -94,16 +94,20 @@ class SchoolClassController extends Controller
 
     private function validateData(Request $request, $ignoreId = null): array
     {
-        $campusId = $request->campus_id ?? config('app.active_campus_id');
+        $campusId = $request->campus_id ?? config('app.active_campus_id') ?? auth()->user()->campus_id;
+
+        $request->merge(['campus_id' => $campusId]);
 
         return $request->validate([
             'campus_id' => 'required|exists:campuses,id',
             'name' => [
                 'required', 'string', 'max:255',
-                Rule::unique('school_classes', 'name')->where('campus_id', $campusId)->ignore($ignoreId)
+                Rule::unique('school_classes', 'name')
+                    ->where('campus_id', $campusId)
+                    ->ignore($ignoreId)
             ],
-            'numeric_name' => 'nullable|integer',
-            'description' => 'nullable|string',
+            'numeric_name' => 'nullable|integer|min:0|max:100', 
+            'description' => 'nullable|string|max:1000',
             'is_active' => 'boolean',
         ]);
     }

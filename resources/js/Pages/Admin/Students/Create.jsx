@@ -1,4 +1,6 @@
 import { useForm, usePage, Head, Link } from '@inertiajs/react';
+import CameraCapture from '@/Components/CameraCapture';
+import usePhotoPreview from '@/Hooks/usePhotoPreview';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
 import Swal from 'sweetalert2';
@@ -18,11 +20,12 @@ const CheckMark = () => (
   </svg>
 );
 
-export default function Create({ classes, active_session, campuses, categories, houses }) {
+export default function Create({ classes, active_session, campuses, categories, houses, activeCampusId }) {
   const { flash } = usePage().props;
+  const selectedCampus = campuses?.find(campus => String(campus.id) === String(activeCampusId));
 
-  const { data, setData, post, processing, errors } = useForm({
-    campus_id: '',
+  const { data, setData, post, processing, errors, transform } = useForm({
+    campus_id: activeCampusId ?? '',
     category_id: '',
     house_id: '',
     class_id: '',
@@ -59,7 +62,7 @@ export default function Create({ classes, active_session, campuses, categories, 
     guardian_id: null
   });
 
-  const [photoPreview, setPhotoPreview] = useState(null);
+  const photoPreview = usePhotoPreview(data.photo);
   const selectedClass = classes?.find(c => c.id == data.class_id);
   const availableSections = selectedClass?.sections || [];
 
@@ -67,67 +70,8 @@ export default function Create({ classes, active_session, campuses, categories, 
   const [searchQuery, setSearchQuery] = useState('');
   const [searching, setSearching] = useState(false);
 
-  // === Camera State & Refs ===
   const [isCameraOpen, setIsCameraOpen] = useState(false);
-  const videoRef = useRef(null);
-  const canvasRef = useRef(null);
-
-  // Camera Functions
-  const openCamera = async () => {
-    setIsCameraOpen(true);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-    } catch (err) {
-      console.error("Error accessing camera:", err);
-      Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Camera permission denied or not found.', showConfirmButton: false, timer: 3000 });
-      setIsCameraOpen(false);
-    }
-  };
-
-  const closeCamera = () => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      const stream = videoRef.current.srcObject;
-      const tracks = stream.getTracks();
-      tracks.forEach(track => track.stop());
-    }
-    setIsCameraOpen(false);
-  };
-
-  const capturePhoto = () => {
-    if (videoRef.current && canvasRef.current) {
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
-      // Set canvas dimensions to match video
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext('2d');
-      // Draw the video frame to the canvas
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-      // Convert canvas to File object
-      canvas.toBlob((blob) => {
-        if (blob) {
-          const file = new File([blob], "webcam_photo.jpg", { type: "image/jpeg" });
-          setData('photo', file);
-          setPhotoPreview(URL.createObjectURL(file));
-          closeCamera(); // Close after capturing
-        }
-      }, 'image/jpeg', 0.9);
-    }
-  };
-
-  // Cleanup camera stream on unmount
-  useEffect(() => {
-    return () => {
-      if (videoRef.current && videoRef.current.srcObject) {
-        videoRef.current.srcObject.getTracks().forEach(track => track.stop());
-      }
-    };
-  }, []);
-  // ============================
+  const openCamera = () => setIsCameraOpen(true);
 
   const handleSearchGuardian = async () => {
     if (!searchQuery) return;
@@ -168,12 +112,16 @@ export default function Create({ classes, active_session, campuses, categories, 
     const file = e.target.files[0];
     if (file) {
       setData('photo', file);
-      setPhotoPreview(URL.createObjectURL(file));
     }
   };
 
   const submit = (e) => {
     e.preventDefault();
+    transform((currentData) => ({
+      ...currentData,
+      campus_id: activeCampusId ?? ''
+    }));
+
     post(route('admin.students.store'), { forceFormData: true });
   };
 
@@ -181,7 +129,7 @@ export default function Create({ classes, active_session, campuses, categories, 
   const personalComplete = !!(data.first_name && data.date_of_birth && data.gender && data.nationality && data.present_address && data.permanent_address);
   const guardianComplete = !!(data.father_name && data.father_phone && data.mother_name);
 
-  const sections = useMemo(() => ([
+  const sectionsList = useMemo(() => ([
     { id: 'section-academic', step: '01', label: 'Academic', complete: academicComplete },
     { id: 'section-personal', step: '02', label: 'Personal', complete: personalComplete },
     { id: 'section-guardian', step: '03', label: 'Guardian', complete: guardianComplete },
@@ -239,76 +187,42 @@ export default function Create({ classes, active_session, campuses, categories, 
       </Head>
 
       <style>{`
-        .mod-scope {
-          --brand: #4f46e5;
-          --brand-hover: #4338ca;
-          --brand-light: #e0e7ff;
-          --bg-main: #f8fafc;
-          --bg-card: #ffffff;
-          --text-main: #0f172a;
-          --text-muted: #64748b;
-          --border: #e2e8f0;
-          --border-focus: #818cf8;
-          --ring: rgba(99, 102, 241, 0.2);
-          --danger: #ef4444;
-          --danger-bg: #fef2f2;
-
-          font-family: 'Inter', -apple-system, sans-serif;
-          background: var(--bg-main);
-          color: var(--text-main);
-          max-width: 1600px;
-          margin: 0 auto;
-          padding: 32px 24px 64px;
-        }
-
+        .mod-scope { --brand: #4f46e5; --brand-hover: #4338ca; --brand-light: #e0e7ff; --bg-main: #f8fafc; --bg-card: #ffffff; --text-main: #0f172a; --text-muted: #64748b; --border: #e2e8f0; --border-focus: #818cf8; --ring: rgba(99, 102, 241, 0.2); --danger: #ef4444; --danger-bg: #fef2f2; font-family: 'Inter', -apple-system, sans-serif; background: var(--bg-main); color: var(--text-main); max-width: 1600px; margin: 0 auto; padding: 32px 24px 64px; }
         .mod-scope *, .mod-scope *::before, .mod-scope *::after { box-sizing: border-box; }
-
         .mod-mast { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; flex-wrap: wrap; margin-bottom: 32px; }
         .mod-badge { display: inline-block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--brand); background: var(--brand-light); padding: 4px 10px; border-radius: 6px; margin-bottom: 12px; }
         .mod-title { font-size: 28px; font-weight: 700; color: var(--text-main); margin: 0 0 6px; letter-spacing: -0.02em; }
         .mod-subtitle { font-size: 15px; color: var(--text-muted); margin: 0; }
-
         .mod-mast-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
         .mod-date-pill { display: flex; flex-direction: column; background: var(--bg-card); border: 1px solid var(--border); padding: 8px 16px; border-radius: 10px; font-size: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
         .mod-date-pill span { font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em; }
         .mod-date-pill strong { font-weight: 600; color: var(--text-main); }
-
         .mod-btn-outline { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-main); font-weight: 600; font-size: 14px; text-decoration: none; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
         .mod-btn-outline:hover { background: var(--bg-main); border-color: #cbd5e1; }
-
         .mod-alert { display: flex; gap: 12px; align-items: flex-start; background: var(--danger-bg); border: 1px solid #fecaca; color: #991b1b; padding: 16px; border-radius: 12px; margin-bottom: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         .mod-alert strong { display: block; font-size: 15px; margin-bottom: 4px; }
-
         .mod-layout { display: grid; grid-template-columns: 200px 1fr; gap: 40px; align-items: start; }
-
         .mod-rail { position: sticky; top: 32px; display: flex; flex-direction: column; gap: 0; }
         .mod-rail-item { display: flex; align-items: flex-start; gap: 16px; background: none; border: none; cursor: pointer; text-align: left; padding: 0 0 32px 0; position: relative; width: 100%; opacity: 0.6; transition: opacity 0.3s; }
         .mod-rail-item:last-child { padding-bottom: 0; }
         .mod-rail-item:not(:last-child)::after { content: ''; position: absolute; left: 15px; top: 36px; bottom: 8px; width: 2px; background: var(--border); }
-
         .mod-rail-item.active, .mod-rail-item.complete { opacity: 1; }
         .mod-rail-item.complete:not(:last-child)::after { background: var(--brand); }
-
         .mod-rail-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--bg-card); border: 2px solid var(--border); font-size: 12px; font-weight: 600; color: var(--text-muted); position: relative; z-index: 2; transition: all 0.3s; }
         .mod-rail-item.active .mod-rail-icon { border-color: var(--brand); color: var(--brand); box-shadow: 0 0 0 4px var(--brand-light); }
         .mod-rail-item.complete .mod-rail-icon { background: var(--brand); border-color: var(--brand); color: white; }
-
         .mod-rail-text { padding-top: 6px; }
         .mod-rail-label { display: block; font-size: 14px; font-weight: 600; color: var(--text-main); }
         .mod-rail-desc { display: block; font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-
         .mod-card { background: var(--bg-card); border-radius: 16px; padding: 32px; margin-bottom: 32px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -2px rgba(0,0,0,0.02); scroll-margin-top: 32px; }
-
         .mod-section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
         .mod-section-icon { width: 40px; height: 40px; border-radius: 10px; background: var(--bg-main); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--text-main); }
         .mod-section-title { font-size: 18px; font-weight: 600; margin: 0; color: var(--text-main); letter-spacing: -0.01em; }
-
         .mod-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
         .mod-field { display: flex; flex-direction: column; gap: 6px; }
         .mod-field.span-2 { grid-column: 1 / -1; }
         .mod-label { font-size: 13px; font-weight: 500; color: var(--text-main); }
         .mod-req { color: var(--danger); margin-left: 2px; }
-
         .mod-input { width: 100%; padding: 10px 14px; font-size: 14px; font-family: inherit; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-card); color: var(--text-main); outline: none; transition: all 0.2s; min-height: 44px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
         .mod-input::placeholder { color: #94a3b8; }
         .mod-input:focus-visible, .mod-input:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px var(--ring); }
@@ -316,12 +230,10 @@ export default function Create({ classes, active_session, campuses, categories, 
         .mod-input-error { border-color: var(--danger) !important; box-shadow: 0 0 0 3px rgba(239,68,68,0.1) !important; }
         textarea.mod-input { resize: vertical; min-height: 80px; line-height: 1.5; padding: 12px 14px; }
         .mod-error-text { color: var(--danger); font-size: 12px; margin-top: 4px; font-weight: 500; }
-
         .mod-toggles { display: flex; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
         .mod-switch-label { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; color: var(--text-main); cursor: pointer; padding: 12px 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-main); transition: all 0.2s; flex: 1; min-width: 200px; }
         .mod-switch-label:hover { border-color: #cbd5e1; }
         .mod-switch-label input { width: 18px; height: 18px; accent-color: var(--brand); cursor: pointer; flex-shrink: 0; }
-
         .mod-photo-area { display: flex; align-items: center; gap: 24px; margin-bottom: 32px; padding: 24px; border: 1px dashed var(--border); border-radius: 12px; background: var(--bg-main); transition: border-color 0.2s; }
         .mod-photo-area:hover { border-color: #cbd5e1; }
         .mod-avatar { width: 90px; height: 90px; border-radius: 50%; background: var(--bg-card); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; flex-shrink: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
@@ -330,22 +242,18 @@ export default function Create({ classes, active_session, campuses, categories, 
         .mod-photo-info { flex: 1; }
         .mod-photo-info h4 { margin: 0 0 4px; font-size: 15px; font-weight: 600; }
         .mod-photo-info p { margin: 0; font-size: 13px; color: var(--text-muted); line-height: 1.5; }
-
         .mod-sibling-box { padding: 20px; background: var(--bg-main); border-radius: 12px; margin-bottom: 28px; border: 1px solid var(--border); }
         .mod-lookup-wrap { display: flex; gap: 12px; margin-top: 16px; }
         .mod-lookup-wrap input { flex: 1; }
         .mod-btn-search { background: var(--text-main); color: white; padding: 0 20px; border-radius: 10px; border: none; font-weight: 500; font-size: 14px; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: background 0.2s; min-height: 44px; }
         .mod-btn-search:hover { background: #334155; }
         .mod-btn-search:disabled { opacity: 0.7; cursor: not-allowed; }
-
         .mod-footer { display: flex; justify-content: flex-end; align-items: center; gap: 16px; padding: 16px 0 0; }
         .mod-btn-cancel { color: var(--text-muted); font-weight: 500; text-decoration: none; font-size: 14px; padding: 12px 20px; border-radius: 10px; transition: all 0.2s; }
         .mod-btn-cancel:hover { color: var(--text-main); background: var(--bg-main); }
         .mod-btn-submit { background: var(--brand); color: white; padding: 12px 28px; font-size: 15px; font-weight: 600; border: none; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 6px -1px rgba(79,70,229,0.3); transition: all 0.2s; }
         .mod-btn-submit:hover:not(:disabled) { background: var(--brand-hover); transform: translateY(-1px); box-shadow: 0 6px 8px -1px rgba(79,70,229,0.3); }
         .mod-btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
-
-        /* --- Camera Modal --- */
         .mod-camera-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(4px); padding: 16px; }
         .mod-camera-container { background: #1e293b; padding: 24px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; gap: 20px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); width: 100%; max-width: 500px; }
         .mod-camera-video { width: 100%; border-radius: 12px; background: #000; transform: scaleX(-1); box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
@@ -356,65 +264,13 @@ export default function Create({ classes, active_session, campuses, categories, 
         .mod-btn-close-cam:hover { background: #dc2626; }
         .mod-cam-trigger { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--brand); background: var(--brand-light); border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; margin-top: 12px; transition: all 0.2s; }
         .mod-cam-trigger:hover { background: #c7d2fe; }
-
-        /* ========================================================
-           RESPONSIVE MEDIA QUERIES
-           ======================================================== */
-        @media (max-width: 1024px) {
-          .mod-layout { grid-template-columns: 1fr; gap: 24px; }
-          .mod-rail { display: none; } /* Hide sidebar on tablets and below */
-        }
-
-        @media (max-width: 768px) {
-          .mod-scope { padding: 24px 16px 48px; }
-          .mod-title { font-size: 24px; }
-          .mod-card { padding: 24px 20px; }
-        }
-
-        @media (max-width: 576px) {
-          .mod-scope { padding: 16px 12px 32px; }
-          .mod-mast { flex-direction: column; gap: 16px; align-items: stretch; margin-bottom: 24px; }
-          .mod-mast-actions { flex-direction: column; align-items: stretch; gap: 12px; }
-          .mod-date-pill { align-items: center; }
-
-          .mod-card { padding: 20px 16px; border-radius: 12px; }
-          .mod-grid { grid-template-columns: 1fr; gap: 16px; } /* Single column form */
-
-          .mod-toggles { flex-direction: column; gap: 12px; }
-          .mod-switch-label { width: 100%; justify-content: flex-start; }
-
-          .mod-photo-area { flex-direction: column; text-align: center; gap: 16px; padding: 20px 16px; }
-          .mod-cam-trigger { width: 100%; }
-
-          .mod-sibling-box { padding: 16px; }
-          .mod-lookup-wrap { flex-direction: column; }
-          .mod-btn-search { width: 100%; justify-content: center; }
-
-          .mod-footer { flex-direction: column-reverse; align-items: stretch; gap: 12px; }
-          .mod-btn-submit, .mod-btn-cancel { width: 100%; justify-content: center; text-align: center; }
-
-          .mod-camera-container { padding: 16px; gap: 16px; }
-          .mod-camera-actions { flex-direction: column-reverse; gap: 12px; }
-        }
+        @media (max-width: 1024px) { .mod-layout { grid-template-columns: 1fr; gap: 24px; } .mod-rail { display: none; } }
+        @media (max-width: 768px) { .mod-scope { padding: 24px 16px 48px; } .mod-title { font-size: 24px; } .mod-card { padding: 24px 20px; } }
+        @media (max-width: 576px) { .mod-scope { padding: 16px 12px 32px; } .mod-mast { flex-direction: column; gap: 16px; align-items: stretch; margin-bottom: 24px; } .mod-mast-actions { flex-direction: column; align-items: stretch; gap: 12px; } .mod-date-pill { align-items: center; } .mod-card { padding: 20px 16px; border-radius: 12px; } .mod-grid { grid-template-columns: 1fr; gap: 16px; } .mod-toggles { flex-direction: column; gap: 12px; } .mod-switch-label { width: 100%; justify-content: flex-start; } .mod-photo-area { flex-direction: column; text-align: center; gap: 16px; padding: 20px 16px; } .mod-cam-trigger { width: 100%; } .mod-sibling-box { padding: 16px; } .mod-lookup-wrap { flex-direction: column; } .mod-btn-search { width: 100%; justify-content: center; } .mod-footer { flex-direction: column-reverse; align-items: stretch; gap: 12px; } .mod-btn-submit, .mod-btn-cancel { width: 100%; justify-content: center; text-align: center; } .mod-camera-container { padding: 16px; gap: 16px; } .mod-camera-actions { flex-direction: column-reverse; gap: 12px; } }
       `}</style>
 
       {isCameraOpen && (
-        <div className="mod-camera-overlay">
-          <div className="mod-camera-container">
-            <h3 style={{ color: 'white', margin: 0, fontWeight: 500 }}>Take Profile Photo</h3>
-            {/* Video Element for live preview */}
-            <video ref={videoRef} autoPlay playsInline className="mod-camera-video"></video>
-            {/* Hidden canvas for capturing frame */}
-            <canvas ref={canvasRef} style={{ display: 'none' }}></canvas>
-
-            <div className="mod-camera-actions">
-              <button type="button" onClick={closeCamera} className="mod-btn-close-cam">Cancel</button>
-              <button type="button" onClick={capturePhoto} className="mod-btn-capture">
-                📸 Capture Photo
-              </button>
-            </div>
-          </div>
-        </div>
+        <CameraCapture onCapture={(file) => setData('photo', file)} onClose={() => setIsCameraOpen(false)} />
       )}
 
       <div className="mod-scope">
@@ -433,7 +289,7 @@ export default function Create({ classes, active_session, campuses, categories, 
 
             {/* Sidebar Rail */}
             <nav className="mod-rail">
-              {sections.map(s => (
+              {sectionsList.map(s => (
                 <button
                   key={s.id}
                   type="button"
@@ -478,9 +334,9 @@ export default function Create({ classes, active_session, campuses, categories, 
                 <div className="mod-grid">
                   <div className="mod-field">
                     <label className="mod-label">Campus <span className="mod-req">*</span></label>
-                    <select className={`mod-input ${errors.campus_id ? 'mod-input-error' : ''}`} value={data.campus_id} onChange={e => setData('campus_id', e.target.value)} required>
-                      <option value="">Select Campus</option>
-                      {campuses?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    <select className={`mod-input ${errors.campus_id ? 'mod-input-error' : ''}`} value={activeCampusId ?? ''} disabled required>
+                      <option value="">Select a campus in the top bar</option>
+                      {selectedCampus && <option value={selectedCampus.id}>{selectedCampus.name}</option>}
                     </select>
                     {errors.campus_id && <span className="mod-error-text">{errors.campus_id}</span>}
                   </div>
@@ -558,7 +414,6 @@ export default function Create({ classes, active_session, campuses, categories, 
                     <button type="button" onClick={openCamera} className="mod-cam-trigger">
                       <Icon name="camera" /> Or capture using Camera
                     </button>
-                    {/* --------------------------------- */}
 
                     {errors.photo && <span className="mod-error-text" style={{ display: 'block', mt: '4px' }}>{errors.photo}</span>}
                   </div>

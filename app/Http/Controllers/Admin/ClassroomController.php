@@ -68,18 +68,27 @@ class ClassroomController extends Controller
 
     private function validateData(Request $request, $ignoreId = null): array
     {
-        $campusId = $request->campus_id ?? config('app.active_campus_id');
+        $campusId = $request->campus_id ?? config('app.active_campus_id') ?? auth()->user()->campus_id;
+
+        $request->merge(['campus_id' => $campusId]);
 
         return $request->validate([
             'campus_id' => 'required|exists:campuses,id',
+            
             'room_number' => [
-                'required', 'string', 'max:100',
-                Rule::unique('classrooms', 'room_number')->where('campus_id', $campusId)->ignore($ignoreId)
+                'required', 
+                'string', 
+                'max:100',
+                Rule::unique('classrooms', 'room_number')
+                    ->where('campus_id', $campusId)
+                    ->ignore($ignoreId)
             ],
-            'capacity' => 'required|integer|min:1',
-            'type' => 'required|string',
-            'description' => 'nullable|string',
+            
+            'capacity' => 'required|integer|min:1|max:500', 
+            'type' => 'required|string|max:100', 
+            'description' => 'nullable|string|max:1000',
             'is_active' => 'boolean',
         ]);
     }
+
 }

@@ -28,7 +28,7 @@ export default function Index({ invoices, students, feeGroups, campuses, filters
   }, [flash]);
 
   function applyFilters(overrides = {}) {
-    router.get(route('admin.fees.invoices.create'), {
+    router.get(route('admin.fees.invoices.index'), {
       search, status, fee_group_id: feeGroupId, per_page: perPage, ...overrides,
     }, { preserveState: true, replace: true });
   }

@@ -1,4 +1,6 @@
 import { useForm, usePage, Head, Link } from '@inertiajs/react';
+import CameraCapture from '@/Components/CameraCapture';
+import usePhotoPreview from '@/Hooks/usePhotoPreview';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
 import Swal from 'sweetalert2';
@@ -42,20 +44,25 @@ export default function Create({ departments, designations, roles }) {
     photo: null
   });
 
-  const [photoPreview, setPhotoPreview] = useState(null);
+  const photoPreview = usePhotoPreview(data.photo);
+
+  // 📸 Camera States & Refs
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
 
   useEffect(() => {
     if (flash?.error) Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: flash.error, showConfirmButton: false, timer: 4000, timerProgressBar: true });
     if (flash?.success) Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: flash.success, showConfirmButton: false, timer: 4000, timerProgressBar: true });
   }, [flash]);
 
+  // Handle traditional file upload
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setData('photo', file);
-      setPhotoPreview(URL.createObjectURL(file));
     }
   };
+
+  const startCamera = () => setIsCameraOpen(true);
 
   const submit = (e) => {
     e.preventDefault();
@@ -121,6 +128,11 @@ export default function Create({ departments, designations, roles }) {
       }
     >
       <Head title="New Admission | Staff" />
+
+      {/* 📸 Camera Modal Overlay */}
+      {isCameraOpen && (
+        <CameraCapture onCapture={(file) => setData('photo', file)} onClose={() => setIsCameraOpen(false)} />
+      )}
 
       <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8">
         
@@ -216,7 +228,7 @@ export default function Create({ departments, designations, roles }) {
                 </div>
               </div>
 
-              {/* 2. Personal Information */}
+              {/* 2. Personal Information (With Smart Camera Support) */}
               <div id="section-personal" ref={el => sectionRefs.current['section-personal'] = el} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-7 scroll-mt-8 ring-1 ring-slate-900/5">
                 <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
                   <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100">
@@ -225,19 +237,42 @@ export default function Create({ departments, designations, roles }) {
                   <h3 className="text-lg font-bold text-slate-900">Staff Personal Information</h3>
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-center gap-5 p-5 bg-slate-50 rounded-2xl border border-slate-200 mb-6">
-                  <div className="relative w-24 h-24 rounded-2xl bg-white border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden shrink-0 shadow-sm hover:border-indigo-500 transition-colors cursor-pointer group">
+                {/* 📸 Profile Photo Upload & Capture Section */}
+                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 p-5 bg-slate-50/70 rounded-2xl border border-slate-200 mb-6">
+                  <div className="relative w-28 h-28 rounded-2xl bg-white border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden shrink-0 shadow-sm hover:border-indigo-500 transition-colors cursor-pointer group">
                     {photoPreview ? (
                       <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
                     ) : (
-                      <Icon name="camera" className="w-8 h-8 text-slate-400 group-hover:text-indigo-600 transition-colors" />
+                      <Icon name="user" className="w-10 h-10 text-slate-300 group-hover:text-indigo-500 transition-colors" />
                     )}
+                    {/* Hidden file input works normally if they click the placeholder */}
                     <input type="file" accept="image/*" onChange={handlePhotoChange} className="absolute inset-0 opacity-0 cursor-pointer" title="Click to upload profile photo" />
                   </div>
-                  <div className="text-center sm:text-left">
-                    <h4 className="text-base font-bold text-slate-900 mb-1">Staff Profile Photo</h4>
-                    <p className="text-xs text-slate-500 leading-relaxed">Click the frame to upload an image.<br />Recommended size: 300×300px. Max size: 2MB.</p>
-                    {errors.photo && <p className="text-rose-500 text-xs mt-1">{errors.photo}</p>}
+
+                  <div className="flex flex-col items-center sm:items-start flex-1 gap-2.5">
+                    <h4 className="text-sm font-bold text-slate-900">Profile Photo</h4>
+                    <p className="text-xs text-slate-500 text-center sm:text-left leading-relaxed">
+                      Upload an image or use your device camera to capture.<br />
+                      Recommended size: 300×300px. Max size: 2MB.
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2 mt-1">
+                      <div className="relative">
+                        <button type="button" className="text-xs px-3.5 py-2 bg-white border border-slate-200 rounded-lg shadow-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-1.5">
+                          <Icon name="upload" className="w-3.5 h-3.5" /> Upload File
+                        </button>
+                        <input type="file" accept="image/*" onChange={handlePhotoChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                      </div>
+                      
+                      {/* 📸 Smart Camera Button */}
+                      <button 
+                        type="button" 
+                        onClick={startCamera} 
+                        className="text-xs px-3.5 py-2 bg-indigo-50 border border-indigo-100 rounded-lg shadow-sm font-bold text-indigo-700 hover:bg-indigo-100 transition-colors flex items-center gap-1.5"
+                      >
+                        <Icon name="camera" className="w-3.5 h-3.5" /> Open Camera
+                      </button>
+                    </div>
+                    {errors.photo && <p className="text-rose-500 text-xs font-semibold mt-1">{errors.photo}</p>}
                   </div>
                 </div>
 

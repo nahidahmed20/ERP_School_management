@@ -1,4 +1,5 @@
 import { useForm, usePage } from '@inertiajs/react';
+import WorkingCampusField from '@/Components/WorkingCampusField';
 import Icon from '@/Components/Icons';
 
 export default function VehicleFormModal({ item, campuses, activeCampusId, onClose }) {
@@ -7,7 +8,7 @@ export default function VehicleFormModal({ item, campuses, activeCampusId, onClo
   const isSuperAdmin = auth?.user?.role === 'super_admin' || auth?.user?.roles?.some(r => r.name === 'Super Admin');
 
   const { data, setData, post, put, processing, errors, reset } = useForm({
-    campus_id: item?.campus_id ?? activeCampusId,
+    campus_id: item?.campus_id ?? auth?.active_campus_id ?? activeCampusId ?? '',
     vehicle_number: item?.vehicle_number ?? '',
     vehicle_model: item?.vehicle_model ?? '',
     driver_name: item?.driver_name ?? '',
@@ -37,10 +38,7 @@ export default function VehicleFormModal({ item, campuses, activeCampusId, onClo
           <div className="mm-form-grid">
             <label style={{ gridColumn: '1 / -1' }}>
               <span>Assign to Campus</span>
-              <select value={data.campus_id || ''} onChange={(e) => setData('campus_id', e.target.value)} disabled={!isSuperAdmin}>
-                <option value="" disabled>Select Campus</option>
-                {campuses?.map(campus => <option key={campus.id} value={campus.id}>{campus.name}</option>)}
-              </select>
+              <WorkingCampusField value={data.campus_id} campuses={campuses}  />
               {errors.campus_id && <em>{errors.campus_id}</em>}
             </label>
 

@@ -8,6 +8,7 @@ use App\Services\StudentLearningService;
 use App\Models\Payment;
 use App\Models\Exam;
 use App\Models\ExamMark;
+use App\Models\Student;
 use App\Support\CampusRule;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -147,6 +148,69 @@ class StudentPortalController extends Controller
         $data=$request->validate(['amount'=>['required','numeric','min:1','max:'.$due],'payment_method'=>'required|string|max:100']);
         PaymentTransaction::create(['transaction_id'=>'PAYREQ-'.now()->format('YmdHis').'-'.$student->id.'-'.strtoupper(str()->random(4)),'reference_no'=>$invoice->invoice_no,'amount'=>$data['amount'],'currency'=>'BDT','payment_method'=>$data['payment_method'],'status'=>'Pending','transaction_date'=>today(),'source_type'=>Invoice::class,'source_id'=>$invoice->id,'student_id'=>$student->id,'note'=>'Student payment request; awaiting gateway/admin confirmation.']);
         return back()->with('success','Payment request created.');
+    }
+
+    public function receipt(Request $request, int $payment)
+    {
+        $student = $this->documentStudent($request);
+        $record = Payment::with('student')
+            ->where('campus_id', $student->campus_id)
+            ->where('student_id', $student->id)
+            ->findOrFail($payment);
+
+        return $this->documentDownload('pdf.fee-receipt', ['payment' => $record], "receipt-{$record->id}.pdf");
+    }
+
+    public function reportCard(Request $request, int $exam)
+    {
+        $student = $this->documentStudent($request);
+        $publishedExam = Exam::where('campus_id', $student->campus_id)
+            ->where('results_published', true)->findOrFail($exam);
+        $marks = ExamMark::with('subject')
+            ->where('campus_id', $student->campus_id)
+            ->where('student_id', $student->id)
+            ->where('exam_id', $publishedExam->id)
+            ->orderBy('subject_id')->get();
+        abort_if($marks->isEmpty(), 404, 'No published result is available for this student and exam.');
+
+        return $this->documentDownload('pdf.report-card', [
+            's' => $student, 'e' => $publishedExam, 'marks' => $marks,
+        ], "report-card-{$student->id}-{$publishedExam->id}.pdf");
+    }
+
+    public function transcript(Request $request)
+    {
+        $student = $this->documentStudent($request);
+        // Exam IDs identify historical results; using the current enrollment
+        // would incorrectly remove results earned before a class promotion.
+        $marks = ExamMark::with(['subject', 'exam'])
+            ->where('campus_id', $student->campus_id)
+            ->where('student_id', $student->id)
+            ->whereHas('exam', fn ($query) => $query
+                ->where('campus_id', $student->campus_id)->where('results_published', true))
+            ->orderBy('exam_id')->orderBy('subject_id')->get()->groupBy('exam_id');
+
+        return $this->documentDownload('pdf.student-transcript', [
+            'student' => $student, 'marksByExam' => $marks,
+        ], "transcript-{$student->id}.pdf");
+    }
+
+    private function documentStudent(Request $request): Student
+    {
+        [$student] = $this->student($request);
+        $campusId = config('app.active_campus_id');
+        abort_unless($campusId && (int) $student->campus_id === (int) $campusId,
+            403, 'Your student profile must belong to your active campus.');
+
+        return $student;
+    }
+
+    private function documentDownload(string $view, array $data, string $filename)
+    {
+        return Pdf::loadView($view, $data)->download($filename)->withHeaders([
+            'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'private, no-store, max-age=0',
+        ]);
     }
 
     public function startExam(Request $request, OnlineExam $exam): Response

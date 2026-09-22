@@ -1,12 +1,15 @@
 import { useForm, usePage } from '@inertiajs/react';
+import WorkingCampusField from '@/Components/WorkingCampusField';
 import Icon from '@/Components/Icons';
 
 export default function CertificateFormModal({ templates, users, campuses, activeCampusId, onClose }) {
   const { auth } = usePage().props;
   const isSuperAdmin = auth?.user?.role === 'super_admin' || auth?.user?.roles?.some(r => r.name === 'Super Admin');
 
+  const defaultCampusId = auth?.active_campus_id ?? activeCampusId ?? '';
+
   const { data, setData, post, processing, errors, reset } = useForm({
-    campus_id: activeCampusId,
+    campus_id: defaultCampusId, 
     certificate_template_id: '',
     user_id: '',
     issue_date: new Date().toISOString().split('T')[0],
@@ -22,22 +25,16 @@ export default function CertificateFormModal({ templates, users, campuses, activ
     });
   }
 
-  // Selected Template Details
   const selectedTemplate = templates.find(t => t.id == data.certificate_template_id);
-
   const inputClass = "block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all";
   const labelClass = "block text-sm font-semibold text-slate-700 mb-1.5";
 
   return (
-    // Responsive Overlay
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
-      
-      {/* Responsive Modal Box */}
       <div 
         className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0 rounded-t-2xl">
           <div>
             <h3 className="text-xl font-bold text-slate-900">Issue New Certificate</h3>
@@ -48,25 +45,14 @@ export default function CertificateFormModal({ templates, users, campuses, activ
           </button>
         </div>
 
-        {/* Form Body (Scrollable) */}
         <form onSubmit={submit} className="flex flex-col flex-1 overflow-hidden">
           <div className="p-6 overflow-y-auto space-y-5 flex-1 custom-scrollbar">
-            
             <div className="grid grid-cols-1 gap-5">
               
               {/* Campus Selection */}
               <div>
                 <label className={labelClass}>Assign to Campus <span className="text-rose-500">*</span></label>
-                <select
-                  value={data.campus_id || ''}
-                  onChange={(e) => setData('campus_id', e.target.value)}
-                  disabled={!isSuperAdmin}
-                  required
-                  className={`${inputClass} ${!isSuperAdmin ? 'bg-slate-100 opacity-70' : 'bg-white'}`}
-                >
-                  <option value="" disabled>Select Campus</option>
-                  {campuses?.map(campus => <option key={campus.id} value={campus.id}>{campus.name}</option>)}
-                </select>
+                <WorkingCampusField value={data.campus_id} campuses={campuses} className={`${inputClass} bg-white`} />
                 {errors.campus_id && <p className="text-rose-500 text-xs mt-1">{errors.campus_id}</p>}
               </div>
 
@@ -119,14 +105,14 @@ export default function CertificateFormModal({ templates, users, campuses, activ
                 {errors.issue_date && <p className="text-rose-500 text-xs mt-1">{errors.issue_date}</p>}
               </div>
 
-              {/* Live Notice / Info Box */}
+              {/* Selected Template Info */}
               {selectedTemplate && (
                 <div className="bg-indigo-50/60 border border-indigo-100 p-4 rounded-xl flex items-start gap-3">
                   <Icon name="info" className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" />
                   <div>
                     <strong className="text-xs font-bold text-indigo-700 uppercase tracking-wider block mb-1">Selected Template Note:</strong>
                     <span className="text-sm font-medium text-slate-700 leading-relaxed">
-                      {selectedTemplate.content_body.substring(0, 150)}{selectedTemplate.content_body.length > 150 ? '...' : ''}
+                      {selectedTemplate.content_body?.substring(0, 150)}{selectedTemplate.content_body?.length > 150 ? '...' : ''}
                     </span>
                   </div>
                 </div>
@@ -135,7 +121,6 @@ export default function CertificateFormModal({ templates, users, campuses, activ
             </div>
           </div>
 
-          {/* Modal Footer */}
           <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex flex-col-reverse sm:flex-row items-center justify-end gap-3 shrink-0 rounded-b-2xl">
             <button type="button" onClick={onClose} disabled={processing} className="w-full sm:w-auto px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 hover:text-slate-800 rounded-xl transition-all shadow-sm">
               Cancel

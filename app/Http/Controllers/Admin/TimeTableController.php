@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\{Campus, Classroom, SchoolClass, Staff, TimeTable};
-use App\Support\CampusRule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
@@ -14,9 +14,24 @@ class TimeTableController extends Controller
 {
     private const DAYS = 'Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday';
 
+    private function existsRule(string $table)
+    {
+        $campusId = config('app.active_campus_id');
+        $rule = Rule::exists($table, 'id');
+        return $campusId ? $rule->where('campus_id', $campusId) : $rule;
+    }
+
     public function index(Request $request)
     {
+        $campusId = config('app.active_campus_id');
+
         $query = TimeTable::with(['schoolClass:id,name', 'section:id,name', 'subject:id,name', 'classroom:id,room_number', 'teacher:id,first_name,last_name,staff_id_no']);
+        
+        // 🔒 Super Admin Bypass Logic
+        if ($campusId) {
+            $query->where('campus_id', $campusId);
+        }
+
         foreach (['class_id', 'section_id'] as $field) {
             $query->when($request->filled($field), fn ($q) => $q->where($field, $request->$field));
         }
@@ -24,9 +39,12 @@ class TimeTableController extends Controller
         $query->orderByRaw("CASE day_of_week WHEN 'Sunday' THEN 0 WHEN 'Monday' THEN 1 WHEN 'Tuesday' THEN 2 WHEN 'Wednesday' THEN 3 WHEN 'Thursday' THEN 4 WHEN 'Friday' THEN 5 WHEN 'Saturday' THEN 6 END")
             ->orderBy('start_time');
 
+        $classesQuery = SchoolClass::with('sections:id,name')->where('is_active', true)->orderBy('numeric_name');
+        if ($campusId) $classesQuery->where('campus_id', $campusId);
+
         return Inertia::render('Admin/TimeTables/Index', [
             'timeTables' => $query->paginate(50)->withQueryString(),
-            'classes' => SchoolClass::with('sections:id,name')->where('is_active', true)->orderBy('numeric_name')->get(),
+            'classes' => $classesQuery->get(),
             'filters' => $request->only(['class_id', 'section_id', 'day']),
         ]);
     }
@@ -39,8 +57,8 @@ class TimeTableController extends Controller
     public function editDay(Request $request)
     {
         $request->validate([
-            'class_id' => ['required', CampusRule::exists('school_classes')],
-            'section_id' => ['required', CampusRule::exists('sections')],
+            'class_id' => ['required', $this->existsRule('school_classes')],
+            'section_id' => ['required', $this->existsRule('sections')],
             'day' => 'required|in:'.self::DAYS,
         ]);
         $this->validateClassSection($request->class_id, $request->section_id);
@@ -76,11 +94,24 @@ class TimeTableController extends Controller
 
     private function formOptions(): array
     {
+        $campusId = config('app.active_campus_id');
+
+        $classesQuery = SchoolClass::with(['sections', 'subjects'])->where('is_active', true)->orderBy('numeric_name');
+        $classroomsQuery = Classroom::where('is_active', true);
+        $staffQuery = Staff::where('is_active', true)->orderBy('first_name');
+
+        // 🔒 Data Leak Protection
+        if ($campusId) {
+            $classesQuery->where('campus_id', $campusId);
+            $classroomsQuery->where('campus_id', $campusId);
+            $staffQuery->where('campus_id', $campusId);
+        }
+
         return [
             'campuses' => Campus::select('id', 'name')->get(),
-            'classes' => SchoolClass::with(['sections', 'subjects'])->where('is_active', true)->orderBy('numeric_name')->get(),
-            'classrooms' => Classroom::where('is_active', true)->get(['id', 'room_number', 'type']),
-            'staffList' => Staff::where('is_active', true)->orderBy('first_name')->get(['id', 'first_name', 'last_name', 'staff_id_no']),
+            'classes' => $classesQuery->get(),
+            'classrooms' => $classroomsQuery->get(['id', 'room_number', 'type']),
+            'staffList' => $staffQuery->get(['id', 'first_name', 'last_name', 'staff_id_no']),
         ];
     }
 
@@ -96,20 +127,21 @@ class TimeTableController extends Controller
     private function saveDay(Request $request, bool $replace): void
     {
         $data = $request->validate([
-            'class_id' => ['required', CampusRule::exists('school_classes')],
-            'section_id' => ['required', CampusRule::exists('sections')],
+            'class_id' => ['required', $this->existsRule('school_classes')],
+            'section_id' => ['required', $this->existsRule('sections')],
             'day_of_week' => 'required|in:'.self::DAYS,
             'periods' => $replace ? 'present|array' : 'required|array|min:1',
-            'periods.*.subject_id' => ['required', CampusRule::exists('subjects')],
-            'periods.*.classroom_id' => ['nullable', CampusRule::exists('classrooms')],
-            'periods.*.teacher_id' => ['nullable', CampusRule::exists('staff')],
+            'periods.*.subject_id' => ['required', $this->existsRule('subjects')],
+            'periods.*.classroom_id' => ['nullable', $this->existsRule('classrooms')],
+            'periods.*.teacher_id' => ['nullable', $this->existsRule('staff')],
             'periods.*.start_time' => 'required|date_format:H:i',
             'periods.*.end_time' => 'required|date_format:H:i|after:periods.*.start_time',
         ]);
+        
         $class = $this->validateClassSection($data['class_id'], $data['section_id']);
         $subjectIds = $class->subjects()->pluck('subjects.id')->all();
         foreach ($data['periods'] as $index => $period) {
-            if (! in_array((int) $period['subject_id'], $subjectIds)) {
+            if (! empty($period['subject_id']) && ! in_array((int) $period['subject_id'], $subjectIds)) {
                 throw ValidationException::withMessages(["periods.$index.subject_id" => 'Select a subject assigned to this class.']);
             }
         }
@@ -139,7 +171,7 @@ class TimeTableController extends Controller
                     throw ValidationException::withMessages(['conflict' => 'This class, teacher or room already has a period during the selected time.']);
                 }
                 TimeTable::create([
-                    'campus_id' => $class->campus_id,
+                    'campus_id' => $class->campus_id, 
                     'class_id' => $class->id,
                     'section_id' => $data['section_id'],
                     'day_of_week' => $data['day_of_week'],

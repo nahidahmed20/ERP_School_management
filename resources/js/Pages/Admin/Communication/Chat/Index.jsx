@@ -28,7 +28,7 @@ export default function ChatIndex({ users, activeUser, messages }) {
   // Handle User selection from sidebar
   const selectUser = (userId) => {
     setData('receiver_id', userId);
-    router.get(route('admin.communication.chat'), { user_id: userId }, { preserveState: true, preserveScroll: true });
+    router.get(route('admin.communication.chat.index'), { user_id: userId }, { preserveState: true, preserveScroll: true });
   };
 
   // Send Message

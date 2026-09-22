@@ -2,9 +2,13 @@ import Sidebar from '@/Components/Sidebar';
 import Topbar from '@/Components/Topbar';
 import PageSizeEnhancer from '@/Components/PageSizeEnhancer';
 import GlobalEventBanner from '@/Components/GlobalEventBanner';
+import { usePage } from '@inertiajs/react';
 import { useCallback, useEffect, useState } from 'react';
 
 export default function AuthenticatedLayout({ header, children }) {
+    const { auth, errors = {} } = usePage().props;
+    const requiresCampusSelection = Boolean(auth?.requires_campus_selection);
+    const campusError = errors.campus_id;
     const [mobileOpen, setMobileOpen] = useState(false);
     const [desktopCollapsed, setDesktopCollapsed] = useState(false);
     const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 900px)').matches);
@@ -45,6 +49,24 @@ export default function AuthenticatedLayout({ header, children }) {
             <div className="main">
                 <Topbar onHamburgerClick={toggleMenu} sidebarOpen={isMobile ? mobileOpen : !desktopCollapsed} />
                 <GlobalEventBanner />
+
+                {(requiresCampusSelection || campusError) && (
+                    <div
+                        role={campusError ? 'alert' : 'status'}
+                        className={`mx-4 mt-4 rounded-lg border px-4 py-3 text-sm sm:mx-6 ${campusError
+                            ? 'border-rose-200 bg-rose-50 text-rose-800'
+                            : 'border-amber-200 bg-amber-50 text-amber-900'}`}
+                    >
+                        {requiresCampusSelection && (
+                            <p>
+                                <span className="font-semibold">Select a working campus in the top bar.</span>{' '}
+                                Combined campus lists are available to view. Choose a campus before adding or changing campus records.
+                                Your account assignment stays unchanged.
+                            </p>
+                        )}
+                        {campusError && <p className={requiresCampusSelection ? 'mt-2' : ''}>{campusError}</p>}
+                    </div>
+                )}
 
                 {header && (
                     <div className="content" style={{ paddingBottom: 0 }}>

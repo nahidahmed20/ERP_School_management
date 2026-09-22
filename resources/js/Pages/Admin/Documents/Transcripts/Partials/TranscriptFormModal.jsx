@@ -1,4 +1,5 @@
 import { useForm, usePage } from '@inertiajs/react';
+import WorkingCampusField from '@/Components/WorkingCampusField';
 import Icon from '@/Components/Icons';
 
 export default function TranscriptFormModal({ item, campuses, activeCampusId, onClose }) {
@@ -6,7 +7,7 @@ export default function TranscriptFormModal({ item, campuses, activeCampusId, on
   const isSuperAdmin = auth?.user?.role === 'super_admin' || auth?.user?.roles?.some(r => r.name === 'Super Admin');
 
   const { data, setData, post, put, processing, errors, reset } = useForm({
-    campus_id: item?.campus_id ?? activeCampusId,
+    campus_id: item?.campus_id ?? auth?.active_campus_id ?? activeCampusId ?? '',
     title: item?.title ?? '',
     grading_system: item?.grading_system ?? 'GPA 5.0 (A+ to F)',
     header_text: item?.header_text ?? 'Official Record of Student Progress',
@@ -52,10 +53,7 @@ export default function TranscriptFormModal({ item, campuses, activeCampusId, on
               
               <div>
                 <label className={labelClass}>Assign to Campus <span className="text-rose-500">*</span></label>
-                <select value={data.campus_id || ''} onChange={(e) => setData('campus_id', e.target.value)} disabled={!isSuperAdmin} required className={`${inputClass} ${!isSuperAdmin ? 'bg-slate-100 opacity-70' : 'bg-white'}`}>
-                  <option value="" disabled>Select Campus</option>
-                  {campuses?.map(campus => <option key={campus.id} value={campus.id}>{campus.name}</option>)}
-                </select>
+                <WorkingCampusField value={data.campus_id} campuses={campuses} className={`${inputClass} ${!isSuperAdmin ? 'bg-slate-100 opacity-70' : 'bg-white'}`} />
                 {errors.campus_id && <p className="text-rose-500 text-xs mt-1">{errors.campus_id}</p>}
               </div>
 

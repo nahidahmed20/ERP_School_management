@@ -1,10 +1,18 @@
-import { Head, router, useForm } from "@inertiajs/react";
+import { useEffect } from "react";
+import { Head, router, useForm, usePage } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import Swal from "sweetalert2";
 
-const input =
-    "mt-1 block w-full rounded-xl border-slate-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-colors";
+const input = "mt-1 block w-full rounded-xl border-slate-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-colors";
 
 export default function Index({ policy, locks, classes, holidays }) {
+    const { flash } = usePage().props;
+
+    useEffect(() => {
+        if (flash?.success) Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: flash.success, showConfirmButton: false, timer: 3000, timerProgressBar: true });
+        if (flash?.error) Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: flash.error, showConfirmButton: false, timer: 4000, timerProgressBar: true });
+    }, [flash]);
+
     const p = useForm({
         student_start_time: policy?.student_start_time?.slice(0, 5) || "08:00",
         staff_start_time: policy?.staff_start_time?.slice(0, 5) || "08:00",
@@ -22,9 +30,7 @@ export default function Index({ policy, locks, classes, holidays }) {
         section_id: "",
     });
 
-    const sections =
-        classes.find((c) => String(c.id) === String(l.data.class_id))
-            ?.sections || [];
+    const sections = classes.find((c) => String(c.id) === String(l.data.class_id))?.sections || [];
 
     return (
         <AuthenticatedLayout>
@@ -52,7 +58,7 @@ export default function Index({ policy, locks, classes, holidays }) {
                         <form
                             onSubmit={(e) => {
                                 e.preventDefault();
-                                p.post(route("admin.attendance-control.policy"));
+                                p.post(route("admin.attendance-control.policy"), { preserveScroll: true });
                             }}
                             className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5"
                         >
@@ -126,8 +132,8 @@ export default function Index({ policy, locks, classes, holidays }) {
                             </div>
 
                             <div className="mt-2 sm:col-span-2">
-                                <button className="w-full sm:w-auto rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-indigo-700 active:scale-95">
-                                    Save policy
+                                <button disabled={p.processing} className="w-full sm:w-auto rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-indigo-700 active:scale-95 disabled:opacity-70">
+                                    {p.processing ? 'Saving...' : 'Save policy'}
                                 </button>
                             </div>
                         </form>
@@ -141,7 +147,7 @@ export default function Index({ policy, locks, classes, holidays }) {
                         <form
                             onSubmit={(e) => {
                                 e.preventDefault();
-                                l.post(route("admin.attendance-control.lock"));
+                                l.post(route("admin.attendance-control.lock"), { preserveScroll: true, onSuccess: () => l.reset() });
                             }}
                             className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5"
                         >
@@ -150,7 +156,7 @@ export default function Index({ policy, locks, classes, holidays }) {
                                 <select
                                     className={input}
                                     value={l.data.attendance_type}
-                                    onChange={(e) => l.setData("attendance_type", e.target.value)}
+                                    onChange={(e) => l.setData({ ...l.data, attendance_type: e.target.value, class_id: "", section_id: "" })}
                                 >
                                     <option value="student">Student</option>
                                     <option value="staff">Staff</option>
@@ -174,7 +180,7 @@ export default function Index({ policy, locks, classes, holidays }) {
                                         <select
                                             className={input}
                                             value={l.data.class_id}
-                                            onChange={(e) => l.setData("class_id", e.target.value)}
+                                            onChange={(e) => l.setData({ ...l.data, class_id: e.target.value, section_id: "" })}
                                         >
                                             <option value="">Select</option>
                                             {classes.map((c) => (
@@ -188,6 +194,7 @@ export default function Index({ policy, locks, classes, holidays }) {
                                             className={input}
                                             value={l.data.section_id}
                                             onChange={(e) => l.setData("section_id", e.target.value)}
+                                            disabled={!l.data.class_id}
                                         >
                                             <option value="">All</option>
                                             {sections.map((s) => (
@@ -199,8 +206,8 @@ export default function Index({ policy, locks, classes, holidays }) {
                             )}
 
                             <div className="mt-2 sm:col-span-2">
-                                <button className="w-full sm:w-auto rounded-xl bg-slate-900 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-slate-800 active:scale-95">
-                                    Lock day
+                                <button disabled={l.processing} className="w-full sm:w-auto rounded-xl bg-slate-900 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-slate-800 active:scale-95 disabled:opacity-70">
+                                    {l.processing ? 'Locking...' : 'Lock day'}
                                 </button>
                             </div>
                         </form>
@@ -220,7 +227,7 @@ export default function Index({ policy, locks, classes, holidays }) {
                                             <span className="capitalize">{r.attendance_type}</span>
                                         </span>
                                         <button
-                                            onClick={() => router.delete(route("admin.attendance-control.unlock", r.id))}
+                                            onClick={() => router.delete(route("admin.attendance-control.unlock", r.id), { preserveScroll: true })}
                                             className="rounded-lg bg-rose-50 px-3 py-1.5 font-semibold text-rose-600 transition-colors hover:bg-rose-100"
                                         >
                                             Reopen
@@ -243,7 +250,7 @@ export default function Index({ policy, locks, classes, holidays }) {
                             holidays.map((h) => (
                                 <div key={h.id} className="flex flex-col justify-center rounded-xl border border-slate-100 bg-slate-50 p-4 text-sm">
                                     <span className="font-bold text-slate-800">{h.title}</span>
-                                    <span className="mt-1 text-slate-500">{h.start_datetime}</span>
+                                    <span className="mt-1 text-slate-500">{new Date(h.start_datetime).toLocaleDateString('en-GB')}</span>
                                 </div>
                             ))
                         ) : (

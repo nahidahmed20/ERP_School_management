@@ -1,4 +1,5 @@
 import { useForm, usePage } from '@inertiajs/react';
+import WorkingCampusField from '@/Components/WorkingCampusField';
 import Icon from '@/Components/Icons';
 
 export default function CustomFieldFormModal({ item, campuses, activeCampusId, onClose }) {
@@ -7,7 +8,7 @@ export default function CustomFieldFormModal({ item, campuses, activeCampusId, o
   const isSuperAdmin = auth?.user?.role === 'super_admin';
 
   const { data, setData, post, put, processing, reset, errors } = useForm({
-    campus_id: item?.campus_id ?? activeCampusId,
+    campus_id: item?.campus_id ?? auth?.active_campus_id ?? activeCampusId ?? '',
     target_model: item?.target_model ?? 'Student',
     field_label: item?.field_label ?? '',
     field_type: item?.field_type ?? 'text',
@@ -54,15 +55,7 @@ export default function CustomFieldFormModal({ item, campuses, activeCampusId, o
 
               <div className="sm:col-span-2">
                 <label className={labelClass}>Campus (Optional)</label>
-                <select
-                  value={data.campus_id || ''}
-                  onChange={(e) => setData('campus_id', e.target.value)}
-                  disabled={!isSuperAdmin}
-                  className={`${inputClass} ${!isSuperAdmin ? 'bg-slate-100 opacity-70' : 'bg-white'}`}
-                >
-                  <option value="">Global / All</option>
-                  {campuses?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
+                <WorkingCampusField value={data.campus_id} campuses={campuses} className={`${inputClass} ${!isSuperAdmin ? 'bg-slate-100 opacity-70' : 'bg-white'}`} />
                 {errors.campus_id && <p className="text-rose-500 text-xs mt-1">{errors.campus_id}</p>}
               </div>
 

@@ -9,14 +9,21 @@ use Inertia\Inertia;
 
 class AdmissionInquiryController extends Controller
 {
+    private function getCampusId()
+    {
+        return config('app.active_campus_id') ?? auth()->user()->campus_id;
+    }
+
     public function index(Request $request)
     {
-        $query = AdmissionInquiry::query();
+        $query = AdmissionInquiry::where('campus_id', $this->getCampusId());
 
         if ($search = $request->search) {
-            $query->where('applicant_name', 'like', "%{$search}%")
+            $query->where(function($q) use ($search) {
+                $q->where('applicant_name', 'like', "%{$search}%")
                   ->orWhere('guardian_name', 'like', "%{$search}%")
                   ->orWhere('phone', 'like', "%{$search}%");
+            });
         }
 
         if ($request->filled('status')) {
@@ -42,14 +49,17 @@ class AdmissionInquiryController extends Controller
             'status' => 'required|in:Pending,Follow-up,Converted,Cancelled',
         ]);
 
-        AdmissionInquiry::create($request->all());
+        $data = $request->all();
+        $data['campus_id'] = $this->getCampusId(); 
+
+        AdmissionInquiry::create($data);
 
         return back()->with('success', 'ভর্তির খোঁজখবর সফলভাবে যুক্ত করা হয়েছে!');
     }
 
     public function update(Request $request, $id)
     {
-        $inquiry = AdmissionInquiry::findOrFail($id);
+        $inquiry = AdmissionInquiry::where('campus_id', $this->getCampusId())->findOrFail($id);
         
         $request->validate([
             'applicant_name' => 'required|string|max:255',
@@ -67,7 +77,8 @@ class AdmissionInquiryController extends Controller
 
     public function destroy($id)
     {
-        AdmissionInquiry::findOrFail($id)->delete();
+        AdmissionInquiry::where('campus_id', $this->getCampusId())->findOrFail($id)->delete();
+        
         return back()->with('success', 'রেকর্ড মুছে ফেলা হয়েছে!');
     }
 }

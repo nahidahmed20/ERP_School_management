@@ -1,16 +1,25 @@
 import React, { useState } from 'react';
+import WorkingCampusField from '@/Components/WorkingCampusField';
 import { Head, useForm, usePage, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
 
 export default function TranscriptForm({ item, campuses, activeCampusId }) {
   const isEdit = !!item;
-  const { auth } = usePage().props;
+  
+  // গ্লোবাল প্রপস থেকে auth এবং global_settings নেওয়া হচ্ছে
+  const { auth, global_settings } = usePage().props;
   const isSuperAdmin = auth?.user?.role === 'super_admin' || auth?.user?.roles?.some(r => r.name === 'Super Admin');
+
+  // ডায়নামিক স্কুলের নাম সেট করা হচ্ছে
+  const schoolName = global_settings?.school_name || 'YOUR SCHOOL NAME';
+
+  // ক্যাম্পাসের আইডি নিশ্চিত করার জন্য সেফটি ফলব্যাক
+  const defaultCampusId = item?.campus_id ?? auth?.active_campus_id ?? activeCampusId ?? '';
 
   const { data, setData, post, processing, errors, isDirty } = useForm({
     _method: isEdit ? 'put' : 'post',
-    campus_id: item?.campus_id ?? activeCampusId,
+    campus_id: defaultCampusId,
     title: item?.title ?? 'Official Academic Transcript',
     grading_system: item?.grading_system ?? 'GPA 5.0',
     header_text: item?.header_text ?? 'Record of Student Academic Performance',
@@ -73,10 +82,7 @@ export default function TranscriptForm({ item, campuses, activeCampusId }) {
                 
                 <div className="sm:col-span-2">
                   <label className={labelClass}>Campus *</label>
-                  <select value={data.campus_id} onChange={(e) => setData('campus_id', e.target.value)} disabled={!isSuperAdmin} required className={`${inputClass} ${!isSuperAdmin ? 'bg-slate-100 opacity-70' : 'bg-white'}`}>
-                    <option value="" disabled>Select Campus</option>
-                    {campuses?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
+                  <WorkingCampusField value={data.campus_id} campuses={campuses} className={`${inputClass} ${!isSuperAdmin ? 'bg-slate-100 opacity-70' : 'bg-white'}`} />
                   {errors.campus_id && <p className="text-rose-500 text-xs mt-1">{errors.campus_id}</p>}
                 </div>
 
@@ -195,6 +201,10 @@ export default function TranscriptForm({ item, campuses, activeCampusId }) {
 
               {/* Header */}
               <div className="w-full text-center border-b-2 border-slate-800 pb-3 mb-4 z-10">
+                {/* ডায়নামিক স্কুলের নাম */}
+                <h2 className="m-0 text-sm font-bold uppercase tracking-widest text-slate-600 mb-1">
+                  {schoolName}
+                </h2>
                 <h1 className="m-0 text-xl font-black uppercase tracking-wide">{data.title || 'Academic Transcript'}</h1>
                 <h3 className="m-0 text-xs text-slate-600 mt-1 font-semibold">{data.header_text}</h3>
               </div>
@@ -236,15 +246,13 @@ export default function TranscriptForm({ item, campuses, activeCampusId }) {
 
               {/* Signatures & Footer */}
               <div className="w-full flex justify-between items-end mt-auto z-10">
-                {/* Left Empty Signature space */}
                 <div className="w-[120px] text-center">
                   <div className="border-t border-slate-800 pt-1 text-[9px] font-bold text-slate-600">Class Teacher</div>
                 </div>
 
-                {/* Right Configurable Signature */}
                 <div className="w-[140px] text-center flex flex-col items-center">
                   {sigPreview ? (
-                    <img src={sigPreview} alt="Sig" className="h-8 object-contain mb-1" />
+                    <img src={sigPreview} alt="Sig" className="h-8 object-contain mb-1 mix-blend-multiply" />
                   ) : (
                     <div className="h-8 mb-1"></div>
                   )}

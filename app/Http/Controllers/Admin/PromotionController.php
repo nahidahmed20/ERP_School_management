@@ -10,8 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use App\Models\PromotionHistory;
+use Illuminate\Validation\Rule; 
 use Inertia\Inertia;
-use App\Support\CampusRule;
 
 class PromotionController extends Controller
 {
@@ -48,18 +48,25 @@ class PromotionController extends Controller
 
     public function store(Request $request)
     {
+        $campusId = config('app.active_campus_id');
+
+        $existsRule = function ($table) use ($campusId) {
+            $rule = Rule::exists($table, 'id');
+            return $campusId ? $rule->where('campus_id', $campusId) : $rule;
+        };
+
         $request->validate([
-            'current_session_id' => ['required', CampusRule::exists('academic_sessions')],
-            'current_class_id' => ['required', CampusRule::exists('school_classes')],
-            'current_section_id' => ['required', CampusRule::exists('sections')],
-            'next_session_id' => ['required', CampusRule::exists('academic_sessions')],
-            'next_class_id'   => ['required', CampusRule::exists('school_classes')],
-            'next_section_id' => ['required', CampusRule::exists('sections')],
-            'students'        => 'required|array',
-            'students.*.enrollment_id' => ['required', CampusRule::exists('enrollments')],
-            'students.*.student_id' => ['required', CampusRule::exists('students')],
+            'current_session_id' => ['required', $existsRule('academic_sessions')],
+            'current_class_id'   => ['required', $existsRule('school_classes')],
+            'current_section_id' => ['required', $existsRule('sections')],
+            'next_session_id'    => ['required', $existsRule('academic_sessions')],
+            'next_class_id'      => ['required', $existsRule('school_classes')],
+            'next_section_id'    => ['required', $existsRule('sections')],
+            'students'           => 'required|array',
+            'students.*.enrollment_id' => ['required', $existsRule('enrollments')],
+            'students.*.student_id'    => ['required', $existsRule('students')],
             'students.*.promote_status' => 'required|in:promote,repeat,leave',
-            'students.*.roll_no' => 'nullable|string|max:50',
+            'students.*.roll_no'       => 'nullable|string|max:50',
         ]);
 
         abort_unless(SchoolClass::findOrFail($request->next_class_id)->sections()->whereKey($request->next_section_id)->exists(), 422, 'Next section is not assigned to the selected class.');
@@ -74,6 +81,7 @@ class PromotionController extends Controller
                     ->where('class_id', $request->current_class_id)
                     ->where('section_id', $request->current_section_id)
                     ->where('is_current', true)->lockForUpdate()->firstOrFail();
+                    
                 if ($studentData['promote_status'] === 'leave') {
                     $enrollment->update(['is_current' => false]);
                     PromotionHistory::create(['batch_uuid'=>$batch,'student_id'=>$studentData['student_id'],'previous_enrollment_id'=>$studentData['enrollment_id'],'action'=>'leave','processed_by'=>$request->user()->id]);
@@ -98,11 +106,12 @@ class PromotionController extends Controller
                     'roll_no'             => $studentData['roll_no'],
                     'is_current'          => true,
                 ]);
+                
                 PromotionHistory::create(['batch_uuid'=>$batch,'student_id'=>$studentData['student_id'],'previous_enrollment_id'=>$studentData['enrollment_id'],'new_enrollment_id'=>$newEnrollment->id,'action'=>$studentData['promote_status'],'processed_by'=>$request->user()->id]);
             }
 
             DB::commit();
-            return redirect()->route('admin.students.promotions')->with('success', 'স্টুডেন্টদের সফলভাবে প্রমোশন দেওয়া হয়েছে!');
+            return redirect()->route('admin.students.promotions')->with('success', 'স্টুডেন্টদের সফলভাবে প্রমোশন দেওয়া হয়েছে!');
 
         } catch (\Exception $e) {
             DB::rollBack();

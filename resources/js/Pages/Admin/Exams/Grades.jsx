@@ -1,10 +1,11 @@
-import { useState } from 'react';
-import { Head, useForm, router } from '@inertiajs/react';
+import { useState, useEffect } from 'react';
+import { Head, useForm, router, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
 import Swal from 'sweetalert2';
 
 export default function Grades({ grades }) {
+  const { flash } = usePage().props; 
   const [editingId, setEditingId] = useState(null);
 
   const { data, setData, post, put, reset, processing, errors } = useForm({
@@ -14,6 +15,11 @@ export default function Grades({ grades }) {
     max_marks: '',
     remarks: ''
   });
+
+  useEffect(() => {
+    if (flash?.success) Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: flash.success, showConfirmButton: false, timer: 3000, timerProgressBar: true });
+    if (flash?.error) Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: flash.error, showConfirmButton: false, timer: 4000, timerProgressBar: true });
+  }, [flash]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -90,93 +96,62 @@ export default function Grades({ grades }) {
                   {editingId ? 'Edit Grade' : 'Add New Grade'}
                 </h3>
                 {editingId && (
-                  <span className="text-xs font-bold px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-md">Editing</span>
+                  <span className="text-xs font-bold px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-md">Editing Mode</span>
                 )}
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className={labelClass}>Grade Name <span className="text-rose-500">*</span></label>
-                  <input 
-                    type="text" 
-                    value={data.name} 
-                    onChange={e => setData('name', e.target.value)} 
-                    required 
-                    className={inputClass} 
-                    placeholder="e.g. A+" 
-                  />
+                  <input type="text" value={data.name} onChange={e => setData('name', e.target.value)} required className={inputClass} placeholder="e.g. A+" />
                   {errors.name && <p className="text-rose-500 text-xs mt-1">{errors.name}</p>}
                 </div>
 
                 <div>
                   <label className={labelClass}>Grade Point <span className="text-rose-500">*</span></label>
-                  <input 
-                    type="number" 
-                    step="0.01" 
-                    value={data.grade_point} 
-                    onChange={e => setData('grade_point', e.target.value)} 
-                    required 
-                    className={inputClass} 
-                    placeholder="e.g. 5.00" 
-                  />
+                  <input type="number" step="0.01" value={data.grade_point} onChange={e => setData('grade_point', e.target.value)} required className={inputClass} placeholder="e.g. 5.00" />
                   {errors.grade_point && <p className="text-rose-500 text-xs mt-1">{errors.grade_point}</p>}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className={labelClass}>Min Marks <span className="text-rose-500">*</span></label>
-                    <input 
-                      type="number" 
-                      value={data.min_marks} 
-                      onChange={e => setData('min_marks', e.target.value)} 
-                      required 
-                      className={inputClass} 
-                      placeholder="80" 
-                    />
+                    <input type="number" value={data.min_marks} onChange={e => setData('min_marks', e.target.value)} required className={inputClass} placeholder="80" />
                     {errors.min_marks && <p className="text-rose-500 text-xs mt-1">{errors.min_marks}</p>}
                   </div>
                   <div>
                     <label className={labelClass}>Max Marks <span className="text-rose-500">*</span></label>
-                    <input 
-                      type="number" 
-                      value={data.max_marks} 
-                      onChange={e => setData('max_marks', e.target.value)} 
-                      required 
-                      className={inputClass} 
-                      placeholder="100" 
-                    />
+                    <input type="number" value={data.max_marks} onChange={e => setData('max_marks', e.target.value)} required className={inputClass} placeholder="100" />
                     {errors.max_marks && <p className="text-rose-500 text-xs mt-1">{errors.max_marks}</p>}
                   </div>
                 </div>
 
                 <div>
                   <label className={labelClass}>Remarks <span className="text-slate-400 font-normal">(Optional)</span></label>
-                  <input 
-                    type="text" 
-                    value={data.remarks} 
-                    onChange={e => setData('remarks', e.target.value)} 
-                    className={inputClass} 
-                    placeholder="e.g. Excellent, Good, Fail" 
-                  />
+                  <input type="text" value={data.remarks} onChange={e => setData('remarks', e.target.value)} className={inputClass} placeholder="e.g. Excellent, Good, Fail" />
                   {errors.remarks && <p className="text-rose-500 text-xs mt-1">{errors.remarks}</p>}
                 </div>
 
-                <div className="pt-3 flex gap-3">
+                {/* 💡 Smart Action Buttons */}
+                <div className="pt-4 mt-2 border-t border-slate-100 flex gap-3">
                   {editingId && (
                     <button 
                       type="button" 
                       onClick={cancelEdit} 
-                      className="flex-1 px-4 py-2.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-sm font-semibold rounded-xl transition-all shadow-sm"
+                      className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-xl transition-all shadow-sm flex items-center justify-center gap-2"
                     >
-                      Cancel
+                      <Icon name="close" className="w-4 h-4" /> Cancel
                     </button>
                   )}
                   <button 
                     type="submit" 
                     disabled={processing} 
-                    className="flex-1 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md shadow-indigo-500/20 disabled:opacity-70 active:scale-95"
+                    className={`flex-[2] px-4 py-2.5 text-white text-sm font-bold rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed ${
+                      editingId ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-500/20' : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/20'
+                    }`}
                   >
-                    {processing ? 'Saving...' : (editingId ? 'Update Grade' : 'Save Grade')}
+                    <Icon name={editingId ? 'edit' : 'plus'} className="w-4 h-4" />
+                    {processing ? (editingId ? 'Updating...' : 'Saving...') : (editingId ? 'Update Grade' : 'Save Grade')}
                   </button>
                 </div>
               </form>

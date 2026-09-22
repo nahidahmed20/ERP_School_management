@@ -3,7 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Campus;
-use App\Models\Student;
+use App\Services\TenantStudentCapacity;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -35,8 +35,7 @@ class EnforceTenantSubscription
             }
 
             if ($request->routeIs('admin.students.store')) {
-                $campuses = $tenant->campuses()->pluck('id');
-                abort_if(Student::withoutGlobalScopes()->whereIn('campus_id', $campuses)->count() >= $plan->max_students, 422, 'Tenant student limit reached.');
+                abort_unless(app(TenantStudentCapacity::class)->allows($tenant), 422, 'Tenant student limit reached.');
             }
 
             if ($request->routeIs('admin.campuses.store')) {

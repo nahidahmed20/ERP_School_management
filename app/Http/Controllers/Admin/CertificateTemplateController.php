@@ -25,22 +25,25 @@ class CertificateTemplateController extends Controller
     public function create()
     {
         return Inertia::render('Admin/Documents/CertificateTemplates/Form', [
-            'campuses' => Campus::select('id', 'name')->get(),
-            'activeCampusId' => session('active_campus_id'),
+            'campuses' => Campus::whereKey(config('app.active_campus_id'))->select('id', 'name')->get(),
+            'activeCampusId' => config('app.active_campus_id'),
         ]);
     }
 
     public function store(Request $request)
     {
+        $request->merge(['campus_id' => config('app.active_campus_id')]);
+
         $data = $request->validate([
             'campus_id' => 'required|exists:campuses,id',
             'title' => 'required|string|max:255',
             'template_type' => 'required|string',
+            'design_style' => 'required|string',
             'content_body' => 'required|string',
             'signature_1_title' => 'nullable|string|max:255',
             'signature_2_title' => 'nullable|string|max:255',
             'is_active' => 'boolean',
-            'background_image' => 'nullable|image|mimes:jpeg,png,jpg|max:3072', // Up to 3MB
+            'background_image' => 'nullable|image|mimes:jpeg,png,jpg|max:3072',
             'signature_1_image' => 'nullable|image|mimes:jpeg,png,jpg|max:1024',
             'signature_2_image' => 'nullable|image|mimes:jpeg,png,jpg|max:1024',
         ]);
@@ -57,8 +60,8 @@ class CertificateTemplateController extends Controller
     {
         return Inertia::render('Admin/Documents/CertificateTemplates/Form', [
             'item' => CertificateTemplate::findOrFail($id),
-            'campuses' => Campus::select('id', 'name')->get(),
-            'activeCampusId' => session('active_campus_id'),
+            'campuses' => Campus::whereKey(config('app.active_campus_id'))->select('id', 'name')->get(),
+            'activeCampusId' => config('app.active_campus_id'),
         ]);
     }
 
@@ -66,36 +69,45 @@ class CertificateTemplateController extends Controller
     {
         $template = CertificateTemplate::findOrFail($id);
 
+        $request->merge(['campus_id' => config('app.active_campus_id')]);
+
         $data = $request->validate([
             'campus_id' => 'required|exists:campuses,id',
             'title' => 'required|string|max:255',
             'template_type' => 'required|string',
+            'design_style' => 'required|string',
             'content_body' => 'required|string',
             'signature_1_title' => 'nullable|string|max:255',
             'signature_2_title' => 'nullable|string|max:255',
             'is_active' => 'boolean',
-            'background_image' => 'nullable',
-            'signature_1_image' => 'nullable',
-            'signature_2_image' => 'nullable',
+            'background_image' => 'nullable|image|mimes:jpeg,png,jpg|max:3072',
+            'signature_1_image' => 'nullable|image|mimes:jpeg,png,jpg|max:1024',
+            'signature_2_image' => 'nullable|image|mimes:jpeg,png,jpg|max:1024',
         ]);
 
         if ($request->hasFile('background_image')) {
             if ($template->background_image) Storage::disk('public')->delete($template->background_image);
             $data['background_image'] = $request->file('background_image')->store('templates/certificates', 'public');
-        } else { unset($data['background_image']); }
+        } else { 
+            unset($data['background_image']); 
+        }
 
         if ($request->hasFile('signature_1_image')) {
             if ($template->signature_1_image) Storage::disk('public')->delete($template->signature_1_image);
             $data['signature_1_image'] = $request->file('signature_1_image')->store('templates/certificates', 'public');
-        } else { unset($data['signature_1_image']); }
+        } else { 
+            unset($data['signature_1_image']); 
+        }
 
         if ($request->hasFile('signature_2_image')) {
             if ($template->signature_2_image) Storage::disk('public')->delete($template->signature_2_image);
             $data['signature_2_image'] = $request->file('signature_2_image')->store('templates/certificates', 'public');
-        } else { unset($data['signature_2_image']); }
+        } else { 
+            unset($data['signature_2_image']); 
+        }
 
         $template->update($data);
-        return redirect()->route('admin.documents.certificatetemplates.index')->with('success', 'Template updated.');
+        return redirect()->route('admin.documents.certificatetemplates.index')->with('success', 'Template updated successfully.');
     }
 
     public function destroy($id)

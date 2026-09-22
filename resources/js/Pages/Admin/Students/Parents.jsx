@@ -1,13 +1,113 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
 import Pagination from '@/Components/Pagination';
 import Swal from 'sweetalert2';
 
+// --- Inline Show Modal Component ---
+const ShowModal = ({ item, onClose }) => {
+  useEffect(() => {
+    const handleKeyDown = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
+  if (!item) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate__animated animate__fadeIn animate__faster" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto transform transition-all relative" onClick={e => e.stopPropagation()}>
+        
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50 rounded-t-2xl">
+          <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+            <Icon name="users" className="w-5 h-5 text-indigo-600" />
+            Guardian Details
+          </h2>
+          <button onClick={onClose} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors">
+            <Icon name="x" className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            {/* Father Details */}
+            <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-4">
+              <h3 className="text-sm font-bold text-blue-800 mb-3 border-b border-blue-200 pb-2">Father's Information</h3>
+              <div className="space-y-2 text-sm">
+                <p><span className="font-semibold text-slate-600">Name:</span> <span className="text-slate-900 font-bold">{item.father_name || 'N/A'}</span></p>
+                <p><span className="font-semibold text-slate-600">Phone:</span> {item.father_phone || 'N/A'}</p>
+                <p><span className="font-semibold text-slate-600">Occupation:</span> {item.father_occupation || 'N/A'}</p>
+                <p><span className="font-semibold text-slate-600">NID:</span> {item.father_nid || 'N/A'}</p>
+              </div>
+            </div>
+
+            {/* Mother Details */}
+            <div className="bg-pink-50/50 border border-pink-100 rounded-xl p-4">
+              <h3 className="text-sm font-bold text-pink-800 mb-3 border-b border-pink-200 pb-2">Mother's Information</h3>
+              <div className="space-y-2 text-sm">
+                <p><span className="font-semibold text-slate-600">Name:</span> <span className="text-slate-900 font-bold">{item.mother_name || 'N/A'}</span></p>
+                <p><span className="font-semibold text-slate-600">Phone:</span> {item.mother_phone || 'N/A'}</p>
+                <p><span className="font-semibold text-slate-600">Occupation:</span> {item.mother_occupation || 'N/A'}</p>
+                <p><span className="font-semibold text-slate-600">NID:</span> {item.mother_nid || 'N/A'}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Contact & Address */}
+          <div className="bg-slate-50 border border-slate-100 rounded-xl p-4">
+            <h3 className="text-sm font-bold text-slate-800 mb-3 border-b border-slate-200 pb-2">Contact & Address</h3>
+            <div className="space-y-2 text-sm">
+              <p><span className="font-semibold text-slate-600">Primary Email:</span> {item.guardian_email || 'N/A'}</p>
+              <p><span className="font-semibold text-slate-600">Present Address:</span> {item.address || 'N/A'}</p>
+            </div>
+          </div>
+
+          {/* Children / Students */}
+          <div>
+            <h3 className="text-sm font-bold text-slate-800 mb-3">Children (Enrolled Students)</h3>
+            <div className="grid gap-3">
+              {item.students?.length > 0 ? item.students.map(student => (
+                <div key={student.id} className="bg-white border border-indigo-100 p-3 rounded-lg flex items-center justify-between shadow-sm">
+                  <div>
+                    <p className="font-bold text-slate-900 text-sm">{student.first_name} {student.last_name || ''}</p>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      {student.current_enrollment ? `Class: ${student.current_enrollment.schoolClass?.name} | Roll: ${student.current_enrollment.roll_no}` : 'Not Enrolled'}
+                    </p>
+                  </div>
+                  <span className="text-xs font-bold bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-md border border-indigo-100">
+                    ID: {student.admission_no}
+                  </span>
+                </div>
+              )) : (
+                <p className="text-sm text-slate-500 italic bg-slate-50 p-3 rounded-lg border border-dashed border-slate-200 text-center">No enrolled students found.</p>
+              )}
+            </div>
+          </div>
+
+        </div>
+        
+        {/* Footer */}
+        <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-100 rounded-b-2xl text-right">
+          <button onClick={onClose} className="px-5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-sm font-semibold transition-colors">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+// ------------------------------------------
+
 export default function Parents({ parents, filters }) {
   const [search, setSearch] = useState(filters.search ?? '');
   const [perPage, setPerPage] = useState(filters.per_page ?? '10');
+  
+  // Show Modal State
+  const [showItem, setShowItem] = useState(null);
 
   const applyFilters = (overrides = {}) => {
     router.get(route('admin.students.parents'), {
@@ -154,12 +254,13 @@ export default function Parents({ parents, filters }) {
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Mother's Info</th>
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Email & Address</th>
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Children (Students)</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right no-print">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {parents.data.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-6 py-12 text-center text-slate-500">
+                    <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
                       কোনো অভিভাবকের তথ্য পাওয়া যায়নি।
                     </td>
                   </tr>
@@ -222,6 +323,17 @@ export default function Parents({ parents, filters }) {
                         </div>
                       </td>
 
+                      {/* Actions */}
+                      <td className="px-6 py-4 text-right no-print align-top">
+                        <button 
+                          onClick={() => setShowItem(guardian)} 
+                          className="p-2 inline-flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors shadow-sm border border-transparent hover:border-indigo-100" 
+                          title="View Details"
+                        >
+                          <Icon name="eye" className="w-4 h-4" />
+                        </button>
+                      </td>
+
                     </tr>
                   ))
                 )}
@@ -234,6 +346,10 @@ export default function Parents({ parents, filters }) {
           </div>
         </div>
       </div>
+
+      {/* Show Modal Rendering */}
+      {showItem && <ShowModal item={showItem} onClose={() => setShowItem(null)} />}
+      
     </AuthenticatedLayout>
   );
 }

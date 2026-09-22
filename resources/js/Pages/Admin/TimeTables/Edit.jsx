@@ -1,8 +1,10 @@
-import { useForm, Head, Link } from '@inertiajs/react';
+import { useForm, usePage, Head, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
+import Swal from 'sweetalert2';
 
 export default function Edit({ classes, classrooms, campuses, editData, staffList = [] }) {
+  const { auth } = usePage().props;
   
   const initialPeriods = editData.periods.length > 0
     ? editData.periods.map(p => ({
@@ -15,7 +17,7 @@ export default function Edit({ classes, classrooms, campuses, editData, staffLis
     : [{ subject_id: '', teacher_id: '', classroom_id: '', start_time: '', end_time: '' }];
 
   const { data, setData, post, processing, errors } = useForm({
-    campus_id: campuses[0]?.id || '',
+    campus_id: editData.campus_id ?? auth?.active_campus_id ?? '',
     class_id: editData.class_id,
     section_id: editData.section_id,
     day_of_week: editData.day_of_week,
@@ -37,6 +39,28 @@ export default function Edit({ classes, classrooms, campuses, editData, staffLis
 
   function submit(e) {
     e.preventDefault();
+
+    // 💡 Time Overlap Check Logic (Front-end Validation)
+    for (let i = 0; i < data.periods.length; i++) {
+      const current = data.periods[i];
+      if (!current.start_time || !current.end_time) continue;
+
+      for (let j = i + 1; j < data.periods.length; j++) {
+        const next = data.periods[j];
+        if (!next.start_time || !next.end_time) continue;
+
+        if (current.start_time < next.end_time && current.end_time > next.start_time) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Time Conflict!',
+            text: `Period ${i + 1} এবং Period ${j + 1} এর সময় একে অপরের সাথে মিলে যাচ্ছে (Overlap)। দয়া করে সময় ঠিক করুন।`,
+            customClass: { popup: 'rounded-2xl' }
+          });
+          return;
+        }
+      }
+    }
+
     post(route('admin.time-tables.bulk-update'));
   }
 
@@ -58,7 +82,7 @@ export default function Edit({ classes, classrooms, campuses, editData, staffLis
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">
               Edit Routine: <span className="text-indigo-600">{data.day_of_week}</span>
             </h1>
-            <p className="text-sm text-slate-500 mt-1">নির্বাচিত বারের রুটিন এবং পিরিয়ড আপডেট করুন।</p>
+            <p className="text-sm text-slate-500 mt-1">নির্বাচিত বারের রুটিন এবং পিরিয়ড আপডেট করুন।</p>
           </div>
         </div>
 

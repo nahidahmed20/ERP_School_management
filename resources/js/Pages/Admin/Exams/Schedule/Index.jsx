@@ -24,18 +24,27 @@ export default function Index({ schedules, exams, classes, classrooms, filters }
   const examForm = useForm({ name: '', start_date: '', end_date: '' });
 
   useEffect(() => {
-    if (flash?.success) Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: flash.success, showConfirmButton: false, timer: 3000, timerProgressBar: true });
+    if (flash?.success) {
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: flash.success, showConfirmButton: false, timer: 3000, timerProgressBar: true });
+      // নতুন পরীক্ষা তৈরি হলে স্বয়ংক্রিয়ভাবে ফিল্ডে সিলেক্ট করে নেওয়া
+      if (flash?.new_exam_id) {
+        setExamId(flash.new_exam_id);
+      }
+    }
     if (flash?.error) Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: flash.error, showConfirmButton: false, timer: 4000, timerProgressBar: true });
   }, [flash]);
 
   function applyFilters(overrides = {}) {
-    router.get(route('admin.exams.schedule'), { exam_id: examId, class_id: classId, section_id: sectionId, ...overrides }, { preserveState: true, replace: true });
+    router.get(route('admin.exam-schedules.index'), { exam_id: examId, class_id: classId, section_id: sectionId, ...overrides }, { preserveState: true, replace: true });
   }
 
   function handleCreateExam(e) {
     e.preventDefault();
     examForm.post(route('admin.exams.store'), {
-      onSuccess: () => { examForm.reset(); setShowAddExam(false); }
+      onSuccess: () => { 
+        examForm.reset(); 
+        setShowAddExam(false); 
+      }
     });
   }
 
@@ -84,7 +93,11 @@ export default function Index({ schedules, exams, classes, classrooms, filters }
               <label className={labelClass}>Exam</label>
               <select className={inputClass} value={examId} onChange={(e) => setExamId(e.target.value)}>
                 <option value="">Select Exam</option>
-                {exams.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+                {exams.map(e => (
+                  <option key={e.id} value={e.id}>
+                    {e.name} {e.start_date ? `(${e.start_date} to ${e.end_date})` : ''}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
@@ -219,6 +232,7 @@ export default function Index({ schedules, exams, classes, classrooms, filters }
                     required
                     placeholder="e.g., Final Exam 2026"
                   />
+                  {examForm.errors.name && <p className="text-rose-500 text-xs mt-1">{examForm.errors.name}</p>}
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -229,6 +243,7 @@ export default function Index({ schedules, exams, classes, classrooms, filters }
                       value={examForm.data.start_date}
                       onChange={e => examForm.setData('start_date', e.target.value)}
                     />
+                    {examForm.errors.start_date && <p className="text-rose-500 text-xs mt-1">{examForm.errors.start_date}</p>}
                   </div>
                   <div>
                     <label className={labelClass}>End Date</label>
@@ -238,6 +253,7 @@ export default function Index({ schedules, exams, classes, classrooms, filters }
                       value={examForm.data.end_date}
                       onChange={e => examForm.setData('end_date', e.target.value)}
                     />
+                    {examForm.errors.end_date && <p className="text-rose-500 text-xs mt-1">{examForm.errors.end_date}</p>}
                   </div>
                 </div>
               </div>
@@ -270,7 +286,7 @@ export default function Index({ schedules, exams, classes, classrooms, filters }
           item={deletingItem} 
           message="Are you sure you want to delete this schedule?"
           onCancel={() => setDeletingItem(null)} 
-          onConfirm={() => { router.delete(route('admin.exams.schedule.destroy', deletingItem.id), { onSuccess: () => setDeletingItem(null) }); }} 
+          onConfirm={() => { router.delete(route('admin.exam-schedules.destroy', deletingItem.id), { onSuccess: () => setDeletingItem(null) }); }}
         />
       )}
     </AuthenticatedLayout>

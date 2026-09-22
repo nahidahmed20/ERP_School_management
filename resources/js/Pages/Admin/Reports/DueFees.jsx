@@ -11,7 +11,7 @@ export default function DueFees({ dueAssignments, totalDue, classes, filters }) 
 
   const applyFilters = (e) => {
     e?.preventDefault();
-    router.get(route('admin.reports.due_fees'), {
+    router.get(route('admin.due_fees'), {
       class_id: classId,
       section_id: sectionId,
       date_until: dateUntil
