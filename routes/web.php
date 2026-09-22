@@ -144,6 +144,8 @@ use App\Http\Controllers\Admin\VendorController;
 use App\Http\Controllers\Admin\VisitLogController;
 use App\Http\Controllers\Admin\VisitorController;
 use App\Http\Controllers\Admin\StudentImportController;
+use App\Http\Controllers\StudentLearningController;
+use App\Http\Controllers\PublicSiteController;
 use App\Http\Controllers\DynamicPageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicInquiryController;
@@ -156,14 +158,14 @@ use App\Http\Controllers\Admin\CommunicationCenterController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', [\App\Http\Controllers\PublicSiteController::class,'home'])->name('home');
-Route::get('/campuses', [\App\Http\Controllers\PublicSiteController::class,'campuses'])->name('site.campuses');
-Route::get('/academics', [\App\Http\Controllers\PublicSiteController::class,'academics'])->name('site.academics');
-Route::get('/admissions', [\App\Http\Controllers\PublicSiteController::class,'admissions'])->name('site.admissions');
-Route::get('/contact', [\App\Http\Controllers\PublicSiteController::class,'contact'])->name('site.contact');
-Route::get('/teachers', [\App\Http\Controllers\PublicSiteController::class,'teachers'])->name('site.teachers');
-Route::get('/blog', [\App\Http\Controllers\PublicSiteController::class,'blogs'])->name('site.blogs');
-Route::get('/blog/{slug}', [\App\Http\Controllers\PublicSiteController::class,'blog'])->name('site.blog.show');
+Route::get('/', [PublicSiteController::class,'home'])->name('home');
+Route::get('/campuses', [PublicSiteController::class,'campuses'])->name('site.campuses');
+Route::get('/academics', [PublicSiteController::class,'academics'])->name('site.academics');
+Route::get('/admissions', [PublicSiteController::class,'admissions'])->name('site.admissions');
+Route::get('/contact', [PublicSiteController::class,'contact'])->name('site.contact');
+Route::get('/teachers', [PublicSiteController::class,'teachers'])->name('site.teachers');
+Route::get('/blog', [PublicSiteController::class,'blogs'])->name('site.blogs');
+Route::get('/blog/{slug}', [PublicSiteController::class,'blog'])->name('site.blog.show');
 Route::post('/admissions', [PublicInquiryController::class, 'admission'])
     ->middleware('throttle:5,1')->name('site.admissions.store');
 Route::post('/contact', [PublicInquiryController::class, 'contact'])
@@ -198,7 +200,7 @@ Route::post('/webhooks/communications/{channel}', [CommunicationWebhookControlle
 Route::match(['get', 'post'], '/payments/sslcommerz/fail', [SslCommerzPaymentController::class, 'failed'])->name('payments.sslcommerz.fail');
 Route::match(['get', 'post'], '/payments/sslcommerz/cancel', [SslCommerzPaymentController::class, 'failed'])->name('payments.sslcommerz.cancel');
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/learning/{student}/{kind}/{record}/download', [\App\Http\Controllers\StudentLearningController::class, 'download'])
+    Route::get('/learning/{student}/{kind}/{record}/download', [StudentLearningController::class, 'download'])
         ->whereIn('kind', ['homework', 'syllabus', 'material'])->whereNumber('record')->name('portal.learning.download');
     Route::get('/staff-services', [PortalServiceController::class, 'staff'])->name('portal.staff.services');
     Route::post('/staff-services/leave', [PortalServiceController::class, 'staffLeave'])->name('portal.staff.leave');
@@ -221,6 +223,15 @@ Route::middleware(['auth', 'verified', 'permission:portal.exams.attempt'])->grou
 });
 
 Route::middleware('auth')->group(function () {
+    Route::get('/documentation/download', function () {
+        abort_unless(auth()->user()?->hasRole('Super Admin'), 403);
+
+        $format = request()->query('format') === 'docx' ? 'docx' : 'rtf';
+        $file = base_path('docs/School_ERP_Full_Menu_Documentation.'.$format);
+        abort_unless(is_file($file), 404, 'Documentation file is not available.');
+
+        return response()->download($file, 'School_ERP_Full_Menu_Documentation.'.$format);
+    })->name('documentation.download');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::delete('/profile/other-sessions', [ProfileController::class, 'destroyOtherSessions'])
         ->middleware('throttle:6,1')->name('profile.sessions.destroy');
@@ -508,8 +519,6 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
         Route::resource('admissions', AdmissionController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::resource('documents', StudentDocumentController::class)->only(['index', 'store', 'destroy']);
         Route::resource('discipline', DisciplinaryRecordController::class)->only(['index', 'store', 'update', 'destroy']);
-
-        // --- Student Profile Quick Actions (New Routes) ---
         Route::get('/{student}/id-card', [StudentController::class, 'generateIdCard'])->name('id-card');
         Route::get('/{student}/attendance', [StudentController::class, 'attendanceHistory'])->name('attendance');
         Route::get('/{student}/results', [StudentController::class, 'academicResults'])->name('results');

@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('admission_inquiries', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('campus_id')->constrained('campuses')->cascadeOnDelete(); // Add this line
             $table->string('applicant_name'); 
             $table->string('guardian_name'); 
             $table->string('phone'); 
