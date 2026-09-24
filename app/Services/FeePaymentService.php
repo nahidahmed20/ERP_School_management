@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\{FeeAssignment, Invoice, Payment, PaymentAllocation, PaymentTransaction};
+use App\Models\{Account, FeeAssignment, Invoice, JournalEntry, Payment, PaymentAllocation, PaymentTransaction};
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -17,6 +17,10 @@ class FeePaymentService
         return DB::transaction(function () use ($assignment, $studentId, $amount, $details) {
             $assignment=FeeAssignment::whereKey($assignment->id)->lockForUpdate()->firstOrFail();
             abort_unless((int)$assignment->student_id===$studentId,422,'Selected fee does not belong to this student.');
+            $account = isset($details['account_id'])
+                ? Account::withoutGlobalScopes()->whereKey($details['account_id'])->where('campus_id', $assignment->campus_id)->where('type', 'Asset')->where('is_active', true)->lockForUpdate()->first()
+                : app(AccountingService::class)->accountForCode('1000', (int) $assignment->campus_id);
+            abort_unless($account, 422, 'Select an active asset account from the current campus.');
             if (! $assignment->invoices()->exists()) {
                 if ($assignment->status === 'paid' || $assignment->payments()->exists()) {
                     throw ValidationException::withMessages(['amount_paid' => 'This legacy assignment has payment history. Reconcile its invoices before collecting more money.']);
@@ -34,16 +38,16 @@ class FeePaymentService
             $due=$invoices->sum(fn($i)=>$this->due($i));
             if($amount>$due+.001)throw ValidationException::withMessages(['amount_paid'=>'Payment exceeds outstanding invoice balance. Remaining: '.number_format($due,2)]);
 
-            $payment=Payment::create(['campus_id'=>$assignment->campus_id,'fee_assignment_id'=>$assignment->id,'student_id'=>$studentId,'amount_paid'=>$amount,'payment_date'=>$details['payment_date'],'payment_method'=>$details['payment_method'],'transaction_id'=>$details['transaction_id']??null,'remarks'=>$details['remarks']??null]);
+            $payment=Payment::create(['campus_id'=>$assignment->campus_id,'fee_assignment_id'=>$assignment->id,'student_id'=>$studentId,'account_id'=>$account->id,'amount_paid'=>$amount,'payment_date'=>$details['payment_date'],'payment_method'=>$details['payment_method'],'transaction_id'=>$details['transaction_id']??null,'remarks'=>$details['remarks']??null]);
             $transactionId=($details['transaction_id']??null)?:'FEE-'.$payment->id.'-'.now()->format('YmdHis').'-'.Str::upper(Str::random(4));
             $payment->update(['transaction_id'=>$transactionId]);
-            $transaction=PaymentTransaction::create(['campus_id'=>$assignment->campus_id,'transaction_id'=>$transactionId,'reference_no'=>'FEE-'.$assignment->id,'amount'=>$amount,'currency'=>'BDT','payment_method'=>$details['payment_method'],'status'=>'Completed','transaction_date'=>$details['payment_date'],'note'=>$details['remarks']??null,'source_type'=>Payment::class,'source_id'=>$payment->id,'student_id'=>$studentId]);
+            $transaction=PaymentTransaction::create(['campus_id'=>$assignment->campus_id,'transaction_id'=>$transactionId,'reference_no'=>'FEE-'.$assignment->id,'amount'=>$amount,'currency'=>'BDT','payment_method'=>$details['payment_method'],'status'=>'Completed','transaction_date'=>$details['payment_date'],'note'=>$details['remarks']??null,'source_type'=>Payment::class,'source_id'=>$payment->id,'student_id'=>$studentId,'account_id'=>$account->id]);
 
             $remaining=$amount;
             foreach($invoices as$invoice){if($remaining<=0)break;$allocation=min($remaining,$this->due($invoice));if($allocation<=0)continue;PaymentAllocation::create(['campus_id'=>$assignment->campus_id,'payment_id'=>$payment->id,'payment_transaction_id'=>$transaction->id,'invoice_id'=>$invoice->id,'amount'=>$allocation]);$this->changeInvoicePaid($invoice,$allocation);if(!$payment->invoice_id)$payment->update(['invoice_id'=>$invoice->id]);$remaining-=$allocation;}
             abort_if($remaining>.001,422,'Payment could not be fully allocated.');
             $assignment->update(['status'=>Invoice::where('fee_assignment_id',$assignment->id)->whereNotIn('status',['Paid','Cancelled'])->exists()?'partially_paid':'paid']);
-            app(AccountingService::class)->post("fee-payment:{$payment->id}",$payment,'1000','4000',$amount,"Student fee receipt {$transactionId}",$details['payment_date'],'Receipt');
+            app(AccountingService::class)->post("fee-payment:{$payment->id}",$payment,$account,'4000',$amount,"Student fee receipt {$transactionId}",$details['payment_date'],'Receipt');
             return$payment;
         },3);
     }
@@ -77,7 +81,8 @@ class FeePaymentService
         foreach($allocations as$allocation){if($remaining<=0)break;$available=(float)$allocation->amount-(float)$allocation->refunded_amount;$part=min($remaining,$available);if($part<=0)continue;$invoice=Invoice::withoutGlobalScopes()->whereKey($allocation->invoice_id)->lockForUpdate()->firstOrFail();$allocation->increment('refunded_amount',$part);$invoice->update(['paid_amount'=>max(0,(float)$invoice->paid_amount-$part)]);$this->syncInvoiceStatus($invoice);if($invoice->fee_assignment_id)$this->syncAssignment($invoice->fee_assignment_id);$remaining-=$part;}
         abort_if($remaining>.001,422,'Refund exceeds allocated payment balance.');
         $transaction->increment('refunded_amount',$amount);if($transaction->source_type===Payment::class)Payment::whereKey($transaction->source_id)->increment('refunded_amount',$amount);
-        app(AccountingService::class)->post("payment-refund:{$refundId}",$transaction,'4000','1000',$amount,"Refund against {$transaction->transaction_id}",now()->toDateString(),'Payment');
+        [$debitAccount, $creditAccount] = $this->refundAccounts($transaction);
+        app(AccountingService::class)->post("payment-refund:{$refundId}",$transaction,$debitAccount,$creditAccount,$amount,"Refund against {$transaction->transaction_id}",now()->toDateString(),'Payment');
     }
 
     private function legacyInvoice(FeeAssignment $assignment): Invoice
@@ -97,4 +102,30 @@ class FeePaymentService
     private function syncInvoiceStatus(Invoice$i):void{$due=$this->due($i);$i->update(['status'=>$due<=.001?'Paid':((float)$i->paid_amount>0?'Partial':'Unpaid')]);}
     public function syncAssignment(int$id):void{$invoices=Invoice::withoutGlobalScopes()->where('fee_assignment_id',$id)->where('status','!=','Cancelled')->get();$open=$invoices->contains(fn($i)=>$this->due($i)>.001);$paid=$invoices->sum('paid_amount');FeeAssignment::withoutGlobalScopes()->whereKey($id)->update(['status'=>!$open?'paid':($paid>.001?'partially_paid':'unpaid')]);}
     private function ensureAllocations(PaymentTransaction $transaction){$allocations=$transaction->allocations()->with('invoice')->lockForUpdate()->latest('id')->get();if($allocations->isNotEmpty())return$allocations;$invoice=null;$payment=null;if($transaction->source_type===Invoice::class)$invoice=Invoice::withoutGlobalScopes()->find($transaction->source_id);if($transaction->source_type===Payment::class){$payment=Payment::withoutGlobalScopes()->find($transaction->source_id);$invoice=$payment?->invoice_id?Invoice::withoutGlobalScopes()->find($payment->invoice_id):Invoice::withoutGlobalScopes()->where('fee_assignment_id',$payment?->fee_assignment_id)->latest('paid_amount')->first();}abort_unless($invoice,422,'This legacy transaction is not linked to an invoice and cannot be automatically refunded.');PaymentAllocation::create(['campus_id'=>$transaction->campus_id?:$invoice->campus_id,'payment_id'=>$payment?->id,'payment_transaction_id'=>$transaction->id,'invoice_id'=>$invoice->id,'amount'=>(float)$transaction->amount]);return$transaction->allocations()->with('invoice')->lockForUpdate()->get();}
+    private function refundAccounts(PaymentTransaction $transaction): array
+    {
+        $original = JournalEntry::withoutGlobalScopes()
+            ->where('campus_id', $transaction->campus_id)
+            ->where(function ($query) use ($transaction) {
+                if ($transaction->source_type === Payment::class) {
+                    $query->where('source_key', 'fee-payment:'.$transaction->source_id);
+                } else {
+                    $query->where('source_key', 'online-payment:'.$transaction->id);
+                }
+            })->first();
+
+        if ($original) {
+            $debit = Account::withoutGlobalScopes()->whereKey($original->credit_account_id)->where('campus_id', $transaction->campus_id)->first();
+            $credit = Account::withoutGlobalScopes()->whereKey($original->debit_account_id)->where('campus_id', $transaction->campus_id)->first();
+            if ($debit && $credit) return [$debit, $credit];
+        }
+
+        $accounting = app(AccountingService::class);
+        return [
+            $accounting->accountForCode('4000', (int) $transaction->campus_id),
+            $transaction->account_id
+                ? Account::withoutGlobalScopes()->whereKey($transaction->account_id)->where('campus_id', $transaction->campus_id)->firstOrFail()
+                : $accounting->accountForCode('1000', (int) $transaction->campus_id),
+        ];
+    }
 }

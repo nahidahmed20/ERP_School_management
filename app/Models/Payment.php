@@ -22,4 +22,5 @@ class Payment extends Model
     }
     public function invoice(){return $this->belongsTo(Invoice::class);}
     public function allocations(){return $this->hasMany(PaymentAllocation::class);}
+    public function account(){return $this->belongsTo(Account::class);}
 }

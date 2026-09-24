@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Head, useForm, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
 import Swal from 'sweetalert2';
 
-export default function POS({ inventory_items, sale }) {
+export default function POS({ inventory_items, accounts, sale }) {
   const isEdit = !!sale;
 
   const initialCart = (sale?.items || []).map(oi => ({
@@ -18,8 +18,6 @@ export default function POS({ inventory_items, sale }) {
 
   const [cart, setCart] = useState(initialCart);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showResults, setShowResults] = useState(false);
-  const searchRef = useRef(null);
 
   const { data, setData, post, put, processing, errors } = useForm({
     customer_name: sale?.customer_name ?? 'Walk-in Customer',
@@ -29,10 +27,10 @@ export default function POS({ inventory_items, sale }) {
     total_amount: sale?.total_amount ? Number(sale.total_amount) : 0,
     paid_amount: sale?.paid_amount ? Number(sale.paid_amount) : 0,
     payment_method: sale?.payment_method ?? 'Cash',
+    account_id: sale?.account_id ?? (accounts?.[0]?.id || ''),
     cart: [],
   });
 
-  // Calculation Logic (Cart, Subtotal, Total)
   useEffect(() => {
     const subtotal = cart.reduce((sum, current) => sum + (Number(current.quantity) * Number(current.unit_price)), 0);
     const discount = Number(data.discount) || 0;
@@ -48,15 +46,6 @@ export default function POS({ inventory_items, sale }) {
 
     setData(prev => ({ ...prev, cart: payloadCart, subtotal: subtotal, total_amount: total }));
   }, [cart, data.discount]);
-
-  // Click outside to close search
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-        if (searchRef.current && !searchRef.current.contains(event.target)) setShowResults(false);
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   const filteredItems = inventory_items.filter(i =>
     i.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -77,7 +66,6 @@ export default function POS({ inventory_items, sale }) {
             newCart[existingIndex].quantity = currentQty + 1;
             setCart(newCart);
             setSearchTerm('');
-            setShowResults(false);
             return;
         }
     }
@@ -88,7 +76,6 @@ export default function POS({ inventory_items, sale }) {
 
     setCart([{ purchase_item_id: product.id, product: product, size: '', color: '', quantity: 1, unit_price: product.selling_price || 0 }, ...cart]);
     setSearchTerm('');
-    setShowResults(false);
   };
 
   const handleCartChange = (index, field, value) => {
@@ -121,7 +108,8 @@ export default function POS({ inventory_items, sale }) {
 
   function submit(e) {
     e.preventDefault();
-    if(cart.length === 0) return Swal.fire('Error', 'কার্টে কোনো আইটেম নেই!', 'error');
+    if (cart.length === 0) return Swal.fire('Error', 'কার্টে কোনো আইটেম নেই!', 'error');
+    if (!data.account_id) return Swal.fire('Warning', 'দয়া করে টাকা জমার অ্যাকাউন্ট সিলেক্ট করুন।', 'warning');
 
     const invalidRow = cart.find(c => (c.product?.size?.length > 0 && !c.size) || (c.product?.color?.length > 0 && !c.color));
     if (invalidRow) return Swal.fire('Warning', 'দয়া করে প্রোডাক্টের Size এবং Color সিলেক্ট করুন।', 'warning');
@@ -130,280 +118,236 @@ export default function POS({ inventory_items, sale }) {
     else post(route('admin.sales.store'));
   }
 
-  const barcodeWidths = [2, 1, 3, 1, 2, 4, 1, 2, 1, 3, 2, 1, 4, 1, 2];
-  const Barcode = ({ tone = 'dark' }) => (
-    <span className={`inline-flex items-end gap-0.5 h-3.5 ${tone === 'light' ? 'opacity-80' : ''}`} aria-hidden="true">
-      {barcodeWidths.map((w, i) => <span key={i} style={{ width: `${w}px` }} className={`block h-full ${tone === 'light' ? 'bg-white' : 'bg-slate-900'}`} />)}
-    </span>
-  );
-
   const due = Number(data.total_amount) - Number(data.paid_amount);
 
   return (
     <AuthenticatedLayout
       header={
-        <div className="flex flex-col gap-1">
-          <Link href={route('admin.sales.index')} className="inline-flex items-center gap-1.5 text-slate-500 hover:text-slate-900 text-xs font-semibold mb-2 transition-colors w-max">
-            <Icon name="arrow-left" className="w-3.5 h-3.5"/> Back to Sales History
-          </Link>
-          <div className="flex items-center gap-2 text-xs font-bold tracking-wider text-indigo-600 uppercase">
-            <Barcode /> POS Terminal
+        <div className="flex justify-between items-center">
+          <div>
+            <Link href={route('admin.sales.index')} className="inline-flex items-center gap-1.5 text-slate-500 hover:text-slate-900 text-xs font-semibold mb-1 transition-colors">
+              <Icon name="arrow-left" className="w-3.5 h-3.5"/> Back to Sales History
+            </Link>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{isEdit ? 'Edit Sale / Invoice' : 'POS Terminal'}</h1>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{isEdit ? 'Edit Sale / Invoice' : 'New Sale'}</h1>
         </div>
       }
     >
       <Head title={isEdit ? 'Edit POS' : 'POS'} />
 
-      <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8">
-        <form onSubmit={submit}>
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="w-full h-full p-4 lg:p-6 bg-slate-50">
+        <form onSubmit={submit} className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full items-start">
 
-            {/* Left Column: Register — Search & Cart */}
-            <div className="lg:col-span-8 bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-6">
-
-              <div>
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-3">Scan or Search</span>
-
-                {/* Scanner search input */}
-                <div className="relative" ref={searchRef}>
-                  <div className="relative flex items-center bg-slate-900 rounded-xl p-4 shadow-inner">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-amber-400">
-                      <Icon name="search" className="w-5 h-5" />
-                    </div>
-                    <input
-                      type="text"
-                      placeholder="Scan barcode or type product name / SKU..."
-                      value={searchTerm}
-                      onChange={(e) => { setSearchTerm(e.target.value); setShowResults(true); }}
-                      onFocus={() => setShowResults(true)}
-                      autoFocus
-                      className="block w-full pl-11 pr-4 bg-transparent border-none outline-none text-white font-mono text-base placeholder-slate-400"
-                    />
-                  </div>
-
-                  {showResults && searchTerm && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl max-h-80 overflow-y-auto z-50 shadow-xl divide-y divide-slate-100">
-                      {filteredItems.map(item => (
-                        <div key={item.id} onClick={() => addToCart(item)} className="p-3.5 hover:bg-slate-50 cursor-pointer flex justify-between items-center gap-4 transition-colors">
-                          <div>
-                            <div className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                              {item.item_code && <span className="font-mono text-xs px-1.5 py-0.5 bg-slate-100 text-indigo-600 rounded">[{item.item_code}]</span>}
-                              {item.name}
-                            </div>
-                            <div className="text-xs text-slate-500 mt-1 flex items-center gap-2 font-medium">
-                              {item.size?.length > 0 && <span>Sizes: {item.size.join(', ')}</span>}
-                              {item.color?.length > 0 && <span>Colors: {item.color.join(', ')}</span>}
-                              <span className={item.quantity > 0 ? 'text-emerald-600 font-bold' : 'text-rose-600 font-bold'}>Stock: {item.quantity}</span>
-                            </div>
-                          </div>
-                          <div className="text-sm font-black text-slate-900 font-mono shrink-0">৳ {item.selling_price}</div>
-                        </div>
-                      ))}
-                      {filteredItems.length === 0 && (
-                        <div className="p-6 text-center text-rose-500 font-semibold text-sm">কোনো প্রোডাক্ট পাওয়া যায়নি!</div>
-                      )}
-                    </div>
-                  )}
-                </div>
+          {/* Left Column: Product Catalog & Search */}
+          <div className="lg:col-span-8 flex flex-col gap-4 h-[calc(100vh-150px)]">
+            <div className="relative shrink-0 shadow-sm rounded-2xl overflow-hidden bg-white border border-slate-200">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                <Icon name="search" className="w-5 h-5" />
               </div>
+              <input
+                type="text"
+                placeholder="Search products by name or barcode..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                autoFocus
+                className="block w-full pl-11 pr-4 py-4 bg-transparent border-none outline-none text-slate-900 text-lg placeholder-slate-400 focus:ring-0"
+              />
+            </div>
 
-              {/* Cart / Line Items Table */}
-              <div className="overflow-x-auto border border-slate-200 rounded-xl">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-slate-200 bg-slate-50/70 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                      <th className="px-4 py-3.5">Product</th>
-                      <th className="px-4 py-3.5 w-44">Variant</th>
-                      <th className="px-4 py-3.5 w-24 text-center">Qty</th>
-                      <th className="px-4 py-3.5 w-32">Price</th>
-                      <th className="px-4 py-3.5 w-28 text-right">Total</th>
-                      <th className="px-4 py-3.5 w-12 text-center"></th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 text-sm">
-                    {cart.map((c, index) => {
-                      const p = c.product;
-                      const hasSize = p?.size && p.size.length > 0;
-                      const hasColor = p?.color && p.color.length > 0;
+            <div className="flex-1 overflow-y-auto bg-transparent rounded-xl pr-2 custom-scrollbar">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pb-10">
+                {filteredItems.length > 0 ? (
+                  filteredItems.map(item => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => addToCart(item)}
+                      className={`relative bg-white border rounded-2xl p-4 flex flex-col items-start text-left transition-all active:scale-95 shadow-sm hover:shadow-md ${item.quantity > 0 ? 'border-slate-200 hover:border-indigo-400' : 'border-rose-100 opacity-70'}`}
+                    >
+                      <div className="flex justify-between w-full items-start mb-2">
+                        <span className="font-mono text-[10px] uppercase font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">{item.item_code}</span>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${item.quantity > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                          {item.quantity} In Stock
+                        </span>
+                      </div>
+                      <h3 className="font-semibold text-slate-800 text-sm leading-snug mb-3">{item.name}</h3>
+                      <div className="mt-auto w-full flex justify-between items-center border-t border-slate-100 pt-3">
+                        <span className="font-black text-slate-900">৳ {item.selling_price}</span>
+                        <div className="bg-indigo-50 p-1.5 rounded-lg text-indigo-600">
+                           <Icon name="plus" className="w-4 h-4" />
+                        </div>
+                      </div>
+                    </button>
+                  ))
+                ) : (
+                  <div className="col-span-full py-20 text-center text-slate-400">
+                    <Icon name="archive" className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                    <p className="font-medium text-lg">কোনো প্রোডাক্ট পাওয়া যায়নি!</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
 
-                      return (
-                        <tr key={index} className="hover:bg-slate-50/50 transition-colors">
-                          <td className="px-4 py-3.5">
-                            <span className="font-bold text-slate-900 block">{p?.name}</span>
-                            <span className="text-[10px] font-mono bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded mt-1 inline-block">Stock: {p?.quantity} {p?.unit}</span>
-                          </td>
-                          <td className="px-4 py-3.5 space-y-2">
+          {/* Right Column: Cart & Checkout (Fixed Sidebar) */}
+          <div className="lg:col-span-4 bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col h-[calc(100vh-150px)] sticky top-4 overflow-y-auto">
+            <div className="p-4 border-b border-slate-100 bg-slate-50/50 rounded-t-2xl space-y-3 shrink-0">
+              <input
+                type="text"
+                className="block w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm placeholder-slate-400 outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
+                placeholder="Customer Name (Walk-in)"
+                value={data.customer_name}
+                onChange={(e) => setData('customer_name', e.target.value)}
+              />
+              <input
+                type="text"
+                className="block w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm placeholder-slate-400 outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
+                placeholder="Customer Phone"
+                value={data.customer_phone}
+                onChange={(e) => setData('customer_phone', e.target.value)}
+              />
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 bg-slate-50/30 min-h-[250px]">
+              {cart.length > 0 ? (
+                <div className="space-y-3">
+                  {cart.map((c, index) => {
+                    const p = c.product;
+                    const hasSize = p?.size && p.size.length > 0;
+                    const hasColor = p?.color && p.color.length > 0;
+                    
+                    return (
+                      <div key={index} className="bg-white border border-slate-200 rounded-xl p-3 shadow-sm flex flex-col gap-3 relative group">
+                        <div className="flex justify-between items-start gap-2 pr-6">
+                          <div className="font-semibold text-sm text-slate-900 leading-tight">{p?.name}</div>
+                        </div>
+                        <button type="button" onClick={() => removeCartItem(index)} className="absolute top-3 right-3 text-slate-300 hover:text-rose-500 transition-colors">
+                            <Icon name="trash" className="w-4 h-4" />
+                        </button>
+
+                        {(hasSize || hasColor) && (
+                          <div className="flex gap-2">
                             {hasSize && (
-                              <select className="block w-full py-1.5 px-2.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 outline-none" value={c.size} onChange={(e) => handleCartChange(index, 'size', e.target.value)} required>
-                                <option value="" disabled>Select Size</option>
+                              <select className="block w-1/2 py-1 px-2 border-slate-200 rounded-md text-xs bg-slate-50 text-slate-700 outline-none focus:border-indigo-500" value={c.size} onChange={(e) => handleCartChange(index, 'size', e.target.value)} required>
+                                <option value="" disabled>Size</option>
                                 {p.size.map((s, i) => <option key={i} value={s}>{s}</option>)}
                               </select>
                             )}
                             {hasColor && (
-                              <select className="block w-full py-1.5 px-2.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 outline-none" value={c.color} onChange={(e) => handleCartChange(index, 'color', e.target.value)} required>
-                                <option value="" disabled>Select Color</option>
+                              <select className="block w-1/2 py-1 px-2 border-slate-200 rounded-md text-xs bg-slate-50 text-slate-700 outline-none focus:border-indigo-500" value={c.color} onChange={(e) => handleCartChange(index, 'color', e.target.value)} required>
+                                <option value="" disabled>Color</option>
                                 {p.color.map((color, i) => <option key={i} value={color}>{color}</option>)}
                               </select>
                             )}
-                            {!hasSize && !hasColor && <span className="text-xs text-slate-400 italic">No variants</span>}
-                          </td>
-                          <td className="px-4 py-3.5">
-                            <input
-                              type="number"
-                              min="1"
-                              value={c.quantity}
-                              onChange={(e) => handleCartChange(index, 'quantity', e.target.value)}
-                              required
-                              className="w-full py-1.5 px-2 bg-slate-50 border border-slate-200 rounded-lg text-center font-mono font-bold text-slate-800 outline-none"
-                            />
-                          </td>
-                          <td className="px-4 py-3.5">
-                            <input
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              value={c.unit_price}
-                              onChange={(e) => handleCartChange(index, 'unit_price', e.target.value)}
-                              required
-                              className="w-full py-1.5 px-2 bg-slate-50 border border-slate-200 rounded-lg font-mono font-bold text-slate-800 outline-none"
-                            />
-                          </td>
-                          <td className="px-4 py-3.5 text-right font-black text-slate-900 font-mono">
-                            ৳ {(c.quantity * c.unit_price).toFixed(2)}
-                          </td>
-                          <td className="px-4 py-3.5 text-center">
-                            <button type="button" onClick={() => removeCartItem(index)} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors" title="Remove">
-                              <Icon name="trash" className="w-4 h-4" />
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                    {cart.length === 0 && (
-                      <tr>
-                        <td colSpan="6" className="px-6 py-16 text-center text-slate-400 italic bg-slate-50/50">
-                          <Icon name="shopping-cart" className="w-8 h-8 mx-auto mb-2 text-slate-300" />
-                          <p className="font-semibold text-slate-600">Cart is empty</p>
-                          <p className="text-xs mt-1">উপরের সার্চ বক্স থেকে প্রোডাক্ট স্ক্যান বা সার্চ করুন</p>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                          </div>
+                        )}
 
+                        <div className="flex items-center justify-between border-t border-slate-100 pt-2 mt-1 gap-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold text-slate-400">Qty:</span>
+                            <input type="number" min="1" value={c.quantity} onChange={(e) => handleCartChange(index, 'quantity', e.target.value)} required className="w-16 py-1 px-2 bg-slate-50 border border-slate-200 rounded-md text-center text-sm font-bold text-slate-800 outline-none" />
+                          </div>
+                          <div className="flex flex-col items-end">
+                             <input type="number" step="0.01" min="0" value={c.unit_price} onChange={(e) => handleCartChange(index, 'unit_price', e.target.value)} required className="w-20 py-0.5 px-1 bg-transparent border-b border-transparent hover:border-slate-300 focus:border-indigo-500 text-right text-xs text-slate-500 outline-none transition-colors" />
+                             <span className="font-black text-slate-900 text-sm">৳ {(c.quantity * c.unit_price).toFixed(2)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center text-slate-400 space-y-3 py-8">
+                  <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-100">
+                    <Icon name="shopping-cart" className="w-6 h-6 text-slate-300" />
+                  </div>
+                  <p className="text-xs font-medium">Cart is empty</p>
+                </div>
+              )}
             </div>
 
-            {/* Right Column: Receipt slip — Customer, Totals, Payment */}
-            <div className="lg:col-span-4 bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-5 sticky top-6">
-
-              <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-                <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                  <Icon name="receipt" className="w-4 h-4 text-indigo-600" /> Receipt
-                </div>
-                <Barcode />
-              </div>
-
-              {/* Customer Inputs */}
-              <div className="space-y-3">
-                <input
-                  type="text"
-                  className="block w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="Customer Name (Walk-in)"
-                  value={data.customer_name}
-                  onChange={(e) => setData('customer_name', e.target.value)}
-                />
-                <input
-                  type="text"
-                  className="block w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="Phone Number"
-                  value={data.customer_phone}
-                  onChange={(e) => setData('customer_phone', e.target.value)}
-                />
-              </div>
-
-              <div className="border-t border-dashed border-slate-200 pt-4 space-y-3 text-sm">
+            <div className="shrink-0 border-t border-slate-200 bg-white rounded-b-2xl p-4 space-y-3">
+              <div className="space-y-1 text-sm">
                 <div className="flex justify-between items-center text-slate-600">
                   <span>Subtotal</span>
                   <span className="font-mono font-bold text-slate-900">৳ {Number(data.subtotal).toFixed(2)}</span>
                 </div>
-
                 <div className="flex justify-between items-center text-slate-600">
-                  <span className="flex items-center gap-1.5"><Icon name="percent" className="w-3.5 h-3.5" /> Discount</span>
-                  <div className="flex items-center gap-2">
+                  <span>Discount</span>
+                  <div className="flex items-center gap-1">
                     <span className="text-slate-400 text-xs">− ৳</span>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      className="w-24 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-right font-mono font-bold text-rose-600 outline-none"
-                      value={data.discount}
-                      onChange={(e) => setData('discount', e.target.value)}
-                    />
+                    <input type="number" step="0.01" min="0" className="w-20 px-2 py-1 bg-slate-50 border border-slate-200 rounded-md text-right font-mono font-bold text-rose-600 outline-none" value={data.discount} onChange={(e) => setData('discount', e.target.value)} />
                   </div>
                 </div>
               </div>
 
-              <div className="border-t border-dashed border-slate-200 pt-4">
-                <div className="bg-slate-900 text-white rounded-xl p-4 flex justify-between items-center shadow-md">
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Total Pay</span>
-                  <span className="text-2xl font-black text-amber-400 font-mono">৳ {Number(data.total_amount).toFixed(2)}</span>
-                </div>
+              <div className="bg-slate-900 text-white rounded-xl p-2.5 flex justify-between items-center shadow-md">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Total Pay</span>
+                <span className="text-lg font-black text-amber-400 font-mono">৳ {Number(data.total_amount).toFixed(2)}</span>
               </div>
 
+              {/* Payment Method Selector */}
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Paid Amount</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  className="block w-full py-3 px-4 bg-slate-50 border-2 border-amber-400 rounded-xl font-mono text-xl font-black text-center text-slate-900 outline-none"
-                  value={data.paid_amount}
-                  onChange={(e) => setData('paid_amount', e.target.value)}
-                  onFocus={(e) => e.target.select()}
-                />
-              </div>
-
-              {due > 0 && (
-                <div className="bg-rose-50 border-2 border-rose-300 text-rose-700 px-4 py-2.5 rounded-xl flex justify-between items-center text-xs font-bold uppercase tracking-wider">
-                  <span>Due Amount</span>
-                  <span className="font-mono text-base">৳ {due.toFixed(2)}</span>
-                </div>
-              )}
-              {due < 0 && (
-                <div className="bg-emerald-50 border-2 border-emerald-300 text-emerald-700 px-4 py-2.5 rounded-xl flex justify-between items-center text-xs font-bold uppercase tracking-wider">
-                  <span>Change ফেরত</span>
-                  <span className="font-mono text-base">৳ {Math.abs(due).toFixed(2)}</span>
-                </div>
-              )}
-
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Payment Method</label>
-                <div className="grid grid-cols-3 gap-2">
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Payment Method</label>
+                <div className="grid grid-cols-3 gap-1">
                   {['Cash', 'bKash', 'Card'].map(method => (
-                    <button
-                      type="button"
-                      key={method}
-                      className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all shadow-sm ${data.payment_method === method ? 'bg-slate-900 text-amber-400 border-slate-900' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
-                      onClick={() => setData('payment_method', method)}
-                    >
+                    <button type="button" key={method} className={`py-1 px-2 rounded-lg border text-[11px] font-bold transition-all shadow-sm ${data.payment_method === method ? 'bg-slate-900 text-amber-400 border-slate-900' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`} onClick={() => setData('payment_method', method)}>
                       {method}
                     </button>
                   ))}
                 </div>
               </div>
 
-              <div className="pt-2">
-                <button type="submit" className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-amber-400 font-bold uppercase tracking-wide text-sm rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-60" disabled={processing}>
-                  <Icon name="check-circle" className="w-5 h-5 text-amber-400" />
-                  {processing ? 'Processing...' : (isEdit ? 'Update Invoice' : 'Confirm Sale')}
+              {/* Deposit Account Selector */}
+              <div>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Deposit To Account</label>
+                <select 
+                  value={data.account_id} 
+                  onChange={(e) => setData('account_id', e.target.value)}
+                  className="w-full py-1.5 px-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:border-indigo-500"
+                  required
+                >
+                  <option value="" disabled>Select Account</option>
+                  {accounts && accounts.map(acc => (
+                    <option key={acc.id} value={acc.id}>
+                      {acc.code} - {acc.name} ({acc.type})
+                    </option>
+                  ))}
+                </select>
+                {errors.account_id && <div className="text-rose-500 text-[10px] mt-0.5">{errors.account_id}</div>}
+              </div>
+
+              {/* Quick Pay Buttons */}
+              <div className="flex gap-1.5">
+                <button type="button" onClick={() => setData('paid_amount', data.total_amount)} className="flex-1 py-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-[11px] font-bold rounded-lg transition-colors">
+                  Full Paid
+                </button>
+                <button type="button" onClick={() => setData('paid_amount', 500)} className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-lg">
+                  ৳500
+                </button>
+                <button type="button" onClick={() => setData('paid_amount', 1000)} className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-lg">
+                  ৳1000
                 </button>
               </div>
 
-            </div>
+              <div>
+                <input type="number" step="0.01" min="0" placeholder="Paid Amount..." className="block w-full py-2 px-3 bg-amber-50/50 border border-amber-300 rounded-lg font-mono text-base font-black text-center text-slate-900 outline-none focus:ring-2 focus:ring-amber-400" value={data.paid_amount || ''} onChange={(e) => setData('paid_amount', e.target.value)} onFocus={(e) => e.target.select()} />
+              </div>
 
+              {due !== 0 && (
+                <div className={`px-3 py-1.5 rounded-lg flex justify-between items-center text-[11px] font-bold uppercase tracking-wider border ${due > 0 ? 'bg-rose-50 border-rose-200 text-rose-700' : 'bg-emerald-50 border-emerald-200 text-emerald-700'}`}>
+                  <span>{due > 0 ? 'Due Amount' : 'Change Return'}</span>
+                  <span className="font-mono text-xs">৳ {Math.abs(due).toFixed(2)}</span>
+                </div>
+              )}
+
+              <button type="submit" className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold uppercase tracking-wide text-xs rounded-xl shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-60" disabled={processing}>
+                <Icon name="check-circle" className="w-4 h-4" />
+                {processing ? 'Processing...' : (isEdit ? 'Update Invoice' : 'Confirm Sale')}
+              </button>
+            </div>
           </div>
+
         </form>
       </div>
     </AuthenticatedLayout>

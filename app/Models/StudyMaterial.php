@@ -1,22 +1,19 @@
 <?php
+
 namespace App\Models;
+
+use App\Traits\BelongsToCampus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Storage;
 
 class StudyMaterial extends Model {
-    use HasFactory;
+    use BelongsToCampus, HasFactory;
 
     protected $fillable = [
         'title', 'class_id', 'subject_id', 'description',
         'file_path', 'file_type', 'uploaded_by'
     ];
-
-    protected static function booted(): void
-    {
-        static::addGlobalScope('campus', fn (Builder $query) => $query->whereHas('schoolClass'));
-    }
 
     public function storageDisk(): string
     {

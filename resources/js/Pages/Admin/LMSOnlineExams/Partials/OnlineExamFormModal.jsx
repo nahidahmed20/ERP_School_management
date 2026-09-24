@@ -23,6 +23,10 @@ export default function OnlineExamFormModal({ item, classes, subjects, campuses,
     is_active: item?.is_active ?? true,
   });
 
+  const availableSubjects = data.school_class_id 
+    ? classes?.find(c => c.id == data.school_class_id)?.subjects || []
+    : [];
+
   function submit(e) {
     e.preventDefault();
     const options = { onSuccess: () => { reset(); onClose(); } };
@@ -34,15 +38,12 @@ export default function OnlineExamFormModal({ item, classes, subjects, campuses,
   const labelClass = "block text-sm font-semibold text-slate-700 mb-1.5";
 
   return (
-    // Responsive Overlay
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
       
-      {/* Responsive Modal Box */}
       <div 
         className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Modal Header */}
         <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0 rounded-t-2xl">
           <div>
             <h3 className="text-xl font-bold text-slate-900">
@@ -55,20 +56,17 @@ export default function OnlineExamFormModal({ item, classes, subjects, campuses,
           </button>
         </div>
 
-        {/* Form Body (Scrollable) */}
         <form onSubmit={submit} className="flex flex-col flex-1 overflow-hidden">
           <div className="p-6 overflow-y-auto space-y-5 flex-1 custom-scrollbar">
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               
-              {/* Campus Selection */}
               <div className="sm:col-span-2">
                 <label className={labelClass}>Campus <span className="text-rose-500">*</span></label>
                 <WorkingCampusField value={data.campus_id} campuses={campuses} className={`${inputClass} ${!isSuperAdmin ? 'bg-slate-100 opacity-70' : 'bg-white'}`} />
                 {errors.campus_id && <p className="text-rose-500 text-xs mt-1">{errors.campus_id}</p>}
               </div>
 
-              {/* Title */}
               <div className="sm:col-span-2">
                 <label className={labelClass}>Exam Title <span className="text-rose-500">*</span></label>
                 <input 
@@ -82,27 +80,37 @@ export default function OnlineExamFormModal({ item, classes, subjects, campuses,
                 {errors.title && <p className="text-rose-500 text-xs mt-1">{errors.title}</p>}
               </div>
 
-              {/* Class */}
               <div>
                 <label className={labelClass}>Target Class <span className="text-rose-500">*</span></label>
-                <select value={data.school_class_id} onChange={(e) => setData('school_class_id', e.target.value)} required className={`${inputClass} bg-white`}>
+                <select 
+                  value={data.school_class_id} 
+                  onChange={(e) => setData({ ...data, school_class_id: e.target.value, subject_id: '' })} 
+                  required 
+                  className={`${inputClass} bg-white`}
+                >
                   <option value="" disabled>Select Class</option>
                   {classes?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
                 {errors.school_class_id && <p className="text-rose-500 text-xs mt-1">{errors.school_class_id}</p>}
               </div>
 
-              {/* Subject */}
               <div>
                 <label className={labelClass}>Subject <span className="text-rose-500">*</span></label>
-                <select value={data.subject_id} onChange={(e) => setData('subject_id', e.target.value)} required className={`${inputClass} bg-white`}>
-                  <option value="" disabled>Select Subject</option>
-                  {subjects?.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                <select 
+                  value={data.subject_id} 
+                  onChange={(e) => setData('subject_id', e.target.value)} 
+                  required 
+                  className={`${inputClass} bg-white`}
+                  disabled={!data.school_class_id}
+                >
+                  <option value="" disabled>
+                    {data.school_class_id ? "Select Subject" : "Select Class First"}
+                  </option>
+                  {availableSubjects?.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
                 {errors.subject_id && <p className="text-rose-500 text-xs mt-1">{errors.subject_id}</p>}
               </div>
 
-              {/* Date & Duration */}
               <div>
                 <label className={labelClass}>Exam Date <span className="text-rose-500">*</span></label>
                 <input 
@@ -129,7 +137,6 @@ export default function OnlineExamFormModal({ item, classes, subjects, campuses,
                 {errors.duration_minutes && <p className="text-rose-500 text-xs mt-1">{errors.duration_minutes}</p>}
               </div>
 
-              {/* Time */}
               <div>
                 <label className={labelClass}>Start Time <span className="text-rose-500">*</span></label>
                 <input 
@@ -154,7 +161,6 @@ export default function OnlineExamFormModal({ item, classes, subjects, campuses,
                 {errors.end_time && <p className="text-rose-500 text-xs mt-1">{errors.end_time}</p>}
               </div>
 
-              {/* Marks */}
               <div>
                 <label className={labelClass}>Total Marks <span className="text-rose-500">*</span></label>
                 <input 
@@ -183,19 +189,17 @@ export default function OnlineExamFormModal({ item, classes, subjects, campuses,
                 {errors.passing_marks && <p className="text-rose-500 text-xs mt-1">{errors.passing_marks}</p>}
               </div>
 
-              {/* Description */}
               <div className="sm:col-span-2">
                 <label className={labelClass}>Instructions / Description (Optional)</label>
                 <textarea 
                   rows="3" 
                   value={data.description} 
                   onChange={(e) => setData('description', e.target.value)} 
-                  placeholder="Exam rules, negative marking info, notes for students..." 
+                  placeholder="Exam rules, notes for students..." 
                   className={`${inputClass} resize-none`}
                 />
               </div>
 
-              {/* Active Status Toggles */}
               <div className="sm:col-span-2 pt-2 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <label className="flex items-center gap-3 cursor-pointer group w-max">
                   <div className="relative flex items-center">
@@ -231,7 +235,6 @@ export default function OnlineExamFormModal({ item, classes, subjects, campuses,
             </div>
           </div>
 
-          {/* Modal Footer */}
           <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex flex-col-reverse sm:flex-row items-center justify-end gap-3 shrink-0 rounded-b-2xl">
             <button type="button" onClick={onClose} disabled={processing} className="w-full sm:w-auto px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 hover:text-slate-800 rounded-xl transition-all shadow-sm">
               Cancel

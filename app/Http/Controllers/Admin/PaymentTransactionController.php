@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Account;
 use App\Models\PaymentTransaction;
 use App\Models\PaymentGateway;
+use App\Support\CampusRule;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +15,7 @@ class PaymentTransactionController extends Controller
 {
     public function index(Request $request)
     {
+        $this->campusId();
         $query = PaymentTransaction::with('gateway');
 
         if ($search = $request->search) {
@@ -26,52 +29,67 @@ class PaymentTransactionController extends Controller
             $query->where('status', $request->status);
         }
 
-        $transactions = $query->latest('transaction_date')->paginate(\App\Support\PerPage::resolve())->withQueryString();
+        $transactions = $query->with('account:id,name,code')->latest('transaction_date')->paginate(\App\Support\PerPage::resolve())->withQueryString();
         $gateways = PaymentGateway::where('is_active', true)->get(['id', 'name']); // ফর্মের জন্য
+        $accounts = Account::where('is_active', true)->where('type', 'Asset')->orderBy('code')->get(['id', 'name', 'code']);
 
         return Inertia::render('Admin/PaymentsTransactions/Index', [
             'transactions' => $transactions,
             'gateways' => $gateways,
+            'accounts' => $accounts,
             'filters' => $request->only(['search', 'status', 'per_page'])
         ]);
     }
 
     public function store(Request $request)
     {
-        $request->validate([
+        $this->campusId();
+        $data = $request->validate([
             'payment_gateway_id' => 'nullable|exists:payment_gateways,id',
             'transaction_id' => 'required|string|unique:payment_transactions,transaction_id',
             'reference_no' => 'nullable|string',
             'amount' => 'required|numeric|min:0.01',
+            'currency' => 'required|string|size:3',
             'payment_method' => 'nullable|string',
             'transaction_date' => 'required|date',
+            'note' => 'nullable|string|max:2000',
+            'account_id' => ['required', CampusRule::exists('accounts'), function ($attribute, $value, $fail) {
+                if (! Account::whereKey($value)->where('type', 'Asset')->where('is_active', true)->exists()) $fail('Select an active asset settlement account.');
+            }],
         ]);
-        PaymentTransaction::create($request->only(['payment_gateway_id','transaction_id','reference_no','amount','payment_method','transaction_date'])+['campus_id'=>config('app.active_campus_id'),'currency'=>'BDT','status'=>'Pending']);
+        PaymentTransaction::create($data + ['campus_id'=>config('app.active_campus_id'),'status'=>'Pending']);
 
         return back()->with('success', 'ম্যানুয়াল ট্রানজেকশন সফলভাবে যুক্ত করা হয়েছে!');
     }
 
     public function update(Request $request, $id)
     {
+        $this->campusId();
         $transaction = PaymentTransaction::findOrFail($id);
         abort_if($transaction->source_type,422,'System-generated transactions cannot be edited manually.');
         abort_unless(in_array($transaction->status,['Pending','Failed'],true),422,'Only pending or failed manual transactions can be edited.');
         
-        $request->validate([
+        $data = $request->validate([
             'payment_gateway_id' => 'nullable|exists:payment_gateways,id',
             'transaction_id' => 'required|string|unique:payment_transactions,transaction_id,'.$id,
             'reference_no' => 'nullable|string',
             'amount' => 'required|numeric|min:0.01',
+            'currency' => 'required|string|size:3',
             'payment_method' => 'nullable|string',
             'transaction_date' => 'required|date',
+            'note' => 'nullable|string|max:2000',
+            'account_id' => ['required', CampusRule::exists('accounts'), function ($attribute, $value, $fail) {
+                if (! Account::whereKey($value)->where('type', 'Asset')->where('is_active', true)->exists()) $fail('Select an active asset settlement account.');
+            }],
         ]);
-        $transaction->update($request->only(['payment_gateway_id','transaction_id','reference_no','amount','payment_method','transaction_date']));
+        $transaction->update($data);
 
         return back()->with('success', 'ট্রানজেকশন আপডেট করা হয়েছে!');
     }
 
     public function updateStatus(Request $request, $id)
     {
+        $this->campusId();
         $request->validate(['status' => 'required|in:Pending,Failed']);
         
         $transaction = PaymentTransaction::findOrFail($id);
@@ -84,6 +102,7 @@ class PaymentTransactionController extends Controller
 
     public function destroy($id)
     {
+        $this->campusId();
         $transaction = PaymentTransaction::findOrFail($id);
         if ($transaction->source_type) {
             return back()->with('error', 'System-generated transaction delete করা যাবে না; source record থেকে reversal করুন।');
@@ -91,5 +110,12 @@ class PaymentTransactionController extends Controller
         abort_unless(in_array($transaction->status,['Pending','Failed'],true),422,'Completed financial records cannot be deleted.');
         $transaction->delete();
         return back()->with('success', 'ট্রানজেকশন রেকর্ড মুছে ফেলা হয়েছে!');
+    }
+
+    private function campusId(): int
+    {
+        $campusId = (int) config('app.active_campus_id');
+        abort_if(! $campusId, 422, 'Select a campus before managing transactions.');
+        return $campusId;
     }
 }

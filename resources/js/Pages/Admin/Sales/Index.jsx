@@ -6,7 +6,7 @@ import Pagination from '@/Components/Pagination';
 import SaleShowModal from './Partials/SaleShowModal';
 import Swal from 'sweetalert2';
 
-export default function Index({ sales, filters, voidRequests = [] }) {
+export default function Index({ sales, filters, voidRequests = [], accounts = [] }) {
   const { flash } = usePage().props;
 
   const [search, setSearch] = useState(filters.search ?? '');
@@ -55,6 +55,30 @@ export default function Index({ sales, filters, voidRequests = [] }) {
     });
     navigator.clipboard.writeText(text);
     Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Data copied to clipboard!', showConfirmButton: false, timer: 2000 });
+  };
+
+  const collectDue = async (sale) => {
+    const accountOptions = accounts.map(account => `<option value="${account.id}">${account.code} — ${account.name}</option>`).join('');
+    const result = await Swal.fire({
+      title: `Receive due: ${sale.invoice_number}`,
+      html: `<input id="due-amount" class="swal2-input" type="number" min="0.01" step="0.01" value="${Number(sale.due_amount).toFixed(2)}" placeholder="Amount">
+        <select id="due-method" class="swal2-select"><option>Cash</option><option>bKash</option><option>Card</option><option>Bank</option></select>
+        <select id="due-account" class="swal2-select"><option value="">Select deposit account</option>${accountOptions}</select>
+        <input id="due-reference" class="swal2-input" maxlength="100" placeholder="Reference / receipt no. (optional)">`,
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: 'Receive payment',
+      preConfirm: () => {
+        const amount = document.getElementById('due-amount').value;
+        const account_id = document.getElementById('due-account').value;
+        if (!amount || Number(amount) <= 0 || Number(amount) > Number(sale.due_amount) || !account_id) {
+          Swal.showValidationMessage('Enter a valid amount and select the deposit account.');
+          return false;
+        }
+        return { amount, account_id, payment_method: document.getElementById('due-method').value, reference_no: document.getElementById('due-reference').value };
+      },
+    });
+    if (result.isConfirmed) router.post(route('admin.sales.receive-due', sale.id), result.value, { preserveScroll: true });
   };
 
   return (
@@ -229,6 +253,9 @@ export default function Index({ sales, filters, voidRequests = [] }) {
                           <Link href={route('admin.sales.invoice', sale.id)} target="_blank" rel="noreferrer" className="p-2 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors" title="Print Invoice">
                             <Icon name="printer" className="w-4 h-4" />
                           </Link>
+                          {!sale.voided_at && Number(sale.due_amount) > 0 && <button onClick={() => collectDue(sale)} className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="Receive due payment">
+                            <Icon name="wallet" className="w-4 h-4" />
+                          </button>}
                            {!sale.voided_at && <button onClick={async () => { const result=await Swal.fire({title:'Request sale void',input:'textarea',inputLabel:'Reason',showCancelButton:true,inputValidator:v=>!v?'Reason is required':undefined});if(result.isConfirmed)router.post(route('admin.sales.void-request',sale.id),{reason:result.value},{preserveScroll:true}); }} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Request approved void">
                              <Icon name="trash" className="w-4 h-4" />
                            </button>}

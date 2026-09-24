@@ -3,9 +3,9 @@ import { Head, router, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
 import Pagination from '@/Components/Pagination';
+import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 import IssueFormModal from './Partials/IssueFormModal';
 import IssueShowModal from './Partials/IssueShowModal';
-import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 import Swal from 'sweetalert2';
 
 export default function Index({ issues, books, users, campuses, filters }) {
@@ -37,12 +37,52 @@ export default function Index({ issues, books, users, campuses, filters }) {
 
   const getStatusBadge = (status) => {
     switch(status) {
-        case 'Issued': return 'bg-sky-50 text-sky-700 border-sky-200'; // Blue
-        case 'Returned': return 'bg-emerald-50 text-emerald-700 border-emerald-200'; // Green
-        case 'Overdue': return 'bg-rose-50 text-rose-700 border-rose-200'; // Red
-        case 'Lost': return 'bg-slate-100 text-slate-700 border-slate-200'; // Gray
+        case 'Issued': return 'bg-sky-50 text-sky-700 border-sky-200';
+        case 'Returned': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+        case 'Overdue': return 'bg-rose-50 text-rose-700 border-rose-200';
+        case 'Lost': return 'bg-slate-100 text-slate-700 border-slate-200';
         default: return 'bg-slate-50 text-slate-700 border-slate-200';
     }
+  };
+
+  // 🟢 Quick Return (One-click) Logic
+  const handleQuickReturn = (item) => {
+    const today = new Date().toISOString().split('T')[0];
+    let calculatedFine = Number(item.fine_amount) || 0;
+
+    // Auto Fine Calculation (10 Taka per day late)
+    if (item.due_date && new Date(today) > new Date(item.due_date)) {
+      const diffTime = Math.abs(new Date(today) - new Date(item.due_date));
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      calculatedFine = diffDays * 10;
+    }
+
+    Swal.fire({
+      title: 'বই জমা নিন',
+      html: `আপনি কি <b>${item.book?.title}</b> বইটি জমা নিতে চান?<br/><br/>
+             ${calculatedFine > 0 ? `<span style="color:#e11d48; font-weight:bold; font-size:18px;">লেট জরিমানা: ৳${calculatedFine}</span>` : '<span style="color:#059669; font-weight:bold;">কোনো জরিমানা নেই</span>'}`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#059669',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'হ্যাঁ, জমা নিন',
+      cancelButtonText: 'বাতিল'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Submit via Inertia
+        router.put(route('admin.library-issues.update', item.id), {
+          campus_id: item.campus_id,
+          book_id: item.book_id,
+          user_id: item.user_id,
+          issue_date: item.issue_date,
+          due_date: item.due_date,
+          return_date: today,
+          fine_amount: calculatedFine,
+          status: 'Returned',
+          note: item.note || ''
+        }, { preserveScroll: true });
+      }
+    });
   };
 
   // --- Export Functions ---
@@ -98,12 +138,11 @@ export default function Index({ issues, books, users, campuses, filters }) {
 
       <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8 no-print">
 
-        {/* Page Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">Campus Life &gt; Library</span>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Book Issues &amp; Fines</h1>
-            <p className="text-sm text-slate-500 mt-1">বই ইস্যু, ফেরত গ্রহণ এবং জরিমানার হিসাব পরিচালনা করুন।</p>
+            <p className="text-sm text-slate-500 mt-1">বই ইস্যু, দ্রুত ফেরত গ্রহণ এবং জরিমানার হিসাব পরিচালনা করুন।</p>
           </div>
           <button
             onClick={() => { setEditingItem(null); setFormOpen(true); }}
@@ -113,11 +152,9 @@ export default function Index({ issues, books, users, campuses, filters }) {
           </button>
         </div>
 
-        {/* Unified Modern Toolbar */}
         <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
 
-            {/* Per Page */}
             <select
               value={perPage}
               onChange={e => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}
@@ -132,7 +169,6 @@ export default function Index({ issues, books, users, campuses, filters }) {
 
             <div className="hidden sm:block w-px h-6 bg-slate-200"></div>
 
-            {/* Status Filter */}
             <select
               value={status}
               onChange={(e) => { setStatus(e.target.value); applyFilters({ status: e.target.value }); }}
@@ -145,7 +181,6 @@ export default function Index({ issues, books, users, campuses, filters }) {
               <option value="Lost">Lost</option>
             </select>
 
-            {/* Search Input */}
             <div className="relative flex-1 min-w-[200px] sm:w-72">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Icon name="search" className="w-4 h-4 text-slate-400" />
@@ -160,7 +195,6 @@ export default function Index({ issues, books, users, campuses, filters }) {
               />
             </div>
 
-            {/* Apply Button */}
             <button
               onClick={() => applyFilters()}
               className="w-full sm:w-auto px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
@@ -169,27 +203,12 @@ export default function Index({ issues, books, users, campuses, filters }) {
             </button>
           </div>
 
-          {/* Export Actions */}
           <div className="flex items-center justify-end gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-xl w-full xl:w-auto shadow-sm shrink-0 ml-auto">
-            <button onClick={copyToClipboard} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Copy to Clipboard">
-              Copy
-            </button>
+            <button onClick={copyToClipboard} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Copy to Clipboard">Copy</button>
             <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-            <button onClick={exportToCSV} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-emerald-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export CSV">
-              CSV
-            </button>
+            <button onClick={exportToCSV} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-emerald-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export CSV">CSV</button>
             <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-            <button onClick={() => alert('Backend Excel plugin needed')} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-green-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export Excel">
-              Excel
-            </button>
-            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-            <button onClick={() => alert('Backend PDF plugin needed')} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-rose-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export PDF">
-              PDF
-            </button>
-            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-            <button onClick={handlePrint} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-amber-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Print List">
-              Print
-            </button>
+            <button onClick={handlePrint} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-amber-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Print List">Print</button>
           </div>
         </div>
 
@@ -204,7 +223,7 @@ export default function Index({ issues, books, users, campuses, filters }) {
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Issue &amp; Due Date</th>
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Fine</th>
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Status</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right no-print">Actions</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right no-print w-40">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -252,13 +271,24 @@ export default function Index({ issues, books, users, campuses, filters }) {
                       </td>
                       <td className="px-6 py-4 text-right no-print">
                         <div className="flex items-center justify-end gap-1.5">
-                          <button onClick={() => setViewingItem(item)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="View Details">
+                          {/* 🟢 Quick Return Button (Only for Issued/Overdue) */}
+                          {['Issued', 'Overdue'].includes(item.status) && (
+                            <button 
+                              onClick={() => handleQuickReturn(item)} 
+                              className=" text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors border hover:border-emerald-200 border-transparent" 
+                              title="Quick Return"
+                            >
+                              <Icon name="check-circle" className="w-4 h-4" />
+                            </button>
+                          )}
+                          
+                          <button onClick={() => setViewingItem(item)} className=" text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="View Details">
                             <Icon name="eye" className="w-4 h-4" />
                           </button>
-                          <button onClick={() => { setEditingItem(item); setFormOpen(true); }} className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Edit / Return">
+                          <button onClick={() => { setEditingItem(item); setFormOpen(true); }} className=" text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Edit / Return">
                             <Icon name="edit" className="w-4 h-4" />
                           </button>
-                          <button onClick={() => setDeletingItem(item)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Delete Record">
+                          <button onClick={() => setDeletingItem(item)} className=" text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Delete Record">
                             <Icon name="trash" className="w-4 h-4" />
                           </button>
                         </div>

@@ -263,14 +263,14 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
     Route::put('/menu-groups/{menuGroup}', [MenuGroupController::class, 'update'])->name('menu-groups.update');
     Route::delete('/menu-groups/{menuGroup}', [MenuGroupController::class, 'destroy'])->name('menu-groups.destroy');
 
-    Route::resource('users', UserController::class)->only(['index', 'store', 'update', 'destroy']);
-    Route::resource('roles', RoleController::class)->only(['index', 'store', 'update', 'destroy']);
-    Route::resource('permissions', PermissionController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('users', UserController::class);
+    Route::resource('roles', RoleController::class);
+    Route::resource('permissions', PermissionController::class);
 
     Route::post('/switch-campus', [CampusController::class, 'switchCampus'])->name('campus.switch');
-    Route::resource('campuses', CampusController::class)->only(['index', 'store', 'update', 'destroy']);
-    Route::resource('sessions', AcademicSessionController::class)->only(['index', 'store', 'update', 'destroy']);
-    Route::resource('general', GeneralSettingController::class)->parameters(['general' => 'setting'])->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('campuses', CampusController::class);
+    Route::resource('sessions', AcademicSessionController::class);
+    Route::resource('general', GeneralSettingController::class)->parameters(['general' => 'setting']);
     Route::post('general/website', [GeneralSettingController::class, 'updateWebsite'])->name('general.website.update');
     Route::get('files/{file}/download', [FileManagerController::class, 'download'])->name('files.download');
     Route::resource('files', FileManagerController::class)->only(['index', 'store', 'destroy']);
@@ -278,23 +278,23 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
     Route::resource('registry', SystemRegistryController::class)->parameters(['registry' => 'log'])->only(['index', 'destroy']);
     Route::post('registry/clear', [SystemRegistryController::class, 'clear'])->name('registry.clear');
 
-    Route::resource('departments', DepartmentController::class)->only(['index', 'store', 'update', 'destroy']);
-    Route::resource('designations', DesignationController::class)->only(['index', 'store', 'update', 'destroy']);
-    Route::resource('houses', HouseController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('departments', DepartmentController::class);
+    Route::resource('designations', DesignationController::class);
+    Route::resource('houses', HouseController::class);
 
-    Route::resource('student-categories', StudentCategoryController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('student-categories', StudentCategoryController::class);
     Route::post('classes/{id}/assign-sections', [SchoolClassController::class, 'assignSections'])->name('classes.assign-sections');
     Route::post('classes/{id}/assign-subjects', [SchoolClassController::class, 'assignSubjects'])->name('classes.assign-subjects');
-    Route::resource('classes', SchoolClassController::class)->parameters(['classes' => 'schoolClass'])->only(['index', 'store', 'update', 'destroy']);
-    Route::resource('sections', SectionController::class)->only(['index', 'store', 'update', 'destroy']);
-    Route::resource('subjects', SubjectController::class)->only(['index', 'store', 'update', 'destroy']);
-    Route::resource('classrooms', ClassroomController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('classes', SchoolClassController::class)->parameters(['classes' => 'schoolClass']);
+    Route::resource('sections', SectionController::class);
+    Route::resource('subjects', SubjectController::class);
+    Route::resource('classrooms', ClassroomController::class);
 
     Route::get('time-tables/edit-day', [TimeTableController::class, 'editDay'])->name('time-tables.edit-day');
     Route::post('time-tables/bulk-update', [TimeTableController::class, 'bulkUpdate'])->name('time-tables.bulk-update');
     Route::resource('time-tables', TimeTableController::class)->only(['index', 'create', 'store', 'destroy']);
 
-    Route::resource('lesson-plans', LessonPlanController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('lesson-plans', LessonPlanController::class);
     Route::get('academic-operations', [AcademicOperationsController::class, 'index'])->name('academic-operations.index');
     Route::post('academic-operations/assignments', [AcademicOperationsController::class, 'assignment'])->name('academic-operations.assignment');
     Route::post('academic-operations/topics', [AcademicOperationsController::class, 'topic'])->name('academic-operations.topic');
@@ -306,14 +306,14 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
     Route::post('academic-operations/transfers', [AcademicOperationsController::class, 'transfer'])->name('academic-operations.transfer');
     Route::patch('academic-operations/transfers/{transfer}/approve', [AcademicOperationsController::class, 'approveTransfer'])->name('academic-operations.transfer-approve');
 
-    Route::resource('communication-calendars', EventController::class)->only(['index', 'store', 'update', 'destroy']);
-    Route::resource('exams', ExamController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('communication-calendars', EventController::class);
+    Route::resource('exams', ExamController::class);
     Route::patch('exams/{exam}/workflow', [ExamController::class, 'workflow'])->name('exams.workflow');
     Route::patch('exams/{exam}/toggle-publish', [ExamController::class, 'togglePublish'])->name('exams.toggle-publish');
     Route::resource('exam-schedules', ExamScheduleController::class)->only(['index', 'store', 'destroy']);
     Route::post('exams/schedule/bulk-update', [ExamScheduleController::class, 'bulkUpdate'])->name('exams.schedule.bulk-update');
 
-    Route::resource('grades', GradeController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('grades', GradeController::class);
     Route::delete('exams-marks/clear', [MarksController::class, 'destroy'])->name('exams-marks.destroy');
     Route::resource('exams-marks', MarksController::class)->only(['index', 'store']);
     Route::get('exams/report/cards', [MarksController::class, 'examsReportcards'])->name('exams.reportcards');
@@ -340,7 +340,7 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
     Route::get('students/import', [StudentImportController::class, 'create'])->name('students.import.create');
     Route::get('students/import/template', [StudentImportController::class, 'template'])->name('students.import.template');
     Route::post('students/import', [StudentImportController::class, 'store'])->name('students.import.store');
-    Route::resource('students', StudentController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+    Route::resource('students', StudentController::class);
     Route::resource('student-attendance', StudentAttendanceController::class)->only(['index', 'store', 'destroy']);
     Route::get('attendance-control', [AttendanceOperationsController::class,'index'])->name('attendance-control.index');
     Route::post('attendance-control/policy', [AttendanceOperationsController::class,'policy'])->name('attendance-control.policy');
@@ -348,21 +348,21 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
     Route::delete('attendance-control/locks/{lock}', [AttendanceOperationsController::class,'unlock'])->name('attendance-control.unlock');
     Route::resource('student-development-records', StudentDevelopmentRecordController::class)->only(['index','store','update','destroy']);
 
-    Route::resource('leave-types', LeaveTypeController::class)->only(['index', 'store', 'update', 'destroy']);
-    Route::resource('staff', StaffController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+    Route::resource('leave-types', LeaveTypeController::class);
+    Route::resource('staff', StaffController::class);
     Route::get('staff/{staff}/report',[StaffController::class,'report'])->name('staff.report');
     Route::get('staff/{staff}/id-card',[StaffController::class,'generateIdCard'])->name('staff.id-card');
     Route::get('staff-attendance', [StaffAttendanceController::class, 'index'])->name('staff-attendance.index');
     Route::post('staff-attendance', [StaffAttendanceController::class, 'store'])->name('staff-attendance.store');
-    Route::resource('staff-leaves', StaffLeaveController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('staff-leaves', StaffLeaveController::class);
     Route::post('staff-payrolls/generate/automatic', [StaffPayrollController::class, 'generate'])->name('staff-payrolls.generate');
     Route::get('staff-payrolls/attendance/adjustments', [StaffPayrollController::class, 'attendance'])->name('staff-payrolls.attendance');
     Route::patch('staff-payrolls/attendance/{attendance}', [StaffPayrollController::class, 'attendanceAdjustment'])->name('staff-payrolls.attendance.update');
     Route::patch('staff-payrolls/{payroll}/approve', [StaffPayrollController::class, 'approve'])->name('staff-payrolls.approve');
     Route::patch('staff-payrolls/{payroll}/finalize', [StaffPayrollController::class, 'finalize'])->name('staff-payrolls.finalize');
     Route::get('staff-payrolls/export/bank-sheet', [StaffPayrollController::class, 'bankSheet'])->name('staff-payrolls.bank-sheet');
-    Route::resource('staff-payrolls', StaffPayrollController::class)->only(['index', 'store', 'update', 'destroy']);
-    Route::resource('staff-hr-records', StaffHrRecordController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('staff-payrolls', StaffPayrollController::class);
+    Route::resource('staff-hr-records', StaffHrRecordController::class);
 
     Route::get('stff/attendances/report', [ReportController::class, 'staffAttendanceReport'])->name('staff.attendances-report');
     Route::post('/attendance-report', [ReportController::class, 'generate'])->name('attendance-report.generate');
@@ -372,7 +372,7 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
     Route::get('/reports/saved', [ReportController::class, 'saved'])->name('reports.saved');
     Route::get('/reports/financial-summary', [ReportController::class, 'financialSummary'])->name('reports.financial-summary');
 
-    Route::resource('fees-groups', FeeGroupController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('fees-groups', FeeGroupController::class);
     Route::get('fees-groups/{feeGroup}/fees-types', [FeeTypeController::class, 'index'])->name('fees-types.index');
     Route::post('fees-groups/{feeGroup}/fees-types', [FeeTypeController::class, 'store'])->name('fees-types.store');
     Route::put('fees-types/{feeType}', [FeeTypeController::class, 'update'])->name('fees-types.update');
@@ -382,7 +382,7 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
     Route::get('fees/payments', [PaymentController::class, 'index'])->name('fees.payments');
     Route::post('fees/payments', [PaymentController::class, 'store'])->name('fees.payments.store');
     Route::get('fees/invoices', [PaymentController::class, 'feesInvoices'])->name('fees.invoices');
-    Route::resource('finance-invoices', InvoiceController::class)->names('fees.invoices')->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('finance-invoices', InvoiceController::class)->names('fees.invoices');
 
     Route::get('fees/ledger', [LedgerController::class, 'index'])->name('fees.ledger');
     Route::post('fees/ledger/expenses', [LedgerController::class, 'storeExpense'])->name('fees.ledger.store');
@@ -400,38 +400,38 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
     Route::post('communication-center/balance', [CommunicationCenterController::class,'balance'])->name('communication-center.balance');
     Route::post('communication-center/preferences', [CommunicationCenterController::class,'preference'])->name('communication-center.preferences');
     Route::get('communication-center/metrics', [CommunicationCenterController::class,'metrics'])->name('communication-center.metrics');
-    Route::resource('communication-notifications', CommunicationNotificationController::class)->only(['index', 'store', 'update', 'destroy']);
-    Route::resource('communication-helpdesk', HelpdeskTicketController::class)->names('communication.helpdesk')->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('communication-notifications', CommunicationNotificationController::class);
+    Route::resource('communication-helpdesk', HelpdeskTicketController::class)->names('communication.helpdesk');
     Route::post('communication-helpdesk/{id}/reply', [HelpdeskTicketController::class, 'reply'])->name('communication.helpdesk.reply');
-    Route::resource('communication-cms', CommunicationCmsController::class)->names('communication.cms')->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('communication-cms', CommunicationCmsController::class)->names('communication.cms');
     Route::get('communication-chat', [CommunicationChatController::class, 'index'])->name('communication.chat.index');
     Route::post('communication-chat', [CommunicationChatController::class, 'store'])->name('communication.chat.store');
     Route::post('student-attendance/send-absent-sms', [StudentAttendanceController::class, 'sendAbsentSms'])->name('attendance.send-absent-sms');
 
     Route::prefix('frontoffice')->name('frontoffice.')->group(function () {
-        Route::resource('visitors', VisitorController::class)->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('notices', NoticeController::class)->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('admission-inquiries', AdmissionInquiryController::class)->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('call-logs', PhoneCallLogController::class)->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('postal', PostalRecordController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('visitors', VisitorController::class);
+        Route::resource('notices', NoticeController::class);
+        Route::resource('admission-inquiries', AdmissionInquiryController::class);
+        Route::resource('call-logs', PhoneCallLogController::class);
+        Route::resource('postal', PostalRecordController::class);
     });
     Route::prefix('recruitment')->name('recruitment.')->group(function () {
-        Route::resource('job-posts', JobPostController::class)->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('applicants', ApplicantController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('job-posts', JobPostController::class);
+        Route::resource('applicants', ApplicantController::class);
         Route::patch('applicants/{applicant}/status', [ApplicantController::class, 'updateStatus'])->name('applicants.update-status');
         Route::patch('interviews/{interview}/status', [InterviewController::class, 'updateStatus'])->name('interviews.update-status');
-        Route::resource('interviews', InterviewController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('interviews', InterviewController::class);
         Route::patch('offer-letters/{offer_letter}/status', [OfferLetterController::class, 'updateStatus'])->name('offer-letters.update-status');
-        Route::resource('offer-letters', OfferLetterController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('offer-letters', OfferLetterController::class);
     });
 
     Route::prefix('alumni')->name('alumni.')->group(function () {
-        Route::resource('directory', AlumniController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('directory', AlumniController::class);
         Route::patch('events/{event}/status', [AlumniEventController::class, 'updateStatus'])->name('events.update-status');
-        Route::resource('events', AlumniEventController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('events', AlumniEventController::class);
     });
 
-    Route::resource('library/catalogue', BookController::class)->names('library.catalogue')->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('library/catalogue', BookController::class)->names('library.catalogue');
     Route::get('library-operations', [LibraryOperationsController::class,'index'])->name('library.operations');
     Route::post('library-operations/masters', [LibraryOperationsController::class,'master'])->name('library.masters');
     Route::post('library-operations/copies', [LibraryOperationsController::class,'copy'])->name('library.copies');
@@ -444,14 +444,14 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
     Route::post('library-operations/stock-checks', [LibraryOperationsController::class,'startStock'])->name('library.stock.start');
     Route::post('library-operations/stock-checks/{check}/scan', [LibraryOperationsController::class,'scanStock'])->name('library.stock.scan');
     Route::patch('library-operations/stock-checks/{check}/complete', [LibraryOperationsController::class,'completeStock'])->name('library.stock.complete');
-    Route::resource('documents/certificatetemplates', CertificateTemplateController::class)->names('documents.certificatetemplates')->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+    Route::resource('documents/certificatetemplates', CertificateTemplateController::class)->names('documents.certificatetemplates');
     Route::resource('documents/certificates', GeneratedCertificateController::class)->names('documents.certificates')->only(['index', 'store', 'destroy']);
-    Route::resource('documents/idcards', IdCardTemplateController::class)->names('documents.idcards')->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
-    Route::resource('documents/transcripts', TranscriptTemplateController::class)->names('documents.transcripts')->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+    Route::resource('documents/idcards', IdCardTemplateController::class)->names('documents.idcards');
+    Route::resource('documents/transcripts', TranscriptTemplateController::class)->names('documents.transcripts');
     Route::resource('documents/official', OfficialDocumentController::class)->only(['index','store','destroy'])->names('documents.official');
     Route::resource('documents/official-templates', OfficialDocumentTemplateController::class)->only(['store','update','destroy'])->names('documents.official-templates');
 
-    Route::resource('vehicles', VehicleController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('vehicles', VehicleController::class);
     Route::get('transport-operations',[TransportOperationsController::class,'index'])->name('transport.operations');
     Route::post('transport-operations/personnel',[TransportOperationsController::class,'personnel'])->name('transport.personnel');
     Route::post('transport-operations/personnel/assign',[TransportOperationsController::class,'assign'])->name('transport.personnel.assign');
@@ -463,9 +463,9 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
     Route::post('transport-operations/vehicles/{vehicle}/token',[TransportOperationsController::class,'token'])->name('transport.token');
     Route::post('transport-operations/expenses',[TransportOperationsController::class,'expense'])->name('transport.expenses');
     Route::post('transport-operations/fees/generate',[TransportOperationsController::class,'generateFees'])->name('transport.fees.generate');
-    Route::resource('transports', TransportAllocationController::class)->only(['index', 'store', 'update', 'destroy']);
-    Route::resource('hostel-rooms', HostelRoomController::class)->only(['index', 'store', 'update', 'destroy']);
-    Route::resource('hostel-allocations', HostelAllocationController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('transports', TransportAllocationController::class);
+    Route::resource('hostel-rooms', HostelRoomController::class);
+    Route::resource('hostel-allocations', HostelAllocationController::class);
     Route::get('hostel-operations', [HostelOperationsController::class,'index'])->name('hostel.operations');
     Route::post('hostel-operations/beds', [HostelOperationsController::class,'bed'])->name('hostel.beds');
     Route::post('hostel-operations/check-in', [HostelOperationsController::class,'checkIn'])->name('hostel.check-in');
@@ -477,23 +477,23 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
     Route::post('hostel-operations/charges', [HostelOperationsController::class,'charge'])->name('hostel.charges');
     Route::post('hostel-operations/allocations/{allocation}/clearance', [HostelOperationsController::class,'clearance'])->name('hostel.clearance');
     Route::post('hostel-operations/allocations/{allocation}/settle', [HostelOperationsController::class,'settle'])->name('hostel.settle');
-    Route::resource('library-issues', BookIssueController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('library-issues', BookIssueController::class);
 
     Route::prefix('purchase')->name('purchase.')->group(function () {
-        Route::resource('vendors', VendorController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('vendors', VendorController::class);
         Route::patch('items/stock-adjustments/{adjustment}', [PurchaseItemController::class,'decideAdjustment'])->name('items.stock-adjustments.decide');
-        Route::resource('items', PurchaseItemController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('items', PurchaseItemController::class);
         Route::patch('requests/{request}/status', [PurchaseRequestController::class, 'updateStatus'])->name('requests.update-status');
-        Route::resource('requests', PurchaseRequestController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('requests', PurchaseRequestController::class);
         Route::patch('orders/{order}/status', [PurchaseOrderController::class, 'updateStatus'])->name('orders.update-status');
-        Route::resource('orders', PurchaseOrderController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
-        Route::resource('assets', AssetController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('orders', PurchaseOrderController::class);
+        Route::resource('assets', AssetController::class);
         Route::patch('suppliers/{supplier}/status', [SupplierController::class, 'updateStatus'])->name('suppliers.update-status');
-        Route::resource('suppliers', SupplierController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('suppliers', SupplierController::class);
         Route::patch('asset-assignments/{asset_assignment}/status', [AssetAssignmentController::class, 'updateStatus'])->name('asset-assignments.update-status');
-        Route::resource('asset-assignments', AssetAssignmentController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('asset-assignments', AssetAssignmentController::class);
         Route::patch('asset-maintenance/{asset_maintenance}/status', [AssetMaintenanceController::class, 'updateStatus'])->name('asset-maintenance.update-status');
-        Route::resource('asset-maintenance', AssetMaintenanceController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('asset-maintenance', AssetMaintenanceController::class);
     });
 
     Route::post('purchase-items/sizes', [PurchaseItemController::class, 'storeSize'])->name('purchase.items.sizes.store');
@@ -503,22 +503,22 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
     Route::get('purchase-items/report', [PurchaseItemController::class, 'report'])->name('purchase.items.report');
 
     Route::prefix('lms')->name('lms.')->group(function () {
-        Route::resource('exams', OnlineExamController::class)->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('questions', QuestionBankController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('exams', OnlineExamController::class);
+        Route::resource('questions', QuestionBankController::class);
         Route::resource('question-papers', QuestionPaperController::class)->only(['index','store','destroy']);
         Route::get('exam-questions', [ExamQuestionController::class, 'index'])->name('exam-questions.index');
         Route::post('exam-questions', [ExamQuestionController::class, 'store'])->name('exam-questions.store');
         Route::delete('exam-questions/{id}', [ExamQuestionController::class, 'destroy'])->name('exam-questions.destroy');
-        Route::resource('courses', CourseController::class)->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('lessons', LessonController::class)->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('homework', HomeworkController::class)->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('quizattempts', QuizAttemptController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('courses', CourseController::class);
+        Route::resource('lessons', LessonController::class);
+        Route::resource('homework', HomeworkController::class);
+        Route::resource('quizattempts', QuizAttemptController::class);
 
     });
     Route::prefix('students')->name('students.')->group(function () {
-        Route::resource('admissions', AdmissionController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('admissions', AdmissionController::class);
         Route::resource('documents', StudentDocumentController::class)->only(['index', 'store', 'destroy']);
-        Route::resource('discipline', DisciplinaryRecordController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('discipline', DisciplinaryRecordController::class);
         Route::get('/{student}/id-card', [StudentController::class, 'generateIdCard'])->name('id-card');
         Route::get('/{student}/attendance', [StudentController::class, 'attendanceHistory'])->name('attendance');
         Route::get('/{student}/results', [StudentController::class, 'academicResults'])->name('results');
@@ -528,7 +528,7 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
 
     Route::prefix('payments')->name('payments.')->group(function () {
         Route::patch('gateways/{gateway}/status', [PaymentGatewayController::class, 'updateStatus'])->name('gateways.update-status');
-        Route::resource('gateways', PaymentGatewayController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('gateways', PaymentGatewayController::class);
         Route::patch('transactions/{transaction}/status', [PaymentTransactionController::class, 'updateStatus'])->name('transactions.update-status');
         Route::resource('transactions', PaymentTransactionController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::patch('refunds/{refund}/status', [PaymentRefundController::class, 'updateStatus'])->name('refunds.update-status');
@@ -539,7 +539,8 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
     Route::post('sales/{sale}/void-request', [SaleController::class, 'requestVoid'])->name('sales.void-request');
     Route::patch('sales/void-requests/{voidRequest}', [SaleController::class, 'decideVoid'])->name('sales.void-decision');
     Route::get('/sales/reports', [SaleController::class, 'report'])->name('sales.reports.index');
-    Route::resource('sales', SaleController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+    Route::resource('sales', SaleController::class)->except('show');
+    Route::post('/sales/{sale}/receive-due', [SaleController::class, 'receiveDue'])->name('sales.receive-due');
 
     Route::prefix('cafeteria')->name('cafeteria.')->group(function () {
         Route::get('operations',[CafeteriaOperationsController::class,'index'])->name('operations');
@@ -552,10 +553,10 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
         Route::patch('operations/refunds/{refund}',[CafeteriaOperationsController::class,'refundDecision'])->name('refund.decision');
         Route::post('operations/cash-closing',[CafeteriaOperationsController::class,'closeCash'])->name('cash-closing');
         Route::patch('operations/foods/{food}/stock',[CafeteriaOperationsController::class,'stock'])->name('stock');
-        Route::resource('outlets', CafeteriaOutletController::class)->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('menu-items', FoodItemController::class)->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('orders', CafeteriaOrderController::class)->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('meal-payments', MealPaymentController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('outlets', CafeteriaOutletController::class);
+        Route::resource('menu-items', FoodItemController::class);
+        Route::resource('orders', CafeteriaOrderController::class);
+        Route::resource('meal-payments', MealPaymentController::class);
     });
 
     Route::prefix('medical')->name('medical.')->group(function () {
@@ -568,15 +569,15 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
         Route::post('operations/emergency',[MedicalOperationsController::class,'emergency'])->name('emergency');
         Route::post('operations/documents',[MedicalOperationsController::class,'document'])->name('documents');
         Route::get('operations/documents/{document}/download',[MedicalOperationsController::class,'download'])->name('documents.download');
-        Route::resource('rooms', MedicalRoomController::class)->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('visit-logs', VisitLogController::class)->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('health-records', HealthRecordController::class)->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('medicine-stock', MedicineStockController::class)->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('vaccinations', VaccinationController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('rooms', MedicalRoomController::class);
+        Route::resource('visit-logs', VisitLogController::class);
+        Route::resource('health-records', HealthRecordController::class);
+        Route::resource('medicine-stock', MedicineStockController::class);
+        Route::resource('vaccinations', VaccinationController::class);
     });
 
-    Route::resource('workflow-builder', FormBuilderController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
-    Route::resource('workflow-approvals', ApprovalWorkflowController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('workflow-builder', FormBuilderController::class);
+    Route::resource('workflow-approvals', ApprovalWorkflowController::class);
     Route::get('reporting-administration',[ReportingAdministrationController::class,'index'])->name('reporting-administration.index');
     Route::post('reporting-administration/reports',[ReportingAdministrationController::class,'report'])->name('reporting-administration.reports');
     Route::get('reporting-administration/reports/{report}/preview',[ReportingAdministrationController::class,'preview'])->name('reporting-administration.preview');
@@ -586,12 +587,12 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
     Route::post('reporting-administration/imports',[ReportingAdministrationController::class,'import'])->name('reporting-administration.imports');
     Route::post('reporting-administration/imports/{batch}/rollback',[ReportingAdministrationController::class,'rollback'])->name('reporting-administration.imports.rollback');
     Route::post('reporting-administration/kpis',[ReportingAdministrationController::class,'kpi'])->name('reporting-administration.kpis');
-    Route::resource('workflow-customfields', CustomFieldController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('workflow-customfields', CustomFieldController::class);
     Route::post('biometric-devices/{device}/sync', [BiometricDeviceController::class, 'sync'])->name('biometric-devices.sync');
     Route::post('biometric-devices/{device}/token', [BiometricDeviceController::class, 'token'])->name('biometric-devices.token');
     Route::post('biometric-devices/{device}/simulate', [BiometricDeviceController::class, 'simulate'])->name('biometric-devices.simulate');
-    Route::resource('biometric-devices', BiometricDeviceController::class)->only(['index', 'store', 'update', 'destroy']);
-    Route::resource('biometric-enrolledusers', BiometricEnrolledUserController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('biometric-devices', BiometricDeviceController::class);
+    Route::resource('biometric-enrolledusers', BiometricEnrolledUserController::class);
 
     Route::get('biometric-synclogs', [BiometricSyncLogController::class, 'index'])->name('biometric.synclogs');
     Route::get('security-logins', [SecurityLoginController::class, 'index'])->name('security.logins');
@@ -620,7 +621,7 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
         Route::post('/jobs/{id}/retry', [SecurityOperationsController::class, 'retryJob'])->name('jobs.retry');
         Route::get('/backup/{backup}/download', [SecurityOperationsController::class, 'download'])->name('backup.download');
     });
-    Route::resource('saas-tenants', SaasTenantController::class)->names('saas.tenants')->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('saas-tenants', SaasTenantController::class)->names('saas.tenants');
     Route::get('saas-control',[SaasControlController::class,'index'])->name('saas.control');
     Route::patch('saas-control/plans/{plan}',[SaasControlController::class,'planLimits'])->name('saas.plan-limits');
     Route::post('saas-control/provision',[SaasControlController::class,'provision'])->name('saas.provision');
@@ -631,22 +632,22 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
     Route::patch('saas-control/invoices/{invoice}/pay',[SaasControlController::class,'pay'])->name('saas.invoice.pay');
     Route::post('saas-control/tenants/{tenant}/backup',[SaasControlController::class,'backup'])->name('saas.tenant-backup');
     Route::delete('/saas-control/{tenant}', [SaasControlController::class, 'destroy'])->name('saas.destroy');
-    Route::resource('saas-plans', SaasPlanController::class)->names('saas.plans')->only(['index', 'store', 'update', 'destroy']);
-    Route::resource('saas-apikeys', SaasApiKeyController::class)->names('saas.apikeys')->only(['index', 'store', 'update', 'destroy']);
-    Route::resource('saas-ai', SaasAiAssistantController::class)->names('saas.ai')->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('saas-plans', SaasPlanController::class)->names('saas.plans');
+    Route::resource('saas-apikeys', SaasApiKeyController::class)->names('saas.apikeys');
+    Route::resource('saas-ai', SaasAiAssistantController::class)->names('saas.ai');
     Route::resource('saas-backups', SaasBackupController::class)->names('saas.backups')->only(['index', 'store', 'destroy']);
-    Route::resource('saas-tasks', SaasScheduledTaskController::class)->names('saas.tasks')->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('saas-tasks', SaasScheduledTaskController::class)->names('saas.tasks');
     Route::resource('saas-queue', SaasQueueMonitorController::class)->names('saas.queue')->only(['index', 'destroy']);
 
     Route::resource('study-materials', StudyMaterialController::class)->only(['index', 'store', 'destroy']);
     Route::get('study-materials/{id}/download', [StudyMaterialController::class, 'download'])->name('study-materials.download');
-    Route::resource('transport-routes', TransportRouteController::class)->names('transport.routes')->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('transport-routes', TransportRouteController::class)->names('transport.routes');
 
-    Route::resource('staff-loans', StaffLoanController::class)->only(['index', 'store', 'update', 'destroy']);
-    Route::resource('staff-appraisals', StaffAppraisalController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('staff-loans', StaffLoanController::class);
+    Route::resource('staff-appraisals', StaffAppraisalController::class);
     Route::resource('accounting/chart', AccountingChartController::class)->names('accounting.chart')->only(['index', 'store', 'update', 'destroy']);
     Route::resource('accounting/vouchers', AccountingVoucherController::class)->names('accounting.vouchers')->only(['index', 'store', 'destroy']);
-    Route::resource('hostel-fees', HostelFeeController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('hostel-fees', HostelFeeController::class);
 
     Route::get('email-logs', [EmailLogController::class, 'index'])->name('email-logs.index');
     Route::delete('email-logs/{id}', [EmailLogController::class, 'destroyLog'])->name('email-logs.destroy');

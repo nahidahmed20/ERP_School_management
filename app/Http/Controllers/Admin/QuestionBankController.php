@@ -39,7 +39,7 @@ class QuestionBankController extends Controller
         return Inertia::render('Admin/LMSQuestionBank/Index', [
             'questions' => $questions,
             'campuses' => Campus::select('id', 'name')->get(),
-            'classes' => SchoolClass::where('is_active', true)->select('id', 'name')->get(),
+            'classes' => SchoolClass::with('subjects')->where('is_active', true)->select('id', 'name')->get(),
             'subjects' => Subject::where('is_active', true)->select('id', 'name', 'code')->get(),
             'filters' => $request->only(['search', 'class_id', 'subject_id', 'per_page']),
         ]);
@@ -78,7 +78,7 @@ class QuestionBankController extends Controller
             'option_b' => 'nullable|string',
             'option_c' => 'nullable|string',
             'option_d' => 'nullable|string',
-            'correct_answer' => 'nullable|in:a,b,c,d',
+            'correct_answer' => 'nullable|in:a,b,c,d,True,False',
             'marks' => 'required|numeric|min:0',
             'explanation' => 'nullable|string',
             'is_active' => 'boolean',

@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\PaymentRefund;
 use App\Models\PaymentTransaction;
+use App\Models\Invoice;
+use App\Models\Payment;
 use App\Services\FeePaymentService;
 use App\Support\CampusRule;
 use Illuminate\Http\Request;
@@ -16,6 +18,7 @@ class PaymentRefundController extends Controller
 {
     public function index(Request $request)
     {
+        $this->campusId();
         $query = PaymentRefund::with('transaction');
 
         if ($search = $request->search) {
@@ -31,7 +34,8 @@ class PaymentRefundController extends Controller
 
         $refunds = $query->latest()->paginate(\App\Support\PerPage::resolve())->withQueryString();
         
-        $transactions = PaymentTransaction::where('status', 'Completed')->latest()->limit(50)->get();
+        $transactions = PaymentTransaction::where('status', 'Completed')
+            ->whereIn('source_type', [Payment::class, Invoice::class])->latest()->limit(50)->get();
 
         return Inertia::render('Admin/PaymentsRefunds/Index', [
             'refunds' => $refunds,
@@ -42,6 +46,7 @@ class PaymentRefundController extends Controller
 
     public function store(Request $request)
     {
+        $this->campusId();
         $request->validate([
             'payment_transaction_id' => ['required', CampusRule::exists('payment_transactions')],
             'amount' => 'required|numeric|min:1',
@@ -51,6 +56,7 @@ class PaymentRefundController extends Controller
 
         DB::transaction(function () use ($request) {
             $transaction = PaymentTransaction::lockForUpdate()->findOrFail($request->payment_transaction_id);
+            abort_unless(in_array($transaction->source_type, [Payment::class, Invoice::class], true), 422, 'Use the source workflow to reverse this transaction.');
             $this->assertRefundable($transaction, (float) $request->amount);
             $refund = PaymentRefund::create($request->only('payment_transaction_id','amount','reason','refund_date')+['campus_id'=>$transaction->campus_id,'status'=>'Pending','requested_by'=>$request->user()->id]);
             $this->syncTransactionStatus($refund->transaction);
@@ -61,6 +67,7 @@ class PaymentRefundController extends Controller
 
     public function update(Request $request, $id)
     {
+        $this->campusId();
         $refund = PaymentRefund::findOrFail($id);
         abort_unless($refund->status === 'Pending', 422, 'Only pending refunds can be edited.');
         
@@ -81,6 +88,7 @@ class PaymentRefundController extends Controller
 
     public function updateStatus(Request $request, $id, FeePaymentService $payments)
     {
+        $this->campusId();
         $request->validate(['status' => 'required|in:Pending,Approved,Refunded,Rejected']);
         
         $refund = PaymentRefund::findOrFail($id);
@@ -108,6 +116,7 @@ class PaymentRefundController extends Controller
 
     public function destroy($id)
     {
+        $this->campusId();
         $refund = PaymentRefund::findOrFail($id);
         abort_unless($refund->status === 'Pending',422,'Only pending refunds can be deleted.');
         abort_unless((int)$refund->requested_by === (int)auth()->id(),403,'Only the requester can delete this refund.');
@@ -130,5 +139,12 @@ class PaymentRefundController extends Controller
     {
         $refunded = (float) $transaction->fresh()->refunded_amount;
         $transaction->update(['status' => $refunded >= (float) $transaction->amount ? 'Refunded' : 'Completed']);
+    }
+
+    private function campusId(): int
+    {
+        $campusId = (int) config('app.active_campus_id');
+        abort_if(! $campusId, 422, 'Select a campus before managing refunds.');
+        return $campusId;
     }
 }

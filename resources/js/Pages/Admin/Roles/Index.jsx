@@ -104,10 +104,10 @@ export default function RoleIndex({ roles, permissions, filters }) {
 
       <div className="print-title">Role Management Directory - {new Date().toLocaleDateString('en-GB')}</div>
 
-      <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8 no-print">
+      <div className="w-full space-y-4 py-4 sm:space-y-6 sm:px-6 sm:py-6 lg:px-8 lg:py-8 no-print">
         
         {/* Page Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">Settings &amp; Registry</span>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Role Management</h1>
@@ -115,21 +115,21 @@ export default function RoleIndex({ roles, permissions, filters }) {
           </div>
           <button
             onClick={openCreate}
-            className="w-full sm:w-auto inline-flex justify-center items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md shadow-indigo-500/20 active:scale-95"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-indigo-500/20 transition-all active:scale-95 hover:bg-indigo-700 sm:w-auto sm:shrink-0"
           >
             <Icon name="plus" className="w-4 h-4" /> Add Role
           </button>
         </div>
 
         {/* Unified Modern Toolbar */}
-        <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
+        <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:gap-4 xl:flex-row xl:items-center xl:justify-between">
+          <div className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center xl:w-auto">
             
             {/* Per Page */}
             <select
               value={perPage}
               onChange={e => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}
-              className="appearance-none bg-none pr-3 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer text-center font-mono"
+              className="w-full cursor-pointer appearance-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 pr-3 text-center font-mono text-sm font-medium text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 sm:w-auto"
               style={{ backgroundImage: 'none' }}
             >
               <option value="10">10 / Page</option>
@@ -140,10 +140,10 @@ export default function RoleIndex({ roles, permissions, filters }) {
               <option value="all">All</option>
             </select>
 
-            <div className="hidden sm:block w-px h-6 bg-slate-200"></div>
+            <div className="hidden h-6 w-px bg-slate-200 sm:block"></div>
 
             {/* Search Input */}
-            <div className="relative flex-1 min-w-[200px] sm:w-80">
+            <div className="relative w-full min-w-0 sm:w-80 sm:flex-1 xl:flex-none">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Icon name="search" className="w-4 h-4 text-slate-400" />
               </div>
@@ -160,30 +160,30 @@ export default function RoleIndex({ roles, permissions, filters }) {
             {/* Apply Button */}
             <button
               onClick={() => applyFilters()}
-              className="w-full sm:w-auto px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
+              className="w-full rounded-xl bg-indigo-600 px-6 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 sm:w-auto"
             >
               Search
             </button>
           </div>
 
           {/* Export Actions */}
-          <div className="flex items-center justify-end gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-xl w-full xl:w-auto shadow-sm shrink-0 ml-auto">
-            <button onClick={copyToClipboard} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Copy to Clipboard">Copy</button>
-            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-            <button onClick={exportToCSV} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-emerald-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export CSV">CSV</button>
-            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-            <button onClick={() => alert('Backend Excel plugin needed')} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-green-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export Excel">Excel</button>
-            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-            <button onClick={() => alert('Backend PDF plugin needed')} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-rose-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export PDF">PDF</button>
-            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-            <button onClick={handlePrint} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-amber-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Print List">Print</button>
+          <div className="grid w-full grid-cols-2 gap-1.5 rounded-xl border border-slate-200 bg-slate-50 p-1 shadow-sm sm:flex sm:w-auto sm:items-center sm:justify-end sm:gap-1.5 xl:shrink-0">
+            <button onClick={copyToClipboard} className="flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-600 transition-all hover:bg-white hover:text-indigo-600 hover:shadow-sm sm:w-auto" title="Copy to Clipboard">Copy</button>
+            <div className="mx-0.5 hidden h-4 w-px bg-slate-200 sm:block"></div>
+            <button onClick={exportToCSV} className="flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-600 transition-all hover:bg-white hover:text-emerald-600 hover:shadow-sm sm:w-auto" title="Export CSV">CSV</button>
+            <div className="mx-0.5 hidden h-4 w-px bg-slate-200 sm:block"></div>
+            <button onClick={() => alert('Backend Excel plugin needed')} className="flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-600 transition-all hover:bg-white hover:text-green-600 hover:shadow-sm sm:w-auto" title="Export Excel">Excel</button>
+            <div className="mx-0.5 hidden h-4 w-px bg-slate-200 sm:block"></div>
+            <button onClick={() => alert('Backend PDF plugin needed')} className="flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-600 transition-all hover:bg-white hover:text-rose-600 hover:shadow-sm sm:w-auto" title="Export PDF">PDF</button>
+            <div className="mx-0.5 hidden h-4 w-px bg-slate-200 sm:block"></div>
+            <button onClick={handlePrint} className="flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-600 transition-all hover:bg-white hover:text-amber-600 hover:shadow-sm sm:w-auto" title="Print List">Print</button>
           </div>
         </div>
 
         {/* Main Table Card */}
         <div className="bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 print-table-wrapper">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+          <div className="hidden overflow-x-auto md:block print:block">
+            <table className="min-w-[720px] w-full border-collapse text-left">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50/50">
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider w-16">SL</th>
@@ -268,8 +268,84 @@ export default function RoleIndex({ roles, permissions, filters }) {
             </table>
           </div>
 
-          <div className="no-print border-t border-slate-100 bg-white px-6 py-4 rounded-b-2xl">
-            <Pagination meta={roles} />
+          {/* Cards keep every role action usable without horizontal scrolling on phones. */}
+          <div className="divide-y divide-slate-100 md:hidden print:hidden">
+            {roles.data.length === 0 ? (
+              <div className="px-4 py-12 text-center text-slate-500">
+                <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full border border-slate-100 bg-slate-50">
+                  <Icon name="shield" className="h-8 w-8 text-slate-300" />
+                </div>
+                <p className="text-sm font-semibold text-slate-600">কোনো Role পাওয়া যায়নি।</p>
+                <p className="mt-1 text-xs text-slate-400">Start by creating a new Role.</p>
+              </div>
+            ) : (
+              roles.data.map((role, index) => (
+                <article key={role.id} className="p-4 sm:p-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border shadow-sm ${role.name === 'Super Admin' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-slate-50 text-slate-500 border-slate-200'}`}>
+                        <Icon name="shield" className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <span className="block break-words text-sm font-bold text-slate-900">{role.name}</span>
+                        {role.name === 'Super Admin' ? (
+                          <span className="mt-1 inline-flex rounded bg-indigo-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-indigo-700">
+                            System Protected
+                          </span>
+                        ) : (
+                          <span className="mt-1 block text-xs font-medium text-slate-400">Role #{(roles.from ?? 1) + index}</span>
+                        )}
+                      </div>
+                    </div>
+                    <span className="shrink-0 text-xs font-medium text-slate-400">#{(roles.from ?? 1) + index}</span>
+                  </div>
+
+                  <div className="mt-4 flex flex-col gap-3 border-t border-slate-100 pt-4">
+                    <div>
+                      <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Permissions</p>
+                      {role.name === 'Super Admin' ? (
+                        <span className="inline-flex max-w-full items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-emerald-700">
+                          <Icon name="check-circle" className="h-3.5 w-3.5 shrink-0" />
+                          <span className="break-words">All Permissions</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex max-w-full items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-slate-700">
+                          <span className="h-2 w-2 shrink-0 rounded-full bg-indigo-500"></span>
+                          <span className="break-words">{role.permissions.length} Permissions Allowed</span>
+                        </span>
+                      )}
+                    </div>
+
+                    {role.name !== 'Super Admin' ? (
+                      <div className="flex w-full items-center gap-2">
+                        <button
+                          onClick={() => openEdit(role)}
+                          className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-700 transition-colors hover:bg-indigo-100"
+                        >
+                          <Icon name="edit" className="h-4 w-4" /> Edit
+                        </button>
+                        <button
+                          onClick={() => setDeletingItem(role)}
+                          className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-rose-100 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 transition-colors hover:bg-rose-100"
+                        >
+                          <Icon name="trash" className="h-4 w-4" /> Delete
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="inline-flex w-full items-center justify-center rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-xs font-bold italic text-slate-400">
+                        Locked
+                      </span>
+                    )}
+                  </div>
+                </article>
+              ))
+            )}
+          </div>
+
+          <div className="no-print rounded-b-2xl border-t border-slate-100 bg-white px-4 py-4 sm:px-6">
+            <div className="overflow-x-auto pb-1 sm:overflow-visible sm:pb-0">
+              <Pagination meta={roles} />
+            </div>
           </div>
         </div>
       </div>

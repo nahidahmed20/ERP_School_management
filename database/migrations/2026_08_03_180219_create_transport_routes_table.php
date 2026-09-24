@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('transport_routes', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('campus_id');
             $table->string('title');
             $table->string('start_point')->nullable();
             $table->string('end_point')->nullable();

@@ -21,10 +21,28 @@ export default function IssueFormModal({ item, books, users, campuses, activeCam
 
   const handleStatusChange = (e) => {
     const newStatus = e.target.value;
-    setData(data => ({
-      ...data,
+    const today = new Date().toISOString().split('T')[0];
+    
+    let newReturnDate = data.return_date;
+    let calculatedFine = data.fine_amount;
+
+    if (newStatus === 'Returned') {
+      newReturnDate = newReturnDate || today;
+      
+      if (data.due_date && new Date(newReturnDate) > new Date(data.due_date)) {
+        const diffTime = Math.abs(new Date(newReturnDate) - new Date(data.due_date));
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        calculatedFine = diffDays * 10; 
+      } else {
+        calculatedFine = 0; 
+      }
+    }
+
+    setData(prev => ({
+      ...prev,
       status: newStatus,
-      return_date: newStatus === 'Returned' && !data.return_date ? new Date().toISOString().split('T')[0] : data.return_date
+      return_date: newReturnDate,
+      fine_amount: calculatedFine
     }));
   };
 
@@ -39,15 +57,12 @@ export default function IssueFormModal({ item, books, users, campuses, activeCam
   const labelClass = "block text-sm font-semibold text-slate-700 mb-1.5";
 
   return (
-    // Responsive Overlay
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
 
-      {/* Responsive Modal Box */}
       <div
-        className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+        className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0 rounded-t-2xl">
           <div>
             <h3 className="text-xl font-bold text-slate-900">{isEdit ? 'Edit/Return Book' : 'Issue New Book'}</h3>
@@ -58,7 +73,6 @@ export default function IssueFormModal({ item, books, users, campuses, activeCam
           </button>
         </div>
 
-        {/* Form Body (Scrollable) */}
         <form onSubmit={submit} className="flex flex-col flex-1 overflow-hidden">
           <div className="p-6 overflow-y-auto space-y-5 flex-1 custom-scrollbar">
 
@@ -130,7 +144,7 @@ export default function IssueFormModal({ item, books, users, campuses, activeCam
 
               <div>
                 <label className={labelClass}>Status <span className="text-rose-500">*</span></label>
-                <select value={data.status} onChange={handleStatusChange} required className={`${inputClass} bg-white`}>
+                <select value={data.status} onChange={handleStatusChange} required className={`${inputClass} bg-white font-bold text-indigo-700`}>
                   <option value="Issued">Issued (Not Returned)</option>
                   <option value="Returned">Returned</option>
                   <option value="Overdue">Overdue</option>
@@ -145,7 +159,7 @@ export default function IssueFormModal({ item, books, users, campuses, activeCam
                   value={data.return_date || ''}
                   onChange={(e) => setData('return_date', e.target.value)}
                   disabled={data.status === 'Issued'}
-                  className={`${inputClass} font-mono ${data.status === 'Issued' ? 'bg-slate-100 opacity-70' : 'bg-white'}`}
+                  className={`${inputClass} font-mono ${data.status === 'Issued' ? 'bg-slate-100 opacity-70 cursor-not-allowed' : 'bg-white'}`}
                 />
               </div>
 
@@ -157,7 +171,7 @@ export default function IssueFormModal({ item, books, users, campuses, activeCam
                   onChange={(e) => setData('fine_amount', e.target.value)}
                   min="0"
                   step="0.01"
-                  className={`${inputClass} font-mono font-bold text-rose-600`}
+                  className={`${inputClass} font-mono font-bold ${Number(data.fine_amount) > 0 ? 'text-rose-600 bg-rose-50' : 'text-slate-700'}`}
                 />
               </div>
 
@@ -175,7 +189,6 @@ export default function IssueFormModal({ item, books, users, campuses, activeCam
             </div>
           </div>
 
-          {/* Footer - Stacked on Mobile, Row on Desktop */}
           <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex flex-col-reverse sm:flex-row items-center justify-end gap-3 shrink-0 rounded-b-2xl">
             <button type="button" onClick={onClose} disabled={processing} className="w-full sm:w-auto px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-all shadow-sm">
               Cancel

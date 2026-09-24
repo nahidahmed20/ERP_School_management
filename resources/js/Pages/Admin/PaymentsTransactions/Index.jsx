@@ -8,7 +8,7 @@ import ShowModal from './Partials/ShowModal';
 import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 import Swal from 'sweetalert2';
 
-export default function Index({ transactions, gateways, filters }) {
+export default function Index({ transactions, gateways, accounts, filters }) {
   const { flash } = usePage().props;
 
   const [search, setSearch] = useState(filters.search ?? '');
@@ -288,7 +288,7 @@ export default function Index({ transactions, gateways, filters }) {
         </div>
       </div>
 
-      {formOpen && <FormModal item={editingItem} gateways={gateways} onClose={() => setFormOpen(false)} />}
+      {formOpen && <FormModal item={editingItem} gateways={gateways} accounts={accounts} onClose={() => setFormOpen(false)} />}
       {showItem && <ShowModal item={showItem} onClose={() => setShowItem(null)} />}
 
       {deleteId && (

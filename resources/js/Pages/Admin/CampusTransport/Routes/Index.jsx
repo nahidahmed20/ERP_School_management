@@ -85,7 +85,7 @@ export default function Index({ routes, filters }) {
           <div>
             <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">Campus Life &gt; Transport</span>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Routes &amp; Stops</h1>
-            <p className="text-sm text-slate-500 mt-1">স্কুল বাস বা ট্রান্সপোর্টের রুট, স্টপেজ এবং ভাড়ার তালিকা পরিচালনা করুন।</p>
+            <p className="text-sm text-slate-500 mt-1">স্কুল বাস বা ট্রান্সপোর্টের রুট, স্টপেজ এবং ভাড়ার তালিকা পরিচালনা করুন।</p>
           </div>
           <button
             onClick={() => { setEditingItem(null); setIsFormOpen(true); }}
@@ -99,7 +99,6 @@ export default function Index({ routes, filters }) {
         <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
 
-            {/* Per Page */}
             <select
               value={perPage}
               onChange={e => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}
@@ -114,7 +113,6 @@ export default function Index({ routes, filters }) {
 
             <div className="hidden sm:block w-px h-6 bg-slate-200"></div>
 
-            {/* Search Input */}
             <div className="relative flex-1 min-w-[200px] sm:w-80">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Icon name="search" className="w-4 h-4 text-slate-400" />
@@ -129,7 +127,6 @@ export default function Index({ routes, filters }) {
               />
             </div>
 
-            {/* Apply Button */}
             <button
               onClick={() => applyFilters()}
               className="w-full sm:w-auto px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
@@ -138,7 +135,6 @@ export default function Index({ routes, filters }) {
             </button>
           </div>
 
-          {/* Export Actions */}
           <div className="flex items-center justify-end gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-xl w-full xl:w-auto shadow-sm shrink-0 ml-auto">
             <button onClick={copyToClipboard} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Copy to Clipboard">
               Copy

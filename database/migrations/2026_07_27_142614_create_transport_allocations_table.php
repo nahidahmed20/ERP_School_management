@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('campus_id')->nullable();
             $table->unsignedBigInteger('vehicle_id');
             $table->unsignedBigInteger('user_id'); 
-            $table->string('pickup_point'); // কোথা থেকে গাড়িতে উঠবে
+            $table->string('pickup_point'); 
             $table->decimal('monthly_fare', 10, 2)->default(0.00);
             $table->boolean('is_active')->default(true);
             $table->timestamps();

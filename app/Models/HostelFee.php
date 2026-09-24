@@ -1,10 +1,12 @@
 <?php
 namespace App\Models;
+
+use App\Traits\BelongsToCampusThrough;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class HostelFee extends Model {
-    use HasFactory;
+    use BelongsToCampusThrough, HasFactory;
     
     protected $fillable = [
         'student_id', 'hostel_room_id', 'amount', 'month', 
@@ -21,5 +23,10 @@ class HostelFee extends Model {
 
     public function room() {
         return $this->belongsTo(HostelRoom::class, 'hostel_room_id');
+    }
+
+    protected function campusOwnershipRelation(): string
+    {
+        return 'student';
     }
 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Lesson;
 use App\Models\Course;
 use App\Models\Campus;
+use App\Models\SchoolClass; 
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
@@ -19,8 +20,22 @@ class LessonController extends Controller
         if ($search = $request->get('search')) {
             $query->where('title', 'like', "%{$search}%");
         }
+
+        // Course Filter
         if ($request->filled('course_id')) {
             $query->where('course_id', $request->get('course_id'));
+        }
+
+        if ($request->filled('class_id')) {
+            $query->whereHas('course', function($q) use ($request) {
+                $q->where('school_class_id', $request->get('class_id'));
+            });
+        }
+
+        if ($request->filled('subject_id')) {
+            $query->whereHas('course', function($q) use ($request) {
+                $q->where('subject_id', $request->get('subject_id'));
+            });
         }
 
         $query->latest();
@@ -33,8 +48,9 @@ class LessonController extends Controller
         return Inertia::render('Admin/LMSLessons/Index', [
             'lessons' => $lessons,
             'campuses' => Campus::select('id', 'name')->get(),
-            'courses' => Course::where('is_active', true)->select('id', 'title')->get(),
-            'filters' => $request->only(['search', 'course_id', 'per_page']),
+            'classes' => SchoolClass::with('subjects')->where('is_active', true)->select('id', 'name')->get(),
+            'courses' => Course::where('is_active', true)->select('id', 'title', 'school_class_id', 'subject_id')->get(),
+            'filters' => $request->only(['search', 'course_id', 'class_id', 'subject_id', 'per_page']),
         ]);
     }
 

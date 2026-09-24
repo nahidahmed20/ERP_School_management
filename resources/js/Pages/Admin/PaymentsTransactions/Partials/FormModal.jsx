@@ -1,7 +1,7 @@
 import { useForm, router } from '@inertiajs/react';
 import Icon from '@/Components/Icons';
 
-export default function FormModal({ item, gateways, onClose }) {
+export default function FormModal({ item, gateways, accounts, onClose }) {
   const isEdit = !!item;
 
   const { data, setData, post, put, processing, errors, reset } = useForm({
@@ -11,6 +11,7 @@ export default function FormModal({ item, gateways, onClose }) {
     amount: item?.amount || '',
     currency: item?.currency || 'BDT',
     payment_method: item?.payment_method || '',
+    account_id: item?.account_id || '',
     status: item?.status || 'Completed',
     transaction_date: item?.transaction_date || new Date().toISOString().split('T')[0],
     note: item?.note || '',
@@ -101,6 +102,15 @@ export default function FormModal({ item, gateways, onClose }) {
                 />
               </div>
 
+              <div>
+                <label className={labelClass}>Settlement Account <span className="text-rose-500">*</span></label>
+                <select value={data.account_id} onChange={(e) => setData('account_id', e.target.value)} required className={inputClass}>
+                  <option value="" disabled>-- Select account --</option>
+                  {accounts.map(account => <option key={account.id} value={account.id}>{account.code} — {account.name}</option>)}
+                </select>
+                {errors.account_id && <p className="text-rose-500 text-xs mt-1">{errors.account_id}</p>}
+              </div>
+
               <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-5 p-5 bg-slate-50 border border-slate-200 rounded-2xl">
                 <div>
                   <label className={labelClass}>Amount <span className="text-rose-500">*</span></label>
@@ -123,15 +133,7 @@ export default function FormModal({ item, gateways, onClose }) {
                   />
                 </div>
 
-                <div>
-                  <label className={labelClass}>Status <span className="text-rose-500">*</span></label>
-                  <select value={data.status} onChange={(e) => setData('status', e.target.value)} required className={`${inputClass} bg-white`}>
-                    <option value="Pending">Pending</option>
-                    <option value="Completed">Completed</option>
-                    <option value="Failed">Failed</option>
-                    <option value="Refunded">Refunded</option>
-                  </select>
-                </div>
+                <div className="flex items-end pb-2 text-sm text-slate-500">New manual transactions are saved as <strong className="ml-1 text-amber-700">Pending</strong>.</div>
               </div>
 
               <div className="sm:col-span-2">

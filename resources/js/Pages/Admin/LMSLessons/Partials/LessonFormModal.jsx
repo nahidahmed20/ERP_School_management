@@ -2,21 +2,29 @@ import { useForm, usePage } from '@inertiajs/react';
 import WorkingCampusField from '@/Components/WorkingCampusField';
 import Icon from '@/Components/Icons';
 
-export default function LessonFormModal({ item, courses, campuses, activeCampusId, onClose }) {
+export default function LessonFormModal({ item, courses, classes, campuses, activeCampusId, onClose }) {
   const isEdit = !!item;
   const { auth } = usePage().props;
   const isSuperAdmin = auth?.user?.role === 'super_admin' || auth?.user?.roles?.some(r => r.name === 'Super Admin');
 
   const { data, setData, post, processing, errors, reset } = useForm({
     campus_id: item?.campus_id ?? auth?.active_campus_id ?? activeCampusId ?? '',
+    school_class_id: item?.course?.school_class_id ?? '',
+    subject_id: item?.course?.subject_id ?? '',
     course_id: item?.course_id ?? '',
     title: item?.title ?? '',
     description: item?.description ?? '',
     video_url: item?.video_url ?? '',
     document: null,
     is_active: item?.is_active ?? true,
-    _method: isEdit ? 'put' : 'post', 
+    _method: isEdit ? 'put' : 'post',
   });
+
+  const availableSubjects = data.school_class_id ? classes?.find(c => c.id == data.school_class_id)?.subjects || [] : [];
+
+  let availableCourses = courses;
+  if (data.school_class_id) availableCourses = availableCourses.filter(c => c.school_class_id == data.school_class_id);
+  if (data.subject_id) availableCourses = availableCourses.filter(c => c.subject_id == data.subject_id);
 
   function submit(e) {
     e.preventDefault();
@@ -35,9 +43,9 @@ export default function LessonFormModal({ item, courses, campuses, activeCampusI
   return (
     // Responsive Overlay
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
-      
+
       {/* Responsive Modal Box */}
-      <div 
+      <div
         className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
@@ -57,9 +65,9 @@ export default function LessonFormModal({ item, courses, campuses, activeCampusI
         {/* Form Body (Scrollable) */}
         <form onSubmit={submit} className="flex flex-col flex-1 overflow-hidden" encType="multipart/form-data">
           <div className="p-6 overflow-y-auto space-y-5 flex-1 custom-scrollbar">
-            
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              
+
               {/* Campus Selection */}
               <div className="sm:col-span-2">
                 <label className={labelClass}>Campus <span className="text-rose-500">*</span></label>
@@ -67,17 +75,44 @@ export default function LessonFormModal({ item, courses, campuses, activeCampusI
                 {errors.campus_id && <p className="text-rose-500 text-xs mt-1">{errors.campus_id}</p>}
               </div>
 
+              {/* Class Filter (Optional helper) */}
+              <div>
+                <label className={labelClass}>Filter by Class <span className="text-slate-400 font-normal">(Optional)</span></label>
+                <select
+                  value={data.school_class_id}
+                  onChange={(e) => setData({ ...data, school_class_id: e.target.value, subject_id: '', course_id: '' })}
+                  className={`${inputClass} bg-white`}
+                >
+                  <option value="">-- Any Class --</option>
+                  {classes?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
+
+              {/* Subject Filter (Optional helper) */}
+              <div>
+                <label className={labelClass}>Filter by Subject <span className="text-slate-400 font-normal">(Optional)</span></label>
+                <select
+                  value={data.subject_id}
+                  onChange={(e) => setData({ ...data, subject_id: e.target.value, course_id: '' })}
+                  className={`${inputClass} bg-white`}
+                  disabled={!data.school_class_id}
+                >
+                  <option value="">{data.school_class_id ? '-- Any Subject --' : 'Select Class First'}</option>
+                  {availableSubjects?.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+              </div>
+
               {/* Course Selection */}
               <div className="sm:col-span-2">
                 <label className={labelClass}>Select Course <span className="text-rose-500">*</span></label>
-                <select 
-                  value={data.course_id} 
+                <select
+                  value={data.course_id}
                   onChange={(e) => setData('course_id', e.target.value)}
                   className={`${inputClass} bg-white`}
                   required
                 >
                   <option value="" disabled>-- Choose Course --</option>
-                  {courses?.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+                  {availableCourses?.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
                 </select>
                 {errors.course_id && <p className="text-rose-500 text-xs mt-1">{errors.course_id}</p>}
               </div>
@@ -85,13 +120,13 @@ export default function LessonFormModal({ item, courses, campuses, activeCampusI
               {/* Lesson Title */}
               <div className="sm:col-span-2">
                 <label className={labelClass}>Lesson Title <span className="text-rose-500">*</span></label>
-                <input 
-                  value={data.title} 
-                  onChange={(e) => setData('title', e.target.value)} 
-                  autoFocus 
-                  placeholder="e.g. Chapter 1: Introduction to Mechanics" 
+                <input
+                  value={data.title}
+                  onChange={(e) => setData('title', e.target.value)}
+                  autoFocus
+                  placeholder="e.g. Chapter 1: Introduction to Mechanics"
                   className={inputClass}
-                  required 
+                  required
                 />
                 {errors.title && <p className="text-rose-500 text-xs mt-1">{errors.title}</p>}
               </div>
@@ -103,11 +138,11 @@ export default function LessonFormModal({ item, courses, campuses, activeCampusI
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                     <Icon name="play-circle" className="w-4 h-4 text-slate-400" />
                   </div>
-                  <input 
-                    type="url" 
-                    value={data.video_url} 
-                    onChange={(e) => setData('video_url', e.target.value)} 
-                    placeholder="https://youtube.com/watch?v=..." 
+                  <input
+                    type="url"
+                    value={data.video_url}
+                    onChange={(e) => setData('video_url', e.target.value)}
+                    placeholder="https://youtube.com/watch?v=..."
                     className={`${inputClass} pl-10`}
                   />
                 </div>
@@ -118,10 +153,10 @@ export default function LessonFormModal({ item, courses, campuses, activeCampusI
               <div className="sm:col-span-2">
                 <label className={labelClass}>Upload PDF / Document Material <span className="text-slate-400 font-normal">(Optional)</span></label>
                 <div className="relative">
-                  <input 
-                    type="file" 
-                    accept=".pdf,.doc,.docx,.ppt,.pptx,.zip" 
-                    onChange={(e) => setData('document', e.target.files[0])} 
+                  <input
+                    type="file"
+                    accept=".pdf,.doc,.docx,.ppt,.pptx,.zip"
+                    onChange={(e) => setData('document', e.target.files[0])}
                     className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition-all border border-slate-200 rounded-xl bg-slate-50 cursor-pointer"
                   />
                 </div>
@@ -136,11 +171,11 @@ export default function LessonFormModal({ item, courses, campuses, activeCampusI
               {/* Description */}
               <div className="sm:col-span-2">
                 <label className={labelClass}>Description / Reading Text</label>
-                <textarea 
-                  rows="3" 
-                  value={data.description} 
-                  onChange={(e) => setData('description', e.target.value)} 
-                  placeholder="Lesson details, text materials or notes..." 
+                <textarea
+                  rows="3"
+                  value={data.description}
+                  onChange={(e) => setData('description', e.target.value)}
+                  placeholder="Lesson details, text materials or notes..."
                   className={`${inputClass} resize-none`}
                 />
               </div>

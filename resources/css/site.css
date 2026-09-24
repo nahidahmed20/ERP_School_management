@@ -1940,9 +1940,8 @@ html {
     color: #42534b
 }
 
-.sf-nav nav>a.active,
-.sf-nav nav>a:hover {
-    color: var(--sf-primary)
+.sf-nav nav>a.active{
+    color: #2d915f;
 }
 
 .sf-nav .sf-login {
@@ -1950,6 +1949,9 @@ html {
     border-radius: 12px;
     background: var(--sf-primary);
     color: #fff
+}
+.sf-nav nav>a:hover {
+    color: #04b65d;
 }
 
 /* Mobile Menu Button */

@@ -23,6 +23,10 @@ export default function QuestionFormModal({ item, classes, subjects, campuses, a
     is_active: item?.is_active ?? true,
   });
 
+  const availableSubjects = data.school_class_id
+    ? classes?.find(c => c.id == data.school_class_id)?.subjects || []
+    : [];
+
   function submit(e) {
     e.preventDefault();
     const options = { onSuccess: () => { reset(); onClose(); } };
@@ -34,15 +38,11 @@ export default function QuestionFormModal({ item, classes, subjects, campuses, a
   const labelClass = "block text-sm font-semibold text-slate-700 mb-1.5";
 
   return (
-    // Responsive Overlay
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
-      
-      {/* Responsive Modal Box */}
-      <div 
-        className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200"
+      <div
+        className="w-full max-w-3xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Modal Header */}
         <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0 rounded-t-2xl">
           <div>
             <h3 className="text-xl font-bold text-slate-900">{isEdit ? 'Edit Question' : 'Add New Question'}</h3>
@@ -53,23 +53,25 @@ export default function QuestionFormModal({ item, classes, subjects, campuses, a
           </button>
         </div>
 
-        {/* Form Body (Scrollable) */}
         <form onSubmit={submit} className="flex flex-col flex-1 overflow-hidden">
-          <div className="p-6 overflow-y-auto space-y-5 flex-1 custom-scrollbar">
-            
+          <div className="p-6 overflow-y-auto space-y-6 flex-1 custom-scrollbar">
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              
-              {/* Campus Selection */}
+
               <div className="sm:col-span-2">
                 <label className={labelClass}>Campus <span className="text-rose-500">*</span></label>
                 <WorkingCampusField value={data.campus_id} campuses={campuses} className={`${inputClass} ${!isSuperAdmin ? 'bg-slate-100 opacity-70' : 'bg-white'}`} />
                 {errors.campus_id && <p className="text-rose-500 text-xs mt-1">{errors.campus_id}</p>}
               </div>
 
-              {/* Class & Subject */}
               <div>
                 <label className={labelClass}>Target Class <span className="text-rose-500">*</span></label>
-                <select value={data.school_class_id} onChange={(e) => setData('school_class_id', e.target.value)} required className={`${inputClass} bg-white`}>
+                <select
+                  value={data.school_class_id}
+                  onChange={(e) => setData({ ...data, school_class_id: e.target.value, subject_id: '' })}
+                  required
+                  className={`${inputClass} bg-white`}
+                >
                   <option value="" disabled>Select Class</option>
                   {classes?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
@@ -78,31 +80,47 @@ export default function QuestionFormModal({ item, classes, subjects, campuses, a
 
               <div>
                 <label className={labelClass}>Subject <span className="text-rose-500">*</span></label>
-                <select value={data.subject_id} onChange={(e) => setData('subject_id', e.target.value)} required className={`${inputClass} bg-white`}>
-                  <option value="" disabled>Select Subject</option>
-                  {subjects?.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                <select
+                  value={data.subject_id}
+                  onChange={(e) => setData('subject_id', e.target.value)}
+                  required
+                  className={`${inputClass} bg-white`}
+                  disabled={!data.school_class_id}
+                >
+                  <option value="" disabled>
+                    {data.school_class_id ? "Select Subject" : "Select Class First"}
+                  </option>
+                  {availableSubjects?.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
                 {errors.subject_id && <p className="text-rose-500 text-xs mt-1">{errors.subject_id}</p>}
               </div>
 
-              {/* Question Text */}
               <div className="sm:col-span-2">
                 <label className={labelClass}>Question Details <span className="text-rose-500">*</span></label>
-                <textarea 
-                  rows="3" 
-                  value={data.question} 
-                  onChange={(e) => setData('question', e.target.value)} 
-                  required 
-                  placeholder="Type your question here..." 
-                  className={`${inputClass} resize-none font-medium`} 
+                <textarea
+                  rows="3"
+                  value={data.question}
+                  onChange={(e) => setData('question', e.target.value)}
+                  required
+                  placeholder="Type your question here..."
+                  className={`${inputClass} resize-none font-medium text-slate-800`}
                 />
                 {errors.question && <p className="text-rose-500 text-xs mt-1">{errors.question}</p>}
               </div>
 
-              {/* Type & Marks */}
               <div>
                 <label className={labelClass}>Question Type</label>
-                <select value={data.question_type} onChange={(e) => setData('question_type', e.target.value)} className={`${inputClass} bg-white`}>
+                <select
+                  value={data.question_type}
+                  onChange={(e) => {
+                    setData({
+                      ...data,
+                      question_type: e.target.value,
+                      correct_answer: e.target.value === 'MCQ' ? 'a' : 'True'
+                    });
+                  }}
+                  className={`${inputClass} bg-white`}
+                >
                   <option value="MCQ">Multiple Choice (MCQ)</option>
                   <option value="True/False">True / False</option>
                 </select>
@@ -110,36 +128,42 @@ export default function QuestionFormModal({ item, classes, subjects, campuses, a
 
               <div>
                 <label className={labelClass}>Marks <span className="text-rose-500">*</span></label>
-                <input 
-                  type="number" 
-                  value={data.marks} 
-                  onChange={(e) => setData('marks', e.target.value)} 
-                  min="0.1" 
-                  step="0.1" 
-                  required 
-                  className={`${inputClass} font-mono font-bold text-emerald-600`} 
+                <input
+                  type="number"
+                  value={data.marks}
+                  onChange={(e) => setData('marks', e.target.value)}
+                  min="0.1"
+                  step="0.1"
+                  required
+                  className={`${inputClass} font-mono font-bold text-emerald-600`}
                 />
               </div>
 
-              {/* MCQ Options Block */}
+              {/* MCQ Options Block - Premium Design */}
               {data.question_type === 'MCQ' && (
-                <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-inner">
-                  <div className="sm:col-span-2 font-bold text-slate-800 text-sm border-b border-slate-200 pb-2 mb-2">MCQ Options:</div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Option A</label>
-                    <input value={data.option_a} onChange={(e) => setData('option_a', e.target.value)} placeholder="A" className={inputClass} />
+                <div className="sm:col-span-2 bg-slate-50/80 p-5 rounded-2xl border border-slate-200">
+                  <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-200">
+                    <span className="font-bold text-slate-800 text-sm flex items-center gap-2">
+                      <Icon name="list" className="w-4 h-4 text-indigo-500" /> Options Setup
+                    </span>
                   </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Option B</label>
-                    <input value={data.option_b} onChange={(e) => setData('option_b', e.target.value)} placeholder="B" className={inputClass} />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Option C</label>
-                    <input value={data.option_c} onChange={(e) => setData('option_c', e.target.value)} placeholder="C" className={inputClass} />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Option D</label>
-                    <input value={data.option_d} onChange={(e) => setData('option_d', e.target.value)} placeholder="D" className={inputClass} />
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {['a', 'b', 'c', 'd'].map((opt) => (
+                      <div key={opt} className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <span className="w-6 h-6 flex items-center justify-center rounded bg-indigo-100 text-indigo-700 font-bold text-xs">
+                            {opt.toUpperCase()}
+                          </span>
+                        </div>
+                        <input
+                          value={data[`option_${opt}`]}
+                          onChange={(e) => setData(`option_${opt}`, e.target.value)}
+                          placeholder={`Enter option ${opt.toUpperCase()}...`}
+                          className={`${inputClass} pl-12 bg-white`}
+                        />
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
@@ -147,7 +171,12 @@ export default function QuestionFormModal({ item, classes, subjects, campuses, a
               {/* Correct Answer Dropdown */}
               <div className="sm:col-span-2">
                 <label className={labelClass}>Correct Answer <span className="text-rose-500">*</span></label>
-                <select value={data.correct_answer} onChange={(e) => setData('correct_answer', e.target.value)} required className={`${inputClass} bg-indigo-50 font-bold text-indigo-700 border-indigo-200`}>
+                <select
+                  value={data.correct_answer}
+                  onChange={(e) => setData('correct_answer', e.target.value)}
+                  required
+                  className={`${inputClass} bg-emerald-50/50 font-bold text-emerald-700 border-emerald-200 focus:ring-emerald-500`}
+                >
                   {data.question_type === 'MCQ' ? (
                     <>
                       <option value="a">Option A</option>
@@ -167,12 +196,12 @@ export default function QuestionFormModal({ item, classes, subjects, campuses, a
               {/* Explanation */}
               <div className="sm:col-span-2">
                 <label className={labelClass}>Explanation (Optional)</label>
-                <textarea 
-                  rows="2" 
-                  value={data.explanation} 
-                  onChange={(e) => setData('explanation', e.target.value)} 
-                  placeholder="Explain why this answer is correct..." 
-                  className={`${inputClass} resize-none`} 
+                <textarea
+                  rows="2"
+                  value={data.explanation}
+                  onChange={(e) => setData('explanation', e.target.value)}
+                  placeholder="Explain why this answer is correct..."
+                  className={`${inputClass} resize-none`}
                 />
               </div>
 
@@ -184,7 +213,7 @@ export default function QuestionFormModal({ item, classes, subjects, campuses, a
                       type="checkbox"
                       checked={data.is_active}
                       onChange={(e) => setData('is_active', e.target.checked)}
-                      className="peer appearance-none w-5 h-5 border-2 border-slate-300 rounded focus:ring-0 checked:bg-emerald-600 checked:border-emerald-600 cursor-pointer transition-colors"
+                      className="peer appearance-none w-5 h-5 border-2 border-slate-300 rounded focus:ring-0 checked:bg-indigo-600 checked:border-indigo-600 cursor-pointer transition-colors"
                     />
                     <svg className="absolute w-3.5 h-3.5 top-[3px] left-[3px] text-white pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -197,7 +226,6 @@ export default function QuestionFormModal({ item, classes, subjects, campuses, a
             </div>
           </div>
 
-          {/* Modal Footer */}
           <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex flex-col-reverse sm:flex-row items-center justify-end gap-3 shrink-0 rounded-b-2xl">
             <button type="button" onClick={onClose} disabled={processing} className="w-full sm:w-auto px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 hover:text-slate-800 rounded-xl transition-all shadow-sm">
               Cancel

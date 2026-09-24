@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\BookIssue;
 use App\Models\Book;
 use App\Models\User;
+use App\Models\Student; 
 use App\Models\Campus;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -37,11 +38,21 @@ class BookIssueController extends Controller
             ? ['data' => $query->get(), 'links' => [], 'meta' => ['total' => $query->count()]]
             : $query->paginate((int) $perPage)->withQueryString();
 
+        $activeCampusId = config('app.active_campus_id');
+
+        $studentUserIds = Student::where('campus_id', $activeCampusId)
+                                 ->whereNotNull('user_id')
+                                 ->pluck('user_id');
+
+        $filteredUsers = User::whereIn('id', $studentUserIds)
+                             ->select('id', 'name', 'email')
+                             ->get();
+
         return Inertia::render('Admin/LibraryIssues/Index', [
             'issues' => $issues,
             'campuses' => Campus::select('id', 'name')->get(),
             'books' => Book::select('id', 'title', 'isbn_no', 'available')->get(),
-            'users' => User::select('id', 'name', 'email')->get(), 
+            'users' => $filteredUsers, 
             'filters' => $request->only(['search', 'status', 'per_page']),
         ]);
     }
@@ -64,10 +75,10 @@ class BookIssueController extends Controller
             }
 
             DB::commit();
-            return back()->with('success', 'বই ইস্যু সফলভাবে সম্পন্ন হয়েছে।');
+            return back()->with('success', 'বই ইস্যু সফলভাবে সম্পন্ন হয়েছে।');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'কোথাও একটি সমস্যা হয়েছে!');
+            return back()->with('error', 'কোথাও একটি সমস্যা হয়েছে!');
         }
     }
 
@@ -92,7 +103,7 @@ class BookIssueController extends Controller
             return back()->with('success', 'ইস্যুর তথ্য আপডেট করা হয়েছে।');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'কোথাও একটি সমস্যা হয়েছে!');
+            return back()->with('error', 'কোথাও একটি সমস্যা হয়েছে!');
         }
     }
 
@@ -110,7 +121,14 @@ class BookIssueController extends Controller
     {
         return $request->validate([
             'campus_id' => 'required|exists:campuses,id',
-            'book_id' => ['required', CampusRule::exists('books')],
+            'book_id' => [
+                'required',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (! Book::whereKey($value)->exists()) {
+                        $fail('The selected book is not available.');
+                    }
+                },
+            ],
             'user_id' => ['required', CampusRule::exists('users')],
             'issue_date' => 'required|date',
             'due_date' => 'required|date|after_or_equal:issue_date',

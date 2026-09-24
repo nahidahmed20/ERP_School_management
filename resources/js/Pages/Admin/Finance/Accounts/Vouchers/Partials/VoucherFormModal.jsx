@@ -33,6 +33,12 @@ export default function VoucherFormModal({ accounts, onClose }) {
   };
 
   const notice = getVoucherNotice();
+  const allowedAccounts = (side) => {
+    if (data.voucher_type === 'Receipt') return accounts.filter(a => side === 'debit' ? a.type === 'Asset' : ['Income', 'Liability', 'Equity'].includes(a.type));
+    if (data.voucher_type === 'Payment') return accounts.filter(a => side === 'debit' ? ['Expense', 'Liability', 'Equity'].includes(a.type) : a.type === 'Asset');
+    if (data.voucher_type === 'Contra') return accounts.filter(a => a.type === 'Asset');
+    return accounts;
+  };
 
   return (
     // Responsive Overlay
@@ -83,7 +89,11 @@ export default function VoucherFormModal({ accounts, onClose }) {
                 <label className={labelClass}>Voucher Type <span className="text-rose-500">*</span></label>
                 <select
                   value={data.voucher_type}
-                  onChange={e => setData('voucher_type', e.target.value)}
+                  onChange={e => {
+                    setData('voucher_type', e.target.value);
+                    setData('debit_account_id', '');
+                    setData('credit_account_id', '');
+                  }}
                   required
                   className={inputClass}
                 >
@@ -103,8 +113,8 @@ export default function VoucherFormModal({ accounts, onClose }) {
                   className={`${inputClass} border-indigo-200 bg-indigo-50/30`}
                 >
                   <option value="" disabled>-- Select Debit Account --</option>
-                  {accounts.map(a => (
-                    <option key={a.id} value={a.id}>{a.name} ({a.type})</option>
+                  {allowedAccounts('debit').map(a => (
+                    <option key={a.id} value={a.id}>{a.code} — {a.name} ({a.type})</option>
                   ))}
                 </select>
                 {errors.debit_account_id && <p className="text-rose-500 text-xs mt-1">{errors.debit_account_id}</p>}
@@ -119,8 +129,8 @@ export default function VoucherFormModal({ accounts, onClose }) {
                   className={`${inputClass} border-amber-200 bg-amber-50/30`}
                 >
                   <option value="" disabled>-- Select Credit Account --</option>
-                  {accounts.map(a => (
-                    <option key={a.id} value={a.id}>{a.name} ({a.type})</option>
+                  {allowedAccounts('credit').map(a => (
+                    <option key={a.id} value={a.id}>{a.code} — {a.name} ({a.type})</option>
                   ))}
                 </select>
                 {errors.credit_account_id && <p className="text-rose-500 text-xs mt-1">{errors.credit_account_id}</p>}

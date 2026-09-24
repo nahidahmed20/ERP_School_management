@@ -8,7 +8,7 @@ export default function RouteFormModal({ item, onClose }) {
     title: item?.title ?? '',
     start_point: item?.start_point ?? '',
     end_point: item?.end_point ?? '',
-    base_fare: item?.base_fare ?? '',
+    base_fare: item?.base_fare ?? 0,
     stops: Array.isArray(item?.stops) ? item.stops.join('\n') : (item?.stops ?? ''),
     is_active: item?.is_active ?? true,
   });
@@ -27,15 +27,12 @@ export default function RouteFormModal({ item, onClose }) {
   const labelClass = "block text-sm font-semibold text-slate-700 mb-1.5";
 
   return (
-    // Responsive Overlay
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm" onClick={onClose}>
 
-      {/* Responsive Modal Box */}
       <div
         className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0 rounded-t-2xl">
           <div>
             <h3 className="text-xl font-bold text-slate-900">{isEdit ? 'Edit Transport Route' : 'Add New Transport Route'}</h3>
@@ -46,7 +43,6 @@ export default function RouteFormModal({ item, onClose }) {
           </button>
         </div>
 
-        {/* Form Body (Scrollable) */}
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
           <div className="p-6 overflow-y-auto space-y-5 flex-1 custom-scrollbar">
 
@@ -131,7 +127,6 @@ export default function RouteFormModal({ item, onClose }) {
             </div>
           </div>
 
-          {/* Footer - Stacked on Mobile, Row on Desktop */}
           <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex flex-col-reverse sm:flex-row items-center justify-end gap-3 shrink-0 rounded-b-2xl">
             <button type="button" onClick={onClose} disabled={processing} className="w-full sm:w-auto px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-all shadow-sm">
               Cancel

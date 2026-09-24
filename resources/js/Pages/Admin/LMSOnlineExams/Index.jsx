@@ -33,6 +33,11 @@ export default function Index({ exams, classes, subjects, campuses, filters }) {
     }, { preserveState: true, replace: true });
   }
 
+  // ফিল্টার করার জন্য ডাইনামিক সাবজেক্ট
+  const filterAvailableSubjects = classId 
+    ? classes.find(c => c.id == classId)?.subjects || []
+    : subjects;
+
   // --- Export Functions ---
   const handlePrint = () => window.print();
 
@@ -125,7 +130,11 @@ export default function Index({ exams, classes, subjects, campuses, filters }) {
             {/* Class Filter */}
             <select 
               value={classId} 
-              onChange={(e) => { setClassId(e.target.value); applyFilters({ class_id: e.target.value }); }}
+              onChange={(e) => { 
+                setClassId(e.target.value); 
+                setSubjectId(''); 
+                applyFilters({ class_id: e.target.value, subject_id: '' }); 
+              }}
               className="w-full sm:w-36 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
             >
               <option value="">All Classes</option>
@@ -137,9 +146,10 @@ export default function Index({ exams, classes, subjects, campuses, filters }) {
               value={subjectId} 
               onChange={(e) => { setSubjectId(e.target.value); applyFilters({ subject_id: e.target.value }); }}
               className="w-full sm:w-36 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
+              disabled={!classId}
             >
-              <option value="">All Subjects</option>
-              {subjects.map(s => <option key={s.id} value={s.id}>{s.name} ({s.code})</option>)}
+              <option value="">{classId ? 'All Subjects' : 'Class First'}</option>
+              {filterAvailableSubjects.map(s => <option key={s.id} value={s.id}>{s.name} ({s.code})</option>)}
             </select>
 
             {/* Search Input */}

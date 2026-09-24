@@ -38,7 +38,7 @@ class CourseController extends Controller
         return Inertia::render('Admin/LMSCourses/Index', [
             'courses' => $courses,
             'campuses' => Campus::select('id', 'name')->get(),
-            'classes' => SchoolClass::where('is_active', true)->select('id', 'name')->get(),
+            'classes' => SchoolClass::with('subjects')->where('is_active', true)->select('id', 'name')->get(),
             'subjects' => Subject::where('is_active', true)->select('id', 'name', 'code')->get(),
             'teachers' => User::select('id', 'name')->get(),
             'filters' => $request->only(['search', 'class_id', 'subject_id', 'per_page']),

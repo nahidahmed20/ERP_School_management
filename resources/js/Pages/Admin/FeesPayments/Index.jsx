@@ -4,7 +4,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
 import Swal from 'sweetalert2';
 
-export default function Index({ student, filters }) {
+export default function Index({ student, accounts, filters }) {
   const { flash, errors: pageErrors } = usePage().props;
 
   const [admissionNo, setAdmissionNo] = useState(filters.admission_no ?? '');
@@ -15,6 +15,7 @@ export default function Index({ student, filters }) {
     student_id: student?.id || '',
     amount_paid: '',
     payment_date: new Date().toISOString().split('T')[0],
+    account_id: '', // Dropdown থেকে সিলেক্ট করার জন্য
     payment_method: 'Cash',
     transaction_id: '',
     remarks: ''
@@ -63,6 +64,10 @@ export default function Index({ student, filters }) {
     e.preventDefault();
     if (!data.fee_assignment_id) {
       Swal.fire({ icon: 'warning', title: 'Oops', text: 'দয়া করে একটি ফি সিলেক্ট করুন!' });
+      return;
+    }
+    if (!data.account_id) {
+      Swal.fire({ icon: 'warning', title: 'Oops', text: 'দয়া করে একটি জমা করার অ্যাকাউন্ট (Deposit To) সিলেক্ট করুন!' });
       return;
     }
     post(route('admin.fees.payments.store'));
@@ -262,46 +267,52 @@ export default function Index({ student, filters }) {
                     </div>
                   </div>
 
-                  {/* Payment Method - Radio Cards */}
-                  <div>
-                    <label className={labelClass}>Payment Method <span className="text-rose-500">*</span></label>
-                    <div className="grid grid-cols-3 gap-3">
-                      {['Cash', 'Bank', 'Bkash/Nagad'].map(method => (
-                        <label 
-                          key={method} 
-                          className={`flex items-center justify-center gap-2 p-3 rounded-xl border cursor-pointer font-bold text-sm transition-all ${
-                            data.payment_method === method 
-                              ? 'bg-indigo-50 border-indigo-500 text-indigo-700 shadow-sm ring-1 ring-indigo-500/20' 
-                              : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'
-                          }`}
-                        >
-                          <input 
-                            type="radio" 
-                            name="method" 
-                            value={method} 
-                            checked={data.payment_method === method} 
-                            onChange={e => setData('payment_method', e.target.value)} 
-                            className="hidden" 
-                          />
-                          {method}
-                        </label>
+                  {/* Method and deposit account are both kept for reconciliation. */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div>
+                    <label className={labelClass}>Collection Method <span className="text-rose-500">*</span></label>
+                    <select
+                      value={data.payment_method}
+                      onChange={e => setData('payment_method', e.target.value)}
+                      className={`${inputClass} ${errors.payment_method ? 'border-rose-500 ring-rose-200' : ''}`}
+                      required
+                    >
+                      {['Cash', 'Bank', 'Mobile Banking', 'Card', 'Cheque', 'Online'].map(method => <option key={method} value={method}>{method}</option>)}
+                    </select>
+                    {errors.payment_method && <p className="mt-1.5 text-xs font-semibold text-rose-600">{errors.payment_method}</p>}
+                    </div>
+                    <div>
+                    <label className={labelClass}>Deposit To (Account) <span className="text-rose-500">*</span></label>
+                    <select
+                      value={data.account_id}
+                      onChange={e => setData('account_id', e.target.value)}
+                      className={`${inputClass} ${errors.account_id ? 'border-rose-500 ring-rose-200' : ''}`}
+                      required
+                    >
+                      <option value="" disabled>-- কোন অ্যাকাউন্টে জমা হবে? --</option>
+                      {accounts?.map(acc => (
+                        <option key={acc.id} value={acc.id}>{acc.code ? `${acc.code} — ` : ''}{acc.name}</option>
                       ))}
+                    </select>
+                    {errors.account_id && (
+                      <p className="flex items-center gap-1.5 mt-1.5 text-xs font-semibold text-rose-600 bg-rose-50 px-2.5 py-1.5 rounded-lg w-max">
+                        <Icon name="warning" className="w-3.5 h-3.5" /> {errors.account_id}
+                      </p>
+                    )}
                     </div>
                   </div>
 
                   {/* Transaction ID & Remarks */}
-                  {data.payment_method !== 'Cash' && (
-                    <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-                      <label className={labelClass}>Transaction / Check ID</label>
-                      <input 
-                        type="text" 
-                        value={data.transaction_id} 
-                        onChange={e => setData('transaction_id', e.target.value)} 
-                        placeholder="Enter TrxID" 
-                        className={`${inputClass} font-mono`} 
-                      />
-                    </div>
-                  )}
+                  <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                    <label className={labelClass}>Transaction / Check ID (Optional)</label>
+                    <input 
+                      type="text" 
+                      value={data.transaction_id} 
+                      onChange={e => setData('transaction_id', e.target.value)} 
+                      placeholder="e.g. TrxID or Check No" 
+                      className={`${inputClass} font-mono`} 
+                    />
+                  </div>
 
                   <div>
                     <label className={labelClass}>Remarks (Optional)</label>

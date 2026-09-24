@@ -39,7 +39,7 @@ class HomeworkController extends Controller
         return Inertia::render('Admin/LMSHomework/Index', [
             'homeworks' => $homeworks,
             'campuses' => Campus::select('id', 'name')->get(),
-            'classes' => SchoolClass::where('is_active', true)->select('id', 'name')->get(),
+            'classes' => SchoolClass::with('subjects')->where('is_active', true)->select('id', 'name')->get(),
             'subjects' => Subject::where('is_active', true)->select('id', 'name', 'code')->get(),
             'filters' => $request->only(['search', 'class_id', 'subject_id', 'per_page']),
         ]);
@@ -55,7 +55,7 @@ class HomeworkController extends Controller
         }
 
         Homework::create($data);
-        return back()->with('success', 'নতুন হোমওয়ার্ক সফলভাবে যোগ করা হয়েছে।');
+        return back()->with('success', 'নতুন হোমওয়ার্ক সফলভাবে যোগ করা হয়েছে।');
     }
 
     public function update(Request $request, $id, MalwareScanner $scanner)
@@ -72,7 +72,7 @@ class HomeworkController extends Controller
         }
 
         $homework->update($data);
-        return back()->with('success', 'হোমওয়ার্ক আপডেট করা হয়েছে।');
+        return back()->with('success', 'হোমওয়ার্ক আপডেট করা হয়েছে।');
     }
 
     public function destroy($id)
@@ -82,12 +82,12 @@ class HomeworkController extends Controller
             Storage::disk('local')->delete($homework->document_path);
         }
         $homework->delete();
-        return back()->with('success', 'হোমওয়ার্ক মুছে ফেলা হয়েছে।');
+        return back()->with('success', 'হোমওয়ার্ক মুছে ফেলা হয়েছে।');
     }
 
     private function validateData(Request $request): array
     {
-        return $request->validate([
+        $validated = $request->validate([
             'campus_id' => 'required|exists:campuses,id',
             'title' => 'required|string|max:255',
             'school_class_id' => ['required', CampusRule::exists('school_classes')],
@@ -96,8 +96,15 @@ class HomeworkController extends Controller
             'submission_date' => 'required|date|after_or_equal:homework_date',
             'total_marks' => 'nullable|numeric|min:0',
             'description' => 'nullable|string',
-            'document' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png,zip|max:5120', // Max 5MB
+            'document' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png,zip|max:5120', 
             'is_active' => 'boolean',
         ]);
+
+        $validated['total_marks'] = $validated['total_marks'] ?? 0;
+        $validated['description'] = $validated['description'] ?? '';
+
+        unset($validated['document']);
+
+        return $validated;
     }
 }

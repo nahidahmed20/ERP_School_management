@@ -22,4 +22,5 @@ class PaymentTransaction extends Model
         return $this->hasMany(PaymentRefund::class);
     }
     public function allocations(){return $this->hasMany(PaymentAllocation::class);}
+    public function account(){return $this->belongsTo(Account::class);}
 }

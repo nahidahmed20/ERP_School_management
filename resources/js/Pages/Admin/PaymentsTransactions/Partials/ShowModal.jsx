@@ -62,6 +62,10 @@ export default function ShowModal({ item, onClose }) {
               <span className="block font-bold text-slate-400 uppercase text-xs mb-1">Payment Method</span>
               <span className="font-medium text-slate-800">{item.payment_method || 'N/A'}</span>
             </div>
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+              <span className="block font-bold text-slate-400 uppercase text-xs mb-1">Settlement Account</span>
+              <span className="font-medium text-slate-800">{item.account ? `${item.account.code} — ${item.account.name}` : 'Not recorded (legacy)'}</span>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-5 text-sm">

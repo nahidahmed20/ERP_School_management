@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\{AcademicSession,Campus,FeeAssignment,FeeGroup,Invoice,PaymentAllocation,PaymentTransaction,Student};
+use App\Models\{AcademicSession,Account,Campus,FeeAssignment,FeeGroup,Invoice,JournalEntry,PaymentAllocation,PaymentTransaction,Student};
 use App\Services\FeePaymentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -15,18 +15,22 @@ class FinanceIntegrityTest extends TestCase
     {
         $campus=Campus::create(['name'=>'Main','code'=>'MAIN']);
         config(['app.active_campus_id'=>$campus->id]);
+        $bank = Account::create(['campus_id' => $campus->id, 'name' => 'Main Bank', 'code' => '1002', 'type' => 'Asset', 'is_active' => true]);
         $student=Student::create(['campus_id'=>$campus->id,'guardian_id'=>1,'admission_no'=>'ST-1','admission_date'=>'2026-01-01','first_name'=>'Test','gender'=>'male','date_of_birth'=>'2015-01-01','present_address'=>'Dhaka','permanent_address'=>'Dhaka']);
         $session=AcademicSession::create(['campus_id'=>$campus->id,'name'=>'2026','start_date'=>'2026-01-01','end_date'=>'2026-12-31']);
         $group=FeeGroup::create(['name'=>'Tuition','is_active'=>true]);
         $assignment=FeeAssignment::create(['campus_id'=>$campus->id,'student_id'=>$student->id,'fee_group_id'=>$group->id,'academic_session_id'=>$session->id,'due_date'=>'2026-09-30','amount'=>1000,'status'=>'unpaid']);
         $invoice=Invoice::create(['campus_id'=>$campus->id,'student_id'=>$student->id,'fee_group_id'=>$group->id,'fee_assignment_id'=>$assignment->id,'invoice_no'=>'INV-1','invoice_date'=>'2026-09-01','due_date'=>'2026-09-30','amount'=>1000,'status'=>'Unpaid']);
 
-        $payment=app(FeePaymentService::class)->receive($assignment,$student->id,600,['payment_date'=>'2026-09-06','payment_method'=>'Cash','transaction_id'=>null,'remarks'=>null]);
+        $payment=app(FeePaymentService::class)->receive($assignment,$student->id,600,['payment_date'=>'2026-09-06','payment_method'=>'Bank','account_id'=>$bank->id,'transaction_id'=>null,'remarks'=>null]);
         $transaction=PaymentTransaction::where('source_id',$payment->id)->firstOrFail();
         $this->assertEquals(600,$invoice->fresh()->paid_amount);
         $this->assertSame('Partial',$invoice->fresh()->status);
         $this->assertDatabaseHas('payment_allocations',['payment_transaction_id'=>$transaction->id,'invoice_id'=>$invoice->id,'amount'=>600]);
         $this->assertDatabaseHas('journal_entries',['source_key'=>'fee-payment:'.$payment->id,'amount'=>600]);
+        $this->assertSame($bank->id, $payment->fresh()->account_id);
+        $this->assertSame($bank->id, $transaction->fresh()->account_id);
+        $this->assertSame($bank->id, JournalEntry::where('source_key', 'fee-payment:'.$payment->id)->value('debit_account_id'));
 
         app(FeePaymentService::class)->refund($transaction,200,99);
         $this->assertEquals(400,$invoice->fresh()->paid_amount);

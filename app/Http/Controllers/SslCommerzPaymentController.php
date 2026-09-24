@@ -31,6 +31,7 @@ class SslCommerzPaymentController extends Controller
                 'mode' => config('services.sslcommerz.sandbox') ? 'sandbox' : 'live', 'is_active' => true,
             ]);
             abort_unless($provider->is_active, 422, 'Online payments are currently disabled.');
+            $onlineSettlementAccount = app(AccountingService::class)->accountForCode('1010', (int) $invoice->campus_id);
             // Persist the reference before calling the provider so an early callback can find it.
             return PaymentTransaction::create([
                 'campus_id' => $invoice->campus_id,
@@ -40,6 +41,7 @@ class SslCommerzPaymentController extends Controller
                 'amount' => $amount, 'currency' => 'BDT', 'payment_method' => 'SSLCommerz',
                 'status' => 'Pending', 'transaction_date' => today(),
                 'source_type' => Invoice::class, 'source_id' => $invoice->id, 'student_id' => $student->id,
+                'account_id' => $onlineSettlementAccount->id,
             ]);
         }, 3);
 
@@ -65,7 +67,7 @@ class SslCommerzPaymentController extends Controller
             abort_unless($transaction->status === 'Pending', 422, 'This transaction can no longer be completed.');
             $payments->applyOnlinePayment($transaction);
             $transaction->update(['status' => 'Completed', 'note' => 'SSLCommerz bank transaction: '.($verified['bank_tran_id'] ?? 'N/A')]);
-            app(AccountingService::class)->post('online-payment:'.$transaction->id, $transaction, '1000', '4000', (float) $transaction->amount, 'Online fee payment '.$transaction->transaction_id, now()->toDateString(), 'Receipt');
+            app(AccountingService::class)->post('online-payment:'.$transaction->id, $transaction, '1010', '4000', (float) $transaction->amount, 'Online fee payment '.$transaction->transaction_id, now()->toDateString(), 'Receipt');
         }, 3);
 
         if ($request->routeIs('payments.sslcommerz.ipn')) {

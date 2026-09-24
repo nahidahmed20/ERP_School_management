@@ -11,12 +11,14 @@ class TransportRouteController extends Controller
 {
     public function index(Request $request)
     {
-        $query = TransportRoute::query();
+        $query = TransportRoute::where('campus_id', config('app.active_campus_id'));
 
         if ($search = $request->get('search')) {
-            $query->where('title', 'like', "%{$search}%")
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
                   ->orWhere('start_point', 'like', "%{$search}%")
                   ->orWhere('end_point', 'like', "%{$search}%");
+            });
         }
 
         $perPageRaw = $request->get('per_page', '10');
@@ -51,13 +53,15 @@ class TransportRouteController extends Controller
         $stopsArray = array_filter(array_map('trim', explode("\n", $validated['stops'] ?? '')));
         $validated['stops'] = $stopsArray;
 
+        $validated['campus_id'] = config('app.active_campus_id');
+
         TransportRoute::create($validated);
         return back()->with('success', 'Transport Route created successfully.');
     }
 
     public function update(Request $request, $id)
     {
-        $route = TransportRoute::findOrFail($id);
+        $route = TransportRoute::where('campus_id', config('app.active_campus_id'))->findOrFail($id);
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -77,7 +81,9 @@ class TransportRouteController extends Controller
 
     public function destroy($id)
     {
-        TransportRoute::findOrFail($id)->delete();
+        $route = TransportRoute::where('campus_id', config('app.active_campus_id'))->findOrFail($id);
+        $route->delete();
+        
         return back()->with('success', 'Transport Route deleted.');
     }
 }

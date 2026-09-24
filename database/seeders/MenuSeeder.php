@@ -106,7 +106,6 @@ class MenuSeeder extends Seeder
                     ['key' => 'admin.staff-attendance.index', 'label' => 'Daily Attendance', 'route' => 'admin.staff-attendance.index'],
                     ['key' => 'admin.staff-leaves.index', 'label' => 'Leave Applications', 'route' => 'admin.staff-leaves.index'],
                     ['key' => 'admin.staff-payrolls.index', 'label' => 'Payroll Management', 'route' => 'admin.staff-payrolls.index'],
-                    ['key' => 'admin.staff-payrolls.attendance', 'label' => 'Payroll Attendance Adjustments', 'route' => 'admin.staff-payrolls.attendance'],
                     ['key' => 'admin.staff-loans.index', 'label' => 'Advance Salary & Loans', 'route' => 'admin.staff-loans.index'],
                     ['key' => 'admin.staff-appraisals.index', 'label' => 'Performance & Appraisals', 'route' => 'admin.staff-appraisals.index'],
                     ['key' => 'admin.staff-hr-records.index', 'label' => 'Teacher HR & Development', 'route' => 'admin.staff-hr-records.index'],

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\QuizAttempt;
 use App\Models\OnlineExam;
 use App\Models\User;
+use App\Models\Student;
 use App\Models\Campus;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -39,11 +40,21 @@ class QuizAttemptController extends Controller
             ? ['data' => $query->get(), 'links' => [], 'meta' => ['total' => $query->count()]]
             : $query->paginate((int) $perPage)->withQueryString();
 
+        $activeCampusId = config('app.active_campus_id'); 
+        
+        $studentUserIds = Student::where('campus_id', $activeCampusId)
+                                 ->whereNotNull('user_id')
+                                 ->pluck('user_id');
+
+        $filteredStudents = User::whereIn('id', $studentUserIds)
+                                ->select('id', 'name', 'email')
+                                ->get();
+
         return Inertia::render('Admin/LMSQuizAttempts/Index', [
             'attempts' => $attempts,
             'campuses' => Campus::select('id', 'name')->get(),
             'exams' => OnlineExam::where('is_active', true)->select('id', 'title', 'total_marks', 'passing_marks')->get(),
-            'students' => User::select('id', 'name', 'email')->get(),
+            'students' => $filteredStudents, 
             'filters' => $request->only(['search', 'exam_id', 'status', 'per_page']),
         ]);
     }
@@ -52,7 +63,7 @@ class QuizAttemptController extends Controller
     {
         $data = $this->validateData($request);
         QuizAttempt::create($data);
-        return back()->with('success', 'ম্যানুয়ালি পরীক্ষার রেজাল্ট যোগ করা হয়েছে।');
+        return back()->with('success', 'ম্যানুয়ালি পরীক্ষার রেজাল্ট যোগ করা হয়েছে।');
     }
 
     public function update(Request $request, $id)

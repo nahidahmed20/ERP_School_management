@@ -8,10 +8,12 @@ import LessonShowModal from './Partials/LessonShowModal';
 import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 import Swal from 'sweetalert2';
 
-export default function Index({ lessons, courses, campuses, filters }) {
+export default function Index({ lessons, courses, classes, campuses, filters }) {
   const { flash, auth } = usePage().props;
 
   const [search, setSearch] = useState(filters.search ?? '');
+  const [classId, setClassId] = useState(filters.class_id ?? '');
+  const [subjectId, setSubjectId] = useState(filters.subject_id ?? '');
   const [courseId, setCourseId] = useState(filters.course_id ?? '');
   const [perPage, setPerPage] = useState(filters.per_page ?? '10');
 
@@ -31,9 +33,15 @@ export default function Index({ lessons, courses, campuses, filters }) {
 
   function applyFilters(overrides = {}) {
     router.get(route('admin.lms.lessons.index'), {
-      search, course_id: courseId, per_page: perPage, ...overrides,
+      search, class_id: classId, subject_id: subjectId, course_id: courseId, per_page: perPage, ...overrides,
     }, { preserveState: true, replace: true });
   }
+
+  const filterAvailableSubjects = classId ? classes.find(c => c.id == classId)?.subjects || [] : [];
+
+  let filterAvailableCourses = courses;
+  if (classId) filterAvailableCourses = filterAvailableCourses.filter(c => c.school_class_id == classId);
+  if (subjectId) filterAvailableCourses = filterAvailableCourses.filter(c => c.subject_id == subjectId);
 
   // --- Export Functions ---
   const handlePrint = () => window.print();
@@ -42,8 +50,8 @@ export default function Index({ lessons, courses, campuses, filters }) {
     if (!lessons.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
     const headers = ['Lesson Title', 'Course Name', 'Materials', 'Status'];
     const rows = lessons.data.map(item => [
-      item.title || 'N/A', 
-      item.course?.title || 'N/A', 
+      item.title || 'N/A',
+      item.course?.title || 'N/A',
       item.video_url && item.document_path ? 'Video & File' : item.video_url ? 'Video' : item.document_path ? 'File' : 'Text Only',
       item.is_active ? 'Active' : 'Inactive'
     ]);
@@ -84,7 +92,7 @@ export default function Index({ lessons, courses, campuses, filters }) {
       <div className="print-title">LMS Lessons & Materials - {new Date().toLocaleDateString('en-GB')}</div>
 
       <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8 no-print">
-        
+
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
@@ -103,8 +111,7 @@ export default function Index({ lessons, courses, campuses, filters }) {
         {/* Unified Modern Toolbar */}
         <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-            
-            {/* Per Page */}
+
             <select
               value={perPage}
               onChange={e => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}
@@ -118,24 +125,54 @@ export default function Index({ lessons, courses, campuses, filters }) {
 
             <div className="hidden sm:block w-px h-6 bg-slate-200"></div>
 
+            {/* Class Filter */}
+            <select
+              value={classId}
+              onChange={(e) => {
+                setClassId(e.target.value);
+                setSubjectId('');
+                setCourseId('');
+                applyFilters({ class_id: e.target.value, subject_id: '', course_id: '' });
+              }}
+              className="w-full sm:w-32 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
+            >
+              <option value="">All Classes</option>
+              {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+
+            {/* Subject Filter */}
+            <select
+              value={subjectId}
+              onChange={(e) => {
+                setSubjectId(e.target.value);
+                setCourseId('');
+                applyFilters({ subject_id: e.target.value, course_id: '' });
+              }}
+              className="w-full sm:w-32 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
+              disabled={!classId}
+            >
+              <option value="">{classId ? 'All Subjects' : 'Class First'}</option>
+              {filterAvailableSubjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+
             {/* Course Filter */}
-            <select 
-              value={courseId} 
+            <select
+              value={courseId}
               onChange={(e) => { setCourseId(e.target.value); applyFilters({ course_id: e.target.value }); }}
               className="w-full sm:w-48 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
             >
               <option value="">All Courses</option>
-              {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+              {filterAvailableCourses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
             </select>
 
             {/* Search Input */}
-            <div className="relative flex-1 min-w-[200px] sm:w-64">
+            <div className="relative flex-1 min-w-[150px] sm:w-48">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Icon name="search" className="w-4 h-4 text-slate-400" />
               </div>
               <input
                 type="text"
-                placeholder="Search lesson title..."
+                placeholder="Search..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
@@ -143,7 +180,6 @@ export default function Index({ lessons, courses, campuses, filters }) {
               />
             </div>
 
-            {/* Apply Button */}
             <button
               onClick={() => applyFilters()}
               className="w-full sm:w-auto px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
@@ -258,7 +294,7 @@ export default function Index({ lessons, courses, campuses, filters }) {
         </div>
       </div>
 
-      {formOpen && <LessonFormModal item={editingItem} courses={courses} campuses={campuses} activeCampusId={auth?.active_campus_id} onClose={() => setFormOpen(false)} />}
+      {formOpen && <LessonFormModal item={editingItem} courses={courses} classes={classes} campuses={campuses} activeCampusId={auth?.active_campus_id} onClose={() => setFormOpen(false)} />}
 
       {viewingItem && <LessonShowModal item={viewingItem} onClose={() => setViewingItem(null)} />}
 

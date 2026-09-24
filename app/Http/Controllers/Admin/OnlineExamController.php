@@ -39,7 +39,7 @@ class OnlineExamController extends Controller
         return Inertia::render('Admin/LMSOnlineExams/Index', [
             'exams' => $exams,
             'campuses' => Campus::select('id', 'name')->get(),
-            'classes' => SchoolClass::where('is_active', true)->select('id', 'name')->get(),
+            'classes' => SchoolClass::with('subjects')->where('is_active', true)->select('id', 'name')->get(),
             'subjects' => Subject::where('is_active', true)->select('id', 'name', 'code')->get(),
             'filters' => $request->only(['search', 'class_id', 'subject_id', 'per_page']),
         ]);
@@ -68,7 +68,7 @@ class OnlineExamController extends Controller
 
     private function validateData(Request $request): array
     {
-        return $request->validate([
+        $validated = $request->validate([
             'campus_id' => 'required|exists:campuses,id',
             'title' => 'required|string|max:255',
             'school_class_id' => ['required', CampusRule::exists('school_classes')],
@@ -83,5 +83,9 @@ class OnlineExamController extends Controller
             'is_published' => 'boolean',
             'is_active' => 'boolean',
         ]);
+        
+        $validated['description'] = $validated['description'] ?? '';
+        
+        return $validated;
     }
 }
