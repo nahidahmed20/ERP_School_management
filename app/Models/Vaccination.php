@@ -1,19 +1,22 @@
 <?php
+
 namespace App\Models;
-use App\Traits\BelongsToCampus;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Vaccination extends Model
 {
-    use BelongsToCampus;
-    protected $guarded = [];
+    use HasFactory;
 
-    protected $casts = [
-        'date_administered' => 'date',
-        'next_due_date' => 'date',
-    ];
+    protected $guarded = []; 
 
-    public function student() {
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+    public function student()
+    {
         return $this->belongsTo(User::class, 'user_id');
     }
 }

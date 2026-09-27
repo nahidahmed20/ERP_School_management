@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\{Book, BookCopy, BookIssue, LibraryFinePayment, LibraryMember, LibraryReservation, User};
+use App\Models\{Book, BookCopy, BookIssue, LibraryFinePayment, LibraryMember, LibraryReservation, User, Student};
 use App\Support\CampusRule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -20,17 +20,28 @@ class LibraryOperationsController extends Controller
 
     public function index()
     {
+        $activeCampusId = config('app.active_campus_id');
+
+        $studentUserIds = Student::where('campus_id', $activeCampusId)
+                                 ->whereNotNull('user_id')
+                                 ->pluck('user_id');
+
+        $filteredUsers = User::whereIn('id', $studentUserIds)
+                             ->with('student.schoolClass:id,name')
+                             ->orderBy('name')
+                             ->get(['id', 'name', 'email']);
+
         return Inertia::render('Admin/LibraryOperations/Index', [
             'books' => Book::with('copies')->orderBy('title')->get(),
             'reservations' => LibraryReservation::with(['book:id,title'])->latest()->take(100)->get(),
-            'issues' => BookIssue::with(['book:id,title', 'copy', 'user:id,name'])->latest()->take(150)->get(),
+            'issues' => BookIssue::where('campus_id', $activeCampusId)->with(['book:id,title', 'copy', 'user:id,name'])->latest()->take(150)->get(),
             'stockChecks' => $this->raw('library_stock_checks')->latest()->take(30)->get(),
             'masters' => [
                 'authors' => $this->raw('library_authors')->orderBy('name')->get(),
                 'publishers' => $this->raw('library_publishers')->orderBy('name')->get(),
                 'categories' => $this->raw('library_categories')->orderBy('name')->get()
             ],
-            'users' => User::orderBy('name')->get(['id', 'name', 'email'])
+            'users' => $filteredUsers
         ]);
     }
 
@@ -64,7 +75,7 @@ class LibraryOperationsController extends Controller
         // Barcode Generation Fixed
         $d['barcode'] = $d['barcode'] ?: 'LIB-' . date('ymd') . strtoupper(Str::random(4));
         $d['qr_code'] = 'BOOK:' . $d['barcode'];
-        
+
         BookCopy::create($d + ['status' => 'available']);
         Book::where('id', $d['book_id'])->incrementEach(['qty' => 1, 'available' => 1]);
 
@@ -83,21 +94,21 @@ class LibraryOperationsController extends Controller
 
         // Member Barcode Fixed
         $d['barcode'] = $d['barcode'] ?: 'MEM-' . date('ymd') . strtoupper(Str::random(4));
-        
+
         LibraryMember::create($d + ['is_active' => true]);
-        
+
         return back()->with('success', 'Library member card created.');
     }
 
     public function scan(Request $r)
     {
         $d = $r->validate(['code' => 'required|string|max:255']);
-        
-        $copy = BookCopy::with('book')->where(fn($q) => 
+
+        $copy = BookCopy::with('book')->where(fn($q) =>
             $q->where('barcode', $d['code'])->orWhere('qr_code', $d['code'])->orWhere('accession_no', $d['code'])
         )->first();
-        
-        $member = LibraryMember::with('user:id,name,email')->where(fn($q) => 
+
+        $member = LibraryMember::with('user:id,name,email')->where(fn($q) =>
             $q->where('barcode', $d['code'])->orWhere('card_no', $d['code'])
         )->first();
 
@@ -116,19 +127,19 @@ class LibraryOperationsController extends Controller
         DB::transaction(function () use ($d) {
             $copy = BookCopy::lockForUpdate()->findOrFail($d['book_copy_id']);
             $member = LibraryMember::findOrFail($d['library_member_id']);
-            
+
             abort_unless($copy->status === 'available', 422, 'Copy is not available.');
             abort_unless($member->is_active && (!$member->valid_until || Carbon::parse($member->valid_until)->endOfDay()->isFuture()), 422, 'Member card is inactive or expired.');
-            
+
             abort_if(BookIssue::where('library_member_id', $member->id)->whereIn('status', ['Issued', 'Overdue'])->count() >= $member->max_books, 422, 'Member issue limit reached.');
-            
+
             BookIssue::create($d + [
                 'book_id' => $copy->book_id,
                 'user_id' => $member->user_id,
                 'campus_id' => $copy->campus_id,
                 'status' => 'Issued'
             ]);
-            
+
             $copy->update(['status' => 'issued']);
             $copy->book()->decrement('available');
         });
@@ -236,16 +247,16 @@ class LibraryOperationsController extends Controller
     public function scanStock(Request $r, int $check)
     {
         abort_unless($this->raw('library_stock_checks')->where('id', $check)->where('status', 'open')->exists(), 404);
-        
+
         $d = $r->validate([
             'code' => 'required|string|max:255',
             'condition' => 'required|in:new,good,fair,damaged'
         ]);
-        
-        $copy = BookCopy::where(fn($q) => 
+
+        $copy = BookCopy::where(fn($q) =>
             $q->where('barcode', $d['code'])->orWhere('qr_code', $d['code'])->orWhere('accession_no', $d['code'])
         )->firstOrFail();
-        
+
         $this->raw('library_stock_check_items')->updateOrInsert(
             ['campus_id' => config('app.active_campus_id'), 'library_stock_check_id' => $check, 'book_copy_id' => $copy->id],
             ['result' => 'found', 'observed_condition' => $d['condition'], 'scanned_at' => now()]
@@ -256,18 +267,18 @@ class LibraryOperationsController extends Controller
     public function completeStock(int $check)
     {
         abort_unless($this->raw('library_stock_checks')->where('id', $check)->where('status', 'open')->exists(), 404);
-        
+
         DB::transaction(function () use ($check) {
             $seen = $this->raw('library_stock_check_items')->where('library_stock_check_id', $check)->pluck('book_copy_id');
             BookCopy::whereNotIn('id', $seen)->whereNotIn('status', ['issued', 'lost'])->update(['status' => 'missing']);
-            
+
             $this->raw('library_stock_checks')->where('id', $check)->update([
                 'status' => 'completed',
                 'completed_at' => now(),
                 'updated_at' => now()
             ]);
         });
-        
+
         return back()->with('success', 'Stock check completed; unscanned copies marked missing.');
     }
 }

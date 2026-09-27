@@ -14,10 +14,12 @@ class VaccinationController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Vaccination::with('student');
+        $activeCampusId = config('app.active_campus_id');
+
+        $query = Vaccination::with('user.roles')->where('campus_id', $activeCampusId);
 
         if ($search = $request->get('search')) {
-            $query->whereHas('student', function($q) use ($search) {
+            $query->whereHas('user', function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%");
             })->orWhere('vaccine_name', 'like', "%{$search}%");
         }
@@ -25,24 +27,30 @@ class VaccinationController extends Controller
         $vaccinations = $query->latest('date_administered')->paginate(\App\Support\PerPage::resolve())->withQueryString();
         $campuses = Campus::select('id', 'name')->get();
 
-        // Spatie & Staff/Student Relation Data 
-        $users = User::with(['roles', 'student', 'staff'])->get()->map(function ($user) {
-            $roleName = $user->roles->first()->name ?? 'User';
-            $displayName = $user->name;
-            if ($user->student) {
-                $displayName = trim($user->student->first_name . ' ' . $user->student->last_name) . ' (' . $user->student->admission_no . ')';
-                $roleName = 'Student';
-            } elseif ($user->staff) {
-                $displayName = trim($user->staff->first_name . ' ' . $user->staff->last_name) . ' (' . $user->staff->staff_id_no . ')';
-            }
-            return ['id' => $user->id, 'name' => $displayName, 'role' => ucfirst($roleName)];
-        });
+        $users = User::where('campus_id', $activeCampusId)
+            ->whereHas('roles', function($q) {
+                $q->whereIn('name', ['Student', 'Teacher', 'Staff', 'student', 'teacher', 'staff']);
+            })
+            ->with(['roles', 'student', 'staff'])->get()->map(function ($user) {
+                
+                $roleName = $user->roles->first()?->name ?? 'User';
+                $displayName = $user->name;
+                
+                if ($user->student) {
+                    $displayName = trim($user->student->first_name . ' ' . $user->student->last_name) . ' (' . $user->student->admission_no . ')';
+                    $roleName = 'Student';
+                } elseif ($user->staff) {
+                    $displayName = trim($user->staff->first_name . ' ' . $user->staff->last_name) . ' (' . $user->staff->staff_id_no . ')';
+                }
+                
+                return ['id' => $user->id, 'name' => $displayName, 'role' => ucfirst($roleName)];
+            });
 
         return Inertia::render('Admin/MedicalVaccinations/Index', [
             'vaccinations' => $vaccinations,
             'users' => $users,
             'campuses' => $campuses,
-            'activeCampusId' => session('active_campus_id'),
+            'activeCampusId' => $activeCampusId,
             'filters' => $request->only(['search']),
         ]);
     }
@@ -66,7 +74,7 @@ class VaccinationController extends Controller
 
     public function update(Request $request, $id)
     {
-        $vaccination = Vaccination::findOrFail($id);
+        $vaccination = Vaccination::where('campus_id', config('app.active_campus_id'))->findOrFail($id);
 
         $validated = $request->validate([
             'campus_id' => 'required|exists:campuses,id',
@@ -85,7 +93,8 @@ class VaccinationController extends Controller
 
     public function destroy($id)
     {
-        Vaccination::findOrFail($id)->delete();
+        Vaccination::where('campus_id', config('app.active_campus_id'))->findOrFail($id)->delete();
+        
         return back()->with('success', 'Vaccination record deleted successfully.');
     }
 }

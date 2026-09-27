@@ -137,6 +137,7 @@ use App\Http\Controllers\Admin\TranscriptTemplateController;
 use App\Http\Controllers\Admin\TransportAllocationController;
 use App\Http\Controllers\Admin\TransportOperationsController;
 use App\Http\Controllers\Admin\TransportRouteController;
+use App\Http\Controllers\Admin\TransportPersonnelController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VaccinationController;
 use App\Http\Controllers\Admin\VehicleController;
@@ -144,6 +145,10 @@ use App\Http\Controllers\Admin\VendorController;
 use App\Http\Controllers\Admin\VisitLogController;
 use App\Http\Controllers\Admin\VisitorController;
 use App\Http\Controllers\Admin\StudentImportController;
+use App\Http\Controllers\Admin\VehicleLogController;
+use App\Http\Controllers\Admin\TransportBoardingController;
+use App\Http\Controllers\Admin\HostelRecordController;
+use App\Http\Controllers\Admin\CafeteriaRawMaterialController;
 use App\Http\Controllers\StudentLearningController;
 use App\Http\Controllers\PublicSiteController;
 use App\Http\Controllers\DynamicPageController;
@@ -464,6 +469,16 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
     Route::post('transport-operations/expenses',[TransportOperationsController::class,'expense'])->name('transport.expenses');
     Route::post('transport-operations/fees/generate',[TransportOperationsController::class,'generateFees'])->name('transport.fees.generate');
     Route::resource('transports', TransportAllocationController::class);
+    Route::resource('transport-personnel', TransportPersonnelController::class);
+
+    // Vehicle Logs & Expenses
+    Route::get('vehicle-logs', [VehicleLogController::class, 'index'])->name('vehicle-logs.index');
+    Route::delete('vehicle-logs/{id}', [VehicleLogController::class, 'destroy'])->name('vehicle-logs.destroy');
+
+    // Transport Boarding History
+    Route::get('transport-boarding', [TransportBoardingController::class, 'index'])->name('transport-boarding.index');
+    Route::delete('transport-boarding/{id}', [TransportBoardingController::class, 'destroy'])->name('transport-boarding.destroy');
+        
     Route::resource('hostel-rooms', HostelRoomController::class);
     Route::resource('hostel-allocations', HostelAllocationController::class);
     Route::get('hostel-operations', [HostelOperationsController::class,'index'])->name('hostel.operations');
@@ -478,6 +493,10 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
     Route::post('hostel-operations/allocations/{allocation}/clearance', [HostelOperationsController::class,'clearance'])->name('hostel.clearance');
     Route::post('hostel-operations/allocations/{allocation}/settle', [HostelOperationsController::class,'settle'])->name('hostel.settle');
     Route::resource('library-issues', BookIssueController::class);
+
+    // Hostel Logs & Records
+    Route::get('hostel-records', [HostelRecordController::class, 'index'])->name('hostel-records.index');
+    Route::delete('hostel-records/{id}', [HostelRecordController::class, 'destroy'])->name('hostel-records.destroy');
 
     Route::prefix('purchase')->name('purchase.')->group(function () {
         Route::resource('vendors', VendorController::class);
@@ -557,6 +576,7 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
         Route::resource('menu-items', FoodItemController::class);
         Route::resource('orders', CafeteriaOrderController::class);
         Route::resource('meal-payments', MealPaymentController::class);
+        Route::resource('raw-materials', CafeteriaRawMaterialController::class);
     });
 
     Route::prefix('medical')->name('medical.')->group(function () {

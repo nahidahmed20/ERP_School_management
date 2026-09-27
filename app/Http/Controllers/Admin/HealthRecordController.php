@@ -15,7 +15,9 @@ class HealthRecordController extends Controller
 {
     public function index(Request $request)
     {
-        $query = HealthRecord::with('user');
+        $activeCampusId = config('app.active_campus_id');
+
+        $query = HealthRecord::with('user')->where('campus_id', $activeCampusId);
 
         if ($search = $request->get('search')) {
             $query->whereHas('user', function($q) use ($search) {
@@ -26,24 +28,29 @@ class HealthRecordController extends Controller
         $records = $query->latest()->paginate(\App\Support\PerPage::resolve())->withQueryString();
         $campuses = Campus::select('id', 'name')->get();
 
-        // Spatie & Staff/Student Relation Data 
-        $users = User::with(['roles', 'student', 'staff'])->get()->map(function ($user) {
-            $roleName = $user->roles->first()->name ?? 'User';
-            $displayName = $user->name;
-            if ($user->student) {
-                $displayName = trim($user->student->first_name . ' ' . $user->student->last_name) . ' (' . $user->student->admission_no . ')';
-                $roleName = 'Student';
-            } elseif ($user->staff) {
-                $displayName = trim($user->staff->first_name . ' ' . $user->staff->last_name) . ' (' . $user->staff->staff_id_no . ')';
-            }
-            return ['id' => $user->id, 'name' => $displayName, 'role' => ucfirst($roleName)];
-        });
+        $users = User::where('campus_id', $activeCampusId)
+            ->whereHas('roles', function($q) {
+                $q->whereIn('name', ['Student', 'Teacher', 'Staff', 'student', 'teacher', 'staff']);
+            })
+            ->with(['roles', 'student', 'staff'])->get()->map(function ($user) {
+                $roleName = $user->roles->first()?->name ?? 'User';
+                $displayName = $user->name;
+                
+                if ($user->student) {
+                    $displayName = trim($user->student->first_name . ' ' . $user->student->last_name) . ' (' . $user->student->admission_no . ')';
+                    $roleName = 'Student';
+                } elseif ($user->staff) {
+                    $displayName = trim($user->staff->first_name . ' ' . $user->staff->last_name) . ' (' . $user->staff->staff_id_no . ')';
+                }
+                
+                return ['id' => $user->id, 'name' => $displayName, 'role' => ucfirst($roleName)];
+            });
 
         return Inertia::render('Admin/MedicalHealthRecords/Index', [
             'records' => $records,
             'users' => $users,
             'campuses' => $campuses,
-            'activeCampusId' => session('active_campus_id'),
+            'activeCampusId' => $activeCampusId,
             'filters' => $request->only(['search']),
         ]);
     }
@@ -68,7 +75,7 @@ class HealthRecordController extends Controller
 
     public function update(Request $request, $id)
     {
-        $record = HealthRecord::findOrFail($id);
+        $record = HealthRecord::where('campus_id', config('app.active_campus_id'))->findOrFail($id);
 
         $validated = $request->validate([
             'campus_id' => 'required|exists:campuses,id',
@@ -88,7 +95,7 @@ class HealthRecordController extends Controller
 
     public function destroy($id)
     {
-        HealthRecord::findOrFail($id)->delete();
+        HealthRecord::where('campus_id', config('app.active_campus_id'))->findOrFail($id)->delete();
         return back()->with('success', 'Health record deleted successfully.');
     }
 }

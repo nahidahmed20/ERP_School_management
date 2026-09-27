@@ -8,27 +8,33 @@ use App\Models\MedicalRoom;
 use App\Models\Campus;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Support\CampusRule; 
 
 class MedicineStockController extends Controller
 {
     public function index(Request $request)
     {
-        $query = MedicineStock::with('room');
+        $activeCampusId = config('app.active_campus_id');
+
+        $query = MedicineStock::with('room')->where('campus_id', $activeCampusId);
 
         if ($search = $request->get('search')) {
-            $query->where('medicine_name', 'like', "%{$search}%")
+            $query->where(function($q) use ($search) {
+                $q->where('medicine_name', 'like', "%{$search}%")
                   ->orWhere('category', 'like', "%{$search}%");
+            });
         }
 
         $stocks = $query->latest()->paginate(\App\Support\PerPage::resolve())->withQueryString();
-        $rooms = MedicalRoom::where('is_active', true)->select('id', 'room_number')->get();
+        
+        $rooms = MedicalRoom::where('campus_id', $activeCampusId)->where('is_active', true)->select('id', 'room_number')->get();
         $campuses = Campus::select('id', 'name')->get();
 
         return Inertia::render('Admin/MedicalMedicineStock/Index', [
             'stocks' => $stocks,
             'rooms' => $rooms,
             'campuses' => $campuses,
-            'activeCampusId' => session('active_campus_id'),
+            'activeCampusId' => $activeCampusId,
             'filters' => $request->only(['search']),
         ]);
     }
@@ -37,7 +43,7 @@ class MedicineStockController extends Controller
     {
         $validated = $request->validate([
             'campus_id' => 'required|exists:campuses,id',
-            'medical_room_id' => 'required|exists:medical_rooms,id',
+            'medical_room_id' => ['required', CampusRule::exists('medical_rooms')],
             'medicine_name' => 'required|string|max:255',
             'category' => 'nullable|string|max:100',
             'quantity' => 'required|integer|min:0',
@@ -51,11 +57,11 @@ class MedicineStockController extends Controller
 
     public function update(Request $request, $id)
     {
-        $stock = MedicineStock::findOrFail($id);
+        $stock = MedicineStock::where('campus_id', config('app.active_campus_id'))->findOrFail($id);
 
         $validated = $request->validate([
             'campus_id' => 'required|exists:campuses,id',
-            'medical_room_id' => 'required|exists:medical_rooms,id',
+            'medical_room_id' => ['required', CampusRule::exists('medical_rooms')],
             'medicine_name' => 'required|string|max:255',
             'category' => 'nullable|string|max:100',
             'quantity' => 'required|integer|min:0',
@@ -69,7 +75,8 @@ class MedicineStockController extends Controller
 
     public function destroy($id)
     {
-        MedicineStock::findOrFail($id)->delete();
+        MedicineStock::where('campus_id', config('app.active_campus_id'))->findOrFail($id)->delete();
+        
         return back()->with('success', 'Medicine deleted from stock successfully.');
     }
 }

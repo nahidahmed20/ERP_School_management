@@ -3,9 +3,6 @@ import { useState } from 'react';
 import InputError from '@/Components/InputError';
 import Checkbox from '@/Components/Checkbox';
 
-// Role accent colors stay inside the Unibox forest + gold family instead of
-// jumping to generic SaaS blues/purples — each role is a tonal variation,
-// not a different brand.
 const ROLE_THEME = {
     admin:   { hex: '#1F5D42', label: 'Admin / Branch Admin', short: 'Admin Portal',   prefix: 'ADM' },
     student: { hex: '#3E7C59', label: 'Student Portal',       short: 'Student Portal', prefix: 'STU' },
@@ -87,7 +84,7 @@ export default function Login({ status, canResetPassword, captchaQuestion }) {
             className="relative min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-[#F7F5EF] overflow-hidden"
             style={{ '--accent': theme.hex }}
         >
-            <Head title="Unibox — Sign in">
+            <Head title="Sign in">
                 <link rel="preconnect" href="https://fonts.googleapis.com" />
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
                 <link
@@ -121,9 +118,6 @@ export default function Login({ status, canResetPassword, captchaQuestion }) {
                                     <path d="M6 10.5V16c0 1 2.7 2.5 6 2.5s6-1.5 6-2.5v-5.5" strokeLinejoin="round" />
                                 </svg>
                             </div>
-                            <span className="text-lg font-semibold tracking-tight" style={{ fontFamily: "'Fraunces', serif" }}>
-                                Unibox
-                            </span>
                         </div>
                         <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-white/10 border border-white/10 text-white/80">
                             Secure sign-in

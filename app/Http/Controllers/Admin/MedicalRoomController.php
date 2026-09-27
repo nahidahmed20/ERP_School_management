@@ -12,11 +12,15 @@ class MedicalRoomController extends Controller
 {
     public function index(Request $request)
     {
-        $query = MedicalRoom::query();
+        $activeCampusId = config('app.active_campus_id');
+
+        $query = MedicalRoom::where('campus_id', $activeCampusId);
 
         if ($search = $request->get('search')) {
-            $query->where('room_number', 'like', "%{$search}%")
+            $query->where(function ($q) use ($search) {
+                $q->where('room_number', 'like', "%{$search}%")
                   ->orWhere('nurse_name', 'like', "%{$search}%");
+            });
         }
 
         $rooms = $query->latest()->paginate(\App\Support\PerPage::resolve())->withQueryString();
@@ -25,7 +29,7 @@ class MedicalRoomController extends Controller
         return Inertia::render('Admin/MedicalRooms/Index', [
             'rooms' => $rooms,
             'campuses' => $campuses,
-            'activeCampusId' => session('active_campus_id'),
+            'activeCampusId' => $activeCampusId,
             'filters' => $request->only(['search']),
         ]);
     }
@@ -48,7 +52,7 @@ class MedicalRoomController extends Controller
 
     public function update(Request $request, $id)
     {
-        $room = MedicalRoom::findOrFail($id);
+        $room = MedicalRoom::where('campus_id', config('app.active_campus_id'))->findOrFail($id);
 
         $validated = $request->validate([
             'campus_id' => 'required|exists:campuses,id',
@@ -66,7 +70,8 @@ class MedicalRoomController extends Controller
 
     public function destroy($id)
     {
-        MedicalRoom::findOrFail($id)->delete();
+        MedicalRoom::where('campus_id', config('app.active_campus_id'))->findOrFail($id)->delete();
+        
         return back()->with('success', 'Medical room deleted successfully.');
     }
 }

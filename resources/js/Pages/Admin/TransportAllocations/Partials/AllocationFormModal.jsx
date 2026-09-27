@@ -16,6 +16,9 @@ export default function AllocationFormModal({ item, vehicles, users, campuses, a
     is_active: item?.is_active ?? true,
   });
 
+  const availableUsers = users?.filter(u => String(u.campus_id) === String(data.campus_id)) || [];
+  const availableVehicles = vehicles?.filter(v => String(v.campus_id) === String(data.campus_id)) || [];
+
   function submit(e) {
     e.preventDefault();
     const options = { onSuccess: () => { reset(); onClose(); } };
@@ -27,15 +30,12 @@ export default function AllocationFormModal({ item, vehicles, users, campuses, a
   const labelClass = "block text-sm font-semibold text-slate-700 mb-1.5";
 
   return (
-    // Responsive Overlay
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
 
-      {/* Responsive Modal Box */}
       <div
-        className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+        className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0 rounded-t-2xl">
           <div>
             <h3 className="text-xl font-bold text-slate-900">{isEdit ? 'Edit Allocation' : 'New Transport Allocation'}</h3>
@@ -46,7 +46,6 @@ export default function AllocationFormModal({ item, vehicles, users, campuses, a
           </button>
         </div>
 
-        {/* Form Body (Scrollable) */}
         <form onSubmit={submit} className="flex flex-col flex-1 overflow-hidden">
           <div className="p-6 overflow-y-auto space-y-5 flex-1 custom-scrollbar">
 
@@ -54,7 +53,12 @@ export default function AllocationFormModal({ item, vehicles, users, campuses, a
 
               <div className="sm:col-span-2">
                 <label className={labelClass}>Assign to Campus <span className="text-rose-500">*</span></label>
-                <WorkingCampusField value={data.campus_id} campuses={campuses} className={`${inputClass} ${!isSuperAdmin ? 'bg-slate-100 opacity-70' : 'bg-white'}`} />
+                <WorkingCampusField
+                  value={data.campus_id}
+                  campuses={campuses}
+                  onChange={(val) => setData({ ...data, campus_id: val, user_id: '', vehicle_id: '' })}
+                  className={`${inputClass} ${!isSuperAdmin ? 'bg-slate-100 opacity-70' : 'bg-white'}`}
+                />
                 {errors.campus_id && <p className="text-rose-500 text-xs mt-1">{errors.campus_id}</p>}
               </div>
 
@@ -62,7 +66,14 @@ export default function AllocationFormModal({ item, vehicles, users, campuses, a
                 <label className={labelClass}>Select Passenger (User) <span className="text-rose-500">*</span></label>
                 <select value={data.user_id} onChange={(e) => setData('user_id', e.target.value)} required className={`${inputClass} bg-white`}>
                   <option value="" disabled>Search or select user...</option>
-                  {users?.map(u => <option key={u.id} value={u.id}>{u.name} ({u.email})</option>)}
+
+                  {availableUsers.map(u => (
+                    <option key={u.id} value={u.id}>
+                      {u.name} {u.student?.school_class?.name ? `(Class: ${u.student.school_class.name})` : `(${u.email})`}
+                    </option>
+                  ))}
+
+                  {availableUsers.length === 0 && <option disabled>No users found for this campus</option>}
                 </select>
                 {errors.user_id && <p className="text-rose-500 text-xs mt-1">{errors.user_id}</p>}
               </div>
@@ -71,7 +82,12 @@ export default function AllocationFormModal({ item, vehicles, users, campuses, a
                 <label className={labelClass}>Assign Vehicle &amp; Route <span className="text-rose-500">*</span></label>
                 <select value={data.vehicle_id} onChange={(e) => setData('vehicle_id', e.target.value)} required className={`${inputClass} bg-white`}>
                   <option value="" disabled>Select Vehicle</option>
-                  {vehicles?.map(v => <option key={v.id} value={v.id}>{v.vehicle_number} - {v.route_name}</option>)}
+
+                  {availableVehicles.map(v => (
+                    <option key={v.id} value={v.id}>{v.vehicle_number} - {v.route_name}</option>
+                  ))}
+
+                  {availableVehicles.length === 0 && <option disabled>No vehicles found for this campus</option>}
                 </select>
                 {errors.vehicle_id && <p className="text-rose-500 text-xs mt-1">{errors.vehicle_id}</p>}
               </div>
@@ -123,7 +139,6 @@ export default function AllocationFormModal({ item, vehicles, users, campuses, a
             </div>
           </div>
 
-          {/* Footer - Stacked on Mobile, Row on Desktop */}
           <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex flex-col-reverse sm:flex-row items-center justify-end gap-3 shrink-0 rounded-b-2xl">
             <button type="button" onClick={onClose} disabled={processing} className="w-full sm:w-auto px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-all shadow-sm">
               Cancel

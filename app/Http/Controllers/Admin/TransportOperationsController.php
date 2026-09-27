@@ -32,14 +32,14 @@ class TransportOperationsController extends Controller
             'stops' => TransportStop::where('campus_id', $campusId)->orderBy('sequence')->get(),
             'personnel' => TransportPersonnel::where('campus_id', $campusId)->latest()->get(),
             'allocations' => TransportAllocation::where('campus_id', $campusId)->with('user:id,name,email')->where('is_active', true)->get(),
-            
+
             'fuelLogs' => $this->raw('vehicle_fuel_logs')->latest('date')->take(100)->get(),
             'maintenance' => $this->raw('vehicle_maintenance_logs')->latest()->take(100)->get(),
             'documents' => $this->raw('transport_personnel_documents')->latest()->take(100)->get(),
             'boarding' => $this->raw('student_boarding_attendances')->latest('event_at')->take(100)->get(),
             'fees' => $this->raw('transport_fee_charges')->latest()->take(100)->get(),
             'expenses' => $this->raw('vehicle_expenses')->latest('date')->take(100)->get(),
-            
+
             'summary' => [
                 'fuel' => $this->raw('vehicle_fuel_logs')->selectRaw('COALESCE(SUM(litres*unit_price), 0) total')->value('total'),
                 'maintenance' => $this->raw('vehicle_maintenance_logs')->sum('cost'),
@@ -249,7 +249,7 @@ class TransportOperationsController extends Controller
             $u = $a->user;
             $s = $u?->student;
             $phone = $s?->guardian?->father_phone;
-            
+
             if ($phone && class_exists('\App\Services\SmsService')) {
                 \App\Services\SmsService::send($phone, "Transport update: {$u->name} was {$event} for {$trip} at " . now()->format('h:i A') . '.', [
                     'category' => 'transport',

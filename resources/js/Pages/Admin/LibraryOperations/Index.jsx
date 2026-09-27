@@ -45,11 +45,11 @@ export default function Index({ books, reservations, issues, stockChecks, users 
       const r = await fetch(route('admin.library.scan', { code: scan }));
       const data = await r.json();
       setFound(prev => ({ ...prev, ...data })); // Merge new scan with previous scans
-      
+
       // Auto Assign to Issue Form
       if (data.copy) issue.setData('book_copy_id', data.copy.id);
       if (data.member) issue.setData('library_member_id', data.member.id);
-      
+
       setScan('');
     } catch (error) {
       console.error("Scan Failed");
@@ -60,7 +60,7 @@ export default function Index({ books, reservations, issues, stockChecks, users 
     <AuthenticatedLayout>
       <Head title="Library Operations" />
       <main className="mx-auto max-w-7xl space-y-8 p-6">
-        
+
         <div>
           <span className="text-xs font-bold uppercase tracking-wider text-indigo-600">LMS Library</span>
           <h1 className="text-2xl font-black text-slate-900 mt-1">Library Circulation & Operations</h1>
@@ -74,12 +74,12 @@ export default function Index({ books, reservations, issues, stockChecks, users 
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Icon name="search" className="w-5 h-5 text-slate-400" />
               </div>
-              <input 
-                autoFocus 
-                className="w-full pl-10 py-3 rounded-xl border-slate-300 focus:ring-indigo-500 text-sm font-mono shadow-inner" 
-                value={scan} 
-                onChange={e => setScan(e.target.value)} 
-                onKeyDown={e => e.key === 'Enter' && doScan()} 
+              <input
+                autoFocus
+                className="w-full pl-10 py-3 rounded-xl border-slate-300 focus:ring-indigo-500 text-sm font-mono shadow-inner"
+                value={scan}
+                onChange={e => setScan(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && doScan()}
                 placeholder="Scan book barcode, QR, accession or member card..."
               />
             </div>
@@ -92,14 +92,14 @@ export default function Index({ books, reservations, issues, stockChecks, users 
         {/* Issue Book via Scan */}
         <Box title="Issue Scanned Book" icon="book-open">
           <form onSubmit={submit(issue, 'admin.library.issue')} className="space-y-5">
-            
+
             <div className="grid sm:grid-cols-2 gap-4">
               {/* Selected Copy Indicator */}
               <div className={`p-4 rounded-xl border ${issue.data.book_copy_id ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200 border-dashed'}`}>
                 <p className="text-xs text-slate-500 font-bold uppercase mb-1">Scanned Book Copy</p>
                 <div className="font-semibold text-slate-800">
-                  {issue.data.book_copy_id 
-                    ? (found?.copy ? `${found.copy.accession_no} - ${found.copy.book.title}` : 'Selected via scan') 
+                  {issue.data.book_copy_id
+                    ? (found?.copy ? `${found.copy.accession_no} - ${found.copy.book.title}` : 'Selected via scan')
                     : <span className="text-rose-500 text-sm">Waiting for book scan...</span>}
                 </div>
               </div>
@@ -108,8 +108,8 @@ export default function Index({ books, reservations, issues, stockChecks, users 
               <div className={`p-4 rounded-xl border ${issue.data.library_member_id ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200 border-dashed'}`}>
                 <p className="text-xs text-slate-500 font-bold uppercase mb-1">Scanned Member Card</p>
                 <div className="font-semibold text-slate-800">
-                  {issue.data.library_member_id 
-                    ? (found?.member ? `${found.member.card_no} - ${found.member.user.name}` : 'Selected via scan') 
+                  {issue.data.library_member_id
+                    ? (found?.member ? `${found.member.card_no} - ${found.member.user.name}` : 'Selected via scan')
                     : <span className="text-rose-500 text-sm">Waiting for member scan...</span>}
                 </div>
               </div>
@@ -165,7 +165,7 @@ export default function Index({ books, reservations, issues, stockChecks, users 
                       {x.status}
                     </span>
                   </div>
-                  
+
                   <div className="bg-slate-50 p-2 rounded text-xs text-slate-600 mb-3 font-mono">
                     Fine: ৳{x.fine_amount} | Chg: ৳{x.replacement_charge} | Paid: ৳{x.fine_paid}
                   </div>
@@ -204,8 +204,12 @@ export default function Index({ books, reservations, issues, stockChecks, users 
             <form onSubmit={submit(mem, 'admin.library.members')} className="grid gap-3">
               <select className={InputClass} value={mem.data.user_id} onChange={e => mem.setData('user_id', e.target.value)} required>
                 <option value="">Select Student / Staff</option>
-                {users.map(x => <option key={x.id} value={x.id}>{x.name} ({x.email})</option>)}
-              </select>
+                {users.map(x => (
+                    <option key={x.id} value={x.id}>
+                    {x.name} {x.student?.school_class?.name ? `(Class: ${x.student.school_class.name})` : `(${x.email})`}
+                    </option>
+                ))}
+                </select>
               <input className={InputClass} placeholder="Card No (Required)" value={mem.data.card_no} onChange={e => mem.setData('card_no', e.target.value)} required />
               <div className="flex gap-2">
                 <input className={InputClass} title="Valid Until" type="date" value={mem.data.valid_until} onChange={e => mem.setData('valid_until', e.target.value)} />
@@ -237,7 +241,7 @@ export default function Index({ books, reservations, issues, stockChecks, users 
               Start New Audit
             </button>
           </div>
-          
+
           <div className="space-y-3">
             {stockChecks.length === 0 && <p className="text-sm text-slate-400 italic">No previous stock checks found.</p>}
             {stockChecks.map(x => (
@@ -246,7 +250,7 @@ export default function Index({ books, reservations, issues, stockChecks, users 
                   <b className="text-slate-800 block text-sm">{x.reference_no}</b>
                   <span className={`text-[10px] uppercase font-bold tracking-wider ${x.status === 'open' ? 'text-amber-600' : 'text-emerald-600'}`}>{x.status}</span>
                 </div>
-                
+
                 {x.status === 'open' && (
                   <div className="flex gap-2 w-full md:w-auto">
                     <input className={`${InputClass} !mt-0 md:w-48`} placeholder="Scan copy barcode" value={stock.data.code} onChange={e => stock.setData('code', e.target.value)} />

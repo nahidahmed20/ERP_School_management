@@ -11,6 +11,8 @@ import Swal from 'sweetalert2';
 export default function Index({ orders, outlets, users, foods, campuses, activeCampusId, filters }) {
   const { flash } = usePage().props;
   const [search, setSearch] = useState(filters.search ?? '');
+  const [status, setStatus] = useState(filters.status ?? '');
+  const [paymentStatus, setPaymentStatus] = useState(filters.payment_status ?? '');
   const [perPage, setPerPage] = useState(filters.per_page ?? '10');
 
   const [viewingItem, setViewingItem] = useState(null);
@@ -25,7 +27,7 @@ export default function Index({ orders, outlets, users, foods, campuses, activeC
 
   function applyFilters(overrides = {}) {
     router.get(route('admin.cafeteria.orders.index'), {
-      search, per_page: perPage, ...overrides
+      search, status, payment_status: paymentStatus, per_page: perPage, ...overrides
     }, { preserveState: true, replace: true });
   }
 
@@ -34,260 +36,118 @@ export default function Index({ orders, outlets, users, foods, campuses, activeC
       status: field === 'status' ? value : order.status,
       payment_status: field === 'payment_status' ? value : order.payment_status,
     }, {
-      preserveScroll: true,
-      preserveState: true,
-      onSuccess: () => {
-        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Order status updated!', showConfirmButton: false, timer: 2000 });
-      }
+      preserveScroll: true, preserveState: true,
+      onSuccess: () => Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Order status updated!', showConfirmButton: false, timer: 2000 })
     });
   };
 
-  const getOrderStatusBadge = (status) => {
-    switch(status) {
-      case 'Completed': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-      case 'Cancelled': return 'bg-rose-50 text-rose-700 border-rose-200';
-      default: return 'bg-amber-50 text-amber-700 border-amber-200'; // Pending
-    }
+  const getOrderStatusBadge = (st) => {
+    if (st === 'Completed' || st === 'Served') return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+    if (st === 'Cancelled' || st === 'Voided') return 'bg-rose-50 text-rose-700 border-rose-200';
+    return 'bg-amber-50 text-amber-700 border-amber-200';
   };
 
-  const getPaymentStatusBadge = (status) => {
-    if (status === 'Paid') return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-    return 'bg-rose-50 text-rose-700 border-rose-200'; // Unpaid
-  };
-
-  // --- Export Functions ---
-  const handlePrint = () => window.print();
-
-  const exportToCSV = () => {
-    if (!orders.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
-    const headers = ['Order No', 'Customer Name', 'Outlet Name', 'Total Amount', 'Order Status', 'Payment Status'];
-    const rows = orders.data.map(item => [
-      item.order_number || 'N/A',
-      item.customer?.name || 'N/A',
-      item.outlet?.name || 'N/A',
-      item.total_amount || '0',
-      item.status || 'Pending',
-      item.payment_status || 'Unpaid'
-    ]);
-    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows.map(e => e.map(val => `"${val}"`).join(','))].join('\n');
-    const link = document.createElement("a");
-    link.setAttribute("href", encodeURI(csvContent));
-    link.setAttribute("download", `Cafeteria_Orders_${new Date().toISOString().slice(0,10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const copyToClipboard = () => {
-    if (!orders.data.length) return;
-    let text = "Order No\tCustomer\tOutlet\tAmount\tStatus\tPayment\n";
-    orders.data.forEach(item => {
-      text += `${item.order_number}\t${item.customer?.name || '-'}\t${item.outlet?.name || '-'}\t${item.total_amount}\t${item.status}\t${item.payment_status}\n`;
-    });
-    navigator.clipboard.writeText(text);
-    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Data copied to clipboard!', showConfirmButton: false, timer: 2000 });
-  };
+  const getPaymentStatusBadge = (st) => (st === 'Paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200');
 
   return (
     <AuthenticatedLayout>
       <Head title="Cafeteria Orders" />
 
-      {/* Print Specific CSS */}
-      <style dangerouslySetInnerHTML={{__html: `
-        @media print {
-          nav, aside, header, .no-print, button, a, select, input { display: none !important; }
-          body, html { background: #f8fafc !important; }
-          .print-table-wrapper { width: 100% !important; border: none !important; box-shadow: none !important; }
-          .print-title { display: block !important; font-size: 24px !important; font-weight: bold !important; margin-bottom: 20px !important; }
-        }
-        @media screen { .print-title { display: none; } }
-      `}} />
-
-      <div className="print-title">Cafeteria Orders Directory - {new Date().toLocaleDateString('en-GB')}</div>
-
-      <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8 no-print">
-
-        {/* Page Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="max-w-7xl mx-auto p-6 space-y-6">
+        <div className="flex justify-between items-center">
           <div>
-            <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">Cafeteria</span>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Orders</h1>
-            <p className="text-sm text-slate-500 mt-1">ক্যাফেটেরিয়ার খাবার অর্ডার, স্ট্যাটাস এবং পেমেন্ট ম্যানেজ করুন।</p>
+            <h1 className="text-2xl font-bold text-slate-900">Orders</h1>
+            <p className="text-sm text-slate-500">Manage cafeteria food orders and payments.</p>
           </div>
-          <button
-            onClick={() => setIsFormOpen(true)}
-            className="w-full sm:w-auto inline-flex justify-center items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md shadow-indigo-500/20 active:scale-95"
-          >
+          <button onClick={() => setIsFormOpen(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 shadow-md">
             <Icon name="plus" className="w-4 h-4" /> New Order
           </button>
         </div>
 
-        {/* Unified Modern Toolbar */}
-        <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
+        {/* Filters */}
+        <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap items-center gap-3">
+          <select value={perPage} onChange={e => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }} className="bg-slate-50 border border-slate-200 rounded-xl text-sm">
+            <option value="10">10 / Page</option>
+            <option value="25">25 / Page</option>
+            <option value="50">50 / Page</option>
+          </select>
+          
+          <select value={status} onChange={e => { setStatus(e.target.value); applyFilters({ status: e.target.value }); }} className="bg-slate-50 border border-slate-200 rounded-xl text-sm">
+            <option value="">All Order Status</option>
+            <option value="Pending">Pending</option>
+            <option value="Preparing">Preparing</option>
+            <option value="Ready">Ready</option>
+            <option value="Served">Served / Completed</option>
+            <option value="Voided">Voided / Cancelled</option>
+          </select>
 
-            {/* Per Page */}
-            <select
-              value={perPage}
-              onChange={e => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}
-              className="appearance-none bg-none pr-3 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer text-center font-mono"
-              style={{ backgroundImage: 'none' }}
-            >
-              <option value="10">10 / Page</option>
-              <option value="20">20 / Page</option>
-              <option value="50">50 / Page</option>
-              <option value="all">All Page</option>
-            </select>
+          <select value={paymentStatus} onChange={e => { setPaymentStatus(e.target.value); applyFilters({ payment_status: e.target.value }); }} className="bg-slate-50 border border-slate-200 rounded-xl text-sm">
+            <option value="">All Payments</option>
+            <option value="Paid">Paid</option>
+            <option value="Unpaid">Unpaid</option>
+            <option value="Refunded">Refunded</option>
+          </select>
 
-            <div className="hidden sm:block w-px h-6 bg-slate-200"></div>
-
-            {/* Search Input */}
-            <div className="relative flex-1 min-w-[200px] sm:w-80">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Icon name="search" className="w-4 h-4 text-slate-400" />
-              </div>
-              <input
-                type="text"
-                placeholder="Search Order No..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
-                className="block w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-              />
-            </div>
-
-            {/* Apply Button */}
-            <button
-              onClick={() => applyFilters()}
-              className="w-full sm:w-auto px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
-            >
-              Search
-            </button>
+          <div className="relative flex-1 min-w-[200px]">
+            <Icon name="search" className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+            <input type="text" placeholder="Search Order No..." value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && applyFilters()} className="w-full pl-9 bg-slate-50 border border-slate-200 rounded-xl text-sm" />
           </div>
-
-          {/* Export Actions */}
-          <div className="flex items-center justify-end gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-xl w-full xl:w-auto shadow-sm shrink-0 ml-auto">
-            <button onClick={copyToClipboard} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Copy to Clipboard">
-              Copy
-            </button>
-            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-            <button onClick={exportToCSV} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-emerald-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export CSV">
-              CSV
-            </button>
-            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-            <button onClick={() => alert('Backend Excel plugin needed')} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-green-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export Excel">
-              Excel
-            </button>
-            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-            <button onClick={() => alert('Backend PDF plugin needed')} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-rose-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export PDF">
-              PDF
-            </button>
-            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-            <button onClick={handlePrint} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-amber-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Print List">
-              Print
-            </button>
-          </div>
+          <button onClick={() => applyFilters()} className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl">Search</button>
         </div>
 
-        {/* Main Table Card */}
-        <div className="bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 print-table-wrapper">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/50">
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Order No</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Customer</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Outlet</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Amount</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Order Status</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Payment Status</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right no-print">Actions</th>
+        {/* Table */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <table className="w-full text-left">
+            <thead className="bg-slate-50 border-b border-slate-200">
+              <tr>
+                <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Order No</th>
+                <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Customer & Outlet</th>
+                <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase text-right">Amount</th>
+                <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase text-center">Status</th>
+                <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase text-center">Payment</th>
+                <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {orders.data.length === 0 ? <tr><td colSpan={6} className="p-8 text-center text-slate-400">No orders found.</td></tr> : orders.data.map(order => (
+                <tr key={order.id} className="hover:bg-slate-50">
+                  <td className="px-6 py-4 font-bold text-slate-900 font-mono">{order.order_number}</td>
+                  <td className="px-6 py-4">
+                    <span className="block font-semibold text-slate-800">{order.customer?.name}</span>
+                    <span className="text-xs text-slate-500">{order.outlet?.name}</span>
+                  </td>
+                  <td className="px-6 py-4 text-right font-black text-emerald-700 font-mono">৳ {Number(order.total_amount).toFixed(2)}</td>
+                  <td className="px-6 py-4 text-center">
+                    <select value={order.status} onChange={(e) => handleStatusUpdate(order, 'status', e.target.value)} className={`px-2 py-1 rounded text-xs font-bold uppercase border cursor-pointer ${getOrderStatusBadge(order.status)}`}>
+                      <option value="Pending">Pending</option>
+                      <option value="Preparing">Preparing</option>
+                      <option value="Ready">Ready</option>
+                      <option value="Served">Served</option>
+                      <option value="Voided">Voided</option>
+                    </select>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <select value={order.payment_status} onChange={(e) => handleStatusUpdate(order, 'payment_status', e.target.value)} className={`px-2 py-1 rounded text-xs font-bold uppercase border cursor-pointer ${getPaymentStatusBadge(order.payment_status)}`}>
+                      <option value="Unpaid">Unpaid</option>
+                      <option value="Paid">Paid</option>
+                      <option value="Refunded">Refunded</option>
+                    </select>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <button onClick={() => setViewingItem(order)} className="p-2 text-slate-400 hover:text-indigo-600"><Icon name="eye" className="w-4 h-4" /></button>
+                    <button onClick={() => setDeletingItem(order)} className="p-2 text-slate-400 hover:text-rose-600"><Icon name="trash" className="w-4 h-4" /></button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {orders.data.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center text-slate-500">
-                      <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-3 border border-slate-100">
-                        <Icon name="receipt" className="w-8 h-8 text-slate-300" />
-                      </div>
-                      <p className="text-sm font-semibold text-slate-600">No orders found</p>
-                      <p className="text-xs text-slate-400 mt-1">Try adjusting filters or place a new order</p>
-                    </td>
-                  </tr>
-                ) : (
-                  orders.data.map(order => (
-                    <tr key={order.id} className="hover:bg-slate-50/60 transition-colors">
-                      <td className="px-6 py-4">
-                        <strong className="text-sm font-bold text-slate-900 font-mono block">{order.order_number}</strong>
-                      </td>
-                      <td className="px-6 py-4 text-sm font-semibold text-slate-800">
-                        {order.customer?.name}
-                      </td>
-                      <td className="px-6 py-4 text-sm font-semibold text-slate-600">
-                        {order.outlet?.name}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <span className="text-sm font-black text-emerald-700 font-mono">
-                          ৳ {Number(order.total_amount).toFixed(2)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <select
-                          value={order.status}
-                          onChange={(e) => handleStatusUpdate(order, 'status', e.target.value)}
-                          className={`inline-flex px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide uppercase border outline-none cursor-pointer transition-colors ${getOrderStatusBadge(order.status)}`}
-                        >
-                          <option value="Pending">Pending</option>
-                          <option value="Completed">Completed</option>
-                          <option value="Cancelled">Cancelled</option>
-                        </select>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <select
-                          value={order.payment_status}
-                          onChange={(e) => handleStatusUpdate(order, 'payment_status', e.target.value)}
-                          className={`inline-flex px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide uppercase border outline-none cursor-pointer transition-colors ${getPaymentStatusBadge(order.payment_status)}`}
-                        >
-                          <option value="Unpaid">Unpaid</option>
-                          <option value="Paid">Paid</option>
-                        </select>
-                      </td>
-                      <td className="px-6 py-4 text-right no-print">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button onClick={() => setViewingItem(order)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="View Details">
-                            <Icon name="eye" className="w-4 h-4" />
-                          </button>
-                          <button onClick={() => setDeletingItem(order)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Delete Order">
-                            <Icon name="trash" className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="no-print border-t border-slate-100 bg-white px-6 py-4 rounded-b-2xl">
-            <Pagination meta={orders} />
-          </div>
+              ))}
+            </tbody>
+          </table>
+          <div className="p-4 bg-white border-t border-slate-100"><Pagination meta={orders} /></div>
         </div>
       </div>
 
       {isFormOpen && <OrderFormModal outlets={outlets} users={users} foods={foods} campuses={campuses} activeCampusId={activeCampusId} onClose={() => setIsFormOpen(false)} />}
       {viewingItem && <OrderShowModal item={viewingItem} onClose={() => setViewingItem(null)} />}
-
-      {deletingItem && (
-        <ConfirmDeleteModal
-          item={{ name: deletingItem.order_number }}
-          onCancel={() => setDeletingItem(null)}
-          onConfirm={() => {
-            router.delete(route('admin.cafeteria.orders.destroy', deletingItem.id), { onSuccess: () => setDeletingItem(null) });
-          }}
-        />
-      )}
+      {deletingItem && <ConfirmDeleteModal item={{ name: deletingItem.order_number }} onCancel={() => setDeletingItem(null)} onConfirm={() => router.delete(route('admin.cafeteria.orders.destroy', deletingItem.id), { onSuccess: () => setDeletingItem(null) })} />}
     </AuthenticatedLayout>
   );
 }

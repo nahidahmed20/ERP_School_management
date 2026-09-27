@@ -52,7 +52,7 @@ export default function Index({ vehicles, routes, stops, personnel, allocations,
     <AuthenticatedLayout>
       <Head title="Transport Operations" />
       <main className="mx-auto max-w-7xl space-y-8 p-6">
-        
+
         {/* Header */}
         <div>
           <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">Fleet Management</span>
@@ -81,7 +81,7 @@ export default function Index({ vehicles, routes, stops, personnel, allocations,
 
         {/* First Row */}
         <div className="grid gap-6 xl:grid-cols-3">
-          
+
           <Box title="Add Driver / Helper" icon="user">
             <form onSubmit={submit(p, 'admin.transport.personnel')} className="space-y-3">
               <select className={InputClass} value={p.data.type} onChange={x => p.setData('type', x.target.value)}>
@@ -107,22 +107,22 @@ export default function Index({ vehicles, routes, stops, personnel, allocations,
                 {routes.map(r => <option key={r.id} value={r.id}>{r.title}</option>)}
               </select>
               <input className={InputClass} placeholder="Stop Name (e.g. Mirpur 10)" value={s.data.name} onChange={x => s.setData('name', x.target.value)} required />
-              
+
               <div className="grid grid-cols-2 gap-3">
                 <div><label className="text-xs text-slate-500 font-bold ml-1">Pickup Time</label><input className={InputClass} type="time" value={s.data.pickup_time} onChange={x => s.setData('pickup_time', x.target.value)} /></div>
                 <div><label className="text-xs text-slate-500 font-bold ml-1">Drop Time</label><input className={InputClass} type="time" value={s.data.drop_time} onChange={x => s.setData('drop_time', x.target.value)} /></div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-3">
                 <input className={InputClass} placeholder="Latitude" value={s.data.latitude} onChange={x => s.setData('latitude', x.target.value)} />
                 <input className={InputClass} placeholder="Longitude" value={s.data.longitude} onChange={x => s.setData('longitude', x.target.value)} />
               </div>
-              
+
               <div className="grid grid-cols-2 gap-3">
                 <input className={InputClass} placeholder="Radius (m)" type="number" value={s.data.geofence_radius_m} onChange={x => s.setData('geofence_radius_m', x.target.value)} />
                 <input className={InputClass} placeholder="Monthly Fare" type="number" value={s.data.monthly_fare} onChange={x => s.setData('monthly_fare', x.target.value)} />
               </div>
-              
+
               <button disabled={s.processing} className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 p-2.5 font-bold text-white transition-colors">Add Stop</button>
             </form>
           </Box>
@@ -148,7 +148,7 @@ export default function Index({ vehicles, routes, stops, personnel, allocations,
 
         {/* Expenses Row */}
         <div className="grid gap-6 xl:grid-cols-3">
-          
+
           <Box title="Fuel Log Entry" icon="droplet">
             <form onSubmit={submit(f, 'admin.transport.fuel')} className="space-y-3">
               <VehicleSelect formInstance={f} />
@@ -167,12 +167,12 @@ export default function Index({ vehicles, routes, stops, personnel, allocations,
             <form onSubmit={submit(m, 'admin.transport.maintenance')} className="space-y-3">
               <VehicleSelect formInstance={m} />
               <input className={InputClass} placeholder="Maintenance Type (e.g. Oil Change)" value={m.data.type} onChange={x => m.setData('type', x.target.value)} required />
-              
+
               <div className="grid grid-cols-2 gap-3">
                 <div><label className="text-xs text-slate-500 font-bold ml-1">Service Date</label><input className={InputClass} type="date" value={m.data.service_date} onChange={x => m.setData('service_date', x.target.value)} /></div>
                 <div><label className="text-xs text-slate-500 font-bold ml-1">Next Due Date</label><input className={InputClass} type="date" value={m.data.next_due_date} onChange={x => m.setData('next_due_date', x.target.value)} /></div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-3">
                 <input className={InputClass} type="number" placeholder="Cost (৳)" value={m.data.cost} onChange={x => m.setData('cost', x.target.value)} />
                 <input className={InputClass} placeholder="Vendor / Garage" value={m.data.vendor} onChange={x => m.setData('vendor', x.target.value)} />
@@ -197,7 +197,7 @@ export default function Index({ vehicles, routes, stops, personnel, allocations,
 
         {/* Boarding & Fees Row */}
         <div className="grid gap-6 lg:grid-cols-2">
-          
+
           <Box title="Manual Boarding Attendance" icon="check-square">
             <form onSubmit={submit(b, 'admin.transport.boarding')} className="space-y-4">
               <select className={InputClass} value={b.data.transport_allocation_id} onChange={x => b.setData('transport_allocation_id', x.target.value)} required>
@@ -205,7 +205,7 @@ export default function Index({ vehicles, routes, stops, personnel, allocations,
                 {/* 🟢 Fix: Safe user name access */}
                 {allocations.map(a => <option key={a.id} value={a.id}>{a.user?.name || 'Unknown Student'} · {a.pickup_point}</option>)}
               </select>
-              
+
               <div className="grid grid-cols-3 gap-3">
                 <input className={InputClass} type="date" value={b.data.trip_date} onChange={x => b.setData('trip_date', x.target.value)} required />
                 <select className={InputClass} value={b.data.trip_type} onChange={x => b.setData('trip_type', x.target.value)}>

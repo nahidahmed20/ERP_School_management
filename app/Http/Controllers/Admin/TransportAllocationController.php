@@ -14,7 +14,9 @@ class TransportAllocationController extends Controller
 {
     public function index(Request $request)
     {
-        $query = TransportAllocation::with(['vehicle', 'user']);
+        $activeCampusId = config('app.active_campus_id');
+
+        $query = TransportAllocation::where('campus_id', $activeCampusId)->with(['vehicle', 'user']);
 
         if ($search = $request->get('search')) {
             $query->whereHas('user', function($q) use ($search) {
@@ -34,11 +36,21 @@ class TransportAllocationController extends Controller
             ? ['data' => $query->get(), 'links' => [], 'meta' => ['total' => $query->count()]]
             : $query->paginate((int) $perPage)->withQueryString();
 
+        $campusUsers = User::with('student.schoolClass:id,name')
+            ->whereHas('roles', function($q) {
+                $q->whereIn('name', ['Student', 'Teacher', 'Staff', 'student', 'teacher', 'staff']);
+            })
+            ->select('id', 'name', 'email', 'campus_id')
+            ->orderBy('name')
+            ->get();
+
         return Inertia::render('Admin/TransportAllocations/Index', [
             'allocations' => $allocations,
             'campuses' => Campus::select('id', 'name')->get(),
-            'vehicles' => Vehicle::where('is_active', true)->select('id', 'vehicle_number', 'route_name')->get(),
-            'users' => User::select('id', 'name', 'email')->get(), 
+            'vehicles' => Vehicle::where('is_active', true)->select('id', 'vehicle_number', 'route_name', 'campus_id')->get(),
+
+            'users' => $campusUsers,
+
             'filters' => $request->only(['search', 'vehicle_id', 'per_page']),
         ]);
     }
@@ -47,7 +59,7 @@ class TransportAllocationController extends Controller
     {
         $data = $this->validateData($request);
         TransportAllocation::create($data);
-        return back()->with('success', 'ট্রান্সপোর্ট বরাদ্দ সফলভাবে সম্পন্ন হয়েছে।');
+        return back()->with('success', 'ট্রান্সপোর্ট বরাদ্দ সফলভাবে সম্পন্ন হয়েছে।');
     }
 
     public function update(Request $request, $id)
