@@ -43,7 +43,7 @@ export default function Index({ apiKeys, tenants, filters }) {
   const handlePrint = () => window.print();
 
   const exportToCSV = () => {
-    if (!apiKeys.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
+    if (!apiKeys.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'There is no data to export.' });
     const headers = ['Key Name', 'Assigned Tenant', 'Status', 'Expiry Date'];
     const rows = apiKeys.data.map(item => [
       item.name || 'N/A', 
@@ -94,7 +94,7 @@ export default function Index({ apiKeys, tenants, filters }) {
           <div>
             <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">SaaS, AI &amp; Backups</span>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">API Keys &amp; Access</h1>
-            <p className="text-sm text-slate-500 mt-1">থার্ড-পার্টি ইন্টিগ্রেশন এবং মোবাইল অ্যাপের জন্য API টোকেন ম্যানেজ করুন।</p>
+            <p className="text-sm text-slate-500 mt-1">Manage SaaS operations securely.</p>
           </div>
           <button
             onClick={() => { setEditingItem(null); setIsFormOpen(true); }}

@@ -7,7 +7,7 @@ import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 import TranscriptShowModal from './Partials/TranscriptShowModal';
 import Swal from 'sweetalert2';
 
-export default function Index({ templates, campuses, filters }) {
+export default function Index({ templates, filters }) {
   const { flash } = usePage().props;
   const [search, setSearch] = useState(filters.search ?? '');
   const [perPage, setPerPage] = useState(filters.per_page ?? '10');
@@ -31,13 +31,10 @@ export default function Index({ templates, campuses, filters }) {
       is_active: !item.is_active
     }, { 
       preserveScroll: true,
-      onSuccess: () => {
-        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Status updated!', showConfirmButton: false, timer: 2000 });
-      }
+      onSuccess: () => Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Status updated!', showConfirmButton: false, timer: 2000 })
     });
   };
 
-  // --- Export Functions ---
   const handlePrint = () => window.print();
 
   const exportToCSV = () => {
@@ -71,7 +68,6 @@ export default function Index({ templates, campuses, filters }) {
     <AuthenticatedLayout>
       <Head title="Transcript Templates" />
 
-      {/* Print Specific CSS */}
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
           nav, aside, header, .no-print, button, a, select, input { display: none !important; }
@@ -86,86 +82,53 @@ export default function Index({ templates, campuses, filters }) {
 
       <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8 no-print">
         
-        {/* Page Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">Documents &amp; Certificates</span>
+            <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">Documents &amp; Academic</span>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Transcript Templates</h1>
-            <p className="text-sm text-slate-500 mt-1">স্টুডেন্টদের মার্কশিট এবং একাডেমিক ট্রান্সক্রিপ্টের ডিজাইন পরিচালনা করুন।</p>
+            <p className="text-sm text-slate-500 mt-1">শিক্ষার্থীদের রেজাল্ট ও মার্কশিটের জন্য ট্রান্সক্রিপ্ট টেমপ্লেট ডিজাইন করুন।</p>
           </div>
           <Link
             href={route('admin.documents.transcripts.create')}
-            className="w-full sm:w-auto inline-flex justify-center items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md shadow-indigo-500/20 active:scale-95"
+            className="w-full sm:w-auto inline-flex justify-center items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md active:scale-95"
           >
             <Icon name="plus" className="w-4 h-4" /> Create Template
           </Link>
         </div>
 
-        {/* Unified Modern Toolbar */}
         <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-            
-            <select
-              value={perPage}
-              onChange={e => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}
-              className="appearance-none bg-none pr-3 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer text-center font-mono"
-              style={{ backgroundImage: 'none' }}
-            >
+            <select value={perPage} onChange={e => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }} className="appearance-none pr-3 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500 font-mono">
               <option value="10">10 / Page</option>
               <option value="20">20 / Page</option>
               <option value="50">50 / Page</option>
-              <option value="all">All</option>
             </select>
-
             <div className="hidden sm:block w-px h-6 bg-slate-200"></div>
-
             <div className="relative flex-1 min-w-[200px] sm:w-80">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Icon name="search" className="w-4 h-4 text-slate-400" />
-              </div>
-              <input
-                type="text"
-                placeholder="Search title..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
-                className="block w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-              />
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Icon name="search" className="w-4 h-4 text-slate-400" /></div>
+              <input type="text" placeholder="Search templates..." value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && applyFilters()} className="block w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 transition-all" />
             </div>
-
-            <button
-              onClick={() => applyFilters()}
-              className="w-full sm:w-auto px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
-            >
-              Search
-            </button>
+            <button onClick={() => applyFilters()} className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm">Search</button>
           </div>
-
-          {/* Export Actions */}
-          <div className="flex items-center justify-end gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-xl w-full xl:w-auto shadow-sm shrink-0 ml-auto">
-            <button onClick={copyToClipboard} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Copy to Clipboard">Copy</button>
+          <div className="flex items-center justify-end gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-xl shadow-sm">
+            <button onClick={copyToClipboard} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-white rounded-lg">Copy</button>
             <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-            <button onClick={exportToCSV} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-emerald-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export CSV">CSV</button>
+            <button onClick={exportToCSV} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-white rounded-lg">CSV</button>
             <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-            <button onClick={() => alert('Backend Excel plugin needed')} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-green-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export Excel">Excel</button>
-            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-            <button onClick={() => alert('Backend PDF plugin needed')} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-rose-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export PDF">PDF</button>
-            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-            <button onClick={handlePrint} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-amber-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Print List">Print</button>
+            <button onClick={handlePrint} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-white rounded-lg">Print</button>
           </div>
         </div>
 
-        {/* Main Table Card */}
-        <div className="bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 print-table-wrapper">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden print-table-wrapper">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50/50">
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider w-16">SL</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Title</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Grading System</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Status</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right no-print">Actions</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase w-16">SL</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Title</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Grading System</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase text-center">Status</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase text-right no-print">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -175,16 +138,13 @@ export default function Index({ templates, campuses, filters }) {
                       <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-3 border border-slate-100">
                         <Icon name="file-text" className="w-8 h-8 text-slate-300" />
                       </div>
-                      <p className="text-sm font-semibold text-slate-600">কোনো ট্রান্সক্রিপ্ট টেমপ্লেট পাওয়া যায়নি</p>
-                      <p className="text-xs text-slate-400 mt-1">Try adjusting filters or create a new template</p>
+                      <p className="text-sm font-semibold text-slate-600">কোনো টেমপ্লেট পাওয়া যায়নি</p>
                     </td>
                   </tr>
                 ) : (
                   templates.data.map((item, index) => (
                     <tr key={item.id} className="hover:bg-slate-50/60 transition-colors">
-                      <td className="px-6 py-4 text-sm font-medium text-slate-500 font-mono">
-                        {(templates.from ?? 1) + index}
-                      </td>
+                      <td className="px-6 py-4 text-sm font-medium text-slate-500 font-mono">{(templates.from ?? 1) + index}</td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100 shrink-0">
@@ -193,31 +153,20 @@ export default function Index({ templates, campuses, filters }) {
                           <strong className="text-sm font-bold text-slate-900">{item.title}</strong>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <span className="inline-flex px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide uppercase bg-sky-50 text-sky-700 border border-sky-200">
-                          {item.grading_system}
-                        </span>
-                      </td>
+                      <td className="px-6 py-4 font-mono text-sm text-slate-600 font-semibold">{item.grading_system}</td>
                       <td className="px-6 py-4 text-center">
                         <button 
                           onClick={() => handleStatusToggle(item)}
-                          className={`inline-flex px-3 py-1.5 rounded-lg text-[11px] font-bold tracking-wide uppercase transition-all shadow-sm active:scale-95 border ${item.is_active ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'}`}
-                          title="Click to toggle status"
+                          className={`inline-flex px-3 py-1.5 rounded-lg text-[11px] font-bold tracking-wide uppercase transition-all shadow-sm border ${item.is_active ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200'}`}
                         >
                           {item.is_active ? 'Active' : 'Inactive'}
                         </button>
                       </td>
                       <td className="px-6 py-4 text-right no-print">
                         <div className="flex items-center justify-end gap-1.5">
-                          <button onClick={() => setViewingItem(item)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="Live Preview">
-                            <Icon name="eye" className="w-4 h-4" />
-                          </button>
-                          <Link href={route('admin.documents.transcripts.edit', item.id)} className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors inline-block" title="Edit Template">
-                            <Icon name="edit" className="w-4 h-4" />
-                          </Link>
-                          <button onClick={() => setDeletingItem(item)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Delete Template">
-                            <Icon name="trash" className="w-4 h-4" />
-                          </button>
+                          <button onClick={() => setViewingItem(item)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg" title="Live Preview"><Icon name="eye" className="w-4 h-4" /></button>
+                          <Link href={route('admin.documents.transcripts.edit', item.id)} className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg inline-block" title="Edit Template"><Icon name="edit" className="w-4 h-4" /></Link>
+                          <button onClick={() => setDeletingItem(item)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg" title="Delete Template"><Icon name="trash" className="w-4 h-4" /></button>
                         </div>
                       </td>
                     </tr>
@@ -226,10 +175,7 @@ export default function Index({ templates, campuses, filters }) {
               </tbody>
             </table>
           </div>
-
-          <div className="no-print border-t border-slate-100 bg-white px-6 py-4 rounded-b-2xl">
-            <Pagination meta={templates} />
-          </div>
+          <div className="no-print border-t border-slate-100 bg-white px-6 py-4 rounded-b-2xl"><Pagination meta={templates} /></div>
         </div>
       </div>
 
@@ -239,9 +185,7 @@ export default function Index({ templates, campuses, filters }) {
         <ConfirmDeleteModal 
           item={{ name: deletingItem.title }} 
           onCancel={() => setDeletingItem(null)} 
-          onConfirm={() => {
-            router.delete(route('admin.documents.transcripts.destroy', deletingItem.id), { onSuccess: () => setDeletingItem(null) });
-          }} 
+          onConfirm={() => { router.delete(route('admin.documents.transcripts.destroy', deletingItem.id), { onSuccess: () => setDeletingItem(null) }); }} 
         />
       )}
     </AuthenticatedLayout>

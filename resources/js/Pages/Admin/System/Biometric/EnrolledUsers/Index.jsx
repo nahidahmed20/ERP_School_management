@@ -38,7 +38,7 @@ export default function Index({ enrolledUsers, campuses, activeCampusId, filters
   const handlePrint = () => window.print();
 
   const exportToCSV = () => {
-    if (!enrolledUsers.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
+    if (!enrolledUsers.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'There is no data to export.' });
     const headers = ['Machine ID (Biometric)', 'User Name', 'System User ID', 'User Type', 'RFID Card No.', 'Status'];
     const rows = enrolledUsers.data.map(item => [
       item.biometric_id || 'N/A',
@@ -91,7 +91,7 @@ export default function Index({ enrolledUsers, campuses, activeCampusId, filters
           <div>
             <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">System / Biometric Devices</span>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Enrolled Users</h1>
-            <p className="text-sm text-slate-500 mt-1">বায়োমেট্রিক ডিভাইসে এনরোল করা ব্যবহারকারীদের তালিকা পরিচালনা করুন।</p>
+            <p className="text-sm text-slate-500 mt-1">Manage security logs and configurations.</p>
           </div>
           <button
             onClick={() => { setEditingItem(null); setIsFormOpen(true); }}

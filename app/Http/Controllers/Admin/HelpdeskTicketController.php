@@ -12,12 +12,19 @@ class HelpdeskTicketController extends Controller
 {
     public function index(Request $request)
     {
-        $query = HelpdeskTicket::query();
+        $activeCampusId = config('app.active_campus_id');
+
+        $query = HelpdeskTicket::where(function($q) use ($activeCampusId) {
+            $q->where('campus_id', $activeCampusId)
+              ->orWhereNull('campus_id');
+        });
 
         if ($search = $request->get('search')) {
-            $query->where('ticket_number', 'like', "%{$search}%")
+            $query->where(function($q) use ($search) {
+                $q->where('ticket_number', 'like', "%{$search}%")
                   ->orWhere('subject', 'like', "%{$search}%")
                   ->orWhere('requester_name', 'like', "%{$search}%");
+            });
         }
 
         $perPageRaw = $request->get('per_page', '10');
@@ -32,7 +39,7 @@ class HelpdeskTicketController extends Controller
         return Inertia::render('Admin/Communication/Helpdesk/Index', [
             'tickets' => $tickets,
             'campuses' => Campus::select('id', 'name')->get(),
-            'activeCampusId' => session('active_campus_id'),
+            'activeCampusId' => $activeCampusId,
             'filters' => [
                 'search' => $request->get('search', ''),
                 'per_page' => $perPageRaw,
@@ -51,17 +58,22 @@ class HelpdeskTicketController extends Controller
             'priority' => 'required|string',
         ]);
 
+        $validated['campus_id'] = $validated['campus_id'] ?? config('app.active_campus_id');
         $validated['ticket_number'] = 'TKT-' . strtoupper(Str::random(6));
         $validated['status'] = 'Open';
         $validated['replies'] = [];
 
         HelpdeskTicket::create($validated);
+
         return back()->with('success', 'Ticket created successfully.');
     }
 
     public function update(Request $request, $id)
     {
-        $ticket = HelpdeskTicket::findOrFail($id);
+        $ticket = HelpdeskTicket::where(function($q) {
+            $q->where('campus_id', config('app.active_campus_id'))
+              ->orWhereNull('campus_id');
+        })->findOrFail($id);
 
         $validated = $request->validate([
             'priority' => 'required|string',
@@ -69,12 +81,16 @@ class HelpdeskTicketController extends Controller
         ]);
 
         $ticket->update($validated);
+
         return back()->with('success', 'Ticket status updated.');
     }
 
     public function reply(Request $request, $id)
     {
-        $ticket = HelpdeskTicket::findOrFail($id);
+        $ticket = HelpdeskTicket::where(function($q) {
+            $q->where('campus_id', config('app.active_campus_id'))
+              ->orWhereNull('campus_id');
+        })->findOrFail($id);
 
         $request->validate(['message' => 'required|string']);
 
@@ -85,7 +101,6 @@ class HelpdeskTicketController extends Controller
             'date' => now()->format('Y-m-d H:i:s')
         ];
 
-        // If admin replies, status automatically changes to In Progress (if it was Open)
         $status = $ticket->status === 'Open' ? 'In Progress' : $ticket->status;
 
         $ticket->update([
@@ -98,7 +113,13 @@ class HelpdeskTicketController extends Controller
 
     public function destroy($id)
     {
-        HelpdeskTicket::findOrFail($id)->delete();
-        return back()->with('success', 'Ticket deleted.');
+        $ticket = HelpdeskTicket::where(function($q) {
+            $q->where('campus_id', config('app.active_campus_id'))
+              ->orWhereNull('campus_id');
+        })->findOrFail($id);
+
+        $ticket->delete();
+
+        return back()->with('success', 'Ticket deleted successfully.');
     }
 }

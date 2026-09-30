@@ -64,7 +64,7 @@ export default function Index({ tenants, plans, usage, invoices, backups, report
                 {/* Header */}
                 <div>
                     <h1 className="text-xl sm:text-2xl font-black text-slate-900">SaaS / Multi-campus Control</h1>
-                    <p className="text-sm text-slate-500 mt-1">Provisioning, subscriptions, limits, metering, billing and tenant recovery.</p>
+                    <p className="text-sm text-slate-500 mt-1">Manage SaaS operations securely.</p>
                 </div>
 
                 {/* Top Statistics Cards */}

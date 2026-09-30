@@ -40,7 +40,7 @@ export default function Index({ assistants, filters }) {
   const handlePrint = () => window.print();
 
   const exportToCSV = () => {
-    if (!assistants.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
+    if (!assistants.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'There is no data to export.' });
     const headers = ['Tool Name', 'AI Provider', 'Model Info', 'Status'];
     const rows = assistants.data.map(item => [
       item.name || 'N/A', 
@@ -74,7 +74,7 @@ export default function Index({ assistants, filters }) {
           <div>
             <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">SaaS, AI & Backups</span>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">AI Assistants & Prompts</h1>
-            <p className="text-sm text-slate-500 mt-1">এআই টুলস এবং প্রম্পট কনফিগারেশন ম্যানেজ করুন।</p>
+            <p className="text-sm text-slate-500 mt-1">Manage SaaS operations securely.</p>
           </div>
           <button
             onClick={() => { setEditingItem(null); setIsFormOpen(true); }}

@@ -13,11 +13,21 @@ class CommunicationCmsController extends Controller
 {
     public function index(Request $request)
     {
+        $activeCampusId = config('app.active_campus_id');
         $query = CommunicationCms::query();
 
+        if ($activeCampusId) {
+            $query->where(function ($q) use ($activeCampusId) {
+                $q->where('campus_id', $activeCampusId)
+                  ->orWhereNull('campus_id');
+            });
+        }
+
         if ($search = $request->get('search')) {
-            $query->where('title', 'like', "%{$search}%")
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
                   ->orWhere('content_type', 'like', "%{$search}%");
+            });
         }
 
         $perPageRaw = $request->get('per_page', '10');
@@ -32,7 +42,7 @@ class CommunicationCmsController extends Controller
         return Inertia::render('Admin/Communication/CMS/Index', [
             'contents' => $contents,
             'campuses' => Campus::select('id', 'name')->get(),
-            'activeCampusId' => session('active_campus_id'),
+            'activeCampusId' => $activeCampusId,
             'filters' => [
                 'search' => $request->get('search', ''),
                 'per_page' => $perPageRaw,
@@ -52,8 +62,7 @@ class CommunicationCmsController extends Controller
             'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
-        // Auto-generate slug if empty
-        $validated['slug'] = $validated['slug'] ? Str::slug($validated['slug']) : Str::slug($validated['title']);
+        $validated['slug'] = empty($validated['slug']) ? Str::slug($validated['title']) : Str::slug($validated['slug']);
 
         // Handle Image Upload
         if ($request->hasFile('featured_image')) {
@@ -66,19 +75,22 @@ class CommunicationCmsController extends Controller
 
     public function update(Request $request, $id)
     {
-        $cms = CommunicationCms::findOrFail($id);
+        $cms = CommunicationCms::where(function($q) {
+            $q->where('campus_id', config('app.active_campus_id'))
+              ->orWhereNull('campus_id');
+        })->findOrFail($id);
 
         $validated = $request->validate([
             'campus_id' => 'nullable|exists:campuses,id',
             'title' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|unique:communication_cms,slug,'.$id,
+            'slug' => 'nullable|string|max:255|unique:communication_cms,slug,'.$id,
             'content_type' => 'required|string',
             'content_body' => 'nullable|string',
             'is_published' => 'boolean',
-            'featured_image' => 'nullable', // string or file
+            'featured_image' => 'nullable',
         ]);
 
-        $validated['slug'] = Str::slug($validated['slug']);
+        $validated['slug'] = empty($validated['slug']) ? Str::slug($validated['title']) : Str::slug($validated['slug']);
 
         if ($request->hasFile('featured_image')) {
             if ($cms->featured_image) Storage::disk('public')->delete($cms->featured_image);
@@ -93,9 +105,14 @@ class CommunicationCmsController extends Controller
 
     public function destroy($id)
     {
-        $cms = CommunicationCms::findOrFail($id);
+        $cms = CommunicationCms::where(function($q) {
+            $q->where('campus_id', config('app.active_campus_id'))
+              ->orWhereNull('campus_id');
+        })->findOrFail($id);
+
         if ($cms->featured_image) Storage::disk('public')->delete($cms->featured_image);
         $cms->delete();
+
         return back()->with('success', 'Content deleted successfully.');
     }
 }

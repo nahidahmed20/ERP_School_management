@@ -1,0 +1,1 @@
+﻿<?php require "vendor/autoload.php"; $app = require_once "bootstrap/app.php"; $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class); $kernel->bootstrap(); $res = \App\Models\MenuItem::select("route_name")->whereNotNull("route_name")->groupBy("route_name")->havingRaw("COUNT(*) > 1")->pluck("route_name")->toArray(); print_r($res);

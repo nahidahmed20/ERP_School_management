@@ -11,7 +11,13 @@ class SecurityAuditLogController extends Controller
 {
     public function index(Request $request)
     {
-        $query = SecurityAuditLog::with('user:id,name,email,role');
+        $activeCampusId = config('app.active_campus_id');
+        $query = SecurityAuditLog::with('user:id,name,email');
+        $query->where(function($q) use ($activeCampusId) {
+            $q->whereHas('user', function($u) use ($activeCampusId) {
+                $u->where('campus_id', $activeCampusId)->orWhereNull('campus_id');
+            })->orWhereNull('user_id');
+        });
 
         if ($search = $request->get('search')) {
             $query->where('action', 'like', "%{$search}%")

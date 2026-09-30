@@ -1,4 +1,4 @@
-import { useForm, usePage } from '@inertiajs/react';
+﻿import { useForm, usePage } from '@inertiajs/react';
 import Icon from '@/Components/Icons';
 
 export default function EnrolledUserFormModal({ item, campuses, activeCampusId, onClose }) {
@@ -8,7 +8,7 @@ export default function EnrolledUserFormModal({ item, campuses, activeCampusId, 
 
   const { data, setData, post, put, processing, reset, errors } = useForm({
     campus_id: item?.campus_id ?? activeCampusId,
-    user_type: item?.user_type ?? 'Student',
+    user_type: item?.user_type ?? 'student',
     user_id: item?.user_id ?? '',
     user_name: item?.user_name ?? '',
     biometric_id: item?.biometric_id ?? '',
@@ -39,7 +39,7 @@ export default function EnrolledUserFormModal({ item, campuses, activeCampusId, 
         <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0 rounded-t-2xl">
           <div>
             <h3 className="text-xl font-bold text-slate-900">{isEdit ? 'Edit Enrollment' : 'Enroll User to Machine'}</h3>
-            <p className="text-sm text-slate-500 mt-1">Map a system user to a physical biometric ID.</p>
+            <p className="text-sm text-slate-500 mt-1">Manage security logs and configurations.</p>
           </div>
           <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors bg-white border border-slate-200 shadow-sm shrink-0">
             <Icon name="close" className="w-4 h-4" />
@@ -69,9 +69,9 @@ export default function EnrolledUserFormModal({ item, campuses, activeCampusId, 
               <div>
                 <label className={labelClass}>User Type <span className="text-rose-500">*</span></label>
                 <select value={data.user_type} onChange={e => setData('user_type', e.target.value)} className={`${inputClass} bg-white`}>
-                  <option value="Student">Student</option>
-                  <option value="Teacher">Teacher</option>
-                  <option value="Staff">Staff</option>
+                  <option value="student">Student</option>
+                  <option value="staff">Teacher / Staff</option>
+                  
                 </select>
                 {errors.user_type && <p className="text-rose-500 text-xs mt-1">{errors.user_type}</p>}
               </div>
@@ -172,3 +172,4 @@ export default function EnrolledUserFormModal({ item, campuses, activeCampusId, 
     </div>
   );
 }
+

@@ -8,7 +8,7 @@ import CertificateFormModal from './Partials/CertificateFormModal';
 import CertificatePrintModal from './Partials/CertificatePrintModal';
 import Swal from 'sweetalert2';
 
-export default function Index({ certificates, templates, users, campuses, activeCampusId, filters }) {
+export default function Index({ certificates, templates, users, campuses, activeCampusId, schoolName, filters }) {
   const { flash } = usePage().props;
   const [search, setSearch] = useState(filters.search ?? '');
   const [perPage, setPerPage] = useState(filters.per_page ?? '10');
@@ -218,7 +218,7 @@ export default function Index({ certificates, templates, users, campuses, active
 
       {isFormOpen && <CertificateFormModal templates={templates} users={users} campuses={campuses} activeCampusId={activeCampusId} onClose={() => setIsFormOpen(false)} />}
       
-      {viewingItem && <CertificatePrintModal item={viewingItem} onClose={() => setViewingItem(null)} />}
+      {viewingItem && <CertificatePrintModal item={viewingItem} schoolName={schoolName} onClose={() => setViewingItem(null)} />}
       
       {deletingItem && (
         <ConfirmDeleteModal 

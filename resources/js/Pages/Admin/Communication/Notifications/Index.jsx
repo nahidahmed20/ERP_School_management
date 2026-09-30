@@ -24,8 +24,8 @@ export default function Index({ notifications, campuses, activeCampusId, filters
   }, [flash]);
 
   function applyFilters(overrides = {}) {
-    router.get(route('admin.communication-notifications.index'), { 
-      search, per_page: perPage, ...overrides 
+    router.get(route('admin.communication-notifications.index'), {
+      search, per_page: perPage, ...overrides
     }, { preserveState: true, replace: true });
   }
 
@@ -37,17 +37,17 @@ export default function Index({ notifications, campuses, activeCampusId, filters
 
   const displayDate = (dt) => new Date(dt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
 
-  // --- Export Functions ---
+  // --- Export Functions (Restored) ---
   const handlePrint = () => window.print();
 
   const exportToCSV = () => {
     if (!notifications.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
     const headers = ['Title', 'Message', 'Type', 'Audience', 'Date', 'Status'];
     const rows = notifications.data.map(item => [
-      item.title || 'N/A', 
-      item.message ? item.message.replace(/(\r\n|\n|\r)/gm, " ") : 'N/A', 
-      item.notification_type || 'N/A', 
-      item.target_audience || 'N/A', 
+      item.title || 'N/A',
+      item.message ? item.message.replace(/(\r\n|\n|\r)/gm, " ") : 'N/A',
+      item.notification_type || 'N/A',
+      item.target_audience || 'N/A',
       displayDate(item.created_at),
       item.status || 'Sent'
     ]);
@@ -70,6 +70,31 @@ export default function Index({ notifications, campuses, activeCampusId, filters
     Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Data copied to clipboard!', showConfirmButton: false, timer: 2000 });
   };
 
+  // --- Helpers for Icons and Colors ---
+  const getTypeIcon = (type) => {
+    switch (type) {
+      case 'App Push': return <Icon name="smartphone" className="w-4 h-4 text-emerald-500" />;
+      case 'Email': return <Icon name="mail" className="w-4 h-4 text-rose-500" />;
+      case 'SMS': return <Icon name="message-square" className="w-4 h-4 text-sky-500" />;
+      default: return <Icon name="bell" className="w-4 h-4 text-amber-500" />;
+    }
+  };
+
+  const getStatusColor = (status) => {
+    if (status === 'Sent') return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+    if (status === 'Draft') return 'bg-slate-100 text-slate-600 border-slate-200';
+    return 'bg-amber-50 text-amber-700 border-amber-200';
+  };
+
+  const getAudienceColor = (audience) => {
+    switch (audience) {
+      case 'Students': return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'Teachers': return 'bg-indigo-50 text-indigo-700 border-indigo-200';
+      case 'Parents': return 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200';
+      default: return 'bg-slate-100 text-slate-700 border-slate-200'; // All
+    }
+  };
+
   return (
     <AuthenticatedLayout>
       <Head title="Notifications" />
@@ -88,27 +113,26 @@ export default function Index({ notifications, campuses, activeCampusId, filters
       <div className="print-title">Notifications Directory - {new Date().toLocaleDateString('en-GB')}</div>
 
       <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8 no-print">
-        
+
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">Communication</span>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Notifications</h1>
-            <p className="text-sm text-slate-500 mt-1">শিক্ষার্থী ও অভিভাবকদের জন্য নোটিশ এবং পুশ নোটিফিকেশন ম্যানেজ করুন।</p>
+            <h1 className="text-3xl font-black text-slate-900 tracking-tight mt-1">Noticeboard & Push</h1>
+            <p className="text-sm text-slate-500 mt-1">Manage notices, push notifications, and broadcast messages.</p>
           </div>
           <button
             onClick={() => { setEditingItem(null); setIsFormOpen(true); }}
-            className="w-full sm:w-auto inline-flex justify-center items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md shadow-indigo-500/20 active:scale-95"
+            className="w-full sm:w-auto inline-flex justify-center items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl text-sm font-semibold transition-all shadow-md active:scale-95"
           >
-            <Icon name="bell" className="w-4 h-4" /> Create Notification
+            <Icon name="bell" className="w-4 h-4" /> Compose Notice
           </button>
         </div>
 
-        {/* Unified Modern Toolbar */}
+        {/* Toolbar */}
         <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-            
-            {/* Per Page */}
+
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold text-slate-500">Show</span>
               <select
@@ -121,39 +145,32 @@ export default function Index({ notifications, campuses, activeCampusId, filters
                 <option value="25">25</option>
                 <option value="50">50</option>
                 <option value="100">100</option>
-                <option value="500">500</option>
                 <option value="All">All</option>
               </select>
-              <span className="text-xs font-semibold text-slate-500">entries</span>
             </div>
 
             <div className="hidden sm:block w-px h-6 bg-slate-200"></div>
 
-            {/* Search Input */}
             <div className="relative flex-1 min-w-[200px] sm:w-80">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Icon name="search" className="w-4 h-4 text-slate-400" />
               </div>
               <input
                 type="text"
-                placeholder="Search title or message..."
+                placeholder="Search notices by title..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
-                className="block w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                className="block w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
               />
             </div>
 
-            {/* Apply Button */}
-            <button
-              onClick={() => applyFilters()}
-              className="w-full sm:w-auto px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
-            >
+            <button onClick={() => applyFilters()} className="w-full sm:w-auto px-6 py-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm">
               Search
             </button>
           </div>
 
-          {/* Export Actions */}
+          {/* 🟢 Export Actions (Restored 5 Buttons) */}
           <div className="flex items-center justify-end gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-xl w-full xl:w-auto shadow-sm shrink-0 ml-auto">
             <button onClick={copyToClipboard} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Copy to Clipboard">
               Copy
@@ -184,10 +201,10 @@ export default function Index({ notifications, campuses, activeCampusId, filters
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50/50">
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider w-16">SL</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider w-[35%]">Title &amp; Message</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Type &amp; Audience</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider w-[40%]">Notice Title & Message</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Channel</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Audience</th>
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Date</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Status</th>
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right no-print">Action</th>
                 </tr>
               </thead>
@@ -198,8 +215,8 @@ export default function Index({ notifications, campuses, activeCampusId, filters
                       <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-3 border border-slate-100">
                         <Icon name="bell" className="w-8 h-8 text-slate-300" />
                       </div>
-                      <p className="text-sm font-semibold text-slate-600">No notifications found.</p>
-                      <p className="text-xs text-slate-400 mt-1">Try creating a new notification</p>
+                      <p className="text-sm font-semibold text-slate-600">No notices or notifications found.</p>
+                      <p className="text-xs text-slate-400 mt-1">Click "Compose Notice" to create one.</p>
                     </td>
                   </tr>
                 ) : (
@@ -209,28 +226,29 @@ export default function Index({ notifications, campuses, activeCampusId, filters
                         {(notifications.from ?? 1) + index}
                       </td>
                       <td className="px-6 py-4">
-                        <strong className="text-sm font-bold text-slate-900 block">{item.title}</strong>
-                        <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">
-                          {item.message}
-                        </p>
+                        <div className="flex items-start gap-3">
+                          <div className="mt-1 shrink-0 bg-white p-1.5 rounded-lg shadow-sm border border-slate-100">
+                            {getTypeIcon(item.notification_type)}
+                          </div>
+                          <div>
+                            <strong className="text-sm font-bold text-slate-900 block">{item.title}</strong>
+                            <p className="text-[11px] text-slate-500 mt-1 line-clamp-2 leading-relaxed">
+                              {item.message}
+                            </p>
+                          </div>
+                        </div>
                       </td>
-                      <td className="px-6 py-4 space-y-1">
-                        <span className="inline-flex px-2.5 py-0.5 rounded text-[10px] font-bold tracking-wide uppercase bg-slate-100 text-slate-700 border border-slate-200 mr-1.5">
-                          {item.notification_type}
-                        </span>
-                        <span className="inline-flex px-2.5 py-0.5 rounded text-[10px] font-bold tracking-wide uppercase bg-blue-50 text-blue-700 border border-blue-200">
+                      <td className="px-6 py-4">
+                         <span className="font-semibold text-xs text-slate-700">{item.notification_type}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex px-2.5 py-1 rounded text-[10px] font-bold tracking-wide uppercase border ${getAudienceColor(item.target_audience)}`}>
                           {item.target_audience}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-xs font-semibold text-slate-600 font-mono">
-                        {displayDate(item.created_at)}
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className={`inline-flex px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide uppercase border ${
-                          item.status === 'Sent' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                          item.status === 'Draft' ? 'bg-slate-100 text-slate-600 border-slate-200' :
-                          'bg-amber-50 text-amber-700 border-amber-200'
-                        }`}>
+                      <td className="px-6 py-4">
+                        <div className="text-xs font-semibold text-slate-700 font-mono mb-1">{displayDate(item.created_at)}</div>
+                        <span className={`inline-flex px-2 py-0.5 rounded text-[9px] font-bold tracking-wide uppercase border ${getStatusColor(item.status)}`}>
                           {item.status}
                         </span>
                       </td>
@@ -260,12 +278,12 @@ export default function Index({ notifications, campuses, activeCampusId, filters
       {isFormOpen && <NotificationFormModal item={editingItem} campuses={campuses} activeCampusId={activeCampusId} onClose={() => setIsFormOpen(false)} />}
 
       {deletingItem && (
-        <ConfirmDeleteModal 
-          item={{ name: deletingItem.title }} 
-          onCancel={() => setDeletingItem(null)} 
+        <ConfirmDeleteModal
+          item={{ name: deletingItem.title }}
+          onCancel={() => setDeletingItem(null)}
           onConfirm={() => {
             router.delete(route('admin.communication-notifications.destroy', deletingItem.id), { onSuccess: () => setDeletingItem(null) });
-          }} 
+          }}
         />
       )}
     </AuthenticatedLayout>

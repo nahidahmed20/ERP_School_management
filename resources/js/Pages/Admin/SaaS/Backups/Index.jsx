@@ -45,7 +45,7 @@ export default function Index({ backups, filters }) {
   const handlePrint = () => window.print();
 
   const exportToCSV = () => {
-    if (!backups.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
+    if (!backups.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'There is no data to export.' });
     const headers = ['File Name', 'Backup Type', 'File Size', 'Created At', 'Status'];
     const rows = backups.data.map(item => [
       item.file_name || 'N/A', 
@@ -97,7 +97,7 @@ export default function Index({ backups, filters }) {
           <div>
             <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">SaaS, AI &amp; Backups</span>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">System Backups</h1>
-            <p className="text-sm text-slate-500 mt-1">সিস্টেমের ডেটাবেস এবং ফাইলের ব্যাকআপ তৈরি ও ডাউনলোড করুন।</p>
+            <p className="text-sm text-slate-500 mt-1">Manage SaaS operations securely.</p>
           </div>
           <button
             onClick={() => setIsFormOpen(true)}

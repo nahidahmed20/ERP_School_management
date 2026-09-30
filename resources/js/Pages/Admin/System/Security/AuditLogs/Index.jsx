@@ -38,7 +38,7 @@ export default function Index({ auditLogs, filters }) {
   const handlePrint = () => window.print();
 
   const exportToCSV = () => {
-    if (!auditLogs.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
+    if (!auditLogs.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'There is no data to export.' });
     const headers = ['Date & Time', 'Performed By', 'Action', 'Module / Model', 'Model ID', 'IP Address'];
     const rows = auditLogs.data.map(item => [
       new Date(item.created_at).toLocaleString() || 'N/A',
@@ -93,7 +93,7 @@ export default function Index({ auditLogs, filters }) {
           <div>
             <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">System / Security Logs</span>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">System Audit Logs</h1>
-            <p className="text-sm text-slate-500 mt-1">সিস্টেমের গুরুত্বপূর্ণ পরিবর্তন (Create, Update, Delete) এবং অ্যাক্টিভিটিগুলো ট্র্যাক করুন।</p>
+            <p className="text-sm text-slate-500 mt-1">Manage security logs and configurations.</p>
           </div>
           <button
             onClick={() => applyFilters()}

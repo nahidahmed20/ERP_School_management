@@ -12,10 +12,12 @@ class TranscriptTemplateController extends Controller
 {
     public function index(Request $request)
     {
-        $query = TranscriptTemplate::query();
+        $query = TranscriptTemplate::where('campus_id', config('app.active_campus_id'));
+        
         if ($search = $request->get('search')) {
             $query->where('title', 'like', "%{$search}%");
         }
+        
         return Inertia::render('Admin/Documents/Transcripts/Index', [
             'templates' => $query->latest()->paginate(\App\Support\PerPage::resolve())->withQueryString(),
             'filters' => $request->only(['search']),
@@ -56,7 +58,7 @@ class TranscriptTemplateController extends Controller
     public function edit($id)
     {
         return Inertia::render('Admin/Documents/Transcripts/Form', [
-            'item' => TranscriptTemplate::findOrFail($id),
+            'item' => TranscriptTemplate::where('campus_id', config('app.active_campus_id'))->findOrFail($id),
             'campuses' => Campus::whereKey(config('app.active_campus_id'))->select('id', 'name')->get(),
             'activeCampusId' => config('app.active_campus_id'),
         ]);
@@ -64,7 +66,7 @@ class TranscriptTemplateController extends Controller
 
     public function update(Request $request, $id)
     {
-        $template = TranscriptTemplate::findOrFail($id);
+        $template = TranscriptTemplate::where('campus_id', config('app.active_campus_id'))->findOrFail($id);
 
         $request->merge(['campus_id' => config('app.active_campus_id')]);
 
@@ -76,8 +78,8 @@ class TranscriptTemplateController extends Controller
             'footer_text' => 'nullable|string',
             'authorized_signature_title' => 'nullable|string|max:255',
             'is_active' => 'boolean',
-            'watermark_image' => 'nullable',
-            'authorized_signature_image' => 'nullable',
+            'watermark_image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'authorized_signature_image' => 'nullable|image|mimes:jpeg,png,jpg|max:1024',
         ]);
 
         if ($request->hasFile('watermark_image')) {
@@ -100,10 +102,12 @@ class TranscriptTemplateController extends Controller
 
     public function destroy($id)
     {
-        $template = TranscriptTemplate::findOrFail($id);
+        $template = TranscriptTemplate::where('campus_id', config('app.active_campus_id'))->findOrFail($id);
+        
         if ($template->watermark_image) Storage::disk('public')->delete($template->watermark_image);
         if ($template->authorized_signature_image) Storage::disk('public')->delete($template->authorized_signature_image);
         $template->delete();
+        
         return back()->with('success', 'Transcript Template deleted.');
     }
 }

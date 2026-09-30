@@ -32,7 +32,7 @@ export default function Index({ devices, campuses, activeCampusId, filters, enro
   const handlePrint = () => window.print();
 
   const exportToCSV = () => {
-    if (!devices.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
+    if (!devices.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'There is no data to export.' });
     const headers = ['Device Name', 'IP Address', 'Port', 'Serial No.', 'Status', 'Last Sync'];
     const rows = devices.data.map(item => [
       item.name || 'N/A',
@@ -91,7 +91,7 @@ export default function Index({ devices, campuses, activeCampusId, filters, enro
           <div>
             <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">System / Biometric Devices</span>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Device Registry</h1>
-            <p className="text-sm text-slate-500 mt-1">অ্যাটেনডেন্স বা অন্যান্য কাজের জন্য যুক্ত থাকা বায়োমেট্রিক ডিভাইসগুলোর তালিকা।</p>
+            <p className="text-sm text-slate-500 mt-1">Manage security logs and configurations.</p>
           </div>
           <button
             onClick={() => { setEditingItem(null); setIsFormOpen(true); }}

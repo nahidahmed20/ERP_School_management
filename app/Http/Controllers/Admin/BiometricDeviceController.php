@@ -15,7 +15,11 @@ class BiometricDeviceController extends Controller
 {
     public function index(Request $request)
     {
-        $query = BiometricDevice::query();
+        $activeCampusId = config('app.active_campus_id');
+        $query = BiometricDevice::where(function($q) use ($activeCampusId) {
+            $q->where('campus_id', $activeCampusId)
+              ->orWhereNull('campus_id');
+        });
 
         if ($search = $request->get('search')) {
             $query->where('name', 'like', "%{$search}%")
@@ -82,7 +86,9 @@ class BiometricDeviceController extends Controller
 
     public function update(Request $request, $id)
     {
-        $device = BiometricDevice::findOrFail($id);
+        $device = BiometricDevice::where('campus_id', config('app.active_campus_id'))
+                        ->orWhereNull('campus_id')
+                        ->findOrFail($id);
 
         $validated = $request->validate([
             'campus_id' => 'nullable|exists:campuses,id',
@@ -100,7 +106,7 @@ class BiometricDeviceController extends Controller
 
     public function destroy($id)
     {
-        BiometricDevice::findOrFail($id)->delete();
+        BiometricDevice::where('campus_id', config('app.active_campus_id'))->findOrFail($id)->delete();
         return back()->with('success', 'Device deleted.');
     }
 }

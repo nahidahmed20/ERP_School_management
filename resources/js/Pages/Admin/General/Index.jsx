@@ -66,7 +66,7 @@ export default function Index({ settings, groups, campuses, filters, websiteSett
   const handlePrint = () => window.print();
 
   const exportToCSV = () => {
-    if (!settings.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
+    if (!settings.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'There is no data to export.' });
     const headers = ['Label', 'Group', 'Key', 'Type', 'Value', 'Status'];
     const rows = settings.data.map(item => [
       item.label || 'N/A', 
@@ -119,7 +119,7 @@ export default function Index({ settings, groups, campuses, filters, websiteSett
           <div>
             <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">Settings &amp; Registry</span>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">General Settings</h1>
-            <p className="text-sm text-slate-500 mt-1">সিস্টেমের key-value ভিত্তিক configuration এখান থেকে নিয়ন্ত্রণ করুন।</p>
+            <p className="text-sm text-slate-500 mt-1">Manage system settings and registry configurations securely.</p>
           </div>
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
             {canManageBranding && <button onClick={() => setWebsiteFormOpen(true)} className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700"><Icon name="settings" className="h-4 w-4" /> School Logo & Website</button>}

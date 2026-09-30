@@ -44,7 +44,7 @@ export default function Index({ tenants, filters }) {
   const handlePrint = () => window.print();
 
   const exportToCSV = () => {
-    if (!tenants.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
+    if (!tenants.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'There is no data to export.' });
     const headers = ['Client / School Name', 'Admin Email', 'Domain URL', 'Current Plan', 'Billing Valid Until', 'Status'];
     const rows = tenants.data.map(item => [
       item.company_name || 'N/A',
@@ -97,7 +97,7 @@ export default function Index({ tenants, filters }) {
           <div>
             <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">SaaS, AI &amp; Backups</span>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Tenants &amp; Billing</h1>
-            <p className="text-sm text-slate-500 mt-1">সিস্টেমের সকল ক্লায়েন্ট স্কুল এবং তাদের সাবস্ক্রিপশন বিলিং পরিচালনা করুন।</p>
+            <p className="text-sm text-slate-500 mt-1">Manage SaaS operations securely.</p>
           </div>
           <button
             onClick={() => { setEditingItem(null); setIsFormOpen(true); }}

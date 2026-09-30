@@ -38,7 +38,7 @@ export default function Index({ tasks, filters }) {
   const handlePrint = () => window.print();
 
   const exportToCSV = () => {
-    if (!tasks.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
+    if (!tasks.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'There is no data to export.' });
     const headers = ['Task Name', 'Command', 'Frequency (Cron)', 'Last Run', 'Status'];
     const rows = tasks.data.map(item => [
       item.name || 'N/A', 
@@ -90,7 +90,7 @@ export default function Index({ tasks, filters }) {
           <div>
             <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">SaaS, AI &amp; Backups</span>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Scheduled Tasks (Cron)</h1>
-            <p className="text-sm text-slate-500 mt-1">সিস্টেমের অটোমেটেড ব্যাকগ্রাউন্ড টাস্ক এবং কমান্ড শিডিউলার ম্যানেজ করুন।</p>
+            <p className="text-sm text-slate-500 mt-1">Manage SaaS operations securely.</p>
           </div>
           <div className="flex items-center gap-3 w-full sm:w-auto">
             <button

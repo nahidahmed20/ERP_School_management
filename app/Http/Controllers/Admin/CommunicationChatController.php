@@ -14,32 +14,45 @@ class CommunicationChatController extends Controller
     public function index(Request $request)
     {
         $currentUserId = Auth::id();
+        $activeCampusId = config('app.active_campus_id');
 
-        // Fetch all users except the currently logged-in user
-        $users = User::where('id', '!=', $currentUserId)->select('id', 'name', 'email')->get();
+        $users = User::where('id', '!=', $currentUserId)
+            ->where('campus_id', $activeCampusId)
+            ->select('id', 'name', 'email')
+            ->get()
+            ->map(function ($user) use ($currentUserId) {
+                $user->unread_count = CommunicationChat::where('sender_id', $user->id)
+                    ->where('receiver_id', $currentUserId)
+                    ->where('is_read', false)
+                    ->count();
+                return $user;
+            })
+            ->sortByDesc('unread_count')
+            ->values();
 
         $activeUserId = $request->get('user_id');
         $activeUser = null;
         $messages = [];
 
         if ($activeUserId) {
-            $activeUser = User::find($activeUserId);
+            $activeUser = User::where('campus_id', $activeCampusId)->find($activeUserId);
 
-            // Mark messages as read
-            CommunicationChat::where('sender_id', $activeUserId)
-                ->where('receiver_id', $currentUserId)
-                ->where('is_read', false)
-                ->update(['is_read' => true]);
+            if ($activeUser) {
+                CommunicationChat::where('sender_id', $activeUserId)
+                    ->where('receiver_id', $currentUserId)
+                    ->where('is_read', false)
+                    ->update(['is_read' => true]);
 
-            // Fetch chat history between current user and active user
-            $messages = CommunicationChat::where(function($q) use ($currentUserId, $activeUserId) {
-                    $q->where('sender_id', $currentUserId)->where('receiver_id', $activeUserId);
-                })
-                ->orWhere(function($q) use ($currentUserId, $activeUserId) {
-                    $q->where('sender_id', $activeUserId)->where('receiver_id', $currentUserId);
-                })
-                ->orderBy('created_at', 'asc')
-                ->get();
+                // Fetch chat history between current user and active user
+                $messages = CommunicationChat::where(function($q) use ($currentUserId, $activeUserId) {
+                        $q->where('sender_id', $currentUserId)->where('receiver_id', $activeUserId);
+                    })
+                    ->orWhere(function($q) use ($currentUserId, $activeUserId) {
+                        $q->where('sender_id', $activeUserId)->where('receiver_id', $currentUserId);
+                    })
+                    ->orderBy('created_at', 'asc')
+                    ->get();
+            }
         }
 
         return Inertia::render('Admin/Communication/Chat/Index', [

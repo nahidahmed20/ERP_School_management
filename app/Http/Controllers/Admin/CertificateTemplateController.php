@@ -7,15 +7,30 @@ use App\Models\{CertificateTemplate, Campus};
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class CertificateTemplateController extends Controller
 {
+    private function getSchoolName()
+    {
+        return DB::table('settings')
+            ->where('key', 'school_name')
+            ->where(function($q) {
+                $q->where('campus_id', config('app.active_campus_id'))
+                  ->orWhereNull('campus_id');
+            })
+            ->orderBy('campus_id', 'desc')
+            ->value('value') ?? 'Your School Name';
+    }
+
     public function index(Request $request)
     {
-        $query = CertificateTemplate::query();
+        $query = CertificateTemplate::where('campus_id', config('app.active_campus_id'));
+
         if ($search = $request->get('search')) {
             $query->where('title', 'like', "%{$search}%");
         }
+
         return Inertia::render('Admin/Documents/CertificateTemplates/Index', [
             'templates' => $query->latest()->paginate(\App\Support\PerPage::resolve())->withQueryString(),
             'filters' => $request->only(['search']),
@@ -27,6 +42,7 @@ class CertificateTemplateController extends Controller
         return Inertia::render('Admin/Documents/CertificateTemplates/Form', [
             'campuses' => Campus::whereKey(config('app.active_campus_id'))->select('id', 'name')->get(),
             'activeCampusId' => config('app.active_campus_id'),
+            'schoolName' => $this->getSchoolName(),
         ]);
     }
 
@@ -59,16 +75,16 @@ class CertificateTemplateController extends Controller
     public function edit($id)
     {
         return Inertia::render('Admin/Documents/CertificateTemplates/Form', [
-            'item' => CertificateTemplate::findOrFail($id),
+            'item' => CertificateTemplate::where('campus_id', config('app.active_campus_id'))->findOrFail($id),
             'campuses' => Campus::whereKey(config('app.active_campus_id'))->select('id', 'name')->get(),
             'activeCampusId' => config('app.active_campus_id'),
+            'schoolName' => $this->getSchoolName(),
         ]);
     }
 
     public function update(Request $request, $id)
     {
-        $template = CertificateTemplate::findOrFail($id);
-
+        $template = CertificateTemplate::where('campus_id', config('app.active_campus_id'))->findOrFail($id);
         $request->merge(['campus_id' => config('app.active_campus_id')]);
 
         $data = $request->validate([
@@ -88,23 +104,17 @@ class CertificateTemplateController extends Controller
         if ($request->hasFile('background_image')) {
             if ($template->background_image) Storage::disk('public')->delete($template->background_image);
             $data['background_image'] = $request->file('background_image')->store('templates/certificates', 'public');
-        } else { 
-            unset($data['background_image']); 
-        }
+        } else { unset($data['background_image']); }
 
         if ($request->hasFile('signature_1_image')) {
             if ($template->signature_1_image) Storage::disk('public')->delete($template->signature_1_image);
             $data['signature_1_image'] = $request->file('signature_1_image')->store('templates/certificates', 'public');
-        } else { 
-            unset($data['signature_1_image']); 
-        }
+        } else { unset($data['signature_1_image']); }
 
         if ($request->hasFile('signature_2_image')) {
             if ($template->signature_2_image) Storage::disk('public')->delete($template->signature_2_image);
             $data['signature_2_image'] = $request->file('signature_2_image')->store('templates/certificates', 'public');
-        } else { 
-            unset($data['signature_2_image']); 
-        }
+        } else { unset($data['signature_2_image']); }
 
         $template->update($data);
         return redirect()->route('admin.documents.certificatetemplates.index')->with('success', 'Template updated successfully.');
@@ -112,11 +122,13 @@ class CertificateTemplateController extends Controller
 
     public function destroy($id)
     {
-        $template = CertificateTemplate::findOrFail($id);
+        $template = CertificateTemplate::where('campus_id', config('app.active_campus_id'))->findOrFail($id);
+
         if ($template->background_image) Storage::disk('public')->delete($template->background_image);
         if ($template->signature_1_image) Storage::disk('public')->delete($template->signature_1_image);
         if ($template->signature_2_image) Storage::disk('public')->delete($template->signature_2_image);
+
         $template->delete();
-        return back()->with('success', 'Template deleted.');
+        return back()->with('success', 'Template deleted successfully.');
     }
 }

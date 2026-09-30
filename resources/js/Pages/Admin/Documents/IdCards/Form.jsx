@@ -4,36 +4,16 @@ import { Head, useForm, usePage, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
 
-const CERTIFICATE_DESIGNS = [
-  { key: 'orange_bevel', name: 'Orange Bevel (Img 1)', blurb: 'Orange frame, corner clips & gold ribbon badge', swatch: 'linear-gradient(135deg, #ea580c, #f97316)' },
-  { key: 'green_gold',   name: 'Green & Gold (Img 2)',   blurb: 'Green curves, gold banner & center star seal', swatch: 'linear-gradient(135deg, #047857, #eab308)' },
-  { key: 'classic_gold', name: 'Classic Ornamental (Img 3)', blurb: 'Ivory background & ornate gold filigree corners', swatch: 'linear-gradient(135deg, #fef3c7, #b45309)' },
-  { key: 'academic_navy',name: 'Academic Navy (Img 4)', blurb: 'Navy geometric angles & grad cap badge', swatch: 'linear-gradient(135deg, #1e3a8a, #d97706)' },
-  { key: 'blue_orange',  name: 'Modern Waves (Img 5)',   blurb: 'Wavy blue corners & top hanging ribbon', swatch: 'linear-gradient(135deg, #0284c7, #ea580c)' },
+const ID_CARD_DESIGNS = [
+  { key: 'modern_wave', name: 'Modern Wave', desc: 'Curved fluid header' },
+  { key: 'classic_solid', name: 'Classic Solid', desc: 'Traditional block header' },
+  { key: 'corporate_minimal', name: 'Corporate Minimal', desc: 'Clean, professional lines' },
+  { key: 'gradient_fluid', name: 'Gradient Fluid', desc: 'Smooth gradient overlaps' },
+  { key: 'polygon_tech', name: 'Polygon Tech', desc: 'Sharp angled cuts' },
+  { key: 'elegant_border', name: 'Elegant Border', desc: 'Premium framed design' },
 ];
 
-const SigImg = ({ src, height = 26 }) =>
-  src ? <img src={src} alt="signature" style={{ height, objectFit: 'contain' }} /> : <div style={{ height }} />;
-
-// --- SVG Ornaments & Badges --- //
-
-const FiligreeHeader = () => (
-  <svg width="110" height="18" viewBox="0 0 200 30" fill="none" className="mx-auto my-0.5">
-    <path d="M100 20 C80 20, 70 5, 40 10 C20 15, 10 5, 0 15 C20 15, 35 25, 60 15 C80 5, 90 15, 100 20 Z" fill="#3f3f46" />
-    <path d="M100 20 C120 20, 130 5, 160 10 C180 15, 190 5, 200 15 C180 15, 165 25, 140 15 C120 5, 110 15, 100 20 Z" fill="#3f3f46" />
-    <circle cx="100" cy="10" r="3.5" fill="#3f3f46" />
-  </svg>
-);
-
-const CornerFiligree = ({ className }) => (
-  <svg width="45" height="45" viewBox="0 0 100 100" fill="#b45309" className={className}>
-    <path d="M0,0 L40,0 C35,15 25,25 0,40 Z M10,0 C10,20 20,30 0,30" />
-    <path d="M5,5 C25,5 35,15 35,35 C25,25 15,25 5,5 Z" opacity="0.6" />
-    <circle cx="18" cy="18" r="2.5" />
-  </svg>
-);
-
-export default function CertificateForm({ item, campuses, activeCampusId }) {
+export default function IdCardForm({ item, campuses, activeCampusId, schoolName = "Smart School" }) {
   const isEdit = !!item;
   const { auth } = usePage().props;
   const isSuperAdmin = auth?.user?.role === 'super_admin' || auth?.user?.roles?.some(r => r.name === 'Super Admin');
@@ -41,21 +21,25 @@ export default function CertificateForm({ item, campuses, activeCampusId }) {
   const { data, setData, post, processing, errors } = useForm({
     _method: isEdit ? 'put' : 'post',
     campus_id: item?.campus_id ?? auth?.active_campus_id ?? activeCampusId ?? '',
-    title: item?.title ?? 'CERTIFICATE',
-    template_type: item?.template_type ?? 'Merit',
-    design_style: item?.design_style ?? 'orange_bevel',
-    content_body: item?.content_body ?? 'Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.',
-    signature_1_title: item?.signature_1_title ?? 'Date',
-    signature_2_title: item?.signature_2_title ?? 'Manager',
+    title: item?.title ?? 'Student ID Card',
+    audience: item?.audience ?? 'student',
+    layout_type: item?.layout_type ?? 'vertical',
+    design_template: item?.design_template ?? 'modern_wave',
+    text_align: item?.text_align ?? 'center',
+    photo_align: item?.photo_align ?? 'center',
+    theme_color: item?.theme_color ?? '#1e40af',
+    show_blood_group: item?.show_blood_group ?? true,
+    show_address: item?.show_address ?? true,
+    show_phone: item?.show_phone ?? true,
+    back_side_content: item?.back_side_content ?? 'If found, please return to the school authority.',
     is_active: item?.is_active ?? true,
+    logo_image: null,
+    signature_image: null,
     background_image: null,
-    signature_1_image: null,
-    signature_2_image: null,
   });
 
-  const [bgPreview, setBgPreview] = useState(item?.background_image ? `/storage/${item.background_image}` : null);
-  const [sig1Preview, setSig1Preview] = useState(item?.signature_1_image ? `/storage/${item.signature_1_image}` : null);
-  const [sig2Preview, setSig2Preview] = useState(item?.signature_2_image ? `/storage/${item.signature_2_image}` : null);
+  const [logoPreview, setLogoPreview] = useState(item?.logo_image ? `/storage/${item.logo_image}` : null);
+  const [sigPreview, setSigPreview] = useState(item?.signature_image ? `/storage/${item.signature_image}` : null);
 
   const handleImageChange = (field, file, setPreview) => {
     setData(field, file);
@@ -64,380 +48,376 @@ export default function CertificateForm({ item, campuses, activeCampusId }) {
 
   function submit(e) {
     e.preventDefault();
-    post(isEdit ? route('admin.documents.certificatetemplates.update', item.id) : route('admin.documents.certificatetemplates.store'));
+    const url = isEdit ? route('admin.documents.idcards.update', item.id) : route('admin.documents.idcards.store');
+    post(url);
   }
 
-  function renderCertificatePreview() {
-    const style = data.design_style;
-    const customBg = bgPreview ? { backgroundImage: `url(${bgPreview})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {};
+  // 🎨 THE 6 PREMIUM ID CARD DESIGNS
+  function renderIdCardPreview() {
+    const isVertical = data.layout_type === 'vertical';
+    const theme = data.theme_color;
+    const alignText = data.text_align === 'left' ? 'text-left' : data.text_align === 'right' ? 'text-right' : 'text-center';
+    const alignPhoto = data.photo_align === 'left' ? 'items-start' : data.photo_align === 'right' ? 'items-end' : 'items-center';
+    const cardSize = isVertical ? "w-[240px] h-[380px]" : "w-[380px] h-[240px]";
+    
+    // Helper Components
+    const LogoBlock = ({ classes }) => (
+      <div className={`relative z-10 flex ${isVertical ? 'flex-col items-center' : 'items-center gap-2'} ${classes}`}>
+        {logoPreview ? <img src={logoPreview} alt="Logo" className="h-10 object-contain" /> : <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white"><Icon name="hexagon" className="w-5 h-5" /></div>}
+        <h2 className={`font-bold text-white uppercase ${isVertical ? 'text-xs mt-1 text-center' : 'text-sm'}`}>{schoolName}</h2>
+      </div>
+    );
 
-    // 1. ORANGE BEVEL FRAME
-    if (style === 'orange_bevel') {
-      return (
-        <div className="w-full aspect-[1.414/1] bg-gradient-to-br from-amber-500 via-orange-500 to-amber-600 p-4 relative overflow-hidden flex flex-col justify-between shadow-md" style={customBg}>
-          <div 
-            className="w-full h-full bg-white relative p-5 flex flex-col justify-between text-center"
-            style={{ clipPath: 'polygon(16px 0, calc(100% - 16px) 0, 100% 16px, 100% calc(100% - 16px), calc(100% - 16px) 100%, 16px 100%, 0 calc(100% - 16px), 0 16px)' }}
-          >
-            <div 
-              className="absolute inset-2 border-[1px] border-zinc-400 pointer-events-none"
-              style={{ clipPath: 'polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px)' }}
-            />
-            <div className="absolute top-2 left-2 z-10 flex flex-col items-center pointer-events-none">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-600 via-yellow-300 to-amber-200 border border-amber-700 shadow-sm flex items-center justify-center font-bold text-[7px] text-zinc-900 uppercase">
-                Gold
+    const PhotoBlock = ({ customWrapper = "" }) => (
+      <div className={`flex flex-col ${alignPhoto} ${isVertical ? 'w-full mb-3' : 'w-24 shrink-0 mr-4'} ${customWrapper}`}>
+        <div className="w-20 h-24 bg-slate-200 border-[3px] border-white shadow-md rounded overflow-hidden flex items-center justify-center relative z-10">
+          <Icon name="user" className="w-10 h-10 text-slate-400" />
+        </div>
+        <div className="mt-1.5 bg-amber-500 text-white text-[9px] font-bold px-3 py-0.5 rounded-full uppercase tracking-wider shadow-sm z-10">
+          {data.audience === 'both' ? 'Student' : data.audience}
+        </div>
+      </div>
+    );
+
+    const DetailsBlock = ({ textCol = "text-slate-800" }) => (
+      <div className={`flex flex-col justify-center flex-1 ${alignText} ${isVertical ? '' : 'py-2'}`}>
+        <h3 className={`font-bold ${textCol} ${isVertical ? 'text-lg' : 'text-xl'} uppercase leading-tight`}>Student Name</h3>
+        <p className="text-[10px] font-bold text-slate-500 font-mono mt-0.5 mb-2 border-b border-slate-200 inline-block pb-1">ID: STU-2024-001</p>
+        <div className="space-y-1 text-[9px] text-slate-700">
+          {data.show_blood_group && <p><strong className="text-rose-600">Blood:</strong> O+</p>}
+          {data.show_phone && <p><strong>Phone:</strong> +880 1234 56789</p>}
+          {data.show_address && <p className="leading-tight"><strong>Address:</strong> 123 School Avenue, Dhaka</p>}
+        </div>
+      </div>
+    );
+
+    const SignatureBlock = ({ classes }) => (
+      <div className={`relative flex flex-col items-center w-16 ${classes}`}>
+        {sigPreview ? <img src={sigPreview} className="h-6 object-contain" /> : <div className="h-6 border-b border-slate-300 w-full mb-1"></div>}
+        <span className="text-[7px] font-bold text-slate-600 uppercase border-t border-slate-300 w-full text-center pt-0.5">Principal</span>
+      </div>
+    );
+
+    // --- TEMPLATES RENDERING --- //
+    
+    let frontContent, backContent;
+
+    if (data.design_template === 'modern_wave') {
+      frontContent = (
+        <div className="w-full h-full flex flex-col relative bg-white">
+          <div className={`relative ${isVertical ? 'h-24' : 'h-16 w-full'} shrink-0 pt-3 px-4 flex justify-center`} style={{ backgroundColor: theme }}>
+            {isVertical ? <div className="absolute -bottom-6 left-0 w-full h-12 bg-white" style={{ clipPath: 'ellipse(100% 50% at 50% 100%)' }}></div> : <div className="absolute -bottom-3 left-0 w-full h-6 bg-white" style={{ clipPath: 'ellipse(100% 100% at 50% 100%)' }}></div>}
+            <LogoBlock />
+          </div>
+          <div className={`flex flex-1 ${isVertical ? 'flex-col px-4 pt-1' : 'flex-row px-4'}`}>
+            <PhotoBlock customWrapper={isVertical ? "-mt-10" : "mt-2"} />
+            <DetailsBlock />
+          </div>
+          <div className={`relative px-4 pb-3 flex ${isVertical ? 'justify-between items-end' : 'justify-end items-end absolute bottom-3 right-4'}`}>
+            {isVertical && <div className="font-barcode text-xl text-slate-400">||| || ||| ||</div>}
+            <SignatureBlock />
+          </div>
+        </div>
+      );
+      backContent = (
+        <div className="w-full h-full flex flex-col text-center bg-slate-50 p-4">
+          <div className="w-12 h-1 mx-auto rounded-full mb-3" style={{ backgroundColor: theme }}></div>
+          <h4 className="text-[10px] font-bold text-slate-800 uppercase tracking-widest mb-2">Terms & Conditions</h4>
+          <div className="text-[9px] text-slate-600 leading-relaxed text-justify px-2 flex-1 whitespace-pre-wrap">{data.back_side_content}</div>
+          <div className="mt-auto border-t border-slate-200 pt-2"><h5 className="text-[10px] font-bold" style={{ color: theme }}>{schoolName}</h5></div>
+        </div>
+      );
+    } 
+    else if (data.design_template === 'classic_solid') {
+      frontContent = (
+        <div className="w-full h-full flex flex-col relative bg-white">
+          <div className={`flex items-center justify-center px-4 ${isVertical ? 'h-20' : 'h-16'}`} style={{ backgroundColor: theme }}>
+            <LogoBlock />
+          </div>
+          <div className={`flex flex-1 ${isVertical ? 'flex-col px-4 pt-4' : 'flex-row px-4 pt-2'}`}>
+            <PhotoBlock />
+            <DetailsBlock />
+          </div>
+          <div className={`relative px-4 pb-3 flex ${isVertical ? 'justify-between items-end border-t border-slate-100 pt-2 mx-4' : 'justify-end items-end absolute bottom-3 right-4'}`}>
+            {isVertical && <div className="font-mono text-[8px] text-slate-400 tracking-widest">ID: STU24001</div>}
+            <SignatureBlock />
+          </div>
+          <div className="h-1.5 w-full mt-auto" style={{ backgroundColor: theme }}></div>
+        </div>
+      );
+      backContent = (
+        <div className="w-full h-full flex flex-col bg-white border-2 border-slate-100 p-4">
+          <h4 className="text-[10px] font-bold uppercase tracking-widest mb-2 border-b pb-1" style={{ color: theme, borderColor: theme }}>Instructions</h4>
+          <div className="text-[8.5px] text-slate-600 leading-relaxed text-justify flex-1 whitespace-pre-wrap">{data.back_side_content}</div>
+          <div className="h-1.5 w-full mt-auto absolute bottom-0 left-0" style={{ backgroundColor: theme }}></div>
+        </div>
+      );
+    }
+    else if (data.design_template === 'corporate_minimal') {
+      frontContent = (
+        <div className="w-full h-full flex flex-col relative bg-white border-t-4" style={{ borderColor: theme }}>
+          <div className="flex items-center justify-center px-4 pt-4 pb-2">
+            <div className={`relative z-10 flex ${isVertical ? 'flex-col items-center' : 'items-center gap-2'}`}>
+              {logoPreview && <img src={logoPreview} alt="Logo" className="h-8 object-contain" />}
+              <h2 className="font-bold text-slate-800 uppercase text-xs mt-1 text-center tracking-widest">{schoolName}</h2>
+            </div>
+          </div>
+          <div className={`flex flex-1 ${isVertical ? 'flex-col items-center px-4' : 'flex-row px-4 pt-2'}`}>
+            <PhotoBlock />
+            <DetailsBlock textCol="text-slate-900" />
+          </div>
+          <div className={`px-4 pb-4 flex ${isVertical ? 'justify-center' : 'justify-end absolute bottom-4 right-4'}`}>
+            <SignatureBlock />
+          </div>
+        </div>
+      );
+      backContent = (
+        <div className="w-full h-full flex flex-col bg-white border-b-4 p-5 text-center" style={{ borderColor: theme }}>
+          <Icon name="info" className="w-5 h-5 text-slate-300 mx-auto mb-2" />
+          <div className="text-[9px] text-slate-600 leading-relaxed whitespace-pre-wrap">{data.back_side_content}</div>
+          <div className="mt-auto text-[8px] font-mono text-slate-400">IF FOUND RETURN TO OFFICE</div>
+        </div>
+      );
+    }
+    else if (data.design_template === 'gradient_fluid') {
+      frontContent = (
+        <div className="w-full h-full flex flex-col relative bg-slate-50 overflow-hidden">
+          <div className={`absolute top-0 right-0 w-32 h-32 rounded-full opacity-20 -translate-y-10 translate-x-10`} style={{ backgroundColor: theme }}></div>
+          <div className={`absolute bottom-0 left-0 w-24 h-24 rounded-full opacity-10 translate-y-10 -translate-x-5`} style={{ backgroundColor: theme }}></div>
+          <div className={`relative ${isVertical ? 'h-24' : 'h-16 w-full'} flex items-center justify-center px-4`} style={{ background: `linear-gradient(135deg, ${theme}, #00000030)` }}>
+            <LogoBlock />
+          </div>
+          <div className={`flex flex-1 ${isVertical ? 'flex-col px-4 pt-4' : 'flex-row px-4 pt-2'} relative z-10`}>
+            <PhotoBlock />
+            <DetailsBlock />
+          </div>
+          <div className={`relative px-4 pb-3 flex ${isVertical ? 'justify-between items-end' : 'justify-end items-end absolute bottom-3 right-4'}`}>
+            {isVertical && <div className="font-barcode text-2xl text-slate-400 opacity-50">|||||||</div>}
+            <SignatureBlock />
+          </div>
+        </div>
+      );
+      backContent = (
+        <div className="w-full h-full flex flex-col bg-slate-50 p-5 overflow-hidden relative">
+          <div className={`absolute top-0 left-0 w-full h-1`} style={{ backgroundColor: theme }}></div>
+          <h4 className="text-[10px] font-bold text-slate-800 uppercase tracking-widest mb-2 z-10">Important Notice</h4>
+          <div className="text-[9px] text-slate-600 leading-relaxed whitespace-pre-wrap z-10">{data.back_side_content}</div>
+        </div>
+      );
+    }
+    else if (data.design_template === 'polygon_tech') {
+      frontContent = (
+        <div className="w-full h-full flex flex-col relative bg-white">
+          <div className={`relative ${isVertical ? 'h-28' : 'h-20 w-full'} flex items-start justify-center pt-3 px-4`} style={{ backgroundColor: theme, clipPath: isVertical ? 'polygon(0 0, 100% 0, 100% 75%, 0 100%)' : 'polygon(0 0, 100% 0, 100% 100%, 0 70%)' }}>
+            <LogoBlock />
+          </div>
+          <div className={`flex flex-1 ${isVertical ? 'flex-col px-4' : 'flex-row px-4'}`}>
+            <PhotoBlock customWrapper={isVertical ? "-mt-12 ml-auto mr-auto" : "-mt-6"} />
+            <DetailsBlock />
+          </div>
+          <div className={`relative px-4 pb-3 flex ${isVertical ? 'justify-between items-end' : 'justify-end items-end absolute bottom-3 right-4'}`}>
+            {isVertical && <div className="w-8 h-8 opacity-20 border-4 border-dashed rounded-full" style={{ borderColor: theme }}></div>}
+            <SignatureBlock />
+          </div>
+        </div>
+      );
+      backContent = (
+        <div className="w-full h-full flex flex-col bg-white p-0 relative overflow-hidden">
+          <div className="w-full h-8" style={{ backgroundColor: theme, clipPath: 'polygon(0 0, 100% 0, 100% 0, 0 100%)' }}></div>
+          <div className="px-5 py-3 flex-1 flex flex-col">
+            <h4 className="text-[10px] font-bold text-slate-800 uppercase tracking-widest mb-2">Conditions</h4>
+            <div className="text-[8.5px] text-slate-600 leading-relaxed whitespace-pre-wrap">{data.back_side_content}</div>
+          </div>
+          <div className="w-full h-8 mt-auto" style={{ backgroundColor: theme, clipPath: 'polygon(100% 0, 100% 100%, 0 100%, 100% 100%)' }}></div>
+        </div>
+      );
+    }
+    else if (data.design_template === 'elegant_border') {
+      frontContent = (
+        <div className="w-full h-full p-2 bg-white">
+          <div className="w-full h-full border-[3px] flex flex-col relative overflow-hidden" style={{ borderColor: theme }}>
+            <div className="flex items-center justify-center px-4 py-3 border-b" style={{ borderColor: theme }}>
+              <div className={`relative z-10 flex ${isVertical ? 'flex-col items-center' : 'items-center gap-2'}`}>
+                {logoPreview && <img src={logoPreview} alt="Logo" className="h-7 object-contain" />}
+                <h2 className="font-bold uppercase text-[10px] text-center tracking-widest" style={{ color: theme }}>{schoolName}</h2>
               </div>
-              <div className="w-5 h-5 bg-amber-500 -mt-1.5 rotate-45 border-b border-r border-amber-700"></div>
             </div>
-
-            <div className="relative z-10 pt-1">
-              <FiligreeHeader />
-              <p className="text-[10px] font-bold text-zinc-800 uppercase tracking-widest mt-0.5">Institute Name Here</p>
-              <h1 className="text-2xl font-black text-zinc-900 tracking-wider font-serif uppercase mt-0.5">{data.title}</h1>
-              <p className="text-[10px] font-bold text-zinc-700 uppercase tracking-widest">Of Achievement</p>
+            <div className={`flex flex-1 ${isVertical ? 'flex-col px-4 pt-4' : 'flex-row px-4 pt-2'}`}>
+              <PhotoBlock />
+              <DetailsBlock />
             </div>
-
-            <div className="my-auto relative z-10">
-              <p className="text-[8px] font-bold text-zinc-600 tracking-widest uppercase mb-1">This Certificate is Proudly Presented To</p>
-              <div className="text-2xl font-serif italic text-zinc-900 border-b border-zinc-400 pb-0.5 px-6 inline-block min-w-[200px]">
-                Name Here
-              </div>
-              <p className="text-[8px] text-zinc-600 max-w-md mx-auto leading-relaxed mt-2 px-4">
-                {data.content_body}
-              </p>
+            <div className={`relative px-4 pb-3 flex ${isVertical ? 'justify-center items-end' : 'justify-end items-end absolute bottom-3 right-4'}`}>
+              <SignatureBlock />
             </div>
-
-            <div className="relative z-10 pb-0.5">
-              <div className="flex justify-between items-end px-10 mb-1">
-                <div className="w-28 text-center border-b border-zinc-400 pb-0.5">
-                  <SigImg src={sig1Preview} />
-                  <p className="text-[8px] text-zinc-600 font-medium mt-0.5">{data.signature_1_title}</p>
-                </div>
-                <div className="w-28 text-center border-b border-zinc-400 pb-0.5">
-                  <SigImg src={sig2Preview} />
-                  <p className="text-[8px] text-zinc-600 font-medium mt-0.5">{data.signature_2_title}</p>
-                </div>
-              </div>
-              <FiligreeHeader />
-            </div>
+          </div>
+        </div>
+      );
+      backContent = (
+        <div className="w-full h-full p-2 bg-white">
+          <div className="w-full h-full border-[3px] flex flex-col p-4 text-center" style={{ borderColor: theme }}>
+            <h4 className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: theme }}>Instructions</h4>
+            <div className="text-[8.5px] text-slate-600 leading-relaxed whitespace-pre-wrap flex-1">{data.back_side_content}</div>
           </div>
         </div>
       );
     }
 
-    // 2. GREEN & GOLD SWOOPS
-    if (style === 'green_gold') {
-      return (
-        <div className="w-full aspect-[1.414/1] bg-white relative overflow-hidden p-5 flex flex-col justify-between text-center" style={customBg}>
-          <div className="absolute -bottom-8 -left-8 w-40 h-64 bg-emerald-900 rounded-full mix-blend-multiply opacity-90 transform rotate-45 pointer-events-none"></div>
-          <div className="absolute -bottom-10 -left-2 w-36 h-64 bg-amber-500 rounded-full transform rotate-45 pointer-events-none"></div>
-
-          <div className="absolute -bottom-8 -right-8 w-40 h-64 bg-emerald-900 rounded-full mix-blend-multiply opacity-90 transform -rotate-45 pointer-events-none"></div>
-          <div className="absolute -bottom-10 -right-2 w-36 h-64 bg-amber-500 rounded-full transform -rotate-45 pointer-events-none"></div>
-
-          <div className="absolute inset-3 border border-amber-500/60 pointer-events-none"></div>
-          <div className="absolute inset-4 border-[1.5px] border-emerald-900/80 pointer-events-none"></div>
-
-          <div className="relative z-10 flex flex-col justify-between h-full py-1">
-            <div>
-              <p className="text-[9px] font-bold text-zinc-700 uppercase tracking-widest mt-1">Company Name</p>
-              <h1 className="text-2xl font-black text-emerald-900 tracking-wider uppercase font-sans">{data.title}</h1>
-              <p className="text-[10px] font-extrabold text-zinc-800 tracking-widest uppercase">Of Achievement</p>
-            </div>
-
-            <div className="my-auto">
-              <div className="bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-white text-[8px] font-bold tracking-widest uppercase py-0.5 px-5 inline-block rounded-xs shadow-xs mb-1.5">
-                The Certificate Proudly Presented To
-              </div>
-              <h2 className="text-2xl font-serif italic text-emerald-950 my-0.5">Itsname Surname</h2>
-              <div className="w-1/2 h-[1px] bg-zinc-300 mx-auto my-1.5"></div>
-              <p className="text-[8px] text-zinc-600 italic max-w-sm mx-auto leading-relaxed px-2">
-                {data.content_body}
-              </p>
-            </div>
-
-            <div className="flex justify-between items-end px-12 relative z-10">
-              <div className="w-24 text-center border-b border-zinc-700 pb-0.5">
-                <SigImg src={sig1Preview} />
-                <p className="text-[8px] font-bold text-zinc-800 uppercase mt-0.5">{data.signature_1_title}</p>
-              </div>
-
-              <div className="w-9 h-9 rounded-full bg-amber-500 border-2 border-amber-300 shadow flex items-center justify-center -mb-1">
-                <Icon name="star" className="w-4 h-4 fill-white text-white" />
-              </div>
-
-              <div className="w-24 text-center border-b border-zinc-700 pb-0.5">
-                <SigImg src={sig2Preview} />
-                <p className="text-[8px] font-bold text-zinc-800 uppercase mt-0.5">{data.signature_2_title}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    // 3. CLASSIC ORNAMENTAL GOLD
-    if (style === 'classic_gold') {
-      return (
-        <div className="w-full aspect-[1.414/1] bg-[#fdfbf7] relative p-5 flex flex-col justify-between text-center overflow-hidden" style={customBg}>
-          <div className="absolute inset-3 border-[1px] border-amber-600/70 pointer-events-none"></div>
-          <div className="absolute inset-4 border-[0.5px] border-amber-600/40 pointer-events-none"></div>
-
-          <CornerFiligree className="absolute top-3 left-3" />
-          <CornerFiligree className="absolute top-3 right-3 transform scale-x-[-1]" />
-          <CornerFiligree className="absolute bottom-3 left-3 transform scale-y-[-1]" />
-          <CornerFiligree className="absolute bottom-3 right-3 transform scale-x-[-1] scale-y-[-1]" />
-
-          <div className="relative z-10 flex flex-col justify-between h-full py-2">
-            <div>
-              <h1 className="text-2xl font-serif font-bold text-zinc-900 tracking-widest uppercase">{data.title}</h1>
-              <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider mt-0.5">of achievement</p>
-              
-              <div className="flex items-center justify-center gap-2 my-1">
-                <div className="w-10 h-[1px] bg-amber-600"></div>
-                <div className="w-1 h-1 rotate-45 bg-amber-600"></div>
-                <div className="w-10 h-[1px] bg-amber-600"></div>
-              </div>
-            </div>
-
-            <div className="my-auto">
-              <p className="text-[9px] text-zinc-700 font-serif mb-0.5">This certificate is proudly presented to</p>
-              <h2 className="text-2xl font-serif italic text-amber-800 my-0.5">Michael Sprague</h2>
-              <p className="text-[8px] text-zinc-600 max-w-xs mx-auto leading-relaxed my-1.5 px-4">
-                {data.content_body}
-              </p>
-              <p className="text-[9px] font-bold text-zinc-800">Thank you lorem ipsum dolor sit amet!</p>
-            </div>
-
-            <div className="flex justify-between items-end px-10">
-              <div className="flex items-center gap-1">
-                <div className="w-9 h-9 rounded-full bg-amber-600 border border-amber-300 shadow flex items-center justify-center text-[6px] font-bold text-white uppercase text-center leading-tight">
-                  Best<br />Award
-                </div>
-              </div>
-
-              <div className="flex gap-8">
-                <div className="w-20 text-center border-b border-zinc-400 pb-0.5">
-                  <SigImg src={sig1Preview} />
-                  <p className="text-[7px] text-zinc-600 mt-0.5">{data.signature_1_title}</p>
-                </div>
-                <div className="w-20 text-center border-b border-zinc-400 pb-0.5">
-                  <SigImg src={sig2Preview} />
-                  <p className="text-[7px] text-zinc-600 mt-0.5">{data.signature_2_title}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    // 4. ACADEMIC NAVY GEOMETRY
-    if (style === 'academic_navy') {
-      return (
-        <div className="w-full aspect-[1.414/1] bg-slate-50 relative p-5 flex flex-col justify-between overflow-hidden" style={customBg}>
-          <div className="absolute top-0 left-0 w-1/3 h-1/2 bg-blue-950 pointer-events-none" style={{ clipPath: 'polygon(0 0, 100% 0, 0 100%)' }}></div>
-          <div className="absolute top-0 left-0 w-1/3 h-1/2 bg-amber-500 pointer-events-none" style={{ clipPath: 'polygon(0 0, 104% 0, 0 104%)', zIndex: -1 }}></div>
-
-          <div className="absolute bottom-0 right-0 w-1/2 h-1/2 bg-blue-950 pointer-events-none" style={{ clipPath: 'polygon(100% 0, 100% 100%, 0 100%)' }}></div>
-          <div className="absolute bottom-0 right-0 w-1/2 h-1/2 bg-amber-500 pointer-events-none opacity-80" style={{ clipPath: 'polygon(100% 8%, 100% 100%, 8% 100%)' }}></div>
-
-          <div className="absolute inset-4 border-[1px] border-amber-600/80 pointer-events-none"></div>
-
-          <div className="absolute top-5 right-5 z-10 w-8 h-8 rounded-full bg-amber-500 border border-blue-950 flex items-center justify-center shadow-xs">
-            <Icon name="academic-cap" className="w-4 h-4 text-blue-950" />
-          </div>
-
-          <div className="relative z-10 flex flex-col justify-between h-full py-1 text-center">
-            <div className="mt-1">
-              <h1 className="text-2xl font-black text-blue-950 tracking-wider uppercase font-sans">{data.title}</h1>
-              <p className="text-[9px] font-bold text-blue-900 uppercase tracking-widest">Of High School Graduation</p>
-              <div className="w-1/3 h-[1.5px] bg-amber-500 mx-auto mt-1"></div>
-            </div>
-
-            <div className="my-auto">
-              <p className="text-[8px] font-bold text-zinc-800 uppercase tracking-wider mb-0.5">Proudly Present To:</p>
-              <h2 className="text-2xl font-serif italic text-zinc-900 my-0.5">Name Surname</h2>
-              <p className="text-[7.5px] font-semibold text-zinc-600 uppercase max-w-xs mx-auto leading-relaxed mt-1">
-                {data.content_body}
-              </p>
-            </div>
-
-            <div className="flex justify-around items-end px-10 mb-1">
-              <div className="w-24 text-center border-b border-blue-950 pb-0.5">
-                <SigImg src={sig1Preview} />
-                <p className="text-[7.5px] font-bold text-blue-950 uppercase mt-0.5">{data.signature_1_title}</p>
-              </div>
-              <div className="w-24 text-center border-b border-blue-950 pb-0.5">
-                <SigImg src={sig2Preview} />
-                <p className="text-[7.5px] font-bold text-blue-950 uppercase mt-0.5">{data.signature_2_title}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    // 5. MODERN WAVES & RIBBON
     return (
-      <div className="w-full aspect-[1.414/1] bg-white relative p-4 flex flex-col justify-between overflow-hidden" style={customBg}>
-        <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-orange-500 to-amber-500"></div>
-        <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-orange-500 to-amber-500"></div>
-
-        <div className="absolute top-0 right-0 w-32 h-28 bg-sky-900 rounded-bl-full opacity-90 pointer-events-none"></div>
-        <div className="absolute bottom-0 left-0 w-36 h-32 bg-sky-900 rounded-tr-full opacity-90 pointer-events-none"></div>
-
-        <div className="absolute top-0 left-8 w-3 h-20 bg-sky-900 z-10"></div>
-        <div className="absolute top-10 left-4 z-20 w-11 h-11 rounded-full bg-sky-950 border-2 border-amber-500 flex flex-col items-center justify-center text-amber-400 font-bold shadow">
-          <span className="text-[8px] leading-tight">2030</span>
-          <span className="text-[5px] tracking-tighter uppercase">Award</span>
+      <div className="flex flex-col xl:flex-row gap-6 items-center justify-center pt-4">
+        {/* FRONT SIDE */}
+        <div className="flex flex-col items-center gap-2">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Front Side</span>
+          <div className={`${cardSize} bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden relative shrink-0`}>
+             {frontContent}
+          </div>
         </div>
 
-        <div className="absolute bottom-3 left-3 z-10 text-[7px] font-bold text-white uppercase tracking-wider">
-          Logo Here
-        </div>
-
-        <div className="relative z-10 pl-20 pr-4 py-3 flex flex-col justify-between h-full">
-          <div>
-            <h1 className="text-2xl font-serif font-bold text-amber-600 tracking-wide">{data.title}</h1>
-            <p className="text-[9px] font-bold text-zinc-700 tracking-widest uppercase">Of Appreciation</p>
-          </div>
-
-          <div className="my-auto">
-            <h2 className="text-2xl font-serif italic text-sky-950 mb-0.5">Name Surname</h2>
-            <div className="w-full h-[1px] bg-amber-500 mb-1.5"></div>
-            <p className="text-[8px] font-bold text-zinc-800 leading-tight">Lorem Ipsum is simply dummy text of the printing and typesetting</p>
-            <p className="text-[7.5px] text-zinc-500 leading-relaxed mt-1 max-w-xs">
-              {data.content_body}
-            </p>
-          </div>
-
-          <div className="flex justify-end gap-8 items-end mb-1">
-            <div className="w-20 text-center border-b border-amber-500 pb-0.5">
-              <SigImg src={sig1Preview} />
-              <p className="text-[7px] text-zinc-700 mt-0.5">{data.signature_1_title}</p>
-            </div>
-            <div className="w-20 text-center border-b border-amber-500 pb-0.5">
-              <SigImg src={sig2Preview} />
-              <p className="text-[7px] text-zinc-700 mt-0.5">{data.signature_2_title}</p>
-            </div>
+        {/* BACK SIDE */}
+        <div className="flex flex-col items-center gap-2">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Back Side</span>
+          <div className={`${cardSize} bg-slate-50 rounded-xl shadow-lg border border-slate-200 overflow-hidden relative shrink-0`}>
+             {backContent}
           </div>
         </div>
       </div>
     );
   }
 
-  const inputClass = "block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all";
-  const labelClass = "block text-sm font-semibold text-slate-700 mb-1.5";
+  const inputClass = "block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition-all";
+  const labelClass = "block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5";
 
   return (
     <AuthenticatedLayout>
-      <Head title={isEdit ? 'Edit Certificate' : 'Create Certificate'} />
+      <Head title={isEdit ? 'Edit ID Card' : 'Create ID Card'} />
 
       <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">Documents / Certificates</span>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">{isEdit ? 'Edit Certificate Template' : 'Create Live Certificate Template'}</h1>
+            <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">Documents / ID Cards</span>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">{isEdit ? 'Edit ID Card Template' : 'Create New ID Card Template'}</h1>
           </div>
-          <Link href={route('admin.documents.certificatetemplates.index')} className="w-full sm:w-auto inline-flex justify-center items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm">
+          <Link href={route('admin.documents.idcards.index')} className="w-full sm:w-auto inline-flex justify-center items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm">
             <Icon name="arrow-left" className="w-4 h-4" /> Back to List
           </Link>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-8 items-start">
-          {/* Settings Side Form */}
-          <div className="w-full lg:w-[480px] xl:w-[540px] shrink-0 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="flex flex-col xl:flex-row gap-8 items-start">
+          
+          {/* Settings Form Side */}
+          <div className="w-full xl:w-[480px] shrink-0 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/50">
                <h3 className="text-lg font-bold text-slate-900">Template Settings</h3>
             </div>
 
             <form onSubmit={submit} className="p-6 space-y-6">
+              
               <div className="pb-6 border-b border-slate-100">
-                <div className="mb-3">
-                  <strong className="text-sm font-semibold text-slate-800">Select Design Style</strong>
-                  <p className="text-xs text-slate-500 mt-0.5">Choose layout matching your reference certificate style.</p>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {CERTIFICATE_DESIGNS.map(d => (
-                    <div
-                      key={d.key}
-                      onClick={() => setData('design_style', d.key)}
-                      className={`cursor-pointer border-2 rounded-xl p-2.5 transition-all bg-white hover:-translate-y-0.5 ${data.design_style === d.key ? 'border-indigo-600 ring-2 ring-indigo-600/20' : 'border-slate-200 hover:border-indigo-300'}`}
-                    >
-                      <div className="w-full h-8 rounded-lg mb-2 relative" style={{ background: d.swatch }}>
-                        {data.design_style === d.key && <span className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-indigo-600 text-white text-[9px] flex items-center justify-center font-bold">✓</span>}
-                      </div>
-                      <div className="font-bold text-[11px] text-slate-800 leading-tight">{d.name}</div>
+                <label className={labelClass}>Select Design Theme</label>
+                <div className="grid grid-cols-2 gap-3 mt-2">
+                  {ID_CARD_DESIGNS.map(d => (
+                    <div key={d.key} onClick={() => setData('design_template', d.key)} className={`cursor-pointer border-2 rounded-xl p-3 transition-all bg-white hover:-translate-y-0.5 flex flex-col gap-1 ${data.design_template === d.key ? 'border-indigo-600 ring-2 ring-indigo-600/20 bg-indigo-50/50' : 'border-slate-200 hover:border-indigo-300'}`}>
+                      <div className="font-bold text-[12px] text-slate-800 leading-tight">{d.name}</div>
+                      <div className="text-[10px] text-slate-500 leading-tight">{d.desc}</div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="sm:col-span-2">
+              <div className="grid grid-cols-1 gap-5">
+                <div>
                   <label className={labelClass}>Campus *</label>
-                  <WorkingCampusField value={data.campus_id} campuses={campuses} className={`${inputClass} ${!isSuperAdmin ? 'bg-slate-100 opacity-70' : 'bg-white'}`} />
-                  {errors.campus_id && <span className="text-red-500 text-xs mt-1">{errors.campus_id}</span>}
+                  <WorkingCampusField value={data.campus_id} campuses={campuses} className={`${inputClass} ${!isSuperAdmin ? 'opacity-70 bg-slate-100' : 'bg-white'}`} />
+                  {errors.campus_id && <span className="text-rose-500 text-xs mt-1 block">{errors.campus_id}</span>}
                 </div>
 
-                <div className="sm:col-span-2">
-                  <label className={labelClass}>Template Title (Headline) *</label>
-                  <input type="text" value={data.title} onChange={e => setData('title', e.target.value)} required className={inputClass} />
-                  {errors.title && <span className="text-red-500 text-xs mt-1">{errors.title}</span>}
+                <div>
+                  <label className={labelClass}>Template Title *</label>
+                  <input type="text" value={data.title} onChange={e => setData('title', e.target.value)} required placeholder="e.g. Student ID Card 2024" className={inputClass} />
                 </div>
 
-                <div className="sm:col-span-2">
-                  <label className={labelClass}>Template Type *</label>
-                  <select value={data.template_type} onChange={e => setData('template_type', e.target.value)} required className={`${inputClass} bg-white`}>
-                    <option value="Merit">Merit / Excellence</option>
-                    <option value="Achievement">Achievement</option>
-                    <option value="Completion">Completion</option>
-                    <option value="Participation">Participation</option>
-                  </select>
-                  {errors.template_type && <span className="text-red-500 text-xs mt-1">{errors.template_type}</span>}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className={labelClass}>Target Audience</label>
+                    <select value={data.audience} onChange={e => setData('audience', e.target.value)} className={`${inputClass} bg-white`}>
+                      <option value="student">Student Only</option>
+                      <option value="staff">Staff / Teacher</option>
+                      <option value="both">Both</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelClass}>Layout Type</label>
+                    <select value={data.layout_type} onChange={e => setData('layout_type', e.target.value)} className={`${inputClass} bg-white font-bold text-indigo-700`}>
+                      <option value="vertical">Portrait (Vertical)</option>
+                      <option value="horizontal">Landscape (Horizontal)</option>
+                    </select>
+                  </div>
                 </div>
 
-                <div className="sm:col-span-2">
-                  <label className={labelClass}>Main Body Content *</label>
-                  <textarea rows="3" value={data.content_body} onChange={e => setData('content_body', e.target.value)} required className={`${inputClass} resize-none`}></textarea>
-                  {errors.content_body && <span className="text-red-500 text-xs mt-1">{errors.content_body}</span>}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className={labelClass}>Text Alignment</label>
+                    <select value={data.text_align} onChange={e => setData('text_align', e.target.value)} className={`${inputClass} bg-white`}>
+                      <option value="center">Center</option>
+                      <option value="left">Left</option>
+                      <option value="right">Right</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelClass}>Theme Color</label>
+                    <div className="flex items-center gap-3 mt-1">
+                      <input type="color" value={data.theme_color} onChange={e => setData('theme_color', e.target.value)} className="w-10 h-10 rounded cursor-pointer border-0 p-0" />
+                      <span className="text-sm font-mono text-slate-500 uppercase">{data.theme_color}</span>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="sm:col-span-2">
-                  <label className={labelClass}>Custom Background Overlay</label>
-                  <input type="file" accept="image/*" onChange={e => handleImageChange('background_image', e.target.files[0], setBgPreview)} className="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition-all border border-slate-200 rounded-xl bg-slate-50 cursor-pointer" />
+                <div className="bg-slate-50 p-4 border border-slate-200 rounded-xl space-y-3">
+                  <strong className="text-xs font-bold text-slate-800 block border-b border-slate-200 pb-2">Toggle Display Fields</strong>
+                  <div className="flex gap-6">
+                    <label className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" className="rounded text-indigo-600 focus:ring-indigo-500" checked={data.show_blood_group} onChange={e => setData('show_blood_group', e.target.checked)} /> Blood Grp</label>
+                    <label className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" className="rounded text-indigo-600 focus:ring-indigo-500" checked={data.show_phone} onChange={e => setData('show_phone', e.target.checked)} /> Phone</label>
+                    <label className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" className="rounded text-indigo-600 focus:ring-indigo-500" checked={data.show_address} onChange={e => setData('show_address', e.target.checked)} /> Address</label>
+                  </div>
                 </div>
 
-                <div className="bg-slate-50 p-3.5 border border-slate-200 rounded-xl space-y-2.5">
-                  <strong className="text-xs font-bold text-slate-800 block border-b border-slate-200 pb-1.5">Left Signature / Date</strong>
-                  <input type="text" value={data.signature_1_title} onChange={e => setData('signature_1_title', e.target.value)} className={`${inputClass} py-1.5 px-3 text-xs`} />
-                  <input type="file" accept="image/*" onChange={e => handleImageChange('signature_1_image', e.target.files[0], setSig1Preview)} className="block w-full text-[11px] text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[11px] file:font-semibold file:bg-indigo-50 file:text-indigo-700 cursor-pointer border border-slate-200 rounded-lg bg-white" />
+                <div>
+                  <label className={labelClass}>Back Side Instruction Text</label>
+                  <textarea rows="3" value={data.back_side_content} onChange={e => setData('back_side_content', e.target.value)} placeholder="Terms and instructions for the back of the card..." className={`${inputClass} resize-none`}></textarea>
                 </div>
 
-                <div className="bg-slate-50 p-3.5 border border-slate-200 rounded-xl space-y-2.5">
-                  <strong className="text-xs font-bold text-slate-800 block border-b border-slate-200 pb-1.5">Right Signature / Manager</strong>
-                  <input type="text" value={data.signature_2_title} onChange={e => setData('signature_2_title', e.target.value)} className={`${inputClass} py-1.5 px-3 text-xs`} />
-                  <input type="file" accept="image/*" onChange={e => handleImageChange('signature_2_image', e.target.files[0], setSig2Preview)} className="block w-full text-[11px] text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[11px] file:font-semibold file:bg-indigo-50 file:text-indigo-700 cursor-pointer border border-slate-200 rounded-lg bg-white" />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-slate-50 p-3 border border-slate-200 rounded-xl">
+                    <strong className="text-xs font-bold text-slate-800 mb-2 block">Upload Logo</strong>
+                    <input type="file" accept="image/*" onChange={e => handleImageChange('logo_image', e.target.files[0], setLogoPreview)} className="block w-full text-[10px] file:mr-2 file:py-1.5 file:px-2 file:rounded-md file:border-0 file:bg-indigo-100 file:text-indigo-700 cursor-pointer" />
+                  </div>
+                  <div className="bg-slate-50 p-3 border border-slate-200 rounded-xl">
+                    <strong className="text-xs font-bold text-slate-800 mb-2 block">Authorized Signature</strong>
+                    <input type="file" accept="image/*" onChange={e => handleImageChange('signature_image', e.target.files[0], setSigPreview)} className="block w-full text-[10px] file:mr-2 file:py-1.5 file:px-2 file:rounded-md file:border-0 file:bg-indigo-100 file:text-indigo-700 cursor-pointer" />
+                  </div>
                 </div>
+                
               </div>
 
-              <div className="pt-4 border-t border-slate-100 flex justify-end">
-                <button type="submit" disabled={processing} className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md shadow-indigo-500/25 disabled:opacity-70">
-                  <Icon name="save" className="w-4 h-4" />
-                  {processing ? 'Saving...' : 'Save Template'}
+              <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={data.is_active} onChange={e => setData('is_active', e.target.checked)} className="rounded w-5 h-5 text-emerald-600 focus:ring-emerald-500" />
+                  <span className="text-sm font-bold text-slate-700">Active Template</span>
+                </label>
+                <button type="submit" disabled={processing} className="flex items-center justify-center gap-2 px-8 py-3 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md disabled:opacity-70 active:scale-95">
+                  {processing ? 'Saving...' : <><Icon name="save" className="w-4 h-4" /> Save ID Card</>}
                 </button>
               </div>
             </form>
           </div>
 
-          {/* Live Preview Display */}
-          <div className="w-full flex-1 lg:sticky lg:top-24 flex flex-col items-center">
-            <div className="w-full flex items-center justify-center gap-2 mb-3 bg-slate-900 text-white py-2 rounded-xl text-xs font-bold uppercase tracking-widest shadow-md">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Certificate Live Preview
+          {/* Live Preview Side */}
+          <div className="w-full flex-1 xl:sticky xl:top-24 flex flex-col items-center">
+            <div className="w-full flex items-center justify-center gap-2 mb-4 bg-slate-900 text-white py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest shadow-md">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse border-2 border-slate-900"></span> Live ID Card Preview
             </div>
-            <div className="w-full rounded-2xl shadow-xl border border-slate-200 overflow-hidden bg-white ring-8 ring-slate-100">
-              {renderCertificatePreview()}
+            
+            <div className="w-full rounded-2xl p-6 bg-slate-200/50 border border-slate-200 flex justify-center overflow-x-auto custom-scrollbar min-h-[500px]">
+              {renderIdCardPreview()}
             </div>
           </div>
         </div>

@@ -449,7 +449,7 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
     Route::post('library-operations/stock-checks', [LibraryOperationsController::class,'startStock'])->name('library.stock.start');
     Route::post('library-operations/stock-checks/{check}/scan', [LibraryOperationsController::class,'scanStock'])->name('library.stock.scan');
     Route::patch('library-operations/stock-checks/{check}/complete', [LibraryOperationsController::class,'completeStock'])->name('library.stock.complete');
-    Route::resource('documents/certificatetemplates', CertificateTemplateController::class)->names('documents.certificatetemplates');
+    Route::resource('documents/certificate-templates', CertificateTemplateController::class)->names('documents.certificatetemplates');
     Route::resource('documents/certificates', GeneratedCertificateController::class)->names('documents.certificates')->only(['index', 'store', 'destroy']);
     Route::resource('documents/idcards', IdCardTemplateController::class)->names('documents.idcards');
     Route::resource('documents/transcripts', TranscriptTemplateController::class)->names('documents.transcripts');
@@ -478,7 +478,7 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
     // Transport Boarding History
     Route::get('transport-boarding', [TransportBoardingController::class, 'index'])->name('transport-boarding.index');
     Route::delete('transport-boarding/{id}', [TransportBoardingController::class, 'destroy'])->name('transport-boarding.destroy');
-        
+
     Route::resource('hostel-rooms', HostelRoomController::class);
     Route::resource('hostel-allocations', HostelAllocationController::class);
     Route::get('hostel-operations', [HostelOperationsController::class,'index'])->name('hostel.operations');

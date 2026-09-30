@@ -23,8 +23,9 @@ class EventController extends Controller
             $query->where('type', $request->type);
         }
 
-        if ($request->get('filter') === 'upcoming') {
-            $query->where('start_datetime', '>=', now());
+        if ($request->get('filter', 'upcoming') === 'upcoming') {
+            // 🟢 FIX: Ongoing events are not hidden anymore
+            $query->where('end_datetime', '>=', now());
         }
 
         return Inertia::render('Admin/Communication/Events/Index', [
@@ -53,7 +54,9 @@ class EventController extends Controller
 
     public function update(Request $request, $id)
     {
-        $event = Event::findOrFail($id);
+        $campusId = config('app.active_campus_id');
+        $event = Event::where('campus_id', $campusId)->findOrFail($id);
+
         $data = $this->validateData($request);
 
         if ($this->checkRoomClash($request, $id)) {
@@ -66,8 +69,10 @@ class EventController extends Controller
 
     public function destroy($id)
     {
-        $event = Event::findOrFail($id);
+        $campusId = config('app.active_campus_id');
+        $event = Event::where('campus_id', $campusId)->findOrFail($id);
         $event->delete();
+
         return back()->with('success', 'ইভেন্ট মুছে ফেলা হয়েছে।');
     }
 

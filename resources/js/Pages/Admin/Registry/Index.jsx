@@ -88,7 +88,7 @@ export default function Index({ logs, filters, diagnostics }) {
   const handlePrint = () => window.print();
 
   const exportToCSV = () => {
-    if (!logs.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
+    if (!logs.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'There is no data to export.' });
     const headers = ['Level', 'Action', 'Message', 'User', 'IP Address', 'Time'];
     const rows = logs.data.map(item => [
       item.level || 'N/A', 
@@ -141,7 +141,7 @@ export default function Index({ logs, filters, diagnostics }) {
           <div>
             <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">Settings &amp; Registry</span>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">System Diagnostics &amp; Logs</h1>
-            <p className="text-sm text-slate-500 mt-1">সিস্টেমের স্বাস্থ্য পরীক্ষা করুন এবং কার্যকলাপের (Activity) লগ দেখুন।</p>
+            <p className="text-sm text-slate-500 mt-1">Manage system settings and registry configurations securely.</p>
           </div>
           <button 
             onClick={clearAll}

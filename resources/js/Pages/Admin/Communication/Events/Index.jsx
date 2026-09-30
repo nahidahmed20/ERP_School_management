@@ -11,19 +11,15 @@ export default function Index({ events, classrooms, filters }) {
   const { flash, auth } = usePage().props;
   const [type, setType] = useState(filters.type ?? '');
   const [filter, setFilter] = useState(filters.filter ?? 'upcoming');
-  const [perPage, setPerPage] = useState(filters.per_page ?? '10');
+  const [perPage, setPerPage] = useState(filters.per_page ?? '15');
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [deletingItem, setDeletingItem] = useState(null);
 
   useEffect(() => {
-    if (flash?.success) {
-      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: flash.success, showConfirmButton: false, timer: 3000, timerProgressBar: true });
-    }
-    if (flash?.error) {
-      Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: flash.error, showConfirmButton: false, timer: 4000, timerProgressBar: true });
-    }
+    if (flash?.success) Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: flash.success, showConfirmButton: false, timer: 3000, timerProgressBar: true });
+    if (flash?.error) Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: flash.error, showConfirmButton: false, timer: 4000, timerProgressBar: true });
   }, [flash]);
 
   function applyFilters(overrides = {}) {
@@ -98,7 +94,7 @@ export default function Index({ events, classrooms, filters }) {
           </div>
           <button
             onClick={() => { setEditingItem(null); setFormOpen(true); }}
-            className="w-full sm:w-auto inline-flex justify-center items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md shadow-indigo-500/20 active:scale-95"
+            className="w-full sm:w-auto inline-flex justify-center items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md active:scale-95"
           >
             <Icon name="plus" className="w-4 h-4" /> Add Event
           </button>
@@ -108,53 +104,33 @@ export default function Index({ events, classrooms, filters }) {
         <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
 
-            {/* Per Page */}
-            <select
-              value={perPage}
-              onChange={e => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}
-              className="appearance-none bg-none pr-3 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer text-center font-mono"
-              style={{ backgroundImage: 'none' }}
-            >
-              <option value="10">10 / Page</option>
-              <option value="20">20 / Page</option>
+            <select value={perPage} onChange={e => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }} className="appearance-none bg-none pr-3 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer text-center font-mono">
+              <option value="15">15 / Page</option>
+              <option value="30">30 / Page</option>
               <option value="50">50 / Page</option>
-              <option value="all">All Page</option>
+              <option value="all">All</option>
             </select>
 
             <div className="hidden sm:block w-px h-6 bg-slate-200"></div>
 
-            {/* Type Filter */}
-            <select
-              value={type}
-              onChange={(e) => { setType(e.target.value); applyFilters({ type: e.target.value }); }}
-              className="w-full sm:w-40 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
-            >
+            <select value={type} onChange={(e) => { setType(e.target.value); applyFilters({ type: e.target.value }); }} className="w-full sm:w-40 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer">
               <option value="">All Types</option>
               <option value="Event">Event</option>
               <option value="Meeting">Meeting</option>
               <option value="Holiday">Holiday</option>
             </select>
 
-            {/* Time Filter */}
-            <select
-              value={filter}
-              onChange={(e) => { setFilter(e.target.value); applyFilters({ filter: e.target.value }); }}
-              className="w-full sm:w-44 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
-            >
+            <select value={filter} onChange={(e) => { setFilter(e.target.value); applyFilters({ filter: e.target.value }); }} className="w-full sm:w-44 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer">
               <option value="upcoming">Upcoming Events</option>
               <option value="all">All Events</option>
             </select>
 
-            {/* Apply Button */}
-            <button
-              onClick={() => applyFilters()}
-              className="w-full sm:w-auto px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
-            >
+            <button onClick={() => applyFilters()} className="w-full sm:w-auto px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm">
               Filter
             </button>
           </div>
 
-          {/* Export Actions */}
+          {/* 🟢 Export Actions (The 5 Buttons) */}
           <div className="flex items-center justify-end gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-xl w-full xl:w-auto shadow-sm shrink-0 ml-auto">
             <button onClick={copyToClipboard} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Copy to Clipboard">
               Copy
@@ -164,11 +140,11 @@ export default function Index({ events, classrooms, filters }) {
               CSV
             </button>
             <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-            <button onClick={() => alert('Backend Excel plugin needed')} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-green-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export Excel">
+            <button onClick={() => Swal.fire({ icon: 'info', title: 'Excel Export', text: 'Backend Excel plugin integration needed.' })} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-green-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export Excel">
               Excel
             </button>
             <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-            <button onClick={() => alert('Backend PDF plugin needed')} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-rose-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export PDF">
+            <button onClick={() => Swal.fire({ icon: 'info', title: 'PDF Export', text: 'Backend PDF plugin integration needed.' })} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-rose-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export PDF">
               PDF
             </button>
             <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
@@ -194,9 +170,7 @@ export default function Index({ events, classrooms, filters }) {
                 {events.data.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="px-6 py-12 text-center text-slate-500">
-                      <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-3 border border-slate-100">
-                        <Icon name="calendar" className="w-8 h-8 text-slate-300" />
-                      </div>
+                      <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-3 border border-slate-100"><Icon name="calendar" className="w-8 h-8 text-slate-300" /></div>
                       <p className="text-sm font-semibold text-slate-600">কোনো ইভেন্ট পাওয়া যায়নি</p>
                       <p className="text-xs text-slate-400 mt-1">Try adjusting filters or add a new event</p>
                     </td>
@@ -206,27 +180,30 @@ export default function Index({ events, classrooms, filters }) {
                     const isHoliday = item.type === 'Holiday';
                     const isMeeting = item.type === 'Meeting';
                     return (
-                      <tr key={item.id} className="hover:bg-slate-50/60 transition-colors">
+                      <tr key={item.id} className={`hover:bg-slate-50/60 transition-colors ${!item.is_active ? 'opacity-60' : ''}`}>
                         <td className="px-6 py-4">
                           <div className="flex items-start gap-3">
-                            <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100 shrink-0 mt-0.5">
-                              <Icon name="calendar" className="w-5 h-5" />
+                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center border shrink-0 mt-0.5 ${isHoliday ? 'bg-rose-50 text-rose-600 border-rose-100' : isMeeting ? 'bg-sky-50 text-sky-600 border-sky-100' : 'bg-indigo-50 text-indigo-600 border-indigo-100'}`}>
+                              <Icon name={isHoliday ? 'calendar-minus' : isMeeting ? 'users' : 'calendar'} className="w-5 h-5" />
                             </div>
                             <div>
-                              <strong className="text-sm font-bold text-slate-900 block">{item.title}</strong>
-                              <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold tracking-wide uppercase mt-1 border ${
-                                isHoliday ? 'bg-rose-50 text-rose-700 border-rose-200' :
-                                isMeeting ? 'bg-sky-50 text-sky-700 border-sky-200' :
-                                'bg-emerald-50 text-emerald-700 border-emerald-200'
-                              }`}>
-                                {item.type}
-                              </span>
+                              <strong className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                {item.title} {!item.is_active && <span className="text-[9px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded font-bold uppercase">Hidden</span>}
+                              </strong>
+                              <div className="flex gap-2 items-center mt-1">
+                                <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold tracking-wide uppercase border ${isHoliday ? 'bg-rose-50 text-rose-700 border-rose-200' : isMeeting ? 'bg-sky-50 text-sky-700 border-sky-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
+                                  {item.type}
+                                </span>
+                                {item.audience !== 'all' && (
+                                  <span className="inline-flex px-2 py-0.5 rounded text-[9px] font-bold tracking-wide uppercase bg-slate-100 text-slate-500 border border-slate-200">For: {item.audience}</span>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 text-xs font-mono space-y-1">
-                          <div className="text-slate-700 font-semibold"><span className="text-slate-400 font-sans font-normal">Starts:</span> {formatDate(item.start_datetime)}</div>
-                          <div className="text-slate-600"><span className="text-slate-400 font-sans font-normal">Ends:</span> {formatDate(item.end_datetime)}</div>
+                          <div className="text-slate-700 font-semibold flex items-center gap-1.5"><Icon name="clock" className="w-3.5 h-3.5 text-emerald-500" /> {formatDate(item.start_datetime)}</div>
+                          <div className="text-slate-600 flex items-center gap-1.5"><Icon name="clock" className="w-3.5 h-3.5 text-rose-400" /> {formatDate(item.end_datetime)}</div>
                         </td>
                         <td className="px-6 py-4">
                           {item.classroom ? (
@@ -265,7 +242,7 @@ export default function Index({ events, classrooms, filters }) {
 
       {deletingItem && (
         <ConfirmDeleteModal
-          item={deletingItem}
+          item={{ name: deletingItem.title }}
           onCancel={() => setDeletingItem(null)}
           onConfirm={() => {
             router.delete(route('admin.communication-calendars.destroy', deletingItem.id), { onSuccess: () => setDeletingItem(null) });

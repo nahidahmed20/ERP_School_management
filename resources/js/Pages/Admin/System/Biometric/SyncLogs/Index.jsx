@@ -29,7 +29,7 @@ export default function Index({ logs, filters }) {
   const handlePrint = () => window.print();
 
   const exportToCSV = () => {
-    if (!logs.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
+    if (!logs.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'There is no data to export.' });
     const headers = ['Punch Time', 'User Details', 'Device', 'State', 'Sync Status'];
     const rows = logs.data.map(item => [
       new Date(item.punch_time).toLocaleString() || 'N/A',
@@ -82,7 +82,7 @@ export default function Index({ logs, filters }) {
           <div>
             <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">System / Biometric Devices</span>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Device Sync Logs</h1>
-            <p className="text-sm text-slate-500 mt-1">বায়োমেট্রিক ডিভাইসের রিয়েল-টাইম পাঞ্চ ও সিঙ্ক হিস্ট্রি ট্র্যাক করুন।</p>
+            <p className="text-sm text-slate-500 mt-1">Manage security logs and configurations.</p>
           </div>
           <button
             onClick={() => applyFilters()}

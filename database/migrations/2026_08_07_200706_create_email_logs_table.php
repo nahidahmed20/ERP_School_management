@@ -6,26 +6,21 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('email_logs', function (Blueprint $table) {
             $table->id();
-            $table->string('recipient_email');
+            $table->foreignId('campus_id')->nullable()->constrained('campuses')->cascadeOnDelete();
+            $table->string('recipient_email')->index();
             $table->string('subject');
-            $table->text('body')->nullable();
-            $table->string('status')->default('Sent'); // Sent, Failed
+            $table->longText('body')->nullable();
+            $table->string('status')->default('Sent')->index();
             $table->text('error_message')->nullable();
-            $table->unsignedBigInteger('sent_by')->nullable(); // Admin ID who triggered it
+            $table->foreignId('sent_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('email_logs');

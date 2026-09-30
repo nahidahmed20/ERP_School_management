@@ -29,7 +29,7 @@ export default function Index({ logins, filters }) {
   const handlePrint = () => window.print();
 
   const exportToCSV = () => {
-    if (!logins.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
+    if (!logins.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'There is no data to export.' });
     const headers = ['User Name', 'Email', 'IP Address', 'Device', 'Browser', 'Login Time'];
     const rows = logins.data.map(item => [
       item.user?.name || 'Deleted User',
@@ -82,7 +82,7 @@ export default function Index({ logins, filters }) {
           <div>
             <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">System / Security Logs</span>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Login History</h1>
-            <p className="text-sm text-slate-500 mt-1">সিস্টেমে ইউজারদের লগইন এক্টিভিটি, আইপি এবং ডিভাইসের তথ্য মনিটর করুন।</p>
+            <p className="text-sm text-slate-500 mt-1">Manage security logs and configurations.</p>
           </div>
           <button
             onClick={() => applyFilters()}

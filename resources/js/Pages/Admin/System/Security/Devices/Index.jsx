@@ -35,7 +35,7 @@ export default function Index({ trustedDevices, filters }) {
   const handlePrint = () => window.print();
 
   const exportToCSV = () => {
-    if (!trustedDevices.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
+    if (!trustedDevices.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'There is no data to export.' });
     const headers = ['User Name', 'Email', 'Device Name', 'Last IP Address', 'Last Used'];
     const rows = trustedDevices.data.map(item => [
       item.user?.name || 'Unknown User',
@@ -87,7 +87,7 @@ export default function Index({ trustedDevices, filters }) {
           <div>
             <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">System / Security Logs</span>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Trusted Devices</h1>
-            <p className="text-sm text-slate-500 mt-1">সিস্টেমে লগইন করা ট্রাস্টেড ডিভাইসগুলোর তালিকা এবং এক্সেস পরিচালনা করুন।</p>
+            <p className="text-sm text-slate-500 mt-1">Manage security logs and configurations.</p>
           </div>
           <button
             onClick={() => applyFilters()}

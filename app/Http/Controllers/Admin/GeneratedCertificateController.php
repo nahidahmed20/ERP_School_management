@@ -10,9 +10,23 @@ use App\Models\Campus;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Support\CampusRule;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class GeneratedCertificateController extends Controller
 {
+    private function getSchoolName()
+    {
+        return DB::table('settings')
+            ->where('key', 'school_name')
+            ->where(function($q) {
+                $q->where('campus_id', config('app.active_campus_id'))
+                  ->orWhereNull('campus_id');
+            })
+            ->orderBy('campus_id', 'desc')
+            ->value('value') ?? 'Your School Name';
+    }
+
     public function index(Request $request)
     {
         $query = GeneratedCertificate::with(['template', 'student', 'campus']);
@@ -28,8 +42,9 @@ class GeneratedCertificateController extends Controller
         }
 
         $certificates = $query->latest()->paginate(\App\Support\PerPage::resolve())->withQueryString();
+        $schoolName = $this->getSchoolName(); 
         
-        $certificates->getCollection()->transform(function($certificate) {
+        $certificates->getCollection()->transform(function($certificate) use ($schoolName) {
             $user = $certificate->student?->loadMissing(['student.currentEnrollment.schoolClass', 'staff.designation']);
             $profile = $user?->student ?: $user?->staff;
             
@@ -38,7 +53,7 @@ class GeneratedCertificateController extends Controller
                 '{{id}}' => $profile?->admission_no ?: $profile?->staff_id_no,
                 '{{class}}' => $user?->student?->currentEnrollment?->schoolClass?->name,
                 '{{designation}}' => $user?->staff?->designation?->name,
-                '{{school_name}}' => $certificate->campus?->name ?: config('app.name'),
+                '{{school_name}}' => $schoolName, 
                 '{{purpose}}' => 'official purpose',
                 '{{remarks}}' => ''
             ];
@@ -47,19 +62,18 @@ class GeneratedCertificateController extends Controller
             return $certificate;
         });
 
+        // 🟢 FIX: Select কলামের লিস্ট অটোমেট করা হয়েছে যেন মিসিং কলামের কারণে এরর না দেয়
+        $columns = ['id', 'title', 'template_type', 'content_body', 'background_image', 'signature_1_image', 'signature_2_image', 'signature_1_title', 'signature_2_title'];
+        
+        // যদি ডাটাবেসে design_style কলামটি থেকে থাকে, তবেই সেটিকে ফেচ করবে
+        if (Schema::hasColumn('certificate_templates', 'design_style')) {
+            $columns[] = 'design_style';
+        }
+
         $templates = CertificateTemplate::where('is_active', true)
-            ->select(
-                'id', 
-                'title', 
-                'template_type', 
-                'content_body', 
-                'background_image', 
-                'signature_1_image', 
-                'signature_2_image', 
-                'signature_1_title', 
-                'signature_2_title'
-            )
+            ->select($columns)
             ->get();
+            
         $campuses = Campus::whereKey(config('app.active_campus_id'))->select('id', 'name')->get();
 
         $users = User::with(['roles', 'student', 'staff'])->get()->map(function ($user) {
@@ -76,6 +90,7 @@ class GeneratedCertificateController extends Controller
             'users' => $users,
             'campuses' => $campuses,
             'activeCampusId' => config('app.active_campus_id'),
+            'schoolName' => $schoolName,
             'filters' => $request->only(['search']),
         ]);
     }
@@ -89,9 +104,6 @@ class GeneratedCertificateController extends Controller
             'certificate_template_id' => ['required', CampusRule::exists('certificate_templates')],
             'user_id' => ['required', CampusRule::exists('users')],
             'issue_date' => 'required|date',
-        ], [
-            'user_id.exists' => 'The selected user id is invalid.',
-            'certificate_template_id.exists' => 'The selected certificate template id is invalid.',
         ]);
 
         $validated['certificate_no'] = 'CERT-' . strtoupper(uniqid());

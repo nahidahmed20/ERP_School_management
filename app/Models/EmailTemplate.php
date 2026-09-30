@@ -5,6 +5,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class EmailTemplate extends Model {
     use HasFactory;
-    protected $fillable = ['name', 'subject', 'body', 'variables', 'is_active'];
+    protected $fillable = [
+        'campus_id', 
+        'name', 
+        'subject', 
+        'body', 
+        'variables', 
+        'is_active'
+    ];
     protected $casts = ['is_active' => 'boolean'];
 }

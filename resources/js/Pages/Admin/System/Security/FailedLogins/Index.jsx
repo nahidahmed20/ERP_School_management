@@ -29,7 +29,7 @@ export default function Index({ failedLogins, filters }) {
   const handlePrint = () => window.print();
 
   const exportToCSV = () => {
-    if (!failedLogins.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
+    if (!failedLogins.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'There is no data to export.' });
     const headers = ['Attempted Email', 'IP Address', 'Browser Details', 'Attempt Time'];
     const rows = failedLogins.data.map(item => [
       item.email_attempted || 'N/A',
@@ -80,7 +80,7 @@ export default function Index({ failedLogins, filters }) {
           <div>
             <span className="text-xs font-bold tracking-wider text-rose-600 uppercase">System / Security Logs</span>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Failed Login Attempts</h1>
-            <p className="text-sm text-slate-500 mt-1">সিস্টেমে অবৈধভাবে অ্যাক্সেস করার ব্যর্থ চেষ্টাগুলো মনিটর করুন।</p>
+            <p className="text-sm text-slate-500 mt-1">Manage security logs and configurations.</p>
           </div>
           <button
             onClick={() => applyFilters()}

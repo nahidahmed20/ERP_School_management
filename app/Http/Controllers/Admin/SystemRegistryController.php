@@ -12,7 +12,13 @@ class SystemRegistryController extends Controller
 {
     public function index(Request $request)
     {
-        $query = SystemLog::with('user:id,name');
+        $activeCampusId = config('app.active_campus_id');
+        $query = SystemLog::with('user:id,name')
+            ->where(function($q) use ($activeCampusId) {
+                $q->whereHas('user', function($u) use ($activeCampusId) {
+                    $u->where('campus_id', $activeCampusId)->orWhereNull('campus_id');
+                })->orWhereNull('user_id');
+            });
 
         if ($search = $request->get('search')) {
             $query->where(function ($q) use ($search) {
@@ -41,18 +47,29 @@ class SystemRegistryController extends Controller
         ]);
     }
 
-    public function destroy(SystemLog $log)
+    public function destroy($id)
     {
+        $activeCampusId = config('app.active_campus_id');
+        $log = SystemLog::where(function($q) use ($activeCampusId) {
+            $q->whereHas('user', function($u) use ($activeCampusId) {
+                $u->where('campus_id', $activeCampusId)->orWhereNull('campus_id');
+            })->orWhereNull('user_id');
+        })->findOrFail($id);
         $log->delete();
 
-        return back()->with('success', 'Log entry মুছে ফেলা হয়েছে।');
+        return back()->with('success', 'Log entry deleted successfully.');
     }
 
     public function clear()
     {
-        SystemLog::query()->delete();
+        $activeCampusId = config('app.active_campus_id');
+        SystemLog::where(function($q) use ($activeCampusId) {
+            $q->whereHas('user', function($u) use ($activeCampusId) {
+                $u->where('campus_id', $activeCampusId)->orWhereNull('campus_id');
+            })->orWhereNull('user_id');
+        })->delete();
 
-        return back()->with('success', 'সব Log entry মুছে ফেলা হয়েছে।');
+        return back()->with('success', 'All log entries deleted successfully.');
     }
 
     private function diagnostics(): array

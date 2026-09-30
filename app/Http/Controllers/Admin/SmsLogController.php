@@ -3,26 +3,31 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\{SmsLog, Campus};
+use App\Models\{SmsLog, Campus, Exam, SchoolClass};
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use App\Models\{Exam,SchoolClass};
-use App\Services\{SmsCampaignService,SmsService};
+use App\Services\{SmsCampaignService, SmsService};
 use App\Support\CampusRule;
 
 class SmsLogController extends Controller
 {
     public function index(Request $request)
     {
-        $query = SmsLog::query();
+        $activeCampusId = config('app.active_campus_id');
+
+        $query = SmsLog::where(function($q) use ($activeCampusId) {
+            $q->where('campus_id', $activeCampusId)
+              ->orWhereNull('campus_id');
+        });
 
         if ($search = $request->get('search')) {
-            $query->where('phone_number', 'like', "%{$search}%")
+            $query->where(function($q) use ($search) {
+                $q->where('phone_number', 'like', "%{$search}%")
                   ->orWhere('recipient_name', 'like', "%{$search}%")
                   ->orWhere('message', 'like', "%{$search}%");
+            });
         }
 
-        // --- Records Per Page Logic ---
         $perPageRaw = $request->get('per_page', '10');
 
         if ($perPageRaw === 'All') {
@@ -35,13 +40,19 @@ class SmsLogController extends Controller
         return Inertia::render('Admin/Communication/SmsLogs/Index', [
             'logs' => $logs,
             'campuses' => Campus::select('id', 'name')->get(),
-            'activeCampusId' => session('active_campus_id'),
+            'activeCampusId' => $activeCampusId,
             'filters' => [
                 'search' => $request->get('search', ''),
                 'per_page' => $perPageRaw,
             ],
-            'classes' => SchoolClass::with('sections:id,name')->where('is_active',true)->get(['id','name']),
-            'exams' => Exam::latest()->get(['id','name']),
+            'classes' => SchoolClass::with('sections:id,name') 
+                ->where('campus_id', $activeCampusId)
+                ->where('is_active', true)
+                ->get(['id', 'name']),
+
+            'exams' => Exam::where('campus_id', $activeCampusId)
+                ->latest()
+                ->get(['id', 'name']),
         ]);
     }
 
@@ -54,20 +65,38 @@ class SmsLogController extends Controller
             'message' => 'required|string',
         ]);
 
-        $ok=SmsService::send($validated['phone_number'],$validated['message'],$validated+['category'=>'custom','sent_by'=>$request->user()->id]);
-        return back()->with($ok?'success':'error',$ok?'SMS processed successfully.':'SMS delivery failed. Check gateway settings.');
+        $validated['campus_id'] = $validated['campus_id'] ?? config('app.active_campus_id');
+
+        $ok = SmsService::send(
+            $validated['phone_number'], 
+            $validated['message'], 
+            $validated + ['category' => 'custom', 'sent_by' => $request->user()->id]
+        );
+
+        return back()->with($ok ? 'success' : 'error', $ok ? 'SMS processed successfully.' : 'SMS delivery failed. Check gateway settings.');
     }
 
-    public function campaign(Request $request,SmsCampaignService $service)
+    public function campaign(Request $request, SmsCampaignService $service)
     {
-        $data=$request->validate(['type'=>'required|in:absent,exam_result,fee_due,notice,emergency,homework,meeting,holiday','date'=>'required_if:type,absent|nullable|date','exam_id'=>['required_if:type,exam_result','nullable',CampusRule::exists('exams')],'class_id'=>['nullable',CampusRule::exists('school_classes')],'section_id'=>['nullable',CampusRule::exists('sections')],'message'=>'required_unless:type,absent,exam_result,fee_due|nullable|string|max:1000']);
-        $result=$service->send($data['type'],$data,$request->user()->id);
-        return back()->with('success',"{$result['sent']} SMS processed; {$result['skipped']} skipped (missing number, duplicate, or failed).");
+        $data = $request->validate([
+            'type' => 'required|in:absent,exam_result,fee_due,notice,emergency,homework,meeting,holiday',
+            'date' => 'required_if:type,absent|nullable|date',
+            'exam_id' => ['required_if:type,exam_result', 'nullable', CampusRule::exists('exams')],
+            'class_id' => ['nullable', CampusRule::exists('school_classes')],
+            'section_id' => ['nullable', CampusRule::exists('sections')],
+            'message' => 'required_unless:type,absent,exam_result,fee_due|nullable|string|max:1000'
+        ]);
+
+        $result = $service->send($data['type'], $data, $request->user()->id);
+        
+        return back()->with('success', "{$result['sent']} SMS processed; {$result['skipped']} skipped (missing number, duplicate, or failed).");
     }
 
     public function destroy($id)
     {
-        SmsLog::findOrFail($id)->delete();
-        return back()->with('success', 'SMS Log deleted.');
+        $log = SmsLog::where('campus_id', config('app.active_campus_id'))->findOrFail($id);
+        $log->delete();
+        
+        return back()->with('success', 'SMS Log deleted successfully.');
     }
 }

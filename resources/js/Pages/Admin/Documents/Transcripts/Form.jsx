@@ -7,16 +7,12 @@ import Icon from '@/Components/Icons';
 export default function TranscriptForm({ item, campuses, activeCampusId }) {
   const isEdit = !!item;
   
-  // গ্লোবাল প্রপস থেকে auth এবং global_settings নেওয়া হচ্ছে
   const { auth, global_settings } = usePage().props;
   const isSuperAdmin = auth?.user?.role === 'super_admin' || auth?.user?.roles?.some(r => r.name === 'Super Admin');
-
-  // ডায়নামিক স্কুলের নাম সেট করা হচ্ছে
   const schoolName = global_settings?.school_name || 'YOUR SCHOOL NAME';
-
-  // ক্যাম্পাসের আইডি নিশ্চিত করার জন্য সেফটি ফলব্যাক
   const defaultCampusId = item?.campus_id ?? auth?.active_campus_id ?? activeCampusId ?? '';
 
+  // 🟢 FIX: _method: 'put' is used, but we MUST submit via post() for files to work
   const { data, setData, post, processing, errors, isDirty } = useForm({
     _method: isEdit ? 'put' : 'post',
     campus_id: defaultCampusId,
@@ -45,7 +41,9 @@ export default function TranscriptForm({ item, campuses, activeCampusId }) {
 
   function submit(e) {
     e.preventDefault();
-    post(isEdit ? route('admin.documents.transcripts.update', item.id) : route('admin.documents.transcripts.store'));
+    // 🟢 FIX: Always use POST for file uploads in Inertia, _method handles the PUT spoofing
+    const url = isEdit ? route('admin.documents.transcripts.update', item.id) : route('admin.documents.transcripts.store');
+    post(url);
   }
 
   const inputClass = "block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all";
@@ -118,7 +116,7 @@ export default function TranscriptForm({ item, campuses, activeCampusId }) {
                     <div className="w-full">
                       <input 
                         type="file" 
-                        accept="image/*" 
+                        accept="image/jpeg, image/png, image/jpg" 
                         onChange={e => handleImageChange('watermark_image', e.target.files[0], setWmPreview)} 
                         className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition-all border border-slate-200 rounded-xl bg-slate-50 cursor-pointer"
                       />
@@ -137,16 +135,16 @@ export default function TranscriptForm({ item, campuses, activeCampusId }) {
                     </div>
                     <div>
                       <label className="block text-xs font-semibold text-slate-600 mb-1">Upload Signature</label>
-                      <div className="flex items-center gap-3">
+                      <div className="flex flex-col gap-3">
                         {sigPreview && (
-                          <div className="relative group shrink-0">
+                          <div className="relative group w-fit">
                             <img src={sigPreview} alt="Signature" className="h-10 border border-slate-200 rounded p-1 bg-white object-contain" />
                             <button type="button" className="absolute -top-2 -right-2 bg-rose-500 text-white rounded-full p-0.5 shadow-md opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => removeImage('authorized_signature_image', setSigPreview)}>
                               <Icon name="x" className="w-3 h-3" />
                             </button>
                           </div>
                         )}
-                        <input type="file" accept="image/*" onChange={e => handleImageChange('authorized_signature_image', e.target.files[0], setSigPreview)} className="block w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 cursor-pointer border border-slate-200 rounded-lg bg-white" />
+                        <input type="file" accept="image/jpeg, image/png, image/jpg" onChange={e => handleImageChange('authorized_signature_image', e.target.files[0], setSigPreview)} className="block w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 cursor-pointer border border-slate-200 rounded-lg bg-white" />
                       </div>
                     </div>
                   </div>
@@ -175,9 +173,15 @@ export default function TranscriptForm({ item, campuses, activeCampusId }) {
               {/* Action Button */}
               <div className="pt-6 border-t border-slate-100 flex items-center justify-between">
                 <span className="text-sm font-bold text-amber-500">{isDirty ? 'You have unsaved changes' : ''}</span>
-                <button type="submit" disabled={processing} className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md shadow-indigo-500/20 disabled:opacity-70 active:scale-95">
-                  <Icon name="save" className="w-4 h-4" />
-                  {processing ? 'Saving...' : 'Save Template'}
+                <button type="submit" disabled={processing} className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md disabled:opacity-70 active:scale-95">
+                  {processing ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                      Saving...
+                    </>
+                  ) : (
+                    <><Icon name="save" className="w-4 h-4" /> Save Template</>
+                  )}
                 </button>
               </div>
             </form>
@@ -195,16 +199,13 @@ export default function TranscriptForm({ item, campuses, activeCampusId }) {
               {/* Watermark Overlay */}
               {wmPreview && (
                 <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.06] flex items-center justify-center">
-                  <img src={wmPreview} alt="Watermark" className="w-[60%] h-[60%] object-contain" />
+                  <img src={wmPreview} alt="Watermark" className="w-[60%] h-[60%] object-contain grayscale" />
                 </div>
               )}
 
               {/* Header */}
               <div className="w-full text-center border-b-2 border-slate-800 pb-3 mb-4 z-10">
-                {/* ডায়নামিক স্কুলের নাম */}
-                <h2 className="m-0 text-sm font-bold uppercase tracking-widest text-slate-600 mb-1">
-                  {schoolName}
-                </h2>
+                <h2 className="m-0 text-sm font-bold uppercase tracking-widest text-slate-600 mb-1">{schoolName}</h2>
                 <h1 className="m-0 text-xl font-black uppercase tracking-wide">{data.title || 'Academic Transcript'}</h1>
                 <h3 className="m-0 text-xs text-slate-600 mt-1 font-semibold">{data.header_text}</h3>
               </div>
@@ -256,13 +257,13 @@ export default function TranscriptForm({ item, campuses, activeCampusId }) {
                   ) : (
                     <div className="h-8 mb-1"></div>
                   )}
-                  <div className="border-t border-slate-800 pt-1 text-[9px] font-bold text-slate-800 w-full">
+                  <div className="border-t border-slate-800 pt-1 text-[9px] font-bold text-slate-800 w-full uppercase tracking-wider">
                     {data.authorized_signature_title || 'Signature'}
                   </div>
                 </div>
               </div>
 
-              <div className="w-full text-center mt-6 text-[8px] text-slate-500 border-t border-dashed border-slate-300 pt-2 z-10">
+              <div className="w-full text-center mt-6 text-[8px] text-slate-500 border-t border-dashed border-slate-300 pt-2 z-10 font-semibold">
                 {data.footer_text || 'This transcript is invalid without the official seal and signature.'}
               </div>
 

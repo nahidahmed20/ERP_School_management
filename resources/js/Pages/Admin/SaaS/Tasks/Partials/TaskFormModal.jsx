@@ -39,7 +39,7 @@ export default function TaskFormModal({ item, onClose }) {
         <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0 rounded-t-2xl">
           <div>
             <h3 className="text-xl font-bold text-slate-900">{isEdit ? 'Edit Scheduled Task' : 'Add New Task'}</h3>
-            <p className="text-sm text-slate-500 mt-1">Configure automated artisan commands and cron intervals.</p>
+            <p className="text-sm text-slate-500 mt-1">Manage SaaS operations securely.</p>
           </div>
           <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors bg-white border border-slate-200 shadow-sm shrink-0">
             <Icon name="close" className="w-4 h-4" />

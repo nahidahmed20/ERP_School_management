@@ -32,7 +32,7 @@ export default function Index({ plans, filters }) {
   const handlePrint = () => window.print();
 
   const exportToCSV = () => {
-    if (!plans.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
+    if (!plans.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'There is no data to export.' });
     const headers = ['Plan Name', 'Currency', 'Price', 'Billing Cycle', 'Features', 'Status'];
     const rows = plans.data.map(item => [
       item.name || 'N/A',
@@ -85,7 +85,7 @@ export default function Index({ plans, filters }) {
           <div>
             <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">SaaS, AI &amp; Backups</span>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Subscription Plans</h1>
-            <p className="text-sm text-slate-500 mt-1">আপনার সিস্টেমের সকল সাবস্ক্রিপশন প্ল্যান এবং প্রাইসিং প্যাকেজ পরিচালনা করুন।</p>
+            <p className="text-sm text-slate-500 mt-1">Manage SaaS operations securely.</p>
           </div>
           <button
             onClick={() => { setEditingItem(null); setIsFormOpen(true); }}
