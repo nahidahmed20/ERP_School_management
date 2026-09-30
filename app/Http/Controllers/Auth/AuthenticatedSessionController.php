@@ -19,7 +19,7 @@ class AuthenticatedSessionController extends Controller
     /**
      * Display the login view.
      */
-    public function create(): Response
+    public function create(\Illuminate\Http\Request $request): Response
     {
         if (session('captcha_required') && ! session('captcha_question')) {
             $a=random_int(1,9);$b=random_int(1,9);session(['captcha_question'=>"{$a} + {$b} = ?",'captcha_answer'=>$a+$b]);
@@ -28,6 +28,8 @@ class AuthenticatedSessionController extends Controller
             'canResetPassword' => Route::has('password.request'),
             'status' => session('status'),
             'captchaQuestion' => session('captcha_required') ? session('captcha_question') : null,
+            'isMainDomain' => parse_url(config('app.url'), PHP_URL_HOST) === $request->getHost() || $request->getHost() === '127.0.0.1' || $request->getHost() === 'localhost',
+
         ]);
     }
 

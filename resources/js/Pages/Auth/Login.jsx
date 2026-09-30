@@ -54,7 +54,7 @@ function SpinnerIcon({ className }) {
     );
 }
 
-export default function Login({ status, canResetPassword, captchaQuestion }) {
+export default function Login({ status, canResetPassword, captchaQuestion, isMainDomain }) {
     const [role, setRole] = useState('admin');
     const [showPassword, setShowPassword] = useState(false);
     const theme = ROLE_THEME[role];
@@ -141,7 +141,7 @@ export default function Login({ status, canResetPassword, captchaQuestion }) {
                                     <RoleIcon role={role} className="w-6 h-6 text-white" />
                                 </div>
                                 <div>
-                                    <h3 className="font-semibold text-base leading-tight" style={{ fontFamily: "'Fraunces', serif" }}>
+                                    <h3 className="font-semibold text-base leading-tight text-white" style={{ fontFamily: "'Fraunces', serif" }}>
                                         {theme.label}
                                     </h3>
                                     <p className="text-xs text-white/70 font-mono mt-0.5">ID: {theme.prefix}-9842</p>
@@ -171,10 +171,10 @@ export default function Login({ status, canResetPassword, captchaQuestion }) {
                 <div className="w-full lg:w-[58%] p-6 sm:p-10 lg:p-12 flex flex-col justify-center bg-white">
                     <div className="max-w-md w-full mx-auto">
                         <div className="mb-6 sm:mb-8">
-                            <h1 className="text-2xl sm:text-3xl font-semibold text-[#16241D] tracking-tight" style={{ fontFamily: "'Fraunces', serif" }}>
+                            <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 font-medium tracking-tight" style={{ fontFamily: "'Fraunces', serif" }}>
                                 Welcome back
                             </h1>
-                            <p className="text-[#6B7568] text-sm mt-1">Select your portal and enter your credentials.</p>
+                            <p className="text-gray-600 text-sm mt-1">Select your portal and enter your credentials.</p>
                         </div>
 
                         {status && (
@@ -196,8 +196,8 @@ export default function Login({ status, canResetPassword, captchaQuestion }) {
                                         onClick={() => handleRoleChange(r)}
                                         className={`flex flex-col sm:flex-row items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-xs sm:text-sm font-medium transition-colors duration-150 ${
                                             active
-                                                ? 'bg-white text-[#16241D] shadow-sm font-semibold'
-                                                : 'text-[#6B7568] hover:text-[#16241D] hover:bg-white/60'
+                                                ? 'bg-white text-gray-900 font-medium shadow-sm font-semibold'
+                                                : 'text-gray-600 hover:text-gray-900 font-medium hover:bg-white/60'
                                         }`}
                                     >
                                         <RoleIcon role={r} className="w-4 h-4" />
@@ -210,14 +210,14 @@ export default function Login({ status, canResetPassword, captchaQuestion }) {
                         <form onSubmit={submit} className="space-y-4 sm:space-y-5">
                             {/* Identifier Input */}
                             <div>
-                                <label htmlFor="login" className="block text-xs sm:text-sm font-medium text-[#3C443E] mb-1.5">
+                                <label htmlFor="login" className="block text-xs sm:text-sm font-medium text-gray-800 mb-1.5">
                                     {role === 'student' ? 'Student ID / Email' : role === 'staff' ? 'Staff ID / Email' : 'Email address'}
                                 </label>
                                 <input
                                     id="login"
                                     name="login"
                                     type="text"
-                                    className="w-full px-4 py-3 bg-[#FAF9F5] border border-[#E4E0D4] rounded-xl text-[#16241D] text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 focus:border-[var(--accent)] transition-all"
+                                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 font-medium text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 focus:border-[var(--accent)] transition-all"
                                     placeholder={role === 'student' ? 'e.g. STU-2023-001' : role === 'staff' ? 'e.g. STF-001' : 'name@school.com'}
                                     value={data.login}
                                     onChange={(e) => setData('login', e.target.value)}
@@ -230,7 +230,7 @@ export default function Login({ status, canResetPassword, captchaQuestion }) {
 
                             {/* Password Input */}
                             <div>
-                                <label htmlFor="password" className="block text-xs sm:text-sm font-medium text-[#3C443E] mb-1.5">
+                                <label htmlFor="password" className="block text-xs sm:text-sm font-medium text-gray-800 mb-1.5">
                                     Password
                                 </label>
                                 <div className="relative">
@@ -238,7 +238,7 @@ export default function Login({ status, canResetPassword, captchaQuestion }) {
                                         id="password"
                                         name="password"
                                         type={showPassword ? 'text' : 'password'}
-                                        className="w-full px-4 py-3 pr-11 bg-[#FAF9F5] border border-[#E4E0D4] rounded-xl text-[#16241D] text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 focus:border-[var(--accent)] transition-all"
+                                        className="w-full px-4 py-3 pr-11 bg-white border border-gray-300 rounded-xl text-gray-900 font-medium text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 focus:border-[var(--accent)] transition-all"
                                         placeholder="••••••••"
                                         value={data.password}
                                         onChange={(e) => setData('password', e.target.value)}
@@ -250,7 +250,7 @@ export default function Login({ status, canResetPassword, captchaQuestion }) {
                                         onClick={() => setShowPassword((v) => !v)}
                                         aria-label={showPassword ? 'Hide password' : 'Show password'}
                                         aria-pressed={showPassword}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8A9186] hover:text-[#16241D] transition-colors"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8A9186] hover:text-gray-900 font-medium transition-colors"
                                     >
                                         <EyeIcon open={showPassword} className="w-4.5 h-4.5" />
                                     </button>
@@ -260,7 +260,7 @@ export default function Login({ status, canResetPassword, captchaQuestion }) {
 
                             {captchaQuestion && (
                                 <div>
-                                    <label htmlFor="captcha" className="block text-xs sm:text-sm font-medium text-[#3C443E] mb-1.5">
+                                    <label htmlFor="captcha" className="block text-xs sm:text-sm font-medium text-gray-800 mb-1.5">
                                         Security check: {captchaQuestion}
                                     </label>
                                     <input
@@ -271,7 +271,7 @@ export default function Login({ status, canResetPassword, captchaQuestion }) {
                                         autoComplete="off"
                                         value={data.captcha}
                                         onChange={(e) => setData('captcha', e.target.value)}
-                                        className="w-full px-4 py-3 bg-[#FAF9F5] border border-[#E4E0D4] rounded-xl text-[#16241D] text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 focus:border-[var(--accent)] transition-all"
+                                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 font-medium text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 focus:border-[var(--accent)] transition-all"
                                         required
                                     />
                                     <InputError message={errors.captcha} className="mt-1.5 text-xs" />
@@ -286,7 +286,7 @@ export default function Login({ status, canResetPassword, captchaQuestion }) {
                                         checked={data.remember}
                                         onChange={(e) => setData('remember', e.target.checked)}
                                     />
-                                    <span className="text-[#6B7568]">Remember me</span>
+                                    <span className="text-gray-600">Remember me</span>
                                 </label>
 
                                 {canResetPassword && (
@@ -312,7 +312,15 @@ export default function Login({ status, canResetPassword, captchaQuestion }) {
                             </button>
                         </form>
 
-                        <div className="mt-6 sm:mt-8 text-center text-xs sm:text-sm text-[#6B7568]">
+                        {isMainDomain && (
+                            <div className="mt-5 text-center text-sm font-semibold">
+                                <span className="text-gray-600">Want to create your school portal? </span>
+                                <Link href={route('register')} className="font-bold hover:underline" style={{ color: 'var(--accent)' }}>
+                                    Register Here
+                                </Link>
+                            </div>
+                        )}
+                        <div className="mt-6 sm:mt-8 text-center text-xs sm:text-sm text-gray-500">
                             Need help signing in?{' '}
                             <a href="#" className="font-medium hover:underline" style={{ color: 'var(--accent)' }}>
                                 Contact IT support

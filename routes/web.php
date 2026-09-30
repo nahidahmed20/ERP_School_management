@@ -33,6 +33,7 @@ use App\Http\Controllers\Admin\CommunicationNotificationController;
 use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\CustomFieldController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\TenantSubscriptionController;
 use App\Http\Controllers\Admin\DepartmentController;
 use App\Http\Controllers\Admin\DesignationController;
 use App\Http\Controllers\Admin\DisciplinaryRecordController;
