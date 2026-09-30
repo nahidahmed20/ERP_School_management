@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace Database\Seeders;
 
@@ -280,7 +280,7 @@ class MenuSeeder extends Seeder
                         'label'         => $item['label'],
                         'icon'          => $item['icon'] ?? null,
                         'route_name'    => $item['route'] ?? null,
-                        'badge_count'   => $item['count'] ?? null,
+                        'badge_count'   => isset($item['children']) ? count($item['children']) : null,
                         'order'         => $iOrder,
                     ]
                 );
