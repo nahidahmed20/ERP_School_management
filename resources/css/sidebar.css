@@ -41,7 +41,9 @@
   background:rgba(255,255,255,.025);
 }
 .seal{
-  width:42px;height:42px;flex:none;
+  width:42px;
+  height:42px;
+  flex:none;
   border-radius:13px;
   border:1.5px solid var(--gold);
   display:flex;align-items:center;justify-content:center;

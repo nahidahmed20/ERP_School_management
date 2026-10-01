@@ -78,9 +78,11 @@ class GeneralSettingController extends Controller
             'hero_eyebrow'=>'nullable|string|max:120','hero_title'=>'nullable|string|max:255','hero_description'=>'nullable|string|max:1000','principal_name'=>'nullable|string|max:120','principal_message'=>'nullable|string|max:1500','primary_color'=>['nullable','regex:/^#[0-9A-Fa-f]{6}$/'],'accent_color'=>['nullable','regex:/^#[0-9A-Fa-f]{6}$/'],
             'logo' => 'nullable|image|mimes:png,jpg,jpeg,webp|max:4096',
             'footer_logo' => 'nullable|image|mimes:png,jpg,jpeg,webp|max:4096',
+            'admin_logo' => 'nullable|image|mimes:png,jpg,jpeg,webp|max:4096',
             'favicon' => 'nullable|file|mimes:png,jpg,jpeg,webp,ico|max:1024',
             'remove_logo' => 'nullable|boolean',
             'remove_footer_logo' => 'nullable|boolean',
+            'remove_admin_logo' => 'nullable|boolean',
             'remove_favicon' => 'nullable|boolean',
         ]);
 
@@ -100,7 +102,7 @@ class GeneralSettingController extends Controller
         $obsolete = [];
         try {
             // Scan every upload before changing settings or removing old media.
-            foreach (['logo', 'footer_logo', 'favicon'] as $key) {
+            foreach (['logo', 'footer_logo', 'admin_logo', 'favicon'] as $key) {
                 if ($request->hasFile($key)) {
                     app(MalwareScanner::class)->assertClean($request->file($key));
                     $uploaded[$key] = $request->file($key)->store('branding', 'public');
@@ -120,7 +122,7 @@ class GeneralSettingController extends Controller
                     );
                 }
 
-                foreach (['logo', 'footer_logo', 'favicon'] as $key) {
+                foreach (['logo', 'footer_logo', 'admin_logo', 'favicon'] as $key) {
                     if ($request->boolean('remove_'.$key) || isset($uploaded[$key])) {
                         $old = Setting::withoutGlobalScope('campus')->whereNull('campus_id')->where('key', $key)->value('value');
                         if ($old && str_starts_with($old, 'branding/')) $obsolete[] = $old;

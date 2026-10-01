@@ -18,6 +18,7 @@ class WebsiteSettingsService
         'school_tagline' => 'SCHOOL MANAGEMENT SYSTEM',
         'logo' => null,
         'footer_logo' => null,
+        'admin_logo' => null,
         'favicon' => null,
         'primary_phone' => '+880 1XXX-XXXXXX',
         'secondary_phone' => null,
@@ -61,7 +62,7 @@ class WebsiteSettingsService
 
         $settings = array_merge(self::DEFAULTS, $values);
 
-        foreach (['logo', 'footer_logo', 'favicon'] as $key) {
+        foreach (['logo', 'footer_logo', 'admin_logo', 'favicon'] as $key) {
             $path = $settings[$key];
             // Local public images use the current origin, not a stale APP_URL
             // (which otherwise breaks HTTPS or a moved deployment).

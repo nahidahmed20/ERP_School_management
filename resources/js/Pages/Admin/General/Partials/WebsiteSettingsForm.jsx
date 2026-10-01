@@ -12,7 +12,7 @@ const fields = [
   ['hero_eyebrow', 'Hero small heading', 'text'], ['hero_title', 'Hero main heading', 'text'],
   ['principal_name', 'Principal / Head name', 'text'], ['primary_color', 'Website primary color', 'color'], ['accent_color', 'Website accent color', 'color'],
 ];
-const images = [['logo', 'School logo — website & admin portal'], ['footer_logo', 'Website footer logo'], ['favicon', 'Browser icon (favicon)']];
+const images = [['logo', 'Website header logo'], ['footer_logo', 'Website footer logo'], ['admin_logo', 'Admin portal logo'], ['favicon', 'Browser icon (favicon)']];
 
 function BrandingImage({ imageKey, label, settings, data, setData, error }) {
   const preview = usePhotoPreview(data[imageKey], data[`remove_${imageKey}`] ? null : settings[imageKey]);
@@ -31,8 +31,8 @@ function BrandingImage({ imageKey, label, settings, data, setData, error }) {
 export default function WebsiteSettingsForm({ settings, onClose }) {
   const { data, setData, post, processing, errors } = useForm({
     ...Object.fromEntries(Object.keys(settings).map(key => [key, settings[key] ?? ''])),
-    logo: null, footer_logo: null, favicon: null,
-    remove_logo: false, remove_footer_logo: false, remove_favicon: false,
+    logo: null, footer_logo: null, admin_logo: null, favicon: null,
+    remove_logo: false, remove_footer_logo: false, remove_admin_logo: false, remove_favicon: false,
   });
   const submit = event => {
     event.preventDefault();

@@ -27,14 +27,17 @@ export default function SiteLayout({ children, activePage = "" }) {
                 <img
                     src={light ? settings.footer_logo || settings.logo : settings.logo}
                     alt={settings.school_name || "School logo"}
+                    className="max-h-12 w-auto"
                 />
             ) : (
-                <i>{initial}</i>
+                <>
+                    <i>{initial}</i>
+                    <span>
+                        <b>{settings.school_short_name || settings.school_name}</b>
+                        <small>{settings.school_tagline}</small>
+                    </span>
+                </>
             )}
-            <span>
-                <b>{settings.school_short_name || settings.school_name}</b>
-                <small>{settings.school_tagline}</small>
-            </span>
         </Link>
     );
 

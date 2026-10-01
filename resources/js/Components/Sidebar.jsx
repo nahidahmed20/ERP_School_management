@@ -66,13 +66,21 @@ export default memo(function Sidebar({ mobileOpen = false, desktopCollapsed = fa
 
   return <aside id="school-sidebar" className={'sidebar' + (mobileOpen ? ' mobile-open' : '') + (desktopCollapsed ? ' desktop-collapsed' : '')} aria-label="School navigation">
     <div className="brand">
-      <div className="seal">{site.logo
-        ? <img src={site.logo} alt={shortName + ' logo'} className="h-full w-full rounded-xl object-contain" />
-        : <span>{shortName.trim().charAt(0).toUpperCase()}</span>}</div>
-      <div className="brand-text">
-        <div className="name">{shortName}</div>
-        <div className="sub">{site.school_tagline || 'School ERP'}</div>
-      </div>
+      {site.admin_logo ? (
+          <div className="brand-logo" style={{ maxWidth: '100%', height: '42px', flexShrink: 0 }}>
+              <img src={site.admin_logo} alt={shortName + ' logo'} style={{ width: 'auto', height: '100%', objectFit: 'contain' }} />
+          </div>
+      ) : (
+          <>
+            <div className="seal">
+              <span>{shortName.trim().charAt(0).toUpperCase()}</span>
+            </div>
+            <div className="brand-text">
+              <div className="name">{shortName}</div>
+              <div className="sub">{site.school_tagline || 'School ERP'}</div>
+            </div>
+          </>
+      )}
     </div>
 
     {groups.length ? <nav className="nav" aria-label="Main menu">
