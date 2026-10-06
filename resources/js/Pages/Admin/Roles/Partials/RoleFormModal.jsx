@@ -45,7 +45,7 @@ export default function RoleFormModal({ item, permissions, onClose }) {
       
       {/* Responsive Modal Box */}
       <div 
-        className="flex max-h-[100dvh] w-full max-w-4xl flex-col overflow-hidden bg-white shadow-2xl ring-1 ring-slate-900/5 transition-all animate-in zoom-in-95 duration-200 sm:max-h-[90vh] sm:rounded-2xl"
+        className="flex max-h-[calc(100dvh-2rem)] w-full max-w-4xl flex-col overflow-hidden bg-white shadow-2xl ring-1 ring-slate-900/5 transition-all animate-in zoom-in-95 duration-200 sm:max-h-[90vh] sm:rounded-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}

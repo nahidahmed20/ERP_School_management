@@ -235,7 +235,7 @@ export default function TemplateShowModal({ item, onClose, schoolName = "Your Sc
 
         <div className="p-6 bg-slate-200 overflow-y-auto flex-1 flex justify-center items-center custom-scrollbar print:p-0 print:bg-white print:overflow-visible">
           {/* 🟢 PRINT TARGET AREA */}
-          <div id="certificate-print-area" className="w-full max-w-3xl bg-white shadow-2xl rounded-sm overflow-hidden print:shadow-none print:rounded-none">
+          <div id="certificate-print-area" className="w-full max-w-3xl bg-white shadow-2xl rounded-sm overflow-hidden print:shadow-none print:rounded-none max-h-[calc(100dvh-2rem)] sm:max-h-[90vh]">
             {renderCertificateContent()}
           </div>
         </div>

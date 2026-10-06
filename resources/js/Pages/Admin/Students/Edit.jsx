@@ -306,9 +306,9 @@ export default function Edit({ student, classes, campuses, categories, houses })
                   </div>
                   <div className="mod-field">
                     <label className="mod-label">Roll Number</label>
-                    <input className="mod-input mono" type="text" placeholder="e.g. 101" value={data.roll_no} onChange={e => setData('roll_no', e.target.value)} />
+                    <input className="mod-input mono" type="text" placeholder="Leave blank to auto-generate" value={data.roll_no} onChange={e => setData('roll_no', e.target.value)} />
                     {errors.roll_no && <span className="mod-error-text">{errors.roll_no}</span>}
-                  </div>
+                </div>
                 </div>
               </div>
 

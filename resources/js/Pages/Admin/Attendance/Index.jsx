@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Head, router, usePage, useForm } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
@@ -28,7 +28,7 @@ export default function Index({ classes, students, filters, sheetLocked, isHolid
         date: attendanceDate,
         attendances: students.map(s => ({
           student_id: s.id,
-          status: s.attendance_status || '',
+          status: s.attendance_status || 'present',
           remarks: s.remarks || ''
         }))
       }));
@@ -44,7 +44,7 @@ export default function Index({ classes, students, filters, sheetLocked, isHolid
 
   const fetchStudents = (e) => {
     e.preventDefault();
-    if (!classId) return Swal.fire({ icon: 'warning', title: 'Oops', text: 'দয়া করে ক্লাস সিলেক্ট করুন!', customClass: { popup: 'rounded-2xl' } });
+    if (!classId) return Swal.fire({ icon: 'warning', title: 'Oops', text: 'Please select a Class and Date first!', customClass: { popup: 'rounded-2xl' } });
     
     router.get(route('admin.student-attendance.index'), {
       class_id: classId,
@@ -79,8 +79,8 @@ export default function Index({ classes, students, filters, sheetLocked, isHolid
     if (unMarked.length > 0) {
       return Swal.fire({ 
         icon: 'warning', 
-        title: 'অপেক্ষা করুন!', 
-        text: `এখনও ${unMarked.length} জন শিক্ষার্থীর হাজিরার স্ট্যাটাস দেওয়া হয়নি। দয়া করে সবার স্ট্যাটাস দিন অথবা 'Mark All' ব্যবহার করুন।`, 
+        title: 'Incomplete Attendance!', 
+        text: `You have ${unMarked.length} unmarked student(s). Please mark attendance for all students or use the 'Mark All' button.`, 
         customClass: { popup: 'rounded-2xl' }
       });
     }
@@ -91,7 +91,7 @@ export default function Index({ classes, students, filters, sheetLocked, isHolid
         const errorMsg = Object.values(errors).join('<br><br>');
         Swal.fire({
           icon: 'error',
-          title: 'অ্যাকশন বাতিল করা হয়েছে!',
+          title: 'Validation Error!',
           html: `<span style="color: #ef4444; font-weight: 500;">${errorMsg}</span>`,
           confirmButtonColor: '#4f46e5',
           customClass: { popup: 'rounded-2xl shadow-xl' }
@@ -102,14 +102,14 @@ export default function Index({ classes, students, filters, sheetLocked, isHolid
 
   const handleSendAbsentSms = () => {
     if (data.selected_students.length === 0) {
-      return Swal.fire({ icon: 'warning', title: 'Oops!', text: 'দয়া করে কমপক্ষে ১ জন স্টুডেন্ট সিলেক্ট করুন!', customClass: { popup: 'rounded-2xl' } });
+      return Swal.fire({ icon: 'warning', title: 'Oops!', text: 'Please select a Class and Date first!', customClass: { popup: 'rounded-2xl' } });
     }
 
     const selectedDate = attendanceDate || new Date().toISOString().split('T')[0]; 
 
     Swal.fire({
-      title: '<span style="color: #1e293b; font-weight: 800; font-size: 1.5rem;">Send Absent SMS?</span>',
-      html: `<p style="color: #64748b; font-size: 0.95rem; margin-top: 6px;">নির্বাচিত <strong>${data.selected_students.length}</strong> জন শিক্ষার্থীর অভিভাবককে SMS পাঠানো হবে!<br><strong style="color: #4f46e5;">Are you sure?</strong></p>`,
+      title: 'Validation Error!',
+          html: `<p style="color: #64748b; font-size: 0.95rem; margin-top: 6px;">You are about to send absentee SMS to <strong>${data.selected_students.length}</strong> selected student(s).<br><strong style="color: #4f46e5;">Are you sure?</strong></p>`,
       icon: 'question',
       iconColor: '#4f46e5',
       showCancelButton: true,
@@ -158,7 +158,7 @@ export default function Index({ classes, students, filters, sheetLocked, isHolid
           <div>
             <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">Attendance</span>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Daily Attendance</h1>
-            <p className="text-sm text-slate-500 mt-1">শিক্ষার্থীদের প্রতিদিনের উপস্থিতি ও অনুপস্থিতির রেকর্ড রাখুন।</p>
+            <p className="text-sm text-slate-500 mt-1">Manage daily student attendance, track absent students, and send SMS notifications to guardians.</p>
           </div>
           
           <button 
@@ -217,7 +217,7 @@ export default function Index({ classes, students, filters, sheetLocked, isHolid
         {sheetLocked && (
           <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-xl flex items-center gap-3">
             <Icon name="lock" className="w-5 h-5 text-amber-600" />
-            <span className="text-sm font-semibold">এই দিনের হাজিরা শিট লক করা আছে। নতুন করে কোনো হাজিরা সেভ করা যাবে না।</span>
+            <span className="text-sm font-semibold">Today is marked as a Holiday. Attendance entry is disabled.</span>
           </div>
         )}
 

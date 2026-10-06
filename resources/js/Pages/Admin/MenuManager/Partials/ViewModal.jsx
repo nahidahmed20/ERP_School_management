@@ -11,7 +11,7 @@ export default function ViewModal({ item, onClose }) {
     >
       {/* Responsive Modal Box */}
       <div 
-        className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden transform transition-all ring-1 ring-slate-900/5 animate-in zoom-in-95 duration-200 flex flex-col"
+        className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden transform transition-all ring-1 ring-slate-900/5 animate-in zoom-in-95 duration-200 flex flex-col max-h-[calc(100dvh-2rem)] sm:max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header Profile */}

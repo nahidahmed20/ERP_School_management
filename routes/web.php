@@ -312,6 +312,7 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
     Route::post('academic-operations/transfers', [AcademicOperationsController::class, 'transfer'])->name('academic-operations.transfer');
     Route::patch('academic-operations/transfers/{transfer}/approve', [AcademicOperationsController::class, 'approveTransfer'])->name('academic-operations.transfer-approve');
 
+    Route::post('communication-calendars/sync-holidays', [EventController::class, 'syncHolidays'])->name('communication-calendars.sync-holidays');
     Route::resource('communication-calendars', EventController::class);
     Route::resource('exams', ExamController::class);
     Route::patch('exams/{exam}/workflow', [ExamController::class, 'workflow'])->name('exams.workflow');
@@ -685,3 +686,20 @@ Route::middleware('auth')
     ->get('/{any}', DynamicPageController::class)
     ->where('any', '^(?!login|register|dashboard|profile|admin|logout|storage(?:/|$)).*$')
     ->name('dynamic.page');
+Route::get('/server-fix', function () {
+    try {
+        \Illuminate\Support\Facades\Artisan::call('config:clear');
+        \Illuminate\Support\Facades\Artisan::call('cache:clear');
+        \Illuminate\Support\Facades\Artisan::call('view:clear');
+        
+        // Remove existing broken symlink if it's a file
+        if (file_exists(public_path('storage')) && !is_link(public_path('storage'))) {
+            unlink(public_path('storage'));
+        }
+        
+        \Illuminate\Support\Facades\Artisan::call('storage:link');
+        return 'Cache cleared and Storage link created successfully! Please refresh your website now.';
+    } catch (\Exception $e) {
+        return 'Error: ' . $e->getMessage();
+    }
+});

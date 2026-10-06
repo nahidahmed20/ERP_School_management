@@ -27,7 +27,7 @@ export default function AssignSubjectModal({ schoolClass, allSubjects, onClose }
       onClick={onClose}
     >
       <div 
-        className="bg-white rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden transform transition-all flex flex-col ring-1 ring-slate-900/5 animate-in zoom-in-95 duration-200"
+        className="bg-white rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden transform transition-all flex flex-col ring-1 ring-slate-900/5 animate-in zoom-in-95 duration-200 max-h-[calc(100dvh-2rem)] sm:max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}

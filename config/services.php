@@ -52,7 +52,7 @@ return [
     ],
 
     'government_holidays' => [
-        'feed_url' => env('GOVERNMENT_HOLIDAY_FEED_URL'),
+        'feed_url' => env('GOVERNMENT_HOLIDAY_FEED_URL', 'https://date.nager.at/api/v3/PublicHolidays/{year}/BD'),
     ],
 
 ];

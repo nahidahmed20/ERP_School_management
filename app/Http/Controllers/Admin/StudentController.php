@@ -93,7 +93,6 @@ class StudentController extends Controller
 
     public function store(Request $request)
     {
-        // 🟢 FIX: ব্যাকএন্ডে ফলব্যাক লজিক
         $request->merge(['campus_id' => config('app.active_campus_id')]);
 
         $data = $request->validate($this->studentValidationRules());
@@ -162,8 +161,22 @@ class StudentController extends Controller
                 $guardianId = $guardian->id;
             }
 
-            $lastStudent = Student::withoutGlobalScope('campus')->withTrashed()->latest('id')->first();
-            $admissionNo = 'STU-' . date('Y') . '-' . sprintf('%04d', $lastStudent ? $lastStudent->id + 1 : 1);
+            // --- Updated Admission No Logic (Yearly Reset) ---
+            $currentYear = date('Y');
+            $lastStudentThisYear = Student::withoutGlobalScope('campus')
+                ->withTrashed()
+                ->where('admission_no', 'like', "{$currentYear}-%")
+                ->latest('id')
+                ->first();
+
+            if ($lastStudentThisYear) {
+                $lastSerial = (int) explode('-', $lastStudentThisYear->admission_no)[1];
+                $newSerial = $lastSerial + 1;
+            } else {
+                $newSerial = 1;
+            }
+            $admissionNo = $currentYear . '-' . sprintf('%04d', $newSerial);
+            // --------------------------------------------------
 
             $studentUserId = null;
             if ($request->create_student_user) {
@@ -221,12 +234,28 @@ class StudentController extends Controller
                 'receives_email' => true,
             ]]);
 
+            // --- Updated Auto Roll Number Logic ---
+            $rollNo = $request->roll_no;
+            if (!$rollNo) {
+                // Find highest roll in this class and section for the active session
+                $lastEnrollmentRoll = Enrollment::where('academic_session_id', $activeSession->id)
+                    ->where('class_id', $request->class_id)
+                    ->where('section_id', $request->section_id)
+                    ->get()
+                    ->max(function ($enrollment) {
+                        return (int) $enrollment->roll_no;
+                    });
+
+                $rollNo = $lastEnrollmentRoll ? $lastEnrollmentRoll + 1 : 1;
+            }
+            // --------------------------------------
+
             Enrollment::create([
                 'student_id'            => $student->id,
                 'academic_session_id'   => $activeSession->id,
                 'class_id'              => $request->class_id,
                 'section_id'            => $request->section_id,
-                'roll_no'               => $request->roll_no,
+                'roll_no'               => $rollNo,
                 'is_current'            => true,
             ]);
 
@@ -268,7 +297,6 @@ class StudentController extends Controller
 
     public function update(Request $request, $id)
     {
-        // 🟢 FIX: ব্যাকএন্ডে ফলব্যাক লজিক
         $request->merge(['campus_id' => config('app.active_campus_id')]);
 
         $student = Student::with(['guardian', 'currentEnrollment'])->findOrFail($id);
@@ -338,10 +366,25 @@ class StudentController extends Controller
             ]);
 
             if ($student->currentEnrollment) {
+                $rollNo = $request->roll_no;
+
+                if (!$rollNo) {
+                    $lastEnrollmentRoll = Enrollment::where('academic_session_id', $student->currentEnrollment->academic_session_id)
+                        ->where('class_id', $request->class_id)
+                        ->where('section_id', $request->section_id)
+                        ->where('id', '!=', $student->currentEnrollment->id)
+                        ->get()
+                        ->max(function ($enrollment) {
+                            return (int) $enrollment->roll_no;
+                        });
+
+                    $rollNo = $lastEnrollmentRoll ? $lastEnrollmentRoll + 1 : 1;
+                }
+
                 $student->currentEnrollment->update([
                     'class_id'      => $request->class_id,
                     'section_id'    => $request->section_id,
-                    'roll_no'       => $request->roll_no,
+                    'roll_no'       => $rollNo,
                 ]);
             }
 
@@ -395,7 +438,7 @@ class StudentController extends Controller
             ->first();
 
         if (!$template) {
-            return back()->with('error', 'কোনো অ্যাক্টিভ Student ID Card টেমপ্লেট পাওয়া যায়নি! আগে একটি টেমপ্লেট তৈরি করুন।');
+            return back()->with('error', 'কোনো অ্যাক্টিভ Student ID Card টেমপ্লেট পাওয়া যায়নি! আগে একটি টেমপ্লেট তৈরি করুন।');
         }
 
         return Inertia::render('Admin/Documents/PersonIdCard', $this->studentDocumentData($student, $template));

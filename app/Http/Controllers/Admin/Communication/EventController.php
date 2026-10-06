@@ -7,6 +7,7 @@ use App\Models\Event;
 use App\Models\Classroom;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Artisan;
 
 class EventController extends Controller
 {
@@ -30,7 +31,10 @@ class EventController extends Controller
 
         return Inertia::render('Admin/Communication/Events/Index', [
             'events' => $query->paginate(\App\Support\PerPage::resolve(15))->withQueryString(),
-            'classrooms' => Classroom::select('id', 'room_number', 'type')->where('is_active', true)->where($filter)->get(),
+            'classrooms' => Classroom::select('id', 'room_number', 'type')
+                ->where('is_active', true)
+                ->where($filter)
+                ->get(),
             'filters' => [
                 'type' => $request->input('type', ''),
                 'filter' => $request->input('filter', 'upcoming'),
@@ -49,6 +53,7 @@ class EventController extends Controller
         $data['campus_id'] = config('app.active_campus_id') ?? auth()->user()->campus_id;
 
         Event::create($data);
+
         return back()->with('success', 'ইভেন্ট সফলভাবে তৈরি করা হয়েছে।');
     }
 
@@ -64,6 +69,7 @@ class EventController extends Controller
         }
 
         $event->update($data);
+
         return back()->with('success', 'ইভেন্ট আপডেট করা হয়েছে।');
     }
 
@@ -74,6 +80,16 @@ class EventController extends Controller
         $event->delete();
 
         return back()->with('success', 'ইভেন্ট মুছে ফেলা হয়েছে।');
+    }
+
+    public function syncHolidays()
+    {
+        try {
+            Artisan::call('holidays:sync');
+            return redirect()->back()->with('success', 'Government holidays synced successfully!');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to sync holidays: ' . $e->getMessage());
+        }
     }
 
     private function validateData(Request $request): array
@@ -94,7 +110,9 @@ class EventController extends Controller
 
     private function checkRoomClash(Request $request, $ignoreId = null)
     {
-        if (empty($request->classroom_id)) return false;
+        if (empty($request->classroom_id)) {
+            return false;
+        }
 
         $query = Event::where('classroom_id', $request->classroom_id)
             ->where(function($q) use ($request) {

@@ -7,7 +7,7 @@
     RewriteEngine On
     RewriteRule ^(\.env|composer\.(json|lock)|package\.json|phpunit\.xml)$ - [F,L,NC]
     
-    RewriteRule ^(app|bootstrap|config|database|resources|storage|tests|vendor)(/.*)?$ - [F,L,NC]
+    RewriteRule ^(app|bootstrap|config|database|resources|tests|vendor)(/.*)?$ - [F,L,NC]
     RewriteCond %{REQUEST_FILENAME} -d [OR]
     RewriteCond %{REQUEST_FILENAME} -f
     RewriteRule ^ ^$1 [N]

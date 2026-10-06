@@ -32,7 +32,7 @@ class SyncGovernmentHolidays extends Command
         }
 
         $holidays = collect($payload['holidays'] ?? $payload)
-            ->filter(fn ($holiday) => is_array($holiday) && ! empty($holiday['date']) && ! empty($holiday['title']))
+            ->filter(fn ($holiday) => is_array($holiday) && ! empty($holiday['date']) && (! empty(($holiday['title'] ?? $holiday['name'] ?? 'Holiday')) || ! empty($holiday['name'])))
             ->filter(fn ($holiday) => Carbon::parse($holiday['date'])->year === $year);
 
         if ($holidays->isEmpty()) {
@@ -51,12 +51,12 @@ class SyncGovernmentHolidays extends Command
             foreach ($holidays as $holiday) {
                 $date = Carbon::parse($holiday['date']);
                 $endDate = Carbon::parse($holiday['end_date'] ?? $holiday['date']);
-                $sourceKey = hash('sha256', $year.'|'.$date->toDateString().'|'.$holiday['title']);
+                $sourceKey = hash('sha256', $year.'|'.$date->toDateString().'|'.($holiday['title'] ?? $holiday['name'] ?? 'Holiday'));
 
                 Event::withoutGlobalScopes()->updateOrCreate(
                     ['campus_id' => $campusId, 'source_key' => $sourceKey],
                     [
-                        'title' => $holiday['title'],
+                        'title' => ($holiday['title'] ?? $holiday['name'] ?? 'Holiday'),
                         'type' => 'Holiday',
                         'is_government_holiday' => true,
                         'start_datetime' => $date->startOfDay(),

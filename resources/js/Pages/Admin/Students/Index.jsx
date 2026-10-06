@@ -18,27 +18,33 @@ function StudentViewModal({ student, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 transition-opacity animate-in fade-in duration-200"
+      className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 transition-opacity animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl w-full max-w-5xl max-h-[90vh] flex flex-col md:flex-row shadow-2xl overflow-hidden transform transition-all ring-1 ring-slate-900/5 animate-in zoom-in-95 duration-200"
+        className="bg-white rounded-3xl w-full max-w-5xl max-h-[90vh] flex flex-col md:flex-row shadow-2xl overflow-hidden transform transition-all ring-1 ring-slate-900/10 animate-in zoom-in-95 duration-200 relative"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Mobile Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 md:hidden w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 z-50"
+          className="absolute top-4 right-4 md:hidden w-8 h-8 flex items-center justify-center rounded-full bg-slate-100/80 text-slate-500 hover:bg-slate-200 hover:text-slate-700 z-50 backdrop-blur-md transition-colors"
         >
           <Icon name="close" className="w-4 h-4" />
         </button>
 
-        <div className="w-full md:w-2/5 lg:w-1/3 bg-slate-50 border-r border-slate-100 p-8 flex flex-col items-center text-center shrink-0 overflow-y-auto">
-          <div className="w-32 h-32 rounded-full overflow-hidden bg-white ring-4 ring-white shadow-sm border border-slate-100 flex items-center justify-center text-slate-300 mb-5 relative group">
+        {/* Left Sidebar - Profile Summary */}
+        <div className="w-full md:w-2/5 lg:w-1/3 bg-gradient-to-b from-slate-50 to-slate-100/50 border-r border-slate-200 p-8 flex flex-col items-center text-center shrink-0 overflow-y-auto relative">
+
+          {/* Decorative background element */}
+          <div className="absolute top-0 left-0 w-full h-32 bg-indigo-600/5 rounded-b-[40%]"></div>
+
+          <div className="w-32 h-32 rounded-full overflow-hidden bg-white ring-4 ring-white shadow-lg shadow-indigo-100 border border-slate-100 flex items-center justify-center text-slate-300 mb-5 relative group z-10 mt-4">
             {student.photo && !imageError ? (
               <img
                 src={publicMediaUrl(student.photo)}
                 alt="Profile"
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 onError={() => setImageError(true)}
               />
             ) : (
@@ -46,127 +52,155 @@ function StudentViewModal({ student, onClose }) {
                 <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
             )}
-            <div className="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center transition-all">
-              <Link href={route('admin.students.edit', student.id)} className="text-white text-xs font-semibold px-3 py-1.5 border border-white/50 rounded-lg hover:bg-white/20">
-                Change Photo
+            <div className="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center transition-all backdrop-blur-sm">
+              <Link href={route('admin.students.edit', student.id)} className="text-white text-xs font-semibold px-4 py-2 border-2 border-white/70 rounded-full hover:bg-white hover:text-slate-900 transition-colors">
+                Update
               </Link>
             </div>
           </div>
 
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight leading-tight mb-1">
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight leading-tight mb-1 z-10">
             {student.first_name} {student.last_name}
           </h2>
-          <p className="text-sm font-medium text-slate-500 mb-4">{student.campus?.name ?? 'Main Campus'}</p>
+          <p className="text-sm font-medium text-slate-500 mb-5 flex items-center gap-1.5 z-10">
+            <Icon name="map-pin" className="w-3.5 h-3.5" />
+            {student.campus?.name ?? 'Main Campus'}
+          </p>
 
-          <div className="flex flex-wrap justify-center gap-2 w-full mb-6">
-            <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-100/50">
+          <div className="flex flex-wrap justify-center gap-2.5 w-full mb-8 z-10">
+            <span className="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-700 shadow-sm border border-indigo-200/50">
               ID: {student.admission_no}
             </span>
-            <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-100/50">
-              Active Student
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 shadow-sm border border-emerald-200/50">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              Active
             </span>
           </div>
 
-          <div className="w-full space-y-3 mt-auto pt-6">
-            <Link href={route('admin.students.edit', student.id)} className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-indigo-600 transition-colors shadow-sm">
-              <Icon name="edit" className="w-4 h-4" /> Edit Full Profile
+          <div className="w-full space-y-3 mt-auto pt-6 z-10">
+            <Link href={route('admin.students.edit', student.id)} className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm font-bold text-slate-700 hover:border-indigo-600 hover:text-indigo-600 transition-all shadow-sm">
+              <Icon name="edit" className="w-4 h-4" /> Edit Profile
             </Link>
-            <button className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-indigo-600 border border-transparent rounded-xl text-sm font-semibold text-white hover:bg-indigo-700 transition-colors shadow-sm shadow-indigo-200">
+            <button className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-indigo-600 border border-transparent rounded-xl text-sm font-bold text-white hover:bg-indigo-700 transition-all shadow-md shadow-indigo-600/20 active:scale-[0.98]">
               <Icon name="printer" className="w-4 h-4" /> Print ID Card
             </button>
           </div>
         </div>
 
+        {/* Right Content - Details */}
         <div className="w-full md:w-3/5 lg:w-2/3 flex flex-col bg-white">
-          <div className="hidden md:flex justify-end p-4 border-b border-slate-50">
+          <div className="hidden md:flex justify-end p-4 pb-0">
             <button
               onClick={onClose}
-              className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+              className="w-9 h-9 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors border border-slate-200"
             >
               <Icon name="close" className="w-5 h-5" />
             </button>
           </div>
 
-          <div className="p-6 sm:p-8 overflow-y-auto space-y-8">
-            <section>
-              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 flex items-center gap-2 border-b border-slate-100 pb-2">
-                <span className="w-2 h-2 rounded-full bg-indigo-500"></span> Academic Info
-              </h3>
-              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
-                <div>
-                  <dt className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Class & Section</dt>
-                  <dd className="mt-1 text-sm font-medium text-slate-900">{student.current_enrollment?.school_class?.name ?? 'N/A'} ({student.current_enrollment?.section?.name ?? 'N/A'})</dd>
+          <div className="p-6 sm:p-8 sm:pt-4 overflow-y-auto space-y-6">
+
+            {/* Academic Info Card */}
+            <section className="bg-white rounded-2xl border border-slate-200/70 shadow-sm overflow-hidden">
+              <div className="border-b border-slate-100 bg-slate-50/50 px-6 py-3.5 flex items-center gap-3">
+                <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg">
+                  <Icon name="book" className="w-4 h-4" />
                 </div>
-                <div>
-                  <dt className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Roll Number</dt>
-                  <dd className="mt-1 text-sm font-medium text-slate-900">{student.current_enrollment?.roll_no ?? 'N/A'}</dd>
-                </div>
-                <div>
-                  <dt className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Admission Date</dt>
-                  <dd className="mt-1 text-sm font-medium text-slate-900">{student.admission_date ?? 'N/A'}</dd>
-                </div>
-                <div>
-                  <dt className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Category / House</dt>
-                  <dd className="mt-1 text-sm font-medium text-slate-900">{student.category?.name || 'General'} • {student.house?.name || 'No House'}</dd>
-                </div>
-              </dl>
+                <h3 className="text-sm font-bold text-slate-800 tracking-wide uppercase">Academic Info</h3>
+              </div>
+              <div className="p-6">
+                <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
+                  <div>
+                    <dt className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Class & Section</dt>
+                    <dd className="text-sm font-bold text-slate-900">{student.current_enrollment?.school_class?.name ?? 'N/A'} ({student.current_enrollment?.section?.name ?? 'N/A'})</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Roll Number</dt>
+                    <dd className="text-sm font-bold text-slate-900">{student.current_enrollment?.roll_no ?? 'N/A'}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Admission Date</dt>
+                    <dd className="text-sm font-medium text-slate-900">{student.admission_date ?? 'N/A'}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Category / House</dt>
+                    <dd className="text-sm font-medium text-slate-900">{student.category?.name || 'General'} • {student.house?.name || 'No House'}</dd>
+                  </div>
+                </dl>
+              </div>
             </section>
 
-            <section>
-              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 flex items-center gap-2 border-b border-slate-100 pb-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Personal Details
-              </h3>
-              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
-                <div>
-                  <dt className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Date of Birth</dt>
-                  <dd className="mt-1 text-sm font-medium text-slate-900">{student.date_of_birth ?? 'N/A'}</dd>
+            {/* Personal Details Card */}
+            <section className="bg-white rounded-2xl border border-slate-200/70 shadow-sm overflow-hidden">
+              <div className="border-b border-slate-100 bg-slate-50/50 px-6 py-3.5 flex items-center gap-3">
+                <div className="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
+                  <Icon name="user" className="w-4 h-4" />
                 </div>
-                <div>
-                  <dt className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Gender</dt>
-                  <dd className="mt-1 text-sm font-medium text-slate-900 capitalize">{student.gender ?? 'N/A'}</dd>
-                </div>
-                <div>
-                  <dt className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Blood Group</dt>
-                  <dd className="mt-1 text-sm font-bold text-rose-600">{student.blood_group || 'Not Specified'}</dd>
-                </div>
-                <div>
-                  <dt className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Religion & Nationality</dt>
-                  <dd className="mt-1 text-sm font-medium text-slate-900">{student.religion ?? 'N/A'} ({student.nationality ?? 'N/A'})</dd>
-                </div>
-              </dl>
+                <h3 className="text-sm font-bold text-slate-800 tracking-wide uppercase">Personal Details</h3>
+              </div>
+              <div className="p-6">
+                <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
+                  <div>
+                    <dt className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Date of Birth</dt>
+                    <dd className="text-sm font-medium text-slate-900">{student.date_of_birth ?? 'N/A'}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Gender</dt>
+                    <dd className="text-sm font-medium text-slate-900 capitalize">{student.gender ?? 'N/A'}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Blood Group</dt>
+                    <dd className="text-sm font-bold text-rose-600 bg-rose-50 px-2.5 py-0.5 rounded border border-rose-100 inline-block">{student.blood_group || 'N/A'}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Religion & Nationality</dt>
+                    <dd className="text-sm font-medium text-slate-900">{student.religion ?? 'N/A'} ({student.nationality ?? 'N/A'})</dd>
+                  </div>
+                </dl>
+              </div>
             </section>
 
-            <section>
-              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 flex items-center gap-2 border-b border-slate-100 pb-2">
-                <span className="w-2 h-2 rounded-full bg-amber-500"></span> Guardian & Contacts
-              </h3>
-              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
-                <div>
-                  <dt className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Father's Name</dt>
-                  <dd className="mt-1 text-sm font-medium text-slate-900">{student.guardian?.father_name ?? 'N/A'}</dd>
+            {/* Guardian & Contacts Card */}
+            <section className="bg-white rounded-2xl border border-slate-200/70 shadow-sm overflow-hidden">
+              <div className="border-b border-slate-100 bg-slate-50/50 px-6 py-3.5 flex items-center gap-3">
+                <div className="p-2 bg-amber-100 text-amber-600 rounded-lg">
+                  <Icon name="users" className="w-4 h-4" />
                 </div>
-                <div>
-                  <dt className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Father's Phone</dt>
-                  <dd className="mt-1 text-sm font-medium text-slate-900">{student.guardian?.father_phone ?? 'N/A'}</dd>
-                </div>
-                <div>
-                  <dt className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Mother's Name</dt>
-                  <dd className="mt-1 text-sm font-medium text-slate-900">{student.guardian?.mother_name ?? 'N/A'}</dd>
-                </div>
-                <div>
-                  <dt className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Guardian Email</dt>
-                  <dd className="mt-1 text-sm font-medium text-slate-900 truncate" title={student.guardian?.guardian_email}>
-                    {student.guardian?.guardian_email || 'N/A'}
-                  </dd>
-                </div>
-                <div className="sm:col-span-2">
-                  <dt className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Present Address</dt>
-                  <dd className="mt-1 text-sm font-medium text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-100 leading-relaxed">
-                    {student.present_address ?? 'Address not provided'}
-                  </dd>
-                </div>
-              </dl>
+                <h3 className="text-sm font-bold text-slate-800 tracking-wide uppercase">Guardian & Contacts</h3>
+              </div>
+              <div className="p-6">
+                <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
+                  <div>
+                    <dt className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Father's Name</dt>
+                    <dd className="text-sm font-bold text-slate-900">{student.guardian?.father_name ?? 'N/A'}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Father's Phone</dt>
+                    <dd className="text-sm font-bold text-indigo-600 flex items-center gap-1.5">
+                      <Icon name="phone" className="w-3.5 h-3.5" /> {student.guardian?.father_phone ?? 'N/A'}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Mother's Name</dt>
+                    <dd className="text-sm font-medium text-slate-900">{student.guardian?.mother_name ?? 'N/A'}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Guardian Email</dt>
+                    <dd className="text-sm font-medium text-slate-900 truncate" title={student.guardian?.guardian_email}>
+                      {student.guardian?.guardian_email || 'N/A'}
+                    </dd>
+                  </div>
+                  <div className="sm:col-span-2 mt-2">
+                    <dt className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Present Address</dt>
+                    <dd className="text-sm font-medium text-slate-700 bg-slate-50 p-4 rounded-xl border border-slate-100 leading-relaxed flex gap-3 items-start">
+                      <Icon name="map-pin" className="w-5 h-5 text-slate-400 shrink-0 mt-0.5" />
+                      <span>{student.present_address ?? 'Address not provided'}</span>
+                    </dd>
+                  </div>
+                </dl>
+              </div>
             </section>
+
           </div>
         </div>
       </div>

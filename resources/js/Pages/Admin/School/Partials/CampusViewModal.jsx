@@ -9,7 +9,7 @@ export default function CampusViewModal({ item, onClose }) {
       onClick={onClose}
     >
       <div 
-        className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden transform transition-all ring-1 ring-slate-900/5 animate-in zoom-in-95 duration-200"
+        className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden transform transition-all ring-1 ring-slate-900/5 animate-in zoom-in-95 duration-200 max-h-[calc(100dvh-2rem)] sm:max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header Profile */}
