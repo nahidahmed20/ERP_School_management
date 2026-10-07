@@ -24,8 +24,13 @@ class HandleInertiaRequests extends Middleware
     {
         $activeCampusId = config('app.active_campus_id');
         $activeCampus = $request->attributes->get('active_campus');
-        $canSwitchCampus = (bool) $request->user()?->hasRole('Super Admin');
-        $schoolName = ! $request->user() ? app(WebsiteSettingsService::class)->values()['school_name']
+        
+        $user = $request->user();
+        $isSuperAdmin = (bool) $user?->hasRole('Super Admin');
+        $isTenantAdmin = (bool) $user?->hasRole('Tenant Admin');
+        $canSwitchCampus = $isSuperAdmin || $isTenantAdmin;
+        
+        $schoolName = ! $user ? app(WebsiteSettingsService::class)->values()['school_name']
             : Setting::withoutGlobalScope('campus')->where('key', 'school_name')
             ->where(function ($query) use ($activeCampusId) {
                 $query->where('campus_id', $activeCampusId)
@@ -67,9 +72,15 @@ class HandleInertiaRequests extends Middleware
                 },
             ],
 
-            'all_campuses' => function () use ($canSwitchCampus) {
+            'all_campuses' => function () use ($canSwitchCampus, $isSuperAdmin, $isTenantAdmin, $user) {
                 if ($canSwitchCampus) {
-                    return Campus::where('is_active', true)->orderBy('order')->orderBy('name')->get(['id', 'name']);
+                    $query = Campus::where('is_active', true);
+                    
+                    if ($isTenantAdmin && !$isSuperAdmin && $user->campus) {
+                        $query->where('saas_tenant_id', $user->campus->saas_tenant_id);
+                    }
+                    
+                    return $query->orderBy('order')->orderBy('name')->get(['id', 'name']);
                 }
 
                 return [];

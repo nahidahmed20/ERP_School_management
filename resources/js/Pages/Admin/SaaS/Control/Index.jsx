@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
@@ -38,7 +38,7 @@ export default function Index({ tenants, plans, usage, invoices, backups, report
     const today = new Date().toISOString().slice(0, 10);
 
     const pv = useForm({
-        company_name: '', domain: '', admin_email: '', admin_phone: '', saas_plan_id: '', valid_until: ''
+        company_name: '', domain: '', admin_email: '', admin_phone: '', password: '', saas_plan_id: '', valid_until: ''
     });
 
     const lim = useForm({
@@ -87,7 +87,7 @@ export default function Index({ tenants, plans, usage, invoices, backups, report
                     <Box title="Tenant Provisioning">
                         <form onSubmit={post(pv, 'admin.saas.provision')} className="space-y-3">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                {['company_name', 'domain', 'admin_email', 'admin_phone'].map(k => (
+                                {['company_name', 'domain', 'admin_email', 'admin_phone', 'password'].map(k => (
                                     <div key={k}>
                                         <label className="text-xs font-semibold text-slate-600 capitalize">
                                             {k.replaceAll('_', ' ')}
@@ -108,7 +108,7 @@ export default function Index({ tenants, plans, usage, invoices, backups, report
                                     <select className={`${C} ${pv.errors.saas_plan_id ? 'border-rose-500' : ''}`} value={pv.data.saas_plan_id} onChange={e => pv.setData('saas_plan_id', e.target.value)}>
                                         <option value="">Select Plan</option>
                                         {plans.map(x => (
-                                            <option key={x.id} value={x.id}>{x.name} · {x.currency} {x.price}</option>
+                                            <option key={x.id} value={x.id}>{x.name} Â· {x.currency} {x.price}</option>
                                         ))}
                                     </select>
                                     {pv.errors.saas_plan_id && <p className="text-[10px] text-rose-600 mt-1 font-semibold">{pv.errors.saas_plan_id}</p>}
@@ -178,14 +178,14 @@ export default function Index({ tenants, plans, usage, invoices, backups, report
                                     <div className="flex items-start justify-between gap-2">
                                         <div className="min-w-0">
                                             <b className="text-base text-slate-900 block truncate">{t.company_name}</b>
-                                            <small className="block text-slate-500 truncate">{t.plan?.name || t.subscription_plan} · {t.domain}</small>
+                                            <small className="block text-slate-500 truncate">{t.plan?.name || t.subscription_plan} Â· {t.domain}</small>
                                         </div>
                                         <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold whitespace-nowrap ${t.status === 'Active' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
                                             {t.status}
                                         </span>
                                     </div>
                                     <p className="mt-2 text-xs text-slate-600">
-                                        Campuses: <b>{t.campuses?.length || 0}</b> / {t.plan?.max_campuses || '—'} · Valid until: <b>{t.valid_until || 'Lifetime'}</b>
+                                        Campuses: <b>{t.campuses?.length || 0}</b> / {t.plan?.max_campuses || 'â€”'} Â· Valid until: <b>{t.valid_until || 'Lifetime'}</b>
                                     </p>
                                     {!t.domain_verified_at && (
                                         <div className="mt-2.5 space-y-1">
@@ -232,7 +232,7 @@ export default function Index({ tenants, plans, usage, invoices, backups, report
                                 <div><label className="text-xs text-slate-500">Due Date</label><input className={C} type="date" value={inv.data.due_date} onChange={e => inv.setData('due_date', e.target.value)} /></div>
                             </div>
                             <div>
-                                <label className="text-xs font-semibold text-slate-600">Invoice Amount (৳)</label>
+                                <label className="text-xs font-semibold text-slate-600">Invoice Amount (à§³)</label>
                                 <input className={C} type="number" placeholder="Enter invoice amount" value={inv.data.amount} onChange={e => inv.setData('amount', e.target.value)} />
                             </div>
                             <Btn>Create invoice</Btn>
@@ -241,7 +241,7 @@ export default function Index({ tenants, plans, usage, invoices, backups, report
                             {invoices.map(x => (
                                 <div key={x.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center rounded-lg border p-3 text-sm gap-2">
                                     <div>
-                                        <b>{x.invoice_no}</b> · ৳{Number(x.amount).toLocaleString()}
+                                        <b>{x.invoice_no}</b> Â· à§³{Number(x.amount).toLocaleString()}
                                         <span className={`ml-2 text-xs font-bold px-2 py-0.5 rounded ${x.status === 'unpaid' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}`}>{x.status}</span>
                                     </div>
                                     {x.status === 'unpaid' && (
@@ -262,9 +262,9 @@ export default function Index({ tenants, plans, usage, invoices, backups, report
                                         <span className="text-xs px-2 py-0.5 rounded bg-slate-200 text-slate-700 font-semibold">{x.status}</span>
                                     </div>
                                     <p className="text-xs text-slate-600 mt-1 truncate">{x.file_name}</p>
-                                    <small className="block text-slate-500 mt-1">Size: {x.file_size} · Encrypted: <b>{x.encrypted ? 'Yes' : 'No'}</b></small>
+                                    <small className="block text-slate-500 mt-1">Size: {x.file_size} Â· Encrypted: <b>{x.encrypted ? 'Yes' : 'No'}</b></small>
                                     <div className="mt-2.5">
-                                        <a href={route('admin.security-operations.index')} className="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition">Verify / restore in Security Center →</a>
+                                        <a href={route('admin.security-operations.index')} className="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition">Verify / restore in Security Center â†’</a>
                                     </div>
                                 </div>
                             ))}
@@ -297,7 +297,7 @@ export default function Index({ tenants, plans, usage, invoices, backups, report
                                             <td className="p-2.5">{x.campuses}</td>
                                             <td className="p-2.5">{x.students}</td>
                                             <td className="p-2.5">{x.staff}</td>
-                                            <td className="p-2.5 font-medium">৳{Number(x.collection).toLocaleString()}</td>
+                                            <td className="p-2.5 font-medium">à§³{Number(x.collection).toLocaleString()}</td>
                                             <td className="p-2.5">
                                                 <span className={`px-2 py-0.5 rounded text-xs font-bold ${x.status === 'Active' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700'}`}>{x.status}</span>
                                             </td>

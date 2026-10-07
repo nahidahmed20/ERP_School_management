@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useForm, usePage, Head, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
@@ -12,6 +13,18 @@ export default function Create({ classes, classrooms, campuses, staffList = [] }
     day_of_week: 'Sunday',
     periods: [{ subject_id: '', teacher_id: '', classroom_id: '', start_time: '', end_time: '' }],
   });
+
+  useEffect(() => {
+    if (errors?.conflict) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Time Conflict Error!',
+        text: errors.conflict,
+        confirmButtonColor: '#4f46e5',
+        customClass: { popup: 'rounded-2xl' }
+      });
+    }
+  }, [errors]);
 
   const selectedClass = classes.find(c => c.id == data.class_id);
   const availableSections = selectedClass?.sections || [];
@@ -29,7 +42,6 @@ export default function Create({ classes, classrooms, campuses, staffList = [] }
   function submit(e) {
     e.preventDefault();
 
-    // 💡 Time Overlap Check Logic (Front-end Validation)
     for (let i = 0; i < data.periods.length; i++) {
       const current = data.periods[i];
       if (!current.start_time || !current.end_time) continue;
@@ -42,7 +54,7 @@ export default function Create({ classes, classrooms, campuses, staffList = [] }
           Swal.fire({
             icon: 'error',
             title: 'Time Conflict!',
-            text: `Period ${i + 1} এবং Period ${j + 1} এর সময় একে অপরের সাথে মিলে যাচ্ছে (Overlap)। দয়া করে সময় ঠিক করুন।`,
+            text: `Period ${i + 1} এবং Period ${j + 1} এর সময় একে অপরের সাথে মিলে যাচ্ছে (Overlap)। দয়া করে সময় ঠিক করুন।`,
             customClass: { popup: 'rounded-2xl' }
           });
           return;
@@ -61,7 +73,7 @@ export default function Create({ classes, classrooms, campuses, staffList = [] }
       <Head title="Create Routine" />
 
       <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8">
-        
+
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
@@ -74,7 +86,7 @@ export default function Create({ classes, classrooms, campuses, staffList = [] }
         </div>
 
         <form onSubmit={submit} className="w-full relative pb-28 space-y-6">
-          
+
           {/* Global Settings Block */}
           <div className="bg-white p-7 rounded-2xl shadow-sm border border-slate-200">
             <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
@@ -151,7 +163,7 @@ export default function Create({ classes, classrooms, campuses, staffList = [] }
               <div className="space-y-4">
                 {data.periods.map((period, index) => (
                   <div key={index} className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-end bg-slate-50/60 p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-indigo-200 transition-all relative group">
-                    
+
                     {/* Period Badge */}
                     <div className="xl:col-span-1 flex items-center xl:justify-center">
                       <div className="flex flex-col items-center">
@@ -172,7 +184,10 @@ export default function Create({ classes, classrooms, campuses, staffList = [] }
 
                     <div className="xl:col-span-2">
                       <label className={labelClass}>Teacher</label>
-                      <select className={inputClass} value={period.teacher_id} onChange={(e) => handlePeriodChange(index, 'teacher_id', e.target.value)}><option value="">Select Teacher</option>{staffList.map(s => <option key={s.id} value={s.id}>{s.first_name} {s.last_name} ({s.staff_id_no})</option>)}</select>
+                      <select className={inputClass} value={period.teacher_id} onChange={(e) => handlePeriodChange(index, 'teacher_id', e.target.value)}>
+                        <option value="">Select Teacher</option>
+                        {staffList.map(s => <option key={s.id} value={s.id}>{s.first_name} {s.last_name} ({s.staff_id_no})</option>)}
+                      </select>
                     </div>
 
                     <div className="xl:col-span-2">

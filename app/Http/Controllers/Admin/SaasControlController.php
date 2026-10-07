@@ -52,11 +52,12 @@ class SaasControlController extends Controller
             'domain' => 'required|string|max:255|unique:saas_tenants,domain',
             'admin_email' => 'required|email|unique:users,email',
             'admin_phone' => 'nullable|string|max:30',
+            'password' => 'nullable|string|min:6',
             'saas_plan_id' => 'required|exists:saas_plans,id',
             'valid_until' => 'nullable|date'
         ]);
 
-        $password = Str::password(14);
+        $password = !empty($d['password']) ? $d['password'] : Str::password(14);
         
         DB::transaction(function () use ($d, $password, &$tenant) {
             $plan = SaasPlan::findOrFail($d['saas_plan_id']);

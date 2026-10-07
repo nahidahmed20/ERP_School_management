@@ -25,8 +25,14 @@ class TimeTableController extends Controller
     {
         $campusId = config('app.active_campus_id');
 
-        $query = TimeTable::with(['schoolClass:id,name', 'section:id,name', 'subject:id,name', 'classroom:id,room_number', 'teacher:id,first_name,last_name,staff_id_no']);
-        
+        $query = TimeTable::with([
+            'schoolClass',
+            'section:id,name',
+            'subject:id,name',
+            'classroom:id,room_number',
+            'teacher:id,first_name,last_name,staff_id_no'
+        ]);
+
         // 🔒 Super Admin Bypass Logic
         if ($campusId) {
             $query->where('campus_id', $campusId);
@@ -36,6 +42,7 @@ class TimeTableController extends Controller
             $query->when($request->filled($field), fn ($q) => $q->where($field, $request->$field));
         }
         $query->when($request->filled('day'), fn ($q) => $q->where('day_of_week', $request->day));
+
         $query->orderByRaw("CASE day_of_week WHEN 'Sunday' THEN 0 WHEN 'Monday' THEN 1 WHEN 'Tuesday' THEN 2 WHEN 'Wednesday' THEN 3 WHEN 'Thursday' THEN 4 WHEN 'Friday' THEN 5 WHEN 'Saturday' THEN 6 END")
             ->orderBy('start_time');
 
@@ -68,8 +75,11 @@ class TimeTableController extends Controller
                 'class_id' => $request->class_id,
                 'section_id' => $request->section_id,
                 'day_of_week' => $request->day,
-                'periods' => TimeTable::where('class_id', $request->class_id)->where('section_id', $request->section_id)
-                    ->where('day_of_week', $request->day)->orderBy('start_time')->get(),
+                'periods' => TimeTable::with(['subject:id,name', 'classroom:id,room_number', 'teacher:id,first_name,last_name'])
+                    ->where('class_id', $request->class_id)
+                    ->where('section_id', $request->section_id)
+                    ->where('day_of_week', $request->day)
+                    ->orderBy('start_time')->get(),
             ],
         ]);
     }
@@ -77,13 +87,13 @@ class TimeTableController extends Controller
     public function store(Request $request)
     {
         $this->saveDay($request, false);
-        return back()->with('success', 'Class routine saved successfully.');
+        return to_route('admin.time-tables.index')->with('success', 'Class routine saved successfully.');
     }
 
     public function bulkUpdate(Request $request)
     {
         $this->saveDay($request, true);
-        return back()->with('success', 'Class routine updated successfully.');
+        return to_route('admin.time-tables.index')->with('success', 'Class routine updated successfully.');
     }
 
     public function destroy($id)
@@ -100,7 +110,6 @@ class TimeTableController extends Controller
         $classroomsQuery = Classroom::where('is_active', true);
         $staffQuery = Staff::where('is_active', true)->orderBy('first_name');
 
-        // 🔒 Data Leak Protection
         if ($campusId) {
             $classesQuery->where('campus_id', $campusId);
             $classroomsQuery->where('campus_id', $campusId);
@@ -137,7 +146,7 @@ class TimeTableController extends Controller
             'periods.*.start_time' => 'required|date_format:H:i',
             'periods.*.end_time' => 'required|date_format:H:i|after:periods.*.start_time',
         ]);
-        
+
         $class = $this->validateClassSection($data['class_id'], $data['section_id']);
         $subjectIds = $class->subjects()->pluck('subjects.id')->all();
         foreach ($data['periods'] as $index => $period) {
@@ -147,7 +156,6 @@ class TimeTableController extends Controller
         }
 
         DB::transaction(function () use ($data, $class, $replace) {
-            // Lock shared resources before checking or replacing any slots.
             Staff::whereIn('id', collect($data['periods'])->pluck('teacher_id')->filter())->orderBy('id')->lockForUpdate()->get();
             Classroom::whereIn('id', collect($data['periods'])->pluck('classroom_id')->filter())->orderBy('id')->lockForUpdate()->get();
             SchoolClass::whereKey($class->id)->lockForUpdate()->firstOrFail();
@@ -167,11 +175,13 @@ class TimeTableController extends Controller
                         if (! empty($period['teacher_id'])) $q->orWhere('teacher_id', $period['teacher_id']);
                         if (! empty($period['classroom_id'])) $q->orWhere('classroom_id', $period['classroom_id']);
                     })->exists();
+
                 if ($clash) {
                     throw ValidationException::withMessages(['conflict' => 'This class, teacher or room already has a period during the selected time.']);
                 }
+
                 TimeTable::create([
-                    'campus_id' => $class->campus_id, 
+                    'campus_id' => $class->campus_id,
                     'class_id' => $class->id,
                     'section_id' => $data['section_id'],
                     'day_of_week' => $data['day_of_week'],

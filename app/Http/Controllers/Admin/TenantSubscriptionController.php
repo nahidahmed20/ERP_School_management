@@ -13,18 +13,20 @@ class TenantSubscriptionController extends Controller
     {
         $user = $request->user();
         $tenant = null;
-        
+
         // Find tenant by user's campus
         if ($user && $user->campus_id) {
             $campus = \App\Models\Campus::find($user->campus_id);
-            if ($campus && $campus->tenant_id) {
-                $tenant = SaasTenant::find($campus->tenant_id);
+            if ($campus && $campus->saas_tenant_id) {
+                $tenant = SaasTenant::find($campus->saas_tenant_id);
             }
         }
 
-        if (!$tenant) {
-            // Fallback for Super Admin or unlinked user
+        if (!$tenant && $user->hasRole('Super Admin')) {
+            // Fallback for Super Admin
             $tenant = SaasTenant::first();
+        } elseif (!$tenant) {
+            abort(403, 'No active subscription found for this campus.');
         }
 
         return Inertia::render('Admin/Subscription/Index', [
@@ -41,12 +43,12 @@ class TenantSubscriptionController extends Controller
         $user = $request->user();
         if ($user && $user->campus_id) {
             $campus = \App\Models\Campus::find($user->campus_id);
-            if ($campus && $campus->tenant_id) {
-                $tenant = SaasTenant::find($campus->tenant_id);
+            if ($campus && $campus->saas_tenant_id) {
+                $tenant = SaasTenant::find($campus->saas_tenant_id);
                 if ($tenant) {
                     // Mock payment: add 1 month
-                    $tenant->valid_until = $tenant->valid_until && $tenant->valid_until->isFuture() 
-                        ? $tenant->valid_until->addMonth() 
+                    $tenant->valid_until = $tenant->valid_until && $tenant->valid_until->isFuture()
+                        ? $tenant->valid_until->addMonth()
                         : now()->addMonth();
                     $tenant->subscription_plan = 'Premium';
                     $tenant->save();

@@ -21,6 +21,18 @@ class SetActiveCampus
             if (filter_var($selectedId, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]])) {
                 $campus = Campus::where('is_active', true)->find($selectedId);
             }
+        } elseif ($user?->hasRole('Tenant Admin') && $user->campus?->saas_tenant_id) {
+            $selectedId = $request->session()->get('active_campus_id');
+            if (filter_var($selectedId, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]])) {
+                // Only allow switching to campuses under their own tenant
+                $campus = Campus::where('is_active', true)
+                                ->where('saas_tenant_id', $user->campus->saas_tenant_id)
+                                ->find($selectedId);
+            }
+            // Fallback to their primary campus if no valid selection
+            if (!$campus) {
+                $campus = Campus::find($user->campus_id);
+            }
         } elseif ($user?->campus_id) {
             // Branch users cannot change context through a forged session/form.
             $campus = Campus::find($user->campus_id);

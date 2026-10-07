@@ -1,19 +1,12 @@
-<?php
-$files = [
-    "app/Http/Controllers/Auth/RegisteredUserController.php",
-    "app/Http/Controllers/Admin/TenantSubscriptionController.php",
-    "resources/js/Pages/Auth/Register.jsx",
-    "resources/js/Pages/Admin/Subscription/Index.jsx"
-];
-
-foreach ($files as $file) {
-    if (file_exists($file)) {
-        $content = file_get_contents($file);
-        // Remove UTF-8 BOM if present
-        if (substr($content, 0, 3) === "\xEF\xBB\xBF") {
-            $content = substr($content, 3);
-            file_put_contents($file, $content);
-            echo "Removed BOM from $file\n";
-        }
-    }
+﻿<?php
+$file = __DIR__ . '/app/Http/Controllers/Admin/CampusController.php';
+$content = file_get_contents($file);
+// Remove BOM if exists
+if (str_starts_with($content, "\xEF\xBB\xBF")) {
+    $content = substr($content, 3);
 }
+// Also just in case there are weird spaces
+$content = trim($content);
+$content = "<?php\n" . preg_replace('/^<\?php\s*/i', '', $content);
+file_put_contents($file, $content);
+echo "Fixed CampusController.php";

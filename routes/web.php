@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 use App\Http\Controllers\Admin\AcademicSessionController;
 use App\Http\Controllers\Admin\AcademicOperationsController;
@@ -661,6 +661,10 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
     Route::resource('saas-tasks', SaasScheduledTaskController::class)->names('saas.tasks');
     Route::resource('saas-queue', SaasQueueMonitorController::class)->names('saas.queue')->only(['index', 'destroy']);
 
+    Route::get('subscription', [TenantSubscriptionController::class, 'index'])->name('subscription.index');
+    Route::post('subscription/renew', [TenantSubscriptionController::class, 'renew'])->name('subscription.renew');
+
+
     Route::resource('study-materials', StudyMaterialController::class)->only(['index', 'store', 'destroy']);
     Route::get('study-materials/{id}/download', [StudyMaterialController::class, 'download'])->name('study-materials.download');
     Route::resource('transport-routes', TransportRouteController::class)->names('transport.routes');
@@ -703,3 +707,4 @@ Route::get('/server-fix', function () {
         return 'Error: ' . $e->getMessage();
     }
 });
+

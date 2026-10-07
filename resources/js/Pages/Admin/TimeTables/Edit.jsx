@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useForm, usePage, Head, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
@@ -5,7 +6,7 @@ import Swal from 'sweetalert2';
 
 export default function Edit({ classes, classrooms, campuses, editData, staffList = [] }) {
   const { auth } = usePage().props;
-  
+
   const initialPeriods = editData.periods.length > 0
     ? editData.periods.map(p => ({
         subject_id: p.subject_id,
@@ -24,6 +25,18 @@ export default function Edit({ classes, classrooms, campuses, editData, staffLis
     periods: initialPeriods,
   });
 
+  useEffect(() => {
+    if (errors?.conflict) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Time Conflict Error!',
+        text: errors.conflict,
+        confirmButtonColor: '#4f46e5',
+        customClass: { popup: 'rounded-2xl' }
+      });
+    }
+  }, [errors]);
+
   const selectedClass = classes.find(c => c.id == data.class_id);
   const availableSections = selectedClass?.sections || [];
   const availableSubjects = selectedClass?.subjects || [];
@@ -40,7 +53,6 @@ export default function Edit({ classes, classrooms, campuses, editData, staffLis
   function submit(e) {
     e.preventDefault();
 
-    // 💡 Time Overlap Check Logic (Front-end Validation)
     for (let i = 0; i < data.periods.length; i++) {
       const current = data.periods[i];
       if (!current.start_time || !current.end_time) continue;
@@ -53,7 +65,7 @@ export default function Edit({ classes, classrooms, campuses, editData, staffLis
           Swal.fire({
             icon: 'error',
             title: 'Time Conflict!',
-            text: `Period ${i + 1} এবং Period ${j + 1} এর সময় একে অপরের সাথে মিলে যাচ্ছে (Overlap)। দয়া করে সময় ঠিক করুন।`,
+            text: `Period ${i + 1} এবং Period ${j + 1} এর সময় একে অপরের সাথে মিলে যাচ্ছে (Overlap)। দয়া করে সময় ঠিক করুন।`,
             customClass: { popup: 'rounded-2xl' }
           });
           return;
@@ -72,7 +84,7 @@ export default function Edit({ classes, classrooms, campuses, editData, staffLis
       <Head title={`Edit Routine: ${data.day_of_week}`} />
 
       <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8">
-        
+
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
@@ -87,11 +99,11 @@ export default function Edit({ classes, classrooms, campuses, editData, staffLis
         </div>
 
         <form onSubmit={submit} className="w-full relative pb-28 space-y-6">
-          
+
           {/* Global Settings Block (Read Only / Locked) */}
           <div className="bg-slate-50 p-7 rounded-2xl border border-slate-200 relative overflow-hidden">
             <Icon name="lock" className="absolute -right-4 -top-4 w-32 h-32 text-slate-200/50 rotate-12 pointer-events-none" />
-            
+
             <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-200 relative z-10">
               <div className="w-10 h-10 bg-slate-200 text-slate-600 rounded-xl flex items-center justify-center shrink-0">
                 <Icon name="lock" className="w-5 h-5" />
@@ -155,7 +167,7 @@ export default function Edit({ classes, classrooms, campuses, editData, staffLis
               <div className="space-y-4">
                 {data.periods.map((period, index) => (
                   <div key={index} className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-end bg-slate-50/60 p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-indigo-200 transition-all relative group">
-                    
+
                     <div className="xl:col-span-1 flex items-center xl:justify-center">
                       <div className="flex flex-col items-center">
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Period</span>
@@ -175,7 +187,10 @@ export default function Edit({ classes, classrooms, campuses, editData, staffLis
 
                     <div className="xl:col-span-2">
                       <label className={labelClass}>Teacher</label>
-                      <select className={inputClass} value={period.teacher_id} onChange={(e) => handlePeriodChange(index, 'teacher_id', e.target.value)}><option value="">Select Teacher</option>{staffList.map(s => <option key={s.id} value={s.id}>{s.first_name} {s.last_name} ({s.staff_id_no})</option>)}</select>
+                      <select className={inputClass} value={period.teacher_id} onChange={(e) => handlePeriodChange(index, 'teacher_id', e.target.value)}>
+                        <option value="">Select Teacher</option>
+                        {staffList.map(s => <option key={s.id} value={s.id}>{s.first_name} {s.last_name} ({s.staff_id_no})</option>)}
+                      </select>
                     </div>
 
                     <div className="xl:col-span-2">
