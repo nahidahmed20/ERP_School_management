@@ -13,6 +13,14 @@ class SecurityFailedLoginController extends Controller
     {
         $query = SecurityFailedLogin::query();
 
+        if (! $request->user()->hasRole('Super Admin') && config('app.active_campus_id')) {
+            $campusId = config('app.active_campus_id');
+            // Only show failed logins where the email belongs to a user in the active campus
+            $query->whereIn('email_attempted', function($q) use ($campusId) {
+                $q->select('email')->from('users')->where('campus_id', $campusId);
+            });
+        }
+
         if ($search = $request->get('search')) {
             $query->where('email_attempted', 'like', "%{$search}%")
                   ->orWhere('ip_address', 'like', "%{$search}%");

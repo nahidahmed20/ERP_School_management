@@ -17,3 +17,9 @@ Route::get('/user', function (Request $request) {
 Route::middleware('auth:sanctum')->get('/navigation', [NavigationController::class, 'index']);
 
 Route::post('/attendance-push', BiometricAttendanceController::class)->middleware('throttle:120,1');
+
+use App\Http\Controllers\Api\ExternalPaymentController;
+
+// External Payment App Integration APIs
+Route::get('/student/{admission_no}/dues', [ExternalPaymentController::class, 'getDues']);
+Route::post('/student/{admission_no}/pay', [ExternalPaymentController::class, 'payDues']);

@@ -172,6 +172,7 @@ function GenerateForm({ classes, subjects, allQuestions, close }) {
                   <option value="">Mixed (All types)</option>
                   <option value="MCQ">Only MCQ</option>
                   <option value="True/False">Only True / False</option>
+                  <option value="Descriptive">Only Descriptive / Broad</option>
                 </select>
               </label>
               

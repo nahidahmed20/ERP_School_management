@@ -1,549 +1,187 @@
-import { Head, router, useForm } from "@inertiajs/react";
-import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import React, { useState } from 'react';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { Head, useForm, usePage } from '@inertiajs/react';
 
-const input = "mt-1 w-full rounded-xl border-slate-300 text-sm";
-const Box = ({ title, children }) => (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="mb-4 font-bold text-slate-900">{title}</h2>
-        {children}
-    </section>
-);
-const Submit = ({ children = "Save" }) => (
-    <button className="mt-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white">
-        {children}
-    </button>
-);
+export default function Index({ allocations, roomChanges, attendances, visitors, clearances }) {
+    const { auth } = usePage().props;
+    const [activeTab, setActiveTab] = useState('overview');
 
-export default function Index({
-    allocations,
-    rooms,
-    visitors,
-    clearances,
-    summary,
-}) {
-    const today = new Date().toISOString().slice(0, 10),
-        active = allocations.filter((a) => a.is_active);
-    const bed = useForm({ hostel_room_id: "", bed_number: "" }),
-        check = useForm({
-            hostel_allocation_id: "",
-            hostel_bed_id: "",
-            checked_in_at: new Date().toISOString().slice(0, 16),
-            security_deposit: "",
-        });
-    const move = useForm({ allocation_id: "", hostel_bed_id: "", reason: "" }),
-        att = useForm({
-            hostel_allocation_id: "",
-            attendance_date: today,
-            status: "present",
-            check_time: "",
-            remarks: "",
-        });
-    const visit = useForm({
-        hostel_allocation_id: "",
-        visitor_name: "",
-        phone: "",
-        relation: "",
-        id_number: "",
+    const roomChangeForm = useForm({
+        hostel_allocation_id: '',
+        to_room_id: '',
+        to_bed_id: '',
+        changed_at: new Date().toISOString().split('T')[0],
+        reason: ''
+    });
+
+    const visitorForm = useForm({
+        hostel_allocation_id: '',
+        visitor_name: '',
+        phone: '',
+        relation: '',
+        id_number: '',
         check_in_at: new Date().toISOString().slice(0, 16),
-        purpose: "",
+        purpose: ''
     });
-    const meal = useForm({
-        hostel_allocation_id: "",
-        meal_date: today,
-        breakfast: true,
-        lunch: true,
-        dinner: true,
-        amount: 0,
-    });
-    const charge = useForm({
-        hostel_allocation_id: "",
-        type: "damage_charge",
-        amount: "",
-        status: "due",
-        reference: "",
-        notes: "",
-    });
-    const clear = useForm({
-        allocation_id: "",
-        room_cleared: false,
-        fees_cleared: false,
-        assets_returned: false,
-        notes: "",
-    });
-    const post =
-        (form, name, params = {}) =>
-        (e) => {
-            e.preventDefault();
-            form.post(route(name, params), {
-                preserveScroll: true,
-                onSuccess: () => form.reset(),
-            });
-        };
-    const allocSelect = (form, key = "hostel_allocation_id") => (
-        <select
-            className={input}
-            value={form.data[key]}
-            onChange={(e) => form.setData(key, e.target.value)}
-        >
-            <option value="">Resident allocation</option>
-            {active.map((a) => (
-                <option key={a.id} value={a.id}>
-                    {a.user?.name} · {a.room?.hostel_name} {a.room?.room_number}
-                    {a.bed ? ` / ${a.bed.bed_number}` : ""}
-                </option>
-            ))}
-        </select>
-    );
-    const beds = rooms.flatMap((r) =>
-        (r.beds || [])
-            .filter((b) => b.status === "available")
-            .map((b) => ({ ...b, room: r })),
-    );
-    const bedSelect = (form) => (
-        <select
-            className={input}
-            value={form.data.hostel_bed_id}
-            onChange={(e) => form.setData("hostel_bed_id", e.target.value)}
-        >
-            <option value="">Available bed</option>
-            {beds.map((b) => (
-                <option key={b.id} value={b.id}>
-                    {b.room.hostel_name} · Room {b.room.room_number} · Bed{" "}
-                    {b.bed_number}
-                </option>
-            ))}
-        </select>
-    );
+
+    const submitRoomChange = (e) => {
+        e.preventDefault();
+        roomChangeForm.post(route('hostel.change-room'), {
+            onSuccess: () => roomChangeForm.reset(),
+        });
+    };
+
+    const submitVisitor = (e) => {
+        e.preventDefault();
+        visitorForm.post(route('hostel.visitor'), {
+            onSuccess: () => visitorForm.reset(),
+        });
+    };
+
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            user={auth.user}
+            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Hostel Operations</h2>}
+        >
             <Head title="Hostel Operations" />
-            <main className="mx-auto max-w-7xl space-y-6 p-6">
-                <div>
-                    <h1 className="text-2xl font-black">Hostel Operations</h1>
-                    <p className="text-sm text-slate-500">
-                        Resident lifecycle, attendance, visitors, meals, finance
-                        and occupancy.
-                    </p>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
-                    {Object.entries(summary).map(([k, v]) => (
-                        <div
-                            key={k}
-                            className="rounded-2xl bg-slate-900 p-4 text-white"
-                        >
-                            <span className="text-xs capitalize text-slate-300">
-                                {k.replace(/([A-Z])/g, " $1")}
-                            </span>
-                            <b className="block text-2xl">
-                                {k === "outstanding" ? "৳" : ""}
-                                {Number(v).toLocaleString()}
-                            </b>
+
+            <div className="py-12">
+                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                    <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
+                        
+                        {/* Tabs */}
+                        <div className="flex border-b mb-6">
+                            <button onClick={() => setActiveTab('overview')} className={`py-2 px-4 ${activeTab === 'overview' ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-500'}`}>Overview</button>
+                            <button onClick={() => setActiveTab('change-room')} className={`py-2 px-4 ${activeTab === 'change-room' ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-500'}`}>Change Room</button>
+                            <button onClick={() => setActiveTab('visitor')} className={`py-2 px-4 ${activeTab === 'visitor' ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-500'}`}>Visitor Log</button>
                         </div>
-                    ))}
-                </div>
-                <div className="grid gap-6 lg:grid-cols-3">
-                    <Box title="Create Bed">
-                        <form onSubmit={post(bed, "admin.hostel.beds")}>
-                            <select
-                                className={input}
-                                value={bed.data.hostel_room_id}
-                                onChange={(e) =>
-                                    bed.setData(
-                                        "hostel_room_id",
-                                        e.target.value,
-                                    )
-                                }
-                            >
-                                <option value="">Room</option>
-                                {rooms.map((r) => (
-                                    <option key={r.id} value={r.id}>
-                                        {r.hostel_name} · {r.room_number}
-                                    </option>
-                                ))}
-                            </select>
-                            <input
-                                className={input}
-                                placeholder="Bed number"
-                                value={bed.data.bed_number}
-                                onChange={(e) =>
-                                    bed.setData("bed_number", e.target.value)
-                                }
-                            />
-                            <Submit>Add bed</Submit>
-                        </form>
-                    </Box>
-                    <Box title="Resident Check-in">
-                        <form onSubmit={post(check, "admin.hostel.check-in")}>
-                            {allocSelect(check)}
-                            {bedSelect(check)}
-                            <input
-                                className={input}
-                                type="datetime-local"
-                                value={check.data.checked_in_at}
-                                onChange={(e) =>
-                                    check.setData(
-                                        "checked_in_at",
-                                        e.target.value,
-                                    )
-                                }
-                            />
-                            <input
-                                className={input}
-                                type="number"
-                                placeholder="Security deposit"
-                                value={check.data.security_deposit}
-                                onChange={(e) =>
-                                    check.setData(
-                                        "security_deposit",
-                                        e.target.value,
-                                    )
-                                }
-                            />
-                            <Submit>Check in</Submit>
-                        </form>
-                    </Box>
-                    <Box title="Room / Bed Change">
-                        <form
-                            onSubmit={post(
-                                move,
-                                "admin.hostel.move",
-                                move.data.allocation_id,
-                            )}
-                        >
-                            {allocSelect(move, "allocation_id")}
-                            {bedSelect(move)}
-                            <textarea
-                                className={input}
-                                placeholder="Reason"
-                                value={move.data.reason}
-                                onChange={(e) =>
-                                    move.setData("reason", e.target.value)
-                                }
-                            />
-                            <Submit>Move resident</Submit>
-                        </form>
-                    </Box>
-                </div>
-                <div className="grid gap-6 lg:grid-cols-3">
-                    <Box title="Hostel Attendance">
-                        <form onSubmit={post(att, "admin.hostel.attendance")}>
-                            {allocSelect(att)}
-                            <input
-                                className={input}
-                                type="date"
-                                value={att.data.attendance_date}
-                                onChange={(e) =>
-                                    att.setData(
-                                        "attendance_date",
-                                        e.target.value,
-                                    )
-                                }
-                            />
-                            <select
-                                className={input}
-                                value={att.data.status}
-                                onChange={(e) =>
-                                    att.setData("status", e.target.value)
-                                }
-                            >
-                                <option>present</option>
-                                <option>absent</option>
-                                <option>leave</option>
-                            </select>
-                            <input
-                                className={input}
-                                type="time"
-                                value={att.data.check_time}
-                                onChange={(e) =>
-                                    att.setData("check_time", e.target.value)
-                                }
-                            />
-                            <Submit>Record attendance</Submit>
-                        </form>
-                    </Box>
-                    <Box title="Visitor Check-in">
-                        <form onSubmit={post(visit, "admin.hostel.visitors")}>
-                            {allocSelect(visit)}
-                            {[
-                                "visitor_name",
-                                "phone",
-                                "relation",
-                                "id_number",
-                                "purpose",
-                            ].map((k) => (
-                                <input
-                                    key={k}
-                                    className={input}
-                                    placeholder={k.replaceAll("_", " ")}
-                                    value={visit.data[k]}
-                                    onChange={(e) =>
-                                        visit.setData(k, e.target.value)
-                                    }
-                                />
-                            ))}
-                            <input
-                                className={input}
-                                type="datetime-local"
-                                value={visit.data.check_in_at}
-                                onChange={(e) =>
-                                    visit.setData("check_in_at", e.target.value)
-                                }
-                            />
-                            <Submit>Register visitor</Submit>
-                        </form>
-                    </Box>
-                    <Box title="Meal Allocation">
-                        <form onSubmit={post(meal, "admin.hostel.meals")}>
-                            {allocSelect(meal)}
-                            <input
-                                className={input}
-                                type="date"
-                                value={meal.data.meal_date}
-                                onChange={(e) =>
-                                    meal.setData("meal_date", e.target.value)
-                                }
-                            />
-                            <div className="my-3 flex gap-4">
-                                {["breakfast", "lunch", "dinner"].map((k) => (
-                                    <label
-                                        key={k}
-                                        className="text-sm capitalize"
-                                    >
-                                        <input
-                                            type="checkbox"
-                                            className="mr-1 rounded"
-                                            checked={meal.data[k]}
-                                            onChange={(e) =>
-                                                meal.setData(
-                                                    k,
-                                                    e.target.checked,
-                                                )
-                                            }
-                                        />
-                                        {k}
-                                    </label>
-                                ))}
-                            </div>
-                            <input
-                                className={input}
-                                type="number"
-                                placeholder="Meal charge"
-                                value={meal.data.amount}
-                                onChange={(e) =>
-                                    meal.setData("amount", e.target.value)
-                                }
-                            />
-                            <Submit>Allocate meals</Submit>
-                        </form>
-                    </Box>
-                </div>
-                <div className="grid gap-6 lg:grid-cols-2">
-                    <Box title="Deposit / Damage / Other Charge">
-                        <form
-                            onSubmit={post(charge, "admin.hostel.charges")}
-                            className="grid gap-2 sm:grid-cols-2"
-                        >
-                            {allocSelect(charge)}
-                            <select
-                                className={input}
-                                value={charge.data.type}
-                                onChange={(e) =>
-                                    charge.setData("type", e.target.value)
-                                }
-                            >
-                                <option>security_deposit</option>
-                                <option>damage_charge</option>
-                                <option>meal_charge</option>
-                                <option>other_charge</option>
-                            </select>
-                            <input
-                                className={input}
-                                type="number"
-                                placeholder="Amount"
-                                value={charge.data.amount}
-                                onChange={(e) =>
-                                    charge.setData("amount", e.target.value)
-                                }
-                            />
-                            <select
-                                className={input}
-                                value={charge.data.status}
-                                onChange={(e) =>
-                                    charge.setData("status", e.target.value)
-                                }
-                            >
-                                <option>due</option>
-                                <option>paid</option>
-                                <option>waived</option>
-                                <option>refunded</option>
-                            </select>
-                            <input
-                                className={input}
-                                placeholder="Reference"
-                                value={charge.data.reference}
-                                onChange={(e) =>
-                                    charge.setData("reference", e.target.value)
-                                }
-                            />
-                            <input
-                                className={input}
-                                placeholder="Notes"
-                                value={charge.data.notes}
-                                onChange={(e) =>
-                                    charge.setData("notes", e.target.value)
-                                }
-                            />
-                            <Submit>Save ledger entry</Submit>
-                        </form>
-                    </Box>
-                    <Box title="Clearance & Final Settlement">
-                        <form
-                            onSubmit={post(
-                                clear,
-                                "admin.hostel.clearance",
-                                clear.data.allocation_id,
-                            )}
-                        >
-                            {allocSelect(clear, "allocation_id")}
-                            <div className="my-3 flex flex-wrap gap-4">
-                                {[
-                                    "room_cleared",
-                                    "fees_cleared",
-                                    "assets_returned",
-                                ].map((k) => (
-                                    <label key={k} className="text-sm">
-                                        <input
-                                            type="checkbox"
-                                            className="mr-1 rounded"
-                                            checked={clear.data[k]}
-                                            onChange={(e) =>
-                                                clear.setData(
-                                                    k,
-                                                    e.target.checked,
-                                                )
-                                            }
-                                        />
-                                        {k.replaceAll("_", " ")}
-                                    </label>
-                                ))}
-                            </div>
-                            <textarea
-                                className={input}
-                                placeholder="Clearance notes"
-                                value={clear.data.notes}
-                                onChange={(e) =>
-                                    clear.setData("notes", e.target.value)
-                                }
-                            />
-                            <Submit>Calculate clearance</Submit>
-                        </form>
-                        <div className="mt-4 space-y-2">
-                            {clearances.map((c) => (
-                                <div
-                                    key={c.id}
-                                    className="flex items-center justify-between rounded-lg bg-slate-50 p-2 text-xs"
-                                >
-                                    <span>
-                                        Allocation #{c.hostel_allocation_id} ·{" "}
-                                        {c.status} · payable ৳{c.final_payable}
-                                    </span>
-                                    {c.status === "approved" && (
-                                        <button
-                                            onClick={() =>
-                                                router.post(
-                                                    route(
-                                                        "admin.hostel.settle",
-                                                        c.hostel_allocation_id,
-                                                    ),
-                                                )
-                                            }
-                                            className="font-bold text-rose-600"
-                                        >
-                                            Settle & checkout
-                                        </button>
-                                    )}
+
+                        {/* Overview Tab */}
+                        {activeTab === 'overview' && (
+                            <div>
+                                <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Room Changes</h3>
+                                <div className="overflow-x-auto mb-8">
+                                    <table className="min-w-full divide-y divide-gray-200">
+                                        <thead className="bg-gray-50">
+                                            <tr>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Student</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reason</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="bg-white divide-y divide-gray-200">
+                                            {roomChanges.length > 0 ? roomChanges.map(change => (
+                                                <tr key={change.id}>
+                                                    <td className="px-6 py-4 whitespace-nowrap">{change.hostel_allocation?.user?.name || 'N/A'}</td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">{new Date(change.changed_at).toLocaleDateString()}</td>
+                                                    <td className="px-6 py-4">{change.reason}</td>
+                                                </tr>
+                                            )) : <tr><td colSpan="3" className="px-6 py-4 text-center text-gray-500">No recent room changes.</td></tr>}
+                                        </tbody>
+                                    </table>
                                 </div>
-                            ))}
-                        </div>
-                    </Box>
-                </div>
-                <Box title="Occupancy Report">
-                    <div className="overflow-auto">
-                        <table className="w-full text-left text-sm">
-                            <thead>
-                                <tr className="border-b">
-                                    <th className="p-2">Hostel / Room</th>
-                                    <th>Capacity</th>
-                                    <th>Occupied</th>
-                                    <th>Available</th>
-                                    <th>Occupancy</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {rooms.map((r) => {
-                                    const o = Number(r.occupied),
-                                        cap = Number(r.bed_capacity);
-                                    return (
-                                        <tr key={r.id} className="border-b">
-                                            <td className="p-2 font-semibold">
-                                                {r.hostel_name} ·{" "}
-                                                {r.room_number}
-                                            </td>
-                                            <td>{cap}</td>
-                                            <td>{o}</td>
-                                            <td>{Math.max(0, cap - o)}</td>
-                                            <td>
-                                                {cap
-                                                    ? Math.round(
-                                                          (o / cap) * 100,
-                                                      )
-                                                    : 0}
-                                                %
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
-                </Box>
-                <Box title="Visitors Currently Inside">
-                    <div className="space-y-2">
-                        {visitors
-                            .filter((v) => !v.check_out_at)
-                            .map((v) => (
-                                <div
-                                    key={v.id}
-                                    className="flex justify-between rounded-lg border p-3 text-sm"
-                                >
-                                    <span>
-                                        <b>{v.visitor_name}</b> · Allocation #
-                                        {v.hostel_allocation_id} ·{" "}
-                                        {v.check_in_at}
-                                    </span>
-                                    <button
-                                        onClick={() =>
-                                            router.patch(
-                                                route(
-                                                    "admin.hostel.visitors.checkout",
-                                                    v.id,
-                                                ),
-                                            )
-                                        }
-                                        className="font-semibold text-indigo-600"
-                                    >
-                                        Check out
-                                    </button>
+
+                                <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Visitors</h3>
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full divide-y divide-gray-200">
+                                        <thead className="bg-gray-50">
+                                            <tr>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Visitor</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Student</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Check In</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="bg-white divide-y divide-gray-200">
+                                            {visitors.length > 0 ? visitors.map(v => (
+                                                <tr key={v.id}>
+                                                    <td className="px-6 py-4 whitespace-nowrap">{v.visitor_name} ({v.relation})</td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">{v.hostel_allocation?.user?.name || 'N/A'}</td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">{new Date(v.check_in_at).toLocaleString()}</td>
+                                                </tr>
+                                            )) : <tr><td colSpan="3" className="px-6 py-4 text-center text-gray-500">No recent visitors.</td></tr>}
+                                        </tbody>
+                                    </table>
                                 </div>
-                            ))}
-                        {!visitors.some((v) => !v.check_out_at) && (
-                            <p className="text-sm text-slate-500">
-                                No visitor is currently inside.
-                            </p>
+                            </div>
                         )}
+
+                        {/* Room Change Tab */}
+                        {activeTab === 'change-room' && (
+                            <form onSubmit={submitRoomChange} className="space-y-4 max-w-lg">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Select Allocation</label>
+                                    <select 
+                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                                        value={roomChangeForm.hostel_allocation_id}
+                                        onChange={e => roomChangeForm.setData('hostel_allocation_id', e.target.value)}
+                                        required
+                                    >
+                                        <option value="">-- Select --</option>
+                                        {allocations.map(a => (
+                                            <option key={a.id} value={a.id}>{a.user?.name} (Current: Room {a.room?.room_number})</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">New Room ID</label>
+                                    <input type="text" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value={roomChangeForm.to_room_id} onChange={e => roomChangeForm.setData('to_room_id', e.target.value)} required />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">New Bed ID</label>
+                                    <input type="text" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value={roomChangeForm.to_bed_id} onChange={e => roomChangeForm.setData('to_bed_id', e.target.value)} required />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Date</label>
+                                    <input type="date" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value={roomChangeForm.changed_at} onChange={e => roomChangeForm.setData('changed_at', e.target.value)} required />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Reason</label>
+                                    <textarea className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value={roomChangeForm.reason} onChange={e => roomChangeForm.setData('reason', e.target.value)}></textarea>
+                                </div>
+                                <button type="submit" disabled={roomChangeForm.processing} className="bg-indigo-600 text-white px-4 py-2 rounded">
+                                    Change Room
+                                </button>
+                            </form>
+                        )}
+
+                        {/* Visitor Tab */}
+                        {activeTab === 'visitor' && (
+                            <form onSubmit={submitVisitor} className="space-y-4 max-w-lg">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Select Student (Allocation)</label>
+                                    <select 
+                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                                        value={visitorForm.hostel_allocation_id}
+                                        onChange={e => visitorForm.setData('hostel_allocation_id', e.target.value)}
+                                        required
+                                    >
+                                        <option value="">-- Select --</option>
+                                        {allocations.map(a => (
+                                            <option key={a.id} value={a.id}>{a.user?.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Visitor Name</label>
+                                    <input type="text" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value={visitorForm.visitor_name} onChange={e => visitorForm.setData('visitor_name', e.target.value)} required />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Relation</label>
+                                    <input type="text" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value={visitorForm.relation} onChange={e => visitorForm.setData('relation', e.target.value)} />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Check In Time</label>
+                                    <input type="datetime-local" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value={visitorForm.check_in_at} onChange={e => visitorForm.setData('check_in_at', e.target.value)} required />
+                                </div>
+                                <button type="submit" disabled={visitorForm.processing} className="bg-indigo-600 text-white px-4 py-2 rounded">
+                                    Record Visitor
+                                </button>
+                            </form>
+                        )}
+
                     </div>
-                </Box>
-            </main>
+                </div>
+            </div>
         </AuthenticatedLayout>
     );
 }

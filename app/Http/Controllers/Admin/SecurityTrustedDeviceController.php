@@ -11,13 +11,7 @@ class SecurityTrustedDeviceController extends Controller
 {
     public function index(Request $request)
     {
-        $activeCampusId = config('app.active_campus_id');
         $query = SecurityTrustedDevice::with('user:id,name,email');
-        $query->where(function($q) use ($activeCampusId) {
-            $q->whereHas('user', function($u) use ($activeCampusId) {
-                $u->where('campus_id', $activeCampusId)->orWhereNull('campus_id');
-            })->orWhereNull('user_id');
-        });
 
         if ($search = $request->get('search')) {
             $query->where('device_name', 'like', "%{$search}%")
@@ -47,12 +41,7 @@ class SecurityTrustedDeviceController extends Controller
 
     public function destroy($id)
     {
-        $activeCampusId = config('app.active_campus_id');
-        SecurityTrustedDevice::where(function($q) use ($activeCampusId) {
-            $q->whereHas('user', function($u) use ($activeCampusId) {
-                $u->where('campus_id', $activeCampusId)->orWhereNull('campus_id');
-            })->orWhereNull('user_id');
-        })->findOrFail($id)->delete();
+        SecurityTrustedDevice::findOrFail($id)->delete();
         return back()->with('success', 'Trusted device revoked successfully.');
     }
 }

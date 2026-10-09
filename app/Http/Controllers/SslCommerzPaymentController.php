@@ -76,8 +76,14 @@ class SslCommerzPaymentController extends Controller
         return redirect()->route('portal.services', ['tab' => 'fees'])->with('success', 'Payment completed successfully.');
     }
 
-    public function failed()
+    public function failed(Request $request)
     {
+        if ($request->has('tran_id')) {
+            $transaction = PaymentTransaction::withoutGlobalScopes()->where('transaction_id', $request->input('tran_id'))->first();
+            if ($transaction && $transaction->status === 'Pending') {
+                $transaction->update(['status' => 'Failed']);
+            }
+        }
         return redirect()->route('portal.services', ['tab' => 'fees'])->with('error', 'Payment was not completed. Its status will be reconciled securely.');
     }
 }

@@ -12,13 +12,7 @@ class SecurityLoginController extends Controller
     public function index(Request $request)
     {
         // Eager load the user relation to get user names and emails
-        $activeCampusId = config('app.active_campus_id');
         $query = SecurityLoginHistory::with('user:id,name,email');
-        $query->where(function($q) use ($activeCampusId) {
-            $q->whereHas('user', function($u) use ($activeCampusId) {
-                $u->where('campus_id', $activeCampusId)->orWhereNull('campus_id');
-            })->orWhereNull('user_id');
-        });
 
         if ($search = $request->get('search')) {
             $query->where('ip_address', 'like', "%{$search}%")

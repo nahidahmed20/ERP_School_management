@@ -92,11 +92,18 @@ class LessonController extends Controller
         return back()->with('success', 'লেসনটি মুছে ফেলা হয়েছে।');
     }
 
+    private function existsRule(string $table)
+    {
+        $campusId = config('app.active_campus_id');
+        $rule = \Illuminate\Validation\Rule::exists($table, 'id');
+        return $campusId ? $rule->where('campus_id', $campusId) : $rule;
+    }
+
     private function validateData(Request $request): array
     {
         return $request->validate([
             'campus_id' => 'required|exists:campuses,id',
-            'course_id' => 'required|exists:courses,id',
+            'course_id' => ['required', $this->existsRule('courses')],
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'video_url' => 'nullable|url',

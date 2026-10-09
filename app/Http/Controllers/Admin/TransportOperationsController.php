@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\{TransportAllocation, TransportPersonnel, TransportRoute, TransportStop, Vehicle};
+use App\Models\{TransportAllocation, TransportPersonnel, TransportRoute, TransportStop, Vehicle, VehicleFuelLog, VehicleMaintenanceLog, TransportPersonnelDocument, StudentBoardingAttendance, TransportFeeCharge, VehicleExpense, TransportVehiclePersonnel};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -12,11 +12,6 @@ use Illuminate\Support\Facades\Log;
 
 class TransportOperationsController extends Controller
 {
-    private function raw(string $table)
-    {
-        return DB::table($table)->where($table . '.campus_id', config('app.active_campus_id'));
-    }
-
     private function campusExists(string $table)
     {
         return Rule::exists($table, 'id')->where(fn($q) => $q->where('campus_id', config('app.active_campus_id')));
@@ -29,21 +24,21 @@ class TransportOperationsController extends Controller
         return Inertia::render('Admin/TransportOperations/Index', [
             'vehicles' => Vehicle::where('campus_id', $campusId)->with('latestLocation')->get(),
             'routes' => TransportRoute::where('campus_id', $campusId)->where('is_active', true)->get(),
-            'stops' => TransportStop::where('campus_id', $campusId)->orderBy('sequence')->get(),
+            'stops' => TransportStop::orderBy('sequence')->get(),
             'personnel' => TransportPersonnel::where('campus_id', $campusId)->latest()->get(),
             'allocations' => TransportAllocation::where('campus_id', $campusId)->with('user:id,name,email')->where('is_active', true)->get(),
 
-            'fuelLogs' => $this->raw('vehicle_fuel_logs')->latest('date')->take(100)->get(),
-            'maintenance' => $this->raw('vehicle_maintenance_logs')->latest()->take(100)->get(),
-            'documents' => $this->raw('transport_personnel_documents')->latest()->take(100)->get(),
-            'boarding' => $this->raw('student_boarding_attendances')->latest('event_at')->take(100)->get(),
-            'fees' => $this->raw('transport_fee_charges')->latest()->take(100)->get(),
-            'expenses' => $this->raw('vehicle_expenses')->latest('date')->take(100)->get(),
+            'fuelLogs' => VehicleFuelLog::latest('date')->take(100)->get(),
+            'maintenance' => VehicleMaintenanceLog::latest()->take(100)->get(),
+            'documents' => TransportPersonnelDocument::latest()->take(100)->get(),
+            'boarding' => StudentBoardingAttendance::latest('event_at')->take(100)->get(),
+            'fees' => TransportFeeCharge::latest()->take(100)->get(),
+            'expenses' => VehicleExpense::latest('date')->take(100)->get(),
 
             'summary' => [
-                'fuel' => $this->raw('vehicle_fuel_logs')->selectRaw('COALESCE(SUM(litres*unit_price), 0) total')->value('total'),
-                'maintenance' => $this->raw('vehicle_maintenance_logs')->sum('cost'),
-                'other' => $this->raw('vehicle_expenses')->sum('amount')
+                'fuel' => VehicleFuelLog::selectRaw('COALESCE(SUM(litres*unit_price), 0) as total')->value('total') ?? 0,
+                'maintenance' => VehicleMaintenanceLog::sum('cost') ?? 0,
+                'other' => VehicleExpense::sum('amount') ?? 0
             ]
         ]);
     }
@@ -74,11 +69,7 @@ class TransportOperationsController extends Controller
             'assigned_until' => 'nullable|date|after_or_equal:assigned_from'
         ]);
 
-        $this->raw('transport_vehicle_personnel')->insert($d + [
-            'campus_id' => config('app.active_campus_id'),
-            'created_at' => now(),
-            'updated_at' => now()
-        ]);
+        TransportVehiclePersonnel::create($d);
 
         return back()->with('success', 'Personnel assigned to vehicle.');
     }
@@ -97,7 +88,6 @@ class TransportOperationsController extends Controller
             'monthly_fare' => 'required|numeric|min:0'
         ]);
 
-        $data['campus_id'] = config('app.active_campus_id');
         TransportStop::create($data);
 
         return back()->with('success', 'Route stop and schedule saved.');
@@ -115,12 +105,8 @@ class TransportOperationsController extends Controller
             'receipt_no' => 'nullable|string|max:100'
         ]);
 
-        $this->raw('vehicle_fuel_logs')->insert($d + [
-            'campus_id' => config('app.active_campus_id'),
-            'recorded_by' => $r->user()->id,
-            'created_at' => now(),
-            'updated_at' => now()
-        ]);
+        $d['recorded_by'] = $r->user()->id;
+        VehicleFuelLog::create($d);
 
         return back()->with('success', 'Fuel log saved.');
     }
@@ -139,11 +125,7 @@ class TransportOperationsController extends Controller
             'notes' => 'nullable|string'
         ]);
 
-        $this->raw('vehicle_maintenance_logs')->insert($d + [
-            'campus_id' => config('app.active_campus_id'),
-            'created_at' => now(),
-            'updated_at' => now()
-        ]);
+        VehicleMaintenanceLog::create($d);
 
         return back()->with('success', 'Maintenance record saved.');
     }
@@ -161,11 +143,7 @@ class TransportOperationsController extends Controller
         $d['file_path'] = $r->hasFile('file') ? $r->file('file')->store('transport/documents/' . config('app.active_campus_id'), 'local') : null;
         unset($d['file']);
 
-        $this->raw('transport_personnel_documents')->insert($d + [
-            'campus_id' => config('app.active_campus_id'),
-            'created_at' => now(),
-            'updated_at' => now()
-        ]);
+        TransportPersonnelDocument::create($d);
 
         return back()->with('success', 'Personnel document saved.');
     }
@@ -183,16 +161,13 @@ class TransportOperationsController extends Controller
 
         $a = TransportAllocation::findOrFail($d['transport_allocation_id']);
 
-        $this->raw('student_boarding_attendances')->updateOrInsert(
+        StudentBoardingAttendance::updateOrCreate(
             collect($d)->only(['transport_allocation_id', 'trip_date', 'trip_type', 'event'])->all(),
             $d + [
-                'campus_id' => config('app.active_campus_id'),
                 'vehicle_id' => $a->vehicle_id,
                 'event_at' => now(),
                 'source' => 'manual',
-                'recorded_by' => $r->user()->id,
-                'created_at' => now(),
-                'updated_at' => now()
+                'recorded_by' => $r->user()->id
             ]
         );
 
@@ -219,12 +194,8 @@ class TransportOperationsController extends Controller
             'notes' => 'nullable|string'
         ]);
 
-        $this->raw('vehicle_expenses')->insert($d + [
-            'campus_id' => config('app.active_campus_id'),
-            'recorded_by' => $r->user()->id,
-            'created_at' => now(),
-            'updated_at' => now()
-        ]);
+        $d['recorded_by'] = $r->user()->id;
+        VehicleExpense::create($d);
 
         return back()->with('success', 'Vehicle expense saved.');
     }
@@ -235,9 +206,9 @@ class TransportOperationsController extends Controller
 
         TransportAllocation::where('campus_id', config('app.active_campus_id'))
             ->where('is_active', true)
-            ->each(fn($a) => $this->raw('transport_fee_charges')->updateOrInsert(
+            ->each(fn($a) => TransportFeeCharge::updateOrCreate(
                 ['transport_allocation_id' => $a->id, 'billing_month' => $month],
-                ['campus_id' => config('app.active_campus_id'), 'amount' => $a->monthly_fare, 'status' => 'unpaid', 'created_at' => now(), 'updated_at' => now()]
+                ['amount' => $a->monthly_fare, 'status' => 'unpaid']
             ));
 
         return back()->with('success', 'Monthly transport fees generated.');

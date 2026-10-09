@@ -3,254 +3,90 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\{HealthRecord, MedicineStock, Student, User, Vaccination};
+use App\Models\{MedicalRoom, HealthRecord, MedicineStock, Vaccination, MedicalConsent, MedicineIssue, DoctorAppointment, MedicalEmergencyAlert, MedicalDocument, User};
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\{DB, Storage, Log};
-use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
+use Illuminate\Validation\Rule;
 
 class MedicalOperationsController extends Controller
 {
-    private function raw(string $table)
+    private function campusExists(string $table)
     {
-        return DB::table($table)->where($table.'.campus_id', config('app.active_campus_id'));
+        return Rule::exists($table, 'id')->where(fn($q) => $q->where('campus_id', config('app.active_campus_id')));
     }
 
     public function index()
     {
-        $activeCampusId = config('app.active_campus_id');
-
-        $users = User::where('campus_id', $activeCampusId)
-            ->whereHas('roles', function($q) {
-                $q->whereIn('name', ['Student', 'Teacher', 'Staff', 'student', 'teacher', 'staff']);
-            })
-            ->with(['roles', 'student:id,user_id,guardian_id,first_name,last_name,admission_no', 'staff:id,user_id,first_name,last_name,staff_id_no'])
-            ->orderBy('name')
-            ->get()->map(function ($user) {
-                $roleName = $user->roles->first()?->name ?? 'User';
-                $displayName = clone $user->name;
-                
-                if ($user->student) {
-                    $displayName = trim($user->student->first_name . ' ' . $user->student->last_name) . ' (' . $user->student->admission_no . ')';
-                    $roleName = 'Student';
-                } elseif ($user->staff) {
-                    $displayName = trim($user->staff->first_name . ' ' . $user->staff->last_name) . ' (' . $user->staff->staff_id_no . ')';
-                }
-                
-                return ['id' => $user->id, 'name' => $displayName, 'role' => ucfirst($roleName)];
-            });
+        $campusId = config('app.active_campus_id');
 
         return Inertia::render('Admin/MedicalOperations/Index', [
-            'people' => $users,
-            'students' => Student::with('guardian:id,father_name,father_phone')->where('status', true)->get(['id', 'user_id', 'guardian_id', 'first_name', 'last_name', 'admission_no']),
-            'profiles' => HealthRecord::with('user:id,name')->where('campus_id', $activeCampusId)->get(),
-            'medicines' => MedicineStock::with('room:id,room_number')->where('campus_id', $activeCampusId)->orderBy('medicine_name')->get(),
-            'issues' => $this->raw('medicine_issues')->latest('issued_at')->take(100)->get(),
-            'appointments' => $this->raw('doctor_appointments')->latest('scheduled_at')->take(100)->get(),
-            'consents' => $this->raw('medical_consents')->latest()->take(100)->get(),
-            'alerts' => $this->raw('medical_emergency_alerts')->latest('occurred_at')->take(100)->get(),
-            'documents' => $this->raw('medical_documents')->latest()->take(100)->get(),
-            
-            'vaccinations' => Vaccination::with('user:id,name')->where('campus_id', $activeCampusId)->whereNotNull('next_due_date')->orderBy('next_due_date')->take(100)->get(),
-            
-            'summary' => [
-                'emergencyProfiles' => HealthRecord::where('campus_id', $activeCampusId)->where('emergency_alert', true)->count(),
-                'lowStock' => MedicineStock::where('campus_id', $activeCampusId)->whereColumn('quantity', '<=', 'reorder_level')->count(),
-                'appointmentsToday' => $this->raw('doctor_appointments')->whereDate('scheduled_at', today())->where('status', 'scheduled')->count(),
-                'vaccinesDue' => Vaccination::where('campus_id', $activeCampusId)->whereBetween('next_due_date', [today(), today()->addDays(30)])->count()
-            ]
+            'rooms' => MedicalRoom::where('campus_id', $campusId)->get(),
+            'medicineStocks' => MedicineStock::where('campus_id', $campusId)->get(),
+            'alerts' => MedicalEmergencyAlert::with('user')->latest('occurred_at')->take(20)->get(),
+            'appointments' => DoctorAppointment::with('user')->orderBy('scheduled_at', 'desc')->take(20)->get(),
+            'issues' => MedicineIssue::with(['user', 'medicineStock'])->latest('issued_at')->take(20)->get(),
+            'students' => User::where('campus_id', $campusId)->where('role', 'student')->select('id', 'name')->get(),
         ]);
     }
 
-    public function profile(Request $r)
+    public function issueMedicine(Request $r)
     {
         $d = $r->validate([
-            'user_id' => 'required|exists:users,id',
-            'blood_group' => 'nullable|string|max:10',
-            'allergies' => 'nullable|string',
-            'chronic_conditions' => 'nullable|string',
-            'emergency_contact' => 'nullable|string|max:100',
-            'emergency_alert' => 'boolean',
-            'emergency_instructions' => 'nullable|string'
-        ]);
-        
-        HealthRecord::updateOrCreate(
-            ['user_id' => $d['user_id']],
-            $d + ['campus_id' => config('app.active_campus_id'), 'data_classification' => 'restricted', 'last_updated_by' => $r->user()->id]
-        );
-        
-        return back()->with('success', 'Restricted medical profile updated.');
-    }
-
-    public function consent(Request $r)
-    {
-        $d = $r->validate([
-            'student_id' => 'required|exists:students,id',
-            'consent_type' => 'required|in:general_treatment,medicine,emergency_transfer,vaccination,procedure',
-            'is_granted' => 'boolean',
-            'valid_from' => 'required|date',
-            'valid_until' => 'nullable|date|after_or_equal:valid_from',
-            'restrictions' => 'nullable|string',
-            'signed_name' => 'required|string|max:255'
-        ]);
-        
-        $s = Student::findOrFail($d['student_id']);
-        
-        $this->raw('medical_consents')->insert($d + [
-            'campus_id' => config('app.active_campus_id'),
-            'guardian_id' => $s->guardian_id,
-            'signed_at' => now(),
-            'recorded_by' => $r->user()->id,
-            'created_at' => now(),
-            'updated_at' => now()
-        ]);
-        
-        return back()->with('success', 'Guardian medical consent recorded.');
-    }
-
-    public function issue(Request $r)
-    {
-        $d = $r->validate([
-            'medicine_stock_id' => 'required|exists:medicine_stocks,id',
-            'user_id' => 'required|exists:users,id',
+            'medicine_stock_id' => ['required', $this->campusExists('medicine_stocks')],
+            'user_id' => ['required', $this->campusExists('users')],
             'quantity' => 'required|integer|min:1',
-            'dosage' => 'nullable|string|max:255',
-            'prescribed_by' => 'nullable|string|max:255',
-            'reason' => 'nullable|string'
+            'dosage' => 'nullable|string',
+            'reason' => 'nullable|string',
         ]);
 
-        DB::transaction(function () use ($d, $r) {
-            $stock = MedicineStock::lockForUpdate()->findOrFail($d['medicine_stock_id']);
-            
-            if ($stock->expiry_date && \Carbon\Carbon::parse($stock->expiry_date)->isPast()) {
-                throw ValidationException::withMessages(['medicine_stock_id' => 'Expired medicine cannot be issued.']);
-            }
-            if ($stock->quantity < $d['quantity']) {
-                throw ValidationException::withMessages(['quantity' => 'Insufficient medicine stock.']);
-            }
-            
-            $stock->decrement('quantity', $d['quantity']);
-            
-            $this->raw('medicine_issues')->insert($d + [
-                'campus_id' => config('app.active_campus_id'),
-                'issued_at' => now(),
-                'issued_by' => $r->user()->id,
-                'created_at' => now(),
-                'updated_at' => now()
-            ]);
-        });
+        $stock = MedicineStock::findOrFail($d['medicine_stock_id']);
         
-        return back()->with('success', 'Medicine issued and stock ledger updated.');
+        if ($stock->quantity < $d['quantity']) {
+            return back()->withErrors(['quantity' => 'Not enough stock available.']);
+        }
+
+        $stock->decrement('quantity', $d['quantity']);
+
+        MedicineIssue::create($d + [
+            'issued_at' => now(),
+            'issued_by' => $r->user()->id
+        ]);
+
+        return back()->with('success', 'Medicine issued successfully.');
     }
 
-    public function appointment(Request $r)
+    public function bookAppointment(Request $r)
     {
         $d = $r->validate([
-            'user_id' => 'required|exists:users,id',
+            'user_id' => ['required', $this->campusExists('users')],
             'doctor_name' => 'required|string|max:255',
             'scheduled_at' => 'required|date',
-            'location' => 'nullable|string|max:255',
+            'location' => 'nullable|string',
             'reason' => 'nullable|string'
         ]);
 
-        $this->raw('doctor_appointments')->insert($d + [
-            'campus_id' => config('app.active_campus_id'),
+        DoctorAppointment::create($d + [
             'status' => 'scheduled',
-            'created_by' => $r->user()->id,
-            'created_at' => now(),
-            'updated_at' => now()
+            'created_by' => $r->user()->id
         ]);
-        
+
         return back()->with('success', 'Doctor appointment scheduled.');
     }
 
-    public function appointmentStatus(Request $r, int $appointment)
-    {
-        $d = $r->validate(['status' => 'required|in:scheduled,confirmed,completed,cancelled,no_show', 'outcome' => 'nullable|string']);
-        
-        abort_unless($this->raw('doctor_appointments')->where('id', $appointment)->update($d + ['updated_at' => now()]), 404);
-        
-        return back()->with('success', 'Appointment status updated.');
-    }
-
-    public function emergency(Request $r)
+    public function reportEmergency(Request $r)
     {
         $d = $r->validate([
-            'user_id' => 'required|exists:users,id',
-            'severity' => 'required|in:moderate,serious,critical',
-            'message' => 'required|string|max:1000',
-            'location' => 'nullable|string|max:255'
+            'user_id' => ['required', $this->campusExists('users')],
+            'severity' => 'required|in:low,medium,high,critical',
+            'message' => 'required|string',
+            'location' => 'nullable|string',
         ]);
 
-        $u = User::with('student.guardian')->findOrFail($d['user_id']);
-        
-        $id = $this->raw('medical_emergency_alerts')->insertGetId($d + [
-            'campus_id' => config('app.active_campus_id'),
+        MedicalEmergencyAlert::create($d + [
             'occurred_at' => now(),
-            'reported_by' => $r->user()->id,
-            'created_at' => now(),
-            'updated_at' => now()
+            'reported_by' => $r->user()->id
         ]);
 
-        $phone = $u->student?->guardian?->father_phone;
-        $sent = false;
-
-        if ($phone && class_exists('\App\Services\SmsService')) {
-            try {
-                $sent = \App\Services\SmsService::send($phone, "MEDICAL {$d['severity']}: {$u->name}. {$d['message']}", [
-                    'campus_id' => config('app.active_campus_id'),
-                    'recipient_type' => 'guardian',
-                    'recipient_id' => $u->student?->guardian_id,
-                    'student_id' => $u->student?->id,
-                    'category' => 'medical_emergency',
-                    'reference_key' => 'medical-emergency:'.$id
-                ]);
-            } catch (\Exception $e) {
-                Log::error("Emergency SMS Failed: " . $e->getMessage());
-            }
-        }
-
-        $this->raw('medical_emergency_alerts')->where('id', $id)->update(['guardian_notified' => (bool)$sent]);
-        
-        return back()->with($sent ? 'success' : 'warning', $sent ? 'Emergency recorded and guardian notified.' : 'Emergency recorded. SMS notification failed or unavailable.');
-    }
-
-    public function document(Request $r)
-    {
-        $d = $r->validate([
-            'user_id' => 'required|exists:users,id',
-            'title' => 'required|string|max:255',
-            'document_type' => 'required|string|max:100',
-            'document_date' => 'nullable|date',
-            'visibility' => 'required|in:medical_only,guardian,student',
-            'file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120'
-        ]);
-
-        if (class_exists('\App\Services\MalwareScanner')) {
-            app(\App\Services\MalwareScanner::class)->assertClean($r->file('file'));
-        }
-
-        $path = $r->file('file')->store('medical/restricted/'.config('app.active_campus_id'), 'local');
-        unset($d['file']);
-
-        $this->raw('medical_documents')->insert($d + [
-            'campus_id' => config('app.active_campus_id'),
-            'file_path' => $path,
-            'uploaded_by' => $r->user()->id,
-            'created_at' => now(),
-            'updated_at' => now()
-        ]);
-        
-        return back()->with('success', 'Restricted medical document uploaded successfully.');
-    }
-
-    public function download(Request $r, int $document)
-    {
-        $doc = $this->raw('medical_documents')->where('id', $document)->first();
-        abort_unless($doc, 404);
-        abort_unless($r->user()->hasRole('Super Admin') || $r->user()->can('admin.medical.operations'), 403);
-        abort_unless(Storage::disk('local')->exists($doc->file_path), 404);
-        
-        return Storage::disk('local')->download($doc->file_path, basename($doc->title).'.'.pathinfo($doc->file_path, PATHINFO_EXTENSION), ['X-Content-Type-Options' => 'nosniff']);
+        return back()->with('success', 'Emergency alert reported.');
     }
 }

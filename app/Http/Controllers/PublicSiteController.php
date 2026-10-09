@@ -58,6 +58,46 @@ class PublicSiteController extends Controller
     public function admissions(): Response { return Inertia::render('Site/Admissions', ['campusRecords' => $this->campusesData(), 'classes' => Schema::hasTable('school_classes') ? SchoolClass::withoutGlobalScopes()->where('is_active', true)->orderBy('numeric_name')->get(['id', 'name']) : collect()]); }
     public function contact(): Response { return Inertia::render('Site/Contact', ['campusRecords' => $this->campusesData()]); }
     public function teachers(): Response { return Inertia::render('Site/Teachers', ['teachers' => Schema::hasTable('staff') ? $this->teacherQuery()->orderBy('first_name')->get() : collect()]); }
+
+    public function careers(): Response {
+        return Inertia::render('Site/Careers', [
+            'jobs' => \App\Models\JobPost::withoutGlobalScopes()->where('status', 'Open')->where('deadline', '>=', today())->latest()->get()
+        ]);
+    }
+
+    public function showJob($id): Response {
+        $job = \App\Models\JobPost::withoutGlobalScopes()->where('status', 'Open')->findOrFail($id);
+        return Inertia::render('Site/JobDetails', ['job' => $job]);
+    }
+
+    public function applyJobStore(\Illuminate\Http\Request $request, $id) {
+        $job = \App\Models\JobPost::withoutGlobalScopes()->where('status', 'Open')->findOrFail($id);
+        
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'phone' => 'required|string|max:20',
+            'resume' => 'required|file|mimes:pdf,doc,docx|max:2048',
+            'cover_letter' => 'nullable|string|max:2000'
+        ]);
+
+        $resumePath = $request->file('resume')->store('applicants', 'public');
+
+        \App\Models\Applicant::withoutGlobalScopes()->create([
+            'campus_id' => $job->campus_id,
+            'job_post_id' => $job->id,
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'resume' => $resumePath,
+            'cover_letter' => $request->cover_letter,
+            'applied_date' => now(),
+            'status' => 'Pending',
+        ]);
+
+        return back()->with('success', 'Your application has been submitted successfully.');
+    }
+
     public function blogs(): Response { return Inertia::render('Site/Blogs', ['articles' => Schema::hasTable('communication_cms') ? $this->articleQuery()->latest()->paginate(9) : []]); }
     public function blog(string $slug): Response
     {

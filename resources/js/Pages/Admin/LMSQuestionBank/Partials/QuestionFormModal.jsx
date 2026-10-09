@@ -116,13 +116,14 @@ export default function QuestionFormModal({ item, classes, subjects, campuses, a
                     setData({
                       ...data,
                       question_type: e.target.value,
-                      correct_answer: e.target.value === 'MCQ' ? 'a' : 'True'
+                      correct_answer: e.target.value === 'MCQ' ? 'a' : (e.target.value === 'True/False' ? 'True' : '')
                     });
                   }}
                   className={`${inputClass} bg-white`}
                 >
                   <option value="MCQ">Multiple Choice (MCQ)</option>
                   <option value="True/False">True / False</option>
+                  <option value="Descriptive">Descriptive / Broad</option>
                 </select>
               </div>
 
@@ -168,29 +169,41 @@ export default function QuestionFormModal({ item, classes, subjects, campuses, a
                 </div>
               )}
 
-              {/* Correct Answer Dropdown */}
+              {/* Correct Answer Dropdown / Textarea */}
               <div className="sm:col-span-2">
-                <label className={labelClass}>Correct Answer <span className="text-rose-500">*</span></label>
-                <select
-                  value={data.correct_answer}
-                  onChange={(e) => setData('correct_answer', e.target.value)}
-                  required
-                  className={`${inputClass} bg-emerald-50/50 font-bold text-emerald-700 border-emerald-200 focus:ring-emerald-500`}
-                >
-                  {data.question_type === 'MCQ' ? (
-                    <>
-                      <option value="a">Option A</option>
-                      <option value="b">Option B</option>
-                      <option value="c">Option C</option>
-                      <option value="d">Option D</option>
-                    </>
-                  ) : (
-                    <>
-                      <option value="True">True</option>
-                      <option value="False">False</option>
-                    </>
-                  )}
-                </select>
+                <label className={labelClass}>
+                  {data.question_type === 'Descriptive' ? 'Answer / Hints (Optional)' : 'Correct Answer *'}
+                </label>
+                {data.question_type === 'Descriptive' ? (
+                  <textarea
+                    value={data.correct_answer || ''}
+                    onChange={(e) => setData('correct_answer', e.target.value)}
+                    rows="3"
+                    className={`${inputClass} bg-white`}
+                    placeholder="Hints or marking key..."
+                  />
+                ) : (
+                  <select
+                    value={data.correct_answer}
+                    onChange={(e) => setData('correct_answer', e.target.value)}
+                    required
+                    className={`${inputClass} bg-emerald-50/50 font-bold text-emerald-700 border-emerald-200 focus:ring-emerald-500`}
+                  >
+                    {data.question_type === 'MCQ' ? (
+                      <>
+                        <option value="a">Option A</option>
+                        <option value="b">Option B</option>
+                        <option value="c">Option C</option>
+                        <option value="d">Option D</option>
+                      </>
+                    ) : (
+                      <>
+                        <option value="True">True</option>
+                        <option value="False">False</option>
+                      </>
+                    )}
+                  </select>
+                )}
               </div>
 
               {/* Explanation */}

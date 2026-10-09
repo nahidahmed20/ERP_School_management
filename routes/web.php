@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 use App\Http\Controllers\Admin\AcademicSessionController;
 use App\Http\Controllers\Admin\AcademicOperationsController;
@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\AssetController;
 use App\Http\Controllers\Admin\AssetMaintenanceController;
 use App\Http\Controllers\Admin\BiometricDeviceController;
 use App\Http\Controllers\Admin\BiometricEnrolledUserController;
+use App\Http\Controllers\Admin\DeviceHealthController;
 use App\Http\Controllers\Admin\BiometricSyncLogController;
 use App\Http\Controllers\Admin\BookController;
 use App\Http\Controllers\Admin\BookIssueController;
@@ -94,6 +95,7 @@ use App\Http\Controllers\Admin\OfficialDocumentController;
 use App\Http\Controllers\Admin\OfficialDocumentTemplateController;
 use App\Http\Controllers\Admin\QuizAttemptController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\AnalyticsController;
 use App\Http\Controllers\Admin\ReportingAdministrationController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SaasAiAssistantController;
@@ -170,6 +172,9 @@ Route::get('/academics', [PublicSiteController::class,'academics'])->name('site.
 Route::get('/admissions', [PublicSiteController::class,'admissions'])->name('site.admissions');
 Route::get('/contact', [PublicSiteController::class,'contact'])->name('site.contact');
 Route::get('/teachers', [PublicSiteController::class,'teachers'])->name('site.teachers');
+Route::get('/careers', [PublicSiteController::class,'careers'])->name('site.careers');
+Route::get('/careers/{job}', [PublicSiteController::class,'showJob'])->name('site.careers.show');
+Route::post('/careers/{job}/apply', [PublicSiteController::class,'applyJobStore'])->name('site.careers.apply');
 Route::get('/blog', [PublicSiteController::class,'blogs'])->name('site.blogs');
 Route::get('/blog/{slug}', [PublicSiteController::class,'blog'])->name('site.blog.show');
 Route::post('/admissions', [PublicInquiryController::class, 'admission'])
@@ -378,6 +383,7 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
     Route::get('std/attendance/report', [ReportController::class, 'studentReport'])->name('studentAttendance.report');
     Route::get('/reports/saved', [ReportController::class, 'saved'])->name('reports.saved');
     Route::get('/reports/financial-summary', [ReportController::class, 'financialSummary'])->name('reports.financial-summary');
+    Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
 
     Route::resource('fees-groups', FeeGroupController::class);
     Route::get('fees-groups/{feeGroup}/fees-types', [FeeTypeController::class, 'index'])->name('fees-types.index');
@@ -482,6 +488,11 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
     Route::delete('transport-boarding/{id}', [TransportBoardingController::class, 'destroy'])->name('transport-boarding.destroy');
 
     Route::resource('hostel-rooms', HostelRoomController::class);
+
+    // Hostel Operations
+    Route::get('hostel-operations', [App\Http\Controllers\Admin\HostelOperationsController::class, 'index'])->name('hostel.operations');
+    Route::post('hostel-operations/change-room', [App\Http\Controllers\Admin\HostelOperationsController::class, 'changeRoom'])->name('hostel.change-room');
+    Route::post('hostel-operations/visitor', [App\Http\Controllers\Admin\HostelOperationsController::class, 'visitor'])->name('hostel.visitor');
     Route::resource('hostel-allocations', HostelAllocationController::class);
     Route::get('hostel-operations', [HostelOperationsController::class,'index'])->name('hostel.operations');
     Route::post('hostel-operations/beds', [HostelOperationsController::class,'bed'])->name('hostel.beds');
@@ -614,6 +625,7 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
     Route::post('biometric-devices/{device}/token', [BiometricDeviceController::class, 'token'])->name('biometric-devices.token');
     Route::post('biometric-devices/{device}/simulate', [BiometricDeviceController::class, 'simulate'])->name('biometric-devices.simulate');
     Route::resource('biometric-devices', BiometricDeviceController::class);
+    Route::get('device-health', [DeviceHealthController::class, 'index'])->name('device-health.index');
     Route::resource('biometric-enrolledusers', BiometricEnrolledUserController::class);
 
     Route::get('biometric-synclogs', [BiometricSyncLogController::class, 'index'])->name('biometric.synclogs');
@@ -695,16 +707,27 @@ Route::get('/server-fix', function () {
         \Illuminate\Support\Facades\Artisan::call('config:clear');
         \Illuminate\Support\Facades\Artisan::call('cache:clear');
         \Illuminate\Support\Facades\Artisan::call('view:clear');
-        
+
         // Remove existing broken symlink if it's a file
         if (file_exists(public_path('storage')) && !is_link(public_path('storage'))) {
             unlink(public_path('storage'));
         }
-        
+
         \Illuminate\Support\Facades\Artisan::call('storage:link');
         return 'Cache cleared and Storage link created successfully! Please refresh your website now.';
     } catch (\Exception $e) {
         return 'Error: ' . $e->getMessage();
     }
+
+    // Cafeteria POS Operations
+    Route::get('cafeteria-pos', [App\Http\Controllers\Admin\CafeteriaPosOperationsController::class, 'index'])->name('cafeteria.pos');
+    Route::post('cafeteria-pos/refund', [App\Http\Controllers\Admin\CafeteriaPosOperationsController::class, 'requestRefund'])->name('cafeteria.pos.refund');
+    Route::post('cafeteria-pos/close-cash', [App\Http\Controllers\Admin\CafeteriaPosOperationsController::class, 'closeCash'])->name('cafeteria.pos.close-cash');
+
+    // Medical Operations
+    Route::get('medical-operations', [App\Http\Controllers\Admin\MedicalOperationsController::class, 'index'])->name('medical.operations');
+    Route::post('medical-operations/issue-medicine', [App\Http\Controllers\Admin\MedicalOperationsController::class, 'issueMedicine'])->name('medical.issue-medicine');
+    Route::post('medical-operations/book-appointment', [App\Http\Controllers\Admin\MedicalOperationsController::class, 'bookAppointment'])->name('medical.book-appointment');
+    Route::post('medical-operations/report-emergency', [App\Http\Controllers\Admin\MedicalOperationsController::class, 'reportEmergency'])->name('medical.report-emergency');
 });
 

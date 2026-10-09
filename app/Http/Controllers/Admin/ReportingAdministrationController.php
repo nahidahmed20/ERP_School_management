@@ -7,6 +7,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{DB, Storage};
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
+use App\Models\CustomReport;
+use App\Models\ScheduledReport;
+use App\Models\ReportExport;
+use App\Models\ImportBatch;
+use App\Models\KpiTarget;
+use App\Models\AdministrationActivity;
+use App\Models\CommunicationNotification;
+use App\Models\WorkflowApproval; // assuming it exists
 
 class ReportingAdministrationController extends Controller
 {
@@ -14,17 +22,17 @@ class ReportingAdministrationController extends Controller
     {
         return Inertia::render('Admin/ReportingAdministration/Index', [
             'sources' => CustomReportService::SOURCES,
-            'reports' => DB::table('custom_reports')->latest()->get(),
-            'schedules' => DB::table('scheduled_reports')->latest()->get(),
-            'exports' => DB::table('report_exports')->latest('exported_at')->take(100)->get(),
-            'imports' => DB::table('import_batches')->latest()->take(100)->get(),
+            'reports' => CustomReport::latest()->get(),
+            'schedules' => ScheduledReport::latest()->get(),
+            'exports' => ReportExport::latest('exported_at')->take(100)->get(),
+            'imports' => ImportBatch::latest()->take(100)->get(),
             'approvals' => DB::table('workflow_approvals')->where('status', 'Pending')->latest()->take(100)->get(),
-            'notifications' => DB::table('communication_notifications')->latest()->take(100)->get(),
-            'kpis' => DB::table('kpi_targets')->latest()->get(),
-            'activities' => DB::table('administration_activities')
-                ->leftJoin('users', 'users.id', '=', 'administration_activities.user_id')
-                ->select('administration_activities.*', 'users.name as user_name')
-                ->latest('occurred_at')->take(150)->get(),
+            'notifications' => CommunicationNotification::latest()->take(100)->get(),
+            'kpis' => KpiTarget::latest()->get(),
+            'activities' => AdministrationActivity::with('user:id,name')->latest('occurred_at')->take(150)->get()->map(function ($activity) {
+                $activity->user_name = $activity->user ? $activity->user->name : null;
+                return $activity;
+            }),
             'campusComparison' => $this->campusComparison()
         ]);
     }
@@ -48,33 +56,28 @@ class ReportingAdministrationController extends Controller
 
         $filters = $d['filter_column'] ? [['column' => $d['filter_column'], 'operator' => $d['filter_operator'] ?: '=', 'value' => $d['filter_value']]] : [];
         
-        $id = DB::table('custom_reports')->insertGetId([
-            'campus_id' => config('app.active_campus_id'),
+        $report = CustomReport::create([
             'name' => $d['name'],
             'data_source' => $d['data_source'],
-            'columns' => json_encode($d['columns']),
-            'filters' => json_encode($filters),
+            'columns' => $d['columns'], // array cast will handle json
+            'filters' => $filters, // array cast will handle json
             'status' => 'active',
             'created_by' => $r->user()->id,
-            'created_at' => now(),
-            'updated_at' => now()
         ]);
 
-        $this->activity($r, 'report_created', 'custom_report', $id, "Created report {$d['name']}");
+        $this->activity($r, 'report_created', 'custom_report', $report->id, "Created report {$d['name']}");
         return back()->with('success', 'Custom report saved.');
     }
 
     public function preview(int $report, CustomReportService $s)
     {
-        $r = DB::table('custom_reports')->where('campus_id', config('app.active_campus_id'))->find($report);
-        abort_unless($r, 404);
+        $r = CustomReport::findOrFail($report);
         return response()->json(['rows' => $s->rows($r)->take(100)->values()]);
     }
 
     public function export(Request $r, int $report, CustomReportService $s)
     {
-        $definition = DB::table('custom_reports')->where('campus_id', config('app.active_campus_id'))->find($report);
-        abort_unless($definition, 404);
+        $definition = CustomReport::findOrFail($report);
 
         Storage::disk('local')->makeDirectory('reports/exports');
         $path = 'reports/exports/' . $report . '-' . now()->format('YmdHis') . '.csv';
@@ -100,34 +103,31 @@ class ReportingAdministrationController extends Controller
         }
         fclose($handle);
 
-        $oldExports = DB::table('report_exports')->where('custom_report_id', $report)->where('exported_at', '<', now()->subDays(7))->get();
+        $oldExports = ReportExport::where('custom_report_id', $report)->where('exported_at', '<', now()->subDays(7))->get();
         foreach ($oldExports as $old) {
             Storage::disk('local')->delete($old->file_path);
-            DB::table('report_exports')->where('id', $old->id)->delete();
+            $old->delete();
         }
 
-        $id = DB::table('report_exports')->insertGetId([
+        $exportRecord = ReportExport::create([
             'custom_report_id' => $report,
-            'campus_id' => config('app.active_campus_id'),
             'format' => 'csv',
             'file_path' => $path,
             'row_count' => $rowCount,
             'status' => 'completed',
             'exported_by' => $r->user()->id,
             'exported_at' => now(),
-            'created_at' => now(),
-            'updated_at' => now()
         ]);
 
-        $this->activity($r, 'report_exported', 'report_export', $id, "Exported {$definition->name} ({$rowCount} rows)");
+        $this->activity($r, 'report_exported', 'report_export', $exportRecord->id, "Exported {$definition->name} ({$rowCount} rows)");
         
         return response()->download($fullPath, $definition->name . '.csv');
     }
 
     public function download(Request $r, int $export)
     {
-        $x = DB::table('report_exports')->where('campus_id', config('app.active_campus_id'))->find($export);
-        abort_unless($x && Storage::disk('local')->exists($x->file_path), 404);
+        $x = ReportExport::findOrFail($export);
+        abort_unless(Storage::disk('local')->exists($x->file_path), 404);
         
         return response()->download(Storage::disk('local')->path($x->file_path));
     }
@@ -142,8 +142,8 @@ class ReportingAdministrationController extends Controller
             'next_run_at' => 'required|date'
         ]);
 
-        $id = DB::table('scheduled_reports')->insertGetId($d + ['delivery_channel' => 'email', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()]);
-        $this->activity($r, 'report_scheduled', 'scheduled_report', $id, 'Scheduled report delivery');
+        $schedule = ScheduledReport::create($d + ['delivery_channel' => 'email', 'is_active' => true]);
+        $this->activity($r, 'report_scheduled', 'scheduled_report', $schedule->id, 'Scheduled report delivery');
         
         return back()->with('success', 'Report delivery scheduled.');
     }
@@ -175,19 +175,16 @@ class ReportingAdministrationController extends Controller
         }
         fclose($handle);
 
-        $batch = DB::table('import_batches')->insertGetId([
-            'campus_id' => config('app.active_campus_id'),
+        $batch = ImportBatch::create([
             'entity_type' => $d['entity_type'],
             'file_name' => $r->file('file')->getClientOriginalName(),
             'status' => $errors ? 'validated_with_errors' : 'validated',
             'total_rows' => count($valid) + count($errors),
             'valid_rows' => count($valid),
             'invalid_rows' => count($errors),
-            'errors' => json_encode($errors),
-            'created_ids' => json_encode([]),
+            'errors' => $errors, // cast to json array
+            'created_ids' => [], // cast to json array
             'imported_by' => $r->user()->id,
-            'created_at' => now(),
-            'updated_at' => now()
         ]);
 
         if ($errors) {
@@ -209,31 +206,29 @@ class ReportingAdministrationController extends Controller
             }
         });
 
-        DB::table('import_batches')->where('id', $batch)->update([
+        $batch->update([
             'status' => 'completed',
-            'created_ids' => json_encode($ids),
-            'updated_at' => now()
+            'created_ids' => $ids, // array cast
         ]);
 
-        $this->activity($r, 'bulk_import', 'import_batch', $batch, 'Imported ' . count($ids) . ' expense records');
+        $this->activity($r, 'bulk_import', 'import_batch', $batch->id, 'Imported ' . count($ids) . ' expense records');
         return back()->with('success', count($ids) . ' records imported.');
     }
 
     public function rollback(Request $r, int $batch)
     {
-        $b = DB::table('import_batches')->where('campus_id', config('app.active_campus_id'))->where('id', $batch)->lockForUpdate()->first();
-        abort_unless($b && $b->status === 'completed' && !$b->rolled_back_at, 422, 'Batch cannot be rolled back.');
+        $b = ImportBatch::lockForUpdate()->findOrFail($batch);
+        abort_unless($b->status === 'completed' && !$b->rolled_back_at, 422, 'Batch cannot be rolled back.');
         
-        $ids = json_decode($b->created_ids, true) ?: [];
+        $ids = is_array($b->created_ids) ? $b->created_ids : (json_decode($b->created_ids, true) ?: []);
         
         DB::transaction(function () use ($b, $ids) {
             if ($b->entity_type === 'expenses') {
                 DB::table('expenses')->whereIn('id', $ids)->delete();
             }
-            DB::table('import_batches')->where('id', $b->id)->update([
+            $b->update([
                 'status' => 'rolled_back',
                 'rolled_back_at' => now(),
-                'updated_at' => now()
             ]);
         });
 
@@ -253,14 +248,11 @@ class ReportingAdministrationController extends Controller
             'owner_id' => 'nullable|exists:users,id'
         ]);
 
-        $id = DB::table('kpi_targets')->insertGetId($d + [
-            'campus_id' => config('app.active_campus_id'),
+        $kpi = KpiTarget::create($d + [
             'status' => 'active',
-            'created_at' => now(),
-            'updated_at' => now()
         ]);
 
-        $this->activity($r, 'kpi_created', 'kpi_target', $id, "Created KPI {$d['name']}");
+        $this->activity($r, 'kpi_created', 'kpi_target', $kpi->id, "Created KPI {$d['name']}");
         return back()->with('success', 'KPI target saved.');
     }
 
@@ -280,17 +272,14 @@ class ReportingAdministrationController extends Controller
 
     private function activity($r, $type, $subject, $id, $description)
     {
-        DB::table('administration_activities')->insert([
-            'campus_id' => config('app.active_campus_id'),
+        AdministrationActivity::create([
             'user_id' => $r->user()->id,
             'type' => $type,
             'subject_type' => $subject,
             'subject_id' => $id,
             'description' => $description,
-            'metadata' => json_encode(['ip' => $r->ip()]),
+            'metadata' => ['ip' => $r->ip()],
             'occurred_at' => now(),
-            'created_at' => now(),
-            'updated_at' => now()
         ]);
     }
 }

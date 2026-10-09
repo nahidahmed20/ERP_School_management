@@ -14,6 +14,7 @@ export default function SiteLayout({ children, activePage = "" }) {
         ["campuses", "Campuses", route("site.campuses")],
         ["academics", "Academics", route("site.academics")],
         ["teachers", "Teachers", route("site.teachers")],
+        ["careers", "Careers", route("site.careers")],
         ["blog", "News & Blog", route("site.blogs")],
         ["admissions", "Admissions", route("site.admissions")],
         ["contact", "Contact", route("site.contact")],

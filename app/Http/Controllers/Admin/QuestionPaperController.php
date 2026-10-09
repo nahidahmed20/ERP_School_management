@@ -48,7 +48,7 @@ class QuestionPaperController extends Controller
             
             // Auto Validation
             'question_count'=>'nullable|required_if:selection_type,auto|integer|min:1',
-            'question_type'=>'nullable|in:MCQ,True/False',
+            'question_type'=>'nullable|in:MCQ,True/False,Descriptive',
             'shuffle'=>'nullable|boolean',
             
             // Manual Validation
