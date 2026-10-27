@@ -17,7 +17,7 @@ class GeneralSettingController extends Controller
 {
     public function index(Request $request, WebsiteSettingsService $websiteSettings)
     {
-        $query = Setting::query();
+        $query = Setting::query()->where('group', '!=', 'website');
 
         if ($search = $request->get('search')) {
             $query->where(function ($q) use ($search) {
@@ -47,7 +47,7 @@ class GeneralSettingController extends Controller
             'settings' => $perPage === 'all'
                 ? ['data' => $settings, 'links' => [], 'meta' => ['total' => $settings->count()]]
                 : $settings,
-            'groups' => Setting::select('group')->distinct()->orderBy('group')->pluck('group'),
+            'groups' => Setting::where('group', '!=', 'website')->select('group')->distinct()->orderBy('group')->pluck('group'),
             'campuses' => $campuses, 
             'filters' => $request->only(['search', 'group', 'status', 'per_page']),
             'websiteSettings' => $websiteSettings->values(),
@@ -156,6 +156,8 @@ class GeneralSettingController extends Controller
 
     public function update(Request $request, Setting $setting)
     {
+        abort_if(strcasecmp($setting->group, 'website') === 0, 403, 'Use the School & Website Settings form to change shared website settings.');
+
         $data = $this->validateData($request, $setting->id);
         $setting->update($data);
         app(WebsiteSettingsService::class)->clearCache();
@@ -165,6 +167,8 @@ class GeneralSettingController extends Controller
 
     public function destroy(Setting $setting)
     {
+        abort_if(strcasecmp($setting->group, 'website') === 0, 403, 'Use the School & Website Settings form to change shared website settings.');
+
         $setting->delete();
         app(WebsiteSettingsService::class)->clearCache();
         return back()->with('success', 'Setting সফলভাবে মুছে ফেলা হয়েছে।');
@@ -173,10 +177,11 @@ class GeneralSettingController extends Controller
     private function validateData(Request $request, $ignoreId = null): array
     {
         $campusId = $request->campus_id ?? config('app.active_campus_id');
+        $request->merge(['group' => strtolower(trim((string) $request->input('group')))]);
 
         return $request->validate([
             'campus_id' => 'required|exists:campuses,id', 
-            'group' => 'required|string|max:100',
+            'group' => ['required', 'string', 'max:100', Rule::notIn(['website'])],
             'key' => [
                 'required',
                 'string',

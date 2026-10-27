@@ -55,6 +55,51 @@ class BrandingAndProfileWorkflowTest extends TestCase
         $this->assertSame(1, Setting::withoutGlobalScope('campus')->whereNull('campus_id')->where('key', 'school_name')->count());
     }
 
+    public function test_website_settings_are_separated_from_advanced_registry(): void
+    {
+        $admin = $this->administrator();
+        $campus = Campus::create(['name' => 'Main', 'code' => 'MAIN']);
+        $setting = Setting::create([
+            'campus_id' => $campus->id,
+            'group' => 'website',
+            'key' => 'school_name',
+            'label' => 'School Name',
+            'value' => 'Example School',
+        ]);
+
+        $this->actingAs($admin)->get(route('admin.general.index'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('settings.data', fn ($settings) => count($settings) === 0)
+                ->where('groups', fn ($groups) => ! $groups->contains('website')));
+
+        $this->withSession(['active_campus_id' => $campus->id])->put(route('admin.general.update', $setting), [
+            'campus_id' => null,
+            'group' => 'website',
+            'key' => 'school_name',
+            'label' => 'Changed through technical form',
+            'value' => 'Changed',
+            'type' => 'text',
+        ])->assertForbidden();
+
+        $this->withSession(['active_campus_id' => $campus->id])->delete(route('admin.general.destroy', $setting))->assertForbidden();
+    }
+
+    public function test_custom_setting_cannot_be_added_to_managed_website_group(): void
+    {
+        $campus = Campus::create(['name' => 'Main', 'code' => 'MAIN']);
+        $operator = User::factory()->create(['campus_id' => $campus->id]);
+        $operator->givePermissionTo(Permission::findOrCreate('admin.general.store', 'web'));
+
+        $this->actingAs($operator)->post(route('admin.general.store'), [
+            'campus_id' => $campus->id,
+            'group' => 'WEBSITE',
+            'key' => 'unmanaged_override',
+            'label' => 'Website override',
+            'value' => 'unexpected',
+            'type' => 'text',
+        ])->assertSessionHasErrors('group');
+    }
+
     public function test_logo_replacement_and_removal_preserve_unrelated_images(): void
     {
         Storage::fake('public');

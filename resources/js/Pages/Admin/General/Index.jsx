@@ -15,6 +15,7 @@ export default function Index({ settings, groups, campuses, filters, websiteSett
   const [group, setGroup] = useState(filters.group ?? '');
   const [status, setStatus] = useState(filters.status ?? '');
   const [perPage, setPerPage] = useState(filters.per_page ?? '10');
+  const [advancedOpen, setAdvancedOpen] = useState(Boolean(filters.search || filters.group || filters.status));
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
@@ -117,15 +118,29 @@ export default function Index({ settings, groups, campuses, filters, websiteSett
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">Settings &amp; Registry</span>
+            <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">School configuration</span>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">General Settings</h1>
-            <p className="text-sm text-slate-500 mt-1">Manage system settings and registry configurations securely.</p>
-          </div>
-          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-            {canManageBranding && <button onClick={() => setWebsiteFormOpen(true)} className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700"><Icon name="settings" className="h-4 w-4" /> School Logo & Website</button>}
-            <button onClick={openCreate} className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"><Icon name="plus" className="h-4 w-4" /> Add Setting</button>
+            <p className="text-sm text-slate-500 mt-1">School information, website appearance, and technical settings.</p>
           </div>
         </div>
+
+        <section className="rounded-2xl border border-indigo-100 bg-indigo-50/70 p-5 sm:p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-base font-bold text-slate-900">Where should I change something?</h2>
+              <p className="mt-1 max-w-3xl text-sm text-slate-600">School name, contact details, admissions, homepage text, logos and colors are grouped into a guided form. Changes there apply across all campuses.</p>
+              {!canManageBranding && <p className="mt-2 text-sm font-medium text-amber-700">Only a Super Admin can change shared school and website information. Contact your Super Admin if you need an update.</p>}
+            </div>
+            {canManageBranding && <button onClick={() => setWebsiteFormOpen(true)} className="shrink-0 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700">Open school settings</button>}
+          </div>
+        </section>
+
+        <details open={advancedOpen} onToggle={event => setAdvancedOpen(event.currentTarget.open)} className="space-y-4">
+          <summary className="cursor-pointer rounded-xl border border-slate-200 bg-white px-5 py-4 text-sm font-semibold text-slate-800 shadow-sm">Advanced / technical settings <span className="ml-2 font-normal text-slate-500">Custom key-value controls — use only when you know what the setting does.</span></summary>
+          <p className="text-sm text-slate-600">এখানে custom key-value setting আছে, যা system behavior-এ প্রভাব ফেলতে পারে। কী-এর উদ্দেশ্য নিশ্চিত না হলে এগুলো add, edit বা delete করবেন না।</p>
+          <div className="flex justify-end">
+            <button onClick={openCreate} className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"><Icon name="plus" className="h-4 w-4" /> Add technical setting</button>
+          </div>
 
         {/* Unified Modern Toolbar */}
         <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-center justify-between gap-4">
@@ -292,6 +307,7 @@ export default function Index({ settings, groups, campuses, filters, websiteSett
             <Pagination meta={settings} />
           </div>
         </div>
+        </details>
       </div>
 
       {/* Modals */}

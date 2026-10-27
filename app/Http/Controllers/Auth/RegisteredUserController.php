@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\SaasTenant;
 use App\Models\Campus;
 use App\Models\Setting;
+use Spatie\Permission\Models\Role;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -64,7 +65,9 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        $user = DB::transaction(function () use ($request) {
+        $tenantAdminRole = Role::findByName('Branch Admin', 'web');
+
+        $user = DB::transaction(function () use ($request, $tenantAdminRole) {
             // 1. Create Tenant (1 month free trial)
             $tenant = SaasTenant::create([
                 'company_name' => $request->school_name,
@@ -91,12 +94,8 @@ class RegisteredUserController extends Controller
                 'password' => Hash::make($request->password),
             ]);
 
-            // 4. Assign 'Tenant Admin' role
-            if (\Spatie\Permission\Models\Role::where('name', 'Tenant Admin')->exists()) {
-                $user->assignRole('Tenant Admin');
-            } else {
-                $user->assignRole('Super Admin');
-            }
+            // Public registration must never grant the global Super Admin role.
+            $user->assignRole($tenantAdminRole);
 
             return $user;
         });

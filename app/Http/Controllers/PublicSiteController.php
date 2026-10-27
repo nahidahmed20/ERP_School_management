@@ -24,6 +24,17 @@ class PublicSiteController extends Controller
     private function teacherQuery()
     {
         return Staff::withoutGlobalScopes()->with(['campus:id,name', 'department:id,name', 'designation:id,name'])
+            ->select([
+                'staff.id',
+                'staff.campus_id',
+                'staff.department_id',
+                'staff.designation_id',
+                'staff.first_name',
+                'staff.last_name',
+                'staff.photo',
+                'staff.qualification',
+                'staff.experience',
+            ])
             ->where('is_active', true)
             ->where(function ($query) {
                 $query->whereHas('teachingAssignments', fn ($assignment) => $assignment->where('is_active', true))
