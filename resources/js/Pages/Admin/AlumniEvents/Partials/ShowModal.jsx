@@ -1,4 +1,5 @@
 import Icon from '@/Components/Icons';
+import FormattedDescription from '@/Components/FormattedDescription';
 
 export default function ShowModal({ item, onClose }) {
   if (!item) return null;
@@ -54,8 +55,8 @@ export default function ShowModal({ item, onClose }) {
 
           <div className="pt-2">
             <span className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 px-1">Event Description</span>
-            <div className="text-sm text-slate-700 bg-slate-50/50 border border-slate-200 p-4 rounded-xl min-h-[80px] whitespace-pre-wrap leading-relaxed">
-              {item.description || <span className="text-slate-400 italic">No description provided.</span>}
+            <div className="text-sm text-slate-700 bg-slate-50/50 border border-slate-200 p-4 rounded-xl min-h-[80px]">
+              {item.description ? <FormattedDescription text={item.description} /> : <span className="text-slate-400 italic">No description provided.</span>}
             </div>
           </div>
 

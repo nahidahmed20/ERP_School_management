@@ -1,5 +1,6 @@
 import { useForm } from '@inertiajs/react';
 import Icon from '@/Components/Icons';
+import RichTextEditor from '@/Components/RichTextEditor';
 
 export default function FormModal({ item, classes, onClose }) {
   const isEdit = !!item;
@@ -123,12 +124,12 @@ export default function FormModal({ item, classes, onClose }) {
               {/* Description */}
               <div className="sm:col-span-2">
                 <label className="block text-sm font-semibold text-slate-700 mb-1.5">Description / Notes</label>
-                <textarea 
-                  rows="5"
-                  value={data.description} 
-                  onChange={(e) => setData('description', e.target.value)} 
-                  placeholder="এই লেসনে কী কী পড়ানো হবে..." 
-                  className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 outline-none transition-all resize-none"
+                <RichTextEditor
+                  value={data.description}
+                  onChange={value => setData('description', value)}
+                  rows={5}
+                  placeholder="Write the lesson details or syllabus notes..."
+                  className="block w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none transition focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
 

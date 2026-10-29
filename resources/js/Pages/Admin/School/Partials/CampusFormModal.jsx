@@ -1,5 +1,6 @@
 import { useForm } from '@inertiajs/react';
 import Icon from '@/Components/Icons';
+import RichTextEditor from '@/Components/RichTextEditor';
 
 export default function CampusFormModal({ item, onClose }) {
   const isEdit = !!item;
@@ -127,7 +128,7 @@ export default function CampusFormModal({ item, onClose }) {
 
               <div className="sm:col-span-2">
                 <label className={labelClass}>Public Campus Description</label>
-                <textarea rows="3" value={data.public_description} onChange={(e) => setData('public_description', e.target.value)} placeholder="Describe this campus for website visitors..." className={`${inputClass} resize-none`} />
+                <RichTextEditor rows={4} value={data.public_description} onChange={value => setData('public_description', value)} placeholder="Describe this campus for website visitors..." className={inputClass} />
                 {errors.public_description && <p className="text-rose-500 text-xs mt-1">{errors.public_description}</p>}
               </div>
 

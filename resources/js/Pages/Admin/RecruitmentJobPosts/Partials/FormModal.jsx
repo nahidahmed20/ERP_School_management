@@ -1,5 +1,6 @@
 import { useForm } from '@inertiajs/react';
 import Icon from '@/Components/Icons';
+import RichTextEditor from '@/Components/RichTextEditor';
 
 export default function FormModal({ item, onClose }) {
   const isEdit = !!item;
@@ -124,10 +125,10 @@ export default function FormModal({ item, onClose }) {
 
               <div className="sm:col-span-2">
                 <label className={labelClass}>Job Description / Requirements</label>
-                <textarea 
+                <RichTextEditor
                   rows="5" 
                   value={data.description} 
-                  onChange={(e) => setData('description', e.target.value)} 
+                  onChange={value => setData('description', value)}
                   placeholder="শিক্ষাগত যোগ্যতা, অভিজ্ঞতা এবং দায়িত্বসমূহ..." 
                   className={`${inputClass} resize-none`} 
                 />

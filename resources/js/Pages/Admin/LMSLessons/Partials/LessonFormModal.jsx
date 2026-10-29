@@ -1,6 +1,7 @@
 import { useForm, usePage } from '@inertiajs/react';
 import WorkingCampusField from '@/Components/WorkingCampusField';
 import Icon from '@/Components/Icons';
+import RichTextEditor from '@/Components/RichTextEditor';
 
 export default function LessonFormModal({ item, courses, classes, campuses, activeCampusId, onClose }) {
   const isEdit = !!item;
@@ -171,13 +172,7 @@ export default function LessonFormModal({ item, courses, classes, campuses, acti
               {/* Description */}
               <div className="sm:col-span-2">
                 <label className={labelClass}>Description / Reading Text</label>
-                <textarea
-                  rows="3"
-                  value={data.description}
-                  onChange={(e) => setData('description', e.target.value)}
-                  placeholder="Lesson details, text materials or notes..."
-                  className={`${inputClass} resize-none`}
-                />
+                <RichTextEditor value={data.description} onChange={value => setData('description', value)} rows={4} placeholder="Lesson details, text materials or notes..." className={inputClass} />
               </div>
 
               {/* Active Status Toggle */}

@@ -1,6 +1,7 @@
 import { useForm, usePage } from '@inertiajs/react';
 import WorkingCampusField from '@/Components/WorkingCampusField';
 import Icon from '@/Components/Icons';
+import RichTextEditor from '@/Components/RichTextEditor';
 
 export default function HomeworkFormModal({ item, classes, subjects, campuses, activeCampusId, onClose }) {
   const isEdit = !!item;
@@ -167,13 +168,7 @@ export default function HomeworkFormModal({ item, classes, subjects, campuses, a
 
               <div className="sm:col-span-2">
                 <label className={labelClass}>Homework Description / Details</label>
-                <textarea
-                  rows="4"
-                  value={data.description}
-                  onChange={(e) => setData('description', e.target.value)}
-                  placeholder="Write homework instructions, questions or guidelines here..."
-                  className={`${inputClass} resize-none`}
-                />
+                <RichTextEditor value={data.description} onChange={value => setData('description', value)} rows={5} placeholder="Write homework instructions, questions or guidelines here..." className={inputClass} />
               </div>
 
               <div className="sm:col-span-2 pt-2 border-t border-slate-100">

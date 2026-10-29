@@ -1,5 +1,6 @@
 import React from 'react';
 import Icon from '@/Components/Icons';
+import FormattedDescription from '@/Components/FormattedDescription';
 
 export default function CourseShowModal({ item, onClose }) {
   if (!item) return null;
@@ -72,9 +73,7 @@ export default function CourseShowModal({ item, onClose }) {
               <Icon name="file-text" className="w-4 h-4 text-slate-400" />
               <span className="font-bold text-slate-500 uppercase text-xs tracking-wider">Course Description / Overview</span>
             </div>
-            <p className="text-sm font-medium text-slate-700 leading-relaxed whitespace-pre-wrap">
-              {item.description || <span className="text-slate-400 italic font-normal">No description provided.</span>}
-            </p>
+            {item.description ? <FormattedDescription text={item.description} className="text-sm font-medium text-slate-700" /> : <p className="text-sm italic text-slate-400">No description provided.</p>}
           </div>
 
         </div>

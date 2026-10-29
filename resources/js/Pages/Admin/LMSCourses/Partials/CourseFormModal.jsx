@@ -1,6 +1,7 @@
 import { useForm, usePage } from '@inertiajs/react';
 import WorkingCampusField from '@/Components/WorkingCampusField';
 import Icon from '@/Components/Icons';
+import RichTextEditor from '@/Components/RichTextEditor';
 
 export default function CourseFormModal({ item, classes, subjects, teachers, campuses, activeCampusId, onClose }) {
   const isEdit = !!item;
@@ -112,13 +113,7 @@ export default function CourseFormModal({ item, classes, subjects, teachers, cam
 
               <div className="sm:col-span-2">
                 <label className={labelClass}>Course Description (Overview)</label>
-                <textarea
-                  rows="3"
-                  value={data.description}
-                  onChange={(e) => setData('description', e.target.value)}
-                  placeholder="What will students learn from this course?"
-                  className={`${inputClass} resize-none`}
-                />
+                <RichTextEditor value={data.description} onChange={value => setData('description', value)} rows={4} placeholder="What will students learn from this course?" className={inputClass} />
               </div>
 
               <div className="sm:col-span-2 pt-2 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-4">

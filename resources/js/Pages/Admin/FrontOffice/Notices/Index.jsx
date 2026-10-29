@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Head, router, usePage, useForm } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
+import RichTextEditor from '@/Components/RichTextEditor';
+import FormattedDescription from '@/Components/FormattedDescription';
 import Pagination from '@/Components/Pagination';
 import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 import Swal from 'sweetalert2';
@@ -268,7 +270,7 @@ export default function Notices({ notices, filters }) {
                       <td className="px-6 py-4">
                         <div className="text-sm font-bold text-slate-900">{notice.title}</div>
                         {notice.description && (
-                          <div className="text-xs text-slate-500 mt-1 line-clamp-2 max-w-xl leading-relaxed">{notice.description}</div>
+                          <div className="mt-1 max-h-12 max-w-xl overflow-hidden text-xs text-slate-500"><FormattedDescription text={notice.description} /></div>
                         )}
                       </td>
                       <td className="px-6 py-4">
@@ -403,7 +405,7 @@ function NoticeFormModal({ item, onClose }) {
 
               <div className="sm:col-span-2">
                 <label className={labelClass}>Description / Details</label>
-                <textarea rows="4" value={data.description} onChange={e => setData('description', e.target.value)} placeholder="Enter notice details..." className={`${inputClass} resize-none`} />
+                <RichTextEditor rows={4} value={data.description} onChange={value => setData('description', value)} placeholder="Enter notice details..." className={inputClass} />
                 {errors.description && <p className="text-rose-500 text-xs mt-1">{errors.description}</p>}
               </div>
 

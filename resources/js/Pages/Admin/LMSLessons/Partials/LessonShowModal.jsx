@@ -1,5 +1,6 @@
 import React from 'react';
 import Icon from '@/Components/Icons';
+import FormattedDescription from '@/Components/FormattedDescription';
 
 export default function LessonShowModal({ item, onClose }) {
   if (!item) return null;
@@ -105,15 +106,7 @@ export default function LessonShowModal({ item, onClose }) {
             <span className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 pb-2 border-b border-slate-100">
                <Icon name="file-text" className="w-4 h-4 text-slate-400" /> Description / Reading Text
             </span>
-            <div className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">
-              {item.description ? (
-                <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
-                  {item.description}
-                </div>
-              ) : (
-                <span className="italic text-slate-400 block p-4 bg-slate-50 rounded-lg border border-slate-100">No additional text details provided.</span>
-              )}
-            </div>
+            {item.description ? <div className="rounded-lg border border-slate-100 bg-slate-50 p-4"><FormattedDescription text={item.description} className="text-sm text-slate-700" /></div> : <span className="block rounded-lg border border-slate-100 bg-slate-50 p-4 text-sm italic text-slate-400">No additional text details provided.</span>}
           </div>
 
         </div>
