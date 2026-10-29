@@ -13,7 +13,7 @@ const ID_CARD_DESIGNS = [
   { key: 'elegant_border', name: 'Elegant Border', desc: 'Premium framed design' },
 ];
 
-export default function IdCardForm({ item, campuses, activeCampusId, schoolName = "Smart School" }) {
+export default function IdCardForm({ item, campuses, activeCampusId, schoolName = "Smart School", initialAudience = "student" }) {
   const isEdit = !!item;
   const { auth } = usePage().props;
   const isSuperAdmin = auth?.user?.role === 'super_admin' || auth?.user?.roles?.some(r => r.name === 'Super Admin');
@@ -21,8 +21,8 @@ export default function IdCardForm({ item, campuses, activeCampusId, schoolName 
   const { data, setData, post, processing, errors } = useForm({
     _method: isEdit ? 'put' : 'post',
     campus_id: item?.campus_id ?? auth?.active_campus_id ?? activeCampusId ?? '',
-    title: item?.title ?? 'Student ID Card',
-    audience: item?.audience ?? 'student',
+    title: item?.title ?? (initialAudience === 'staff' ? 'Staff ID Card' : 'Student ID Card'),
+    audience: item?.audience ?? initialAudience,
     layout_type: item?.layout_type ?? 'vertical',
     design_template: item?.design_template ?? 'modern_wave',
     text_align: item?.text_align ?? 'center',
@@ -74,14 +74,14 @@ export default function IdCardForm({ item, campuses, activeCampusId, schoolName 
           <Icon name="user" className="w-10 h-10 text-slate-400" />
         </div>
         <div className="mt-1.5 bg-amber-500 text-white text-[9px] font-bold px-3 py-0.5 rounded-full uppercase tracking-wider shadow-sm z-10">
-          {data.audience === 'both' ? 'Student' : data.audience}
+        {data.audience === 'both' ? 'Student / Staff' : data.audience}
         </div>
       </div>
     );
 
     const DetailsBlock = ({ textCol = "text-slate-800" }) => (
       <div className={`flex flex-col justify-center flex-1 ${alignText} ${isVertical ? '' : 'py-2'}`}>
-        <h3 className={`font-bold ${textCol} ${isVertical ? 'text-lg' : 'text-xl'} uppercase leading-tight`}>Student Name</h3>
+        <h3 className={`font-bold ${textCol} ${isVertical ? 'text-lg' : 'text-xl'} uppercase leading-tight`}>{data.audience === 'staff' ? 'Staff Name' : 'Student Name'}</h3>
         <p className="text-[10px] font-bold text-slate-500 font-mono mt-0.5 mb-2 border-b border-slate-200 inline-block pb-1">ID: STU-2024-001</p>
         <div className="space-y-1 text-[9px] text-slate-700">
           {data.show_blood_group && <p><strong className="text-rose-600">Blood:</strong> O+</p>}
@@ -332,7 +332,7 @@ export default function IdCardForm({ item, campuses, activeCampusId, schoolName 
 
                 <div>
                   <label className={labelClass}>Template Title *</label>
-                  <input type="text" value={data.title} onChange={e => setData('title', e.target.value)} required placeholder="e.g. Student ID Card 2024" className={inputClass} />
+                  <input type="text" value={data.title} onChange={e => setData('title', e.target.value)} required placeholder={initialAudience === 'staff' ? 'e.g. Staff ID Card' : 'e.g. Student ID Card 2024'} className={inputClass} />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">

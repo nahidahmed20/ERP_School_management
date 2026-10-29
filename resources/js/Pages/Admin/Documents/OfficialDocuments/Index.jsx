@@ -10,7 +10,7 @@ const labelClass = 'block text-sm font-semibold text-slate-700';
 function Modal({ close, title, children }) {
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200" onClick={close}>
-            <div onClick={e => e.stopPropagation()} className="max-h-[90vh] w-full max-w-3xl flex flex-col rounded-2xl bg-white shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden">
+            <div onClick={e => e.stopPropagation()} className="max-h-[calc(100dvh-2rem)] sm:max-h-[90vh] w-full max-w-3xl flex flex-col rounded-2xl bg-white shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden">
                 <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
                     <h2 className="text-xl font-bold text-slate-900">{title}</h2>
                     <button onClick={close} className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition-colors bg-white border border-slate-200 shadow-sm"><Icon name="close" className="w-4 h-4" /></button>

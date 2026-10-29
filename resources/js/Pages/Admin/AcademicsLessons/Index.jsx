@@ -15,6 +15,9 @@ export default function Index({ lessons, classes, subjects, filters }) {
   const [classId, setClassId] = useState(filters.class_id ?? '');
   const [subjectId, setSubjectId] = useState(filters.subject_id ?? '');
   const [perPage, setPerPage] = useState(filters.per_page ?? '10');
+  const filterSubjects = classId
+    ? classes.find((schoolClass) => String(schoolClass.id) === String(classId))?.subjects ?? []
+    : subjects;
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
@@ -138,7 +141,11 @@ export default function Index({ lessons, classes, subjects, filters }) {
             {/* Class Filter */}
             <select
               value={classId}
-              onChange={(e) => { setClassId(e.target.value); applyFilters({ class_id: e.target.value }); }}
+              onChange={(e) => {
+                setClassId(e.target.value);
+                setSubjectId('');
+                applyFilters({ class_id: e.target.value, subject_id: '' });
+              }}
               className="w-full sm:w-36 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
             >
               <option value="">All Classes</option>
@@ -152,7 +159,7 @@ export default function Index({ lessons, classes, subjects, filters }) {
               className="w-full sm:w-44 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
             >
               <option value="">All Subjects</option>
-              {subjects.map(s => <option key={s.id} value={s.id}>{s.name} ({s.code})</option>)}
+              {filterSubjects.map(s => <option key={s.id} value={s.id}>{s.name} ({s.code})</option>)}
             </select>
 
             {/* Search Input */}
@@ -284,7 +291,7 @@ export default function Index({ lessons, classes, subjects, filters }) {
       </div>
 
       {/* Modals */}
-      {formOpen && <FormModal item={editingItem} classes={classes} subjects={subjects} onClose={() => setFormOpen(false)} />}
+      {formOpen && <FormModal item={editingItem} classes={classes} onClose={() => setFormOpen(false)} />}
       {showItem && <ShowModal item={showItem} onClose={() => setShowItem(null)} />}
 
       {deleteId && (

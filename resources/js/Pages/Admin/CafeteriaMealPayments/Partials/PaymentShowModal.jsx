@@ -25,7 +25,7 @@ export default function PaymentShowModal({ item, onClose }) {
 
       <div
         id="pos-receipt"
-        className="w-full max-w-sm bg-white rounded-xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200 print:max-h-max print:overflow-visible"
+        className="w-full max-w-lg bg-white rounded-xl shadow-2xl flex flex-col max-h-[calc(100dvh-2rem)] sm:max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200 print:max-h-max print:overflow-visible"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="bg-slate-50 px-5 py-4 border-b flex items-center justify-between shrink-0 no-print">

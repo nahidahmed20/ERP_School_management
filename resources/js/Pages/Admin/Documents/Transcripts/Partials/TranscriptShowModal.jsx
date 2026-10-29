@@ -57,7 +57,7 @@ export default function TranscriptShowModal({ item, onClose }) {
       `}} />
 
       <div 
-        className="modal-wrapper w-full max-w-[850px] bg-slate-100 rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden transform transition-all animate-in zoom-in-95 duration-200 print:max-h-max print:rounded-none print:shadow-none print:bg-white print:border-none"
+        className="modal-wrapper w-full max-w-[850px] bg-slate-100 rounded-2xl shadow-2xl flex flex-col max-h-[calc(100dvh-2rem)] sm:max-h-[90vh] overflow-hidden transform transition-all animate-in zoom-in-95 duration-200 print:max-h-max print:rounded-none print:shadow-none print:bg-white print:border-none"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-white shrink-0 shadow-sm z-10 no-print">

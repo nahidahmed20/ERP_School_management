@@ -68,7 +68,7 @@ class StaffController extends Controller
         $departments = Department::where('is_active', true)->where($globalFilter)->get();
         $designations = Designation::where('is_active', true)->where($globalFilter)->get();
 
-        $roles = Role::where('name', '!=', 'super_admin')->get();
+        $roles = Role::whereNotIn('name', ['Super Admin', 'super_admin', 'Branch Admin'])->get();
 
         return inertia('Admin/Staff/Create', compact('departments', 'designations', 'roles'));
     }
@@ -76,7 +76,12 @@ class StaffController extends Controller
     public function store(Request $request)
     {
         $rules = $this->staffValidationRules();
-        $rules['role_name'] = 'required_if:create_user_account,true';
+        $rules['role_name'] = [
+            'required_if:create_user_account,true',
+            'nullable',
+            Rule::exists('roles', 'name')->where('guard_name', 'web'),
+            Rule::notIn(['Super Admin', 'super_admin', 'Branch Admin']),
+        ];
         $request->validate($rules, [
             'role_name.required_if' => 'অ্যাকাউন্ট তৈরি করতে চাইলে একটি Role সিলেক্ট করা আবশ্যক।'
         ]);
@@ -165,7 +170,7 @@ class StaffController extends Controller
             'staff' => $staff,
             'departments' => Department::where('is_active', true)->where($globalFilter)->get(),
             'designations' => Designation::where('is_active', true)->where($globalFilter)->get(),
-            'roles' => Role::where('name', '!=', 'super_admin')->get(),
+            'roles' => Role::whereNotIn('name', ['Super Admin', 'super_admin', 'Branch Admin'])->get(),
             'currentRole' => $currentRole
         ]);
     }
@@ -176,7 +181,21 @@ class StaffController extends Controller
         $filter = fn($q) => $campusId ? $q->where('campus_id', $campusId) : $q;
 
         $staff = Staff::where($filter)->findOrFail($id);
-        $request->validate($this->staffValidationRules(isUpdate: true, staffId: $staff->id));
+        $rules = $this->staffValidationRules(isUpdate: true, staffId: $staff->id);
+        $rules['create_user_account'] = 'sometimes|boolean';
+        $rules['role_name'] = [
+            'required_if:create_user_account,true',
+            'nullable',
+            Rule::exists('roles', 'name')->where('guard_name', 'web'),
+            Rule::notIn(['Super Admin', 'super_admin', 'Branch Admin']),
+        ];
+        $rules['email'] = [
+            ...explode('|', $rules['email']),
+            Rule::unique('users', 'email')->ignore($staff->user_id),
+        ];
+        $request->validate($rules, [
+            'role_name.required_if' => 'লগইন অ্যাকাউন্ট তৈরি করতে চাইলে একটি Role সিলেক্ট করা আবশ্যক।',
+        ]);
 
         DB::beginTransaction();
         try {
@@ -225,6 +244,16 @@ class StaffController extends Controller
                         $user->syncRoles([$request->role_name]);
                     }
                 }
+            } elseif ($request->boolean('create_user_account')) {
+                $staffEmail = $request->email ?: strtolower($staff->staff_id_no).'@school.com';
+                $user = User::create([
+                    'name' => trim($request->first_name.' '.$request->last_name),
+                    'email' => $staffEmail,
+                    'password' => Hash::make($staff->staff_id_no),
+                    'campus_id' => $staff->campus_id ?? $campusId,
+                ]);
+                $user->assignRole($request->role_name);
+                $staff->update(['user_id' => $user->id]);
             }
 
             DB::commit();
@@ -291,7 +320,11 @@ class StaffController extends Controller
         $staff = Staff::where($filter)->with(['campus','department','designation'])->findOrFail($id);
 
         $template = \App\Models\IdCardTemplate::where('is_active',true)->whereIn('audience',['staff','both'])->latest()->first();
-        abort_unless($template, 422, 'Create an active Staff ID card template first.');
+        if (! $template) {
+            return redirect()
+                ->route('admin.documents.idcards.create', ['audience' => 'staff'])
+                ->with('error', 'স্টাফের ID card প্রিন্ট করতে আগে একটি active Staff ID card template তৈরি করুন।');
+        }
 
         return Inertia::render('Admin/Documents/PersonIdCard',[
             'personType'=>'staff',

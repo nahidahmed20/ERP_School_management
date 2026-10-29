@@ -26,6 +26,7 @@ export default function Edit({ staff, departments, designations, roles, currentR
     department_id: staff.department_id || '',
     designation_id: staff.designation_id || '',
     role_name: resolveRoleName(currentRole),
+    create_user_account: !!staff.user_id,
     joining_date: staff.joining_date || '',
     basic_salary: staff.basic_salary || '',
 
@@ -185,9 +186,9 @@ export default function Edit({ staff, departments, designations, roles, currentR
                   <h3 className="text-lg font-bold text-slate-900">Employment Details</h3>
                 </div>
 
-                {/* 💡 Role Management (Only if staff has user account) */}
-                {staff.user_id && (
+                {staff.user_id ? (
                   <div className="mb-6 p-5 bg-slate-50 rounded-2xl border border-slate-200 max-w-md">
+                    <p className="mb-3 text-sm font-semibold text-emerald-700">এই স্টাফের login account আছে।</p>
                     <label className={labelClass}>System Role (Permission) <span className="text-rose-500">*</span></label>
                     <select className={inputClass} value={data.role_name} onChange={e => setData('role_name', e.target.value)} required>
                       <option value="" disabled>-- Select System Role --</option>
@@ -198,6 +199,33 @@ export default function Edit({ staff, departments, designations, roles, currentR
                       ))}
                     </select>
                     {errors.role_name && <p className="text-rose-500 text-xs mt-1">{errors.role_name}</p>}
+                  </div>
+                ) : (
+                  <div className="mb-6 p-5 bg-slate-50 rounded-2xl border border-slate-200">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={data.create_user_account}
+                        onChange={e => setData('create_user_account', e.target.checked)}
+                        className="h-5 w-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                      />
+                      <span className="text-sm font-semibold text-slate-800">এই স্টাফের জন্য Login Portal Account তৈরি করুন</span>
+                    </label>
+                    {data.create_user_account && (
+                      <div className="mt-4 max-w-md">
+                        <label className={labelClass}>System Role <span className="text-rose-500">*</span></label>
+                        <select className={inputClass} value={data.role_name} onChange={e => setData('role_name', e.target.value)} required>
+                          <option value="" disabled>-- Select System Role --</option>
+                          {roles?.map(role => (
+                            <option key={role.id} value={role.name}>
+                              {role.name.charAt(0).toUpperCase() + role.name.slice(1)}
+                            </option>
+                          ))}
+                        </select>
+                        {errors.role_name && <p className="text-rose-500 text-xs mt-1">{errors.role_name}</p>}
+                        <p className="mt-2 text-xs text-slate-500">প্রাথমিক পাসওয়ার্ড হবে Staff ID: {staff.staff_id_no}</p>
+                      </div>
+                    )}
                   </div>
                 )}
 

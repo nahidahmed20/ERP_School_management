@@ -27,7 +27,7 @@ export default function AssignSubjectModal({ schoolClass, allSubjects, onClose }
       onClick={onClose}
     >
       <div 
-        className="bg-white rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden transform transition-all flex flex-col ring-1 ring-slate-900/5 animate-in zoom-in-95 duration-200 max-h-[calc(100dvh-2rem)] sm:max-h-[90vh]"
+        className="bg-white rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden transform transition-all flex flex-col ring-1 ring-slate-900/5 animate-in zoom-in-95 duration-200 max-h-[calc(100dvh-2rem)] sm:max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
@@ -44,7 +44,7 @@ export default function AssignSubjectModal({ schoolClass, allSubjects, onClose }
         {/* Form Body */}
         <form onSubmit={submit} className="flex flex-col flex-1 overflow-hidden">
           <div className="p-6 overflow-y-auto max-h-[350px] flex-1">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {allSubjects.map(subject => {
                 const isChecked = data.subjects.includes(subject.id);
                 return (

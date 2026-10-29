@@ -10,7 +10,7 @@ export default function HomeworkShowModal({ item, onClose }) {
       
       {/* Responsive Modal Box (Increased Width to max-w-3xl) */}
       <div 
-        className="w-full max-w-3xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden transform transition-all animate-in zoom-in-95 duration-200"
+        className="w-full max-w-3xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[calc(100dvh-2rem)] sm:max-h-[90vh] overflow-hidden transform transition-all animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}

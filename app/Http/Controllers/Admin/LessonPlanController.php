@@ -27,7 +27,7 @@ class LessonPlanController extends Controller
         $campusId = config('app.active_campus_id');
         
         $query = LessonPlan::with(['schoolClass', 'subject']);
-        $classesQuery = SchoolClass::where('is_active', true);
+        $classesQuery = SchoolClass::with('subjects:id,name,code')->where('is_active', true);
         $subjectsQuery = Subject::where('is_active', true);
 
         // 🔒 Data Leak Protection & Super Admin Bypass
@@ -61,16 +61,18 @@ class LessonPlanController extends Controller
     {
         $request->validate([
             'class_id' => ['required', $this->existsRule('school_classes')],
-            'subject_id' => ['required', $this->existsRule('subjects')],
+            'subject_id' => ['required', Rule::exists('class_subject', 'subject_id')
+                ->where('class_id', $request->input('class_id'))],
             'title' => 'required|string|max:255',
             'status' => 'required|in:Pending,Ongoing,Completed',
             'attachment' => 'nullable|file|mimes:pdf,doc,docx,jpg,png|max:2048',
         ]);
 
-        $activeSession = AcademicSession::where('is_current', 1)->first();
-        
         $class = SchoolClass::findOrFail($request->class_id);
-        $campusId = $class->campus_id; 
+        $activeSession = AcademicSession::where('campus_id', $class->campus_id)
+            ->where('is_current', true)
+            ->first();
+        $campusId = $class->campus_id;
 
         $filePath = null;
         if ($request->hasFile('attachment')) {
@@ -93,7 +95,8 @@ class LessonPlanController extends Controller
         
         $request->validate([
             'class_id' => ['required', $this->existsRule('school_classes')],
-            'subject_id' => ['required', $this->existsRule('subjects')],
+            'subject_id' => ['required', Rule::exists('class_subject', 'subject_id')
+                ->where('class_id', $request->input('class_id'))],
             'title' => 'required|string|max:255',
             'status' => 'required|in:Pending,Ongoing,Completed',
             'attachment' => 'nullable|file|mimes:pdf,doc,docx,jpg,png|max:2048',

@@ -37,12 +37,13 @@ class IdCardTemplateController extends Controller
         ]);
     }
 
-    public function create()
+    public function create(Request $request)
     {
         return Inertia::render('Admin/Documents/IdCards/Form', [
             'campuses' => Campus::whereKey(config('app.active_campus_id'))->select('id', 'name')->get(),
             'activeCampusId' => config('app.active_campus_id'),
             'schoolName' => $this->getSchoolName(),
+            'initialAudience' => $request->query('audience') === 'staff' ? 'staff' : 'student',
         ]);
     }
 

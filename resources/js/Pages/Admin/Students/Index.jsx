@@ -22,7 +22,7 @@ function StudentViewModal({ student, onClose }) {
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-3xl w-full max-w-5xl max-h-[90vh] flex flex-col md:flex-row shadow-2xl overflow-hidden transform transition-all ring-1 ring-slate-900/10 animate-in zoom-in-95 duration-200 relative"
+        className="bg-white rounded-3xl w-full max-w-5xl max-h-[calc(100dvh-2rem)] sm:max-h-[90vh] flex flex-col md:flex-row shadow-2xl overflow-hidden transform transition-all ring-1 ring-slate-900/10 animate-in zoom-in-95 duration-200 relative"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Mobile Close Button */}

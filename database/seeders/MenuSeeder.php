@@ -1,7 +1,5 @@
-﻿<?php
-
+<?php
 namespace Database\Seeders;
-
 use App\Models\MenuGroup;
 use App\Models\MenuItem;
 use App\Services\MenuOrderService;

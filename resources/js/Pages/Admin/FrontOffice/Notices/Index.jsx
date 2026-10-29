@@ -268,7 +268,7 @@ export default function Notices({ notices, filters }) {
                       <td className="px-6 py-4">
                         <div className="text-sm font-bold text-slate-900">{notice.title}</div>
                         {notice.description && (
-                          <div className="text-xs text-slate-500 mt-1 line-clamp-2 max-w-lg leading-relaxed">{notice.description}</div>
+                          <div className="text-xs text-slate-500 mt-1 line-clamp-2 max-w-xl leading-relaxed">{notice.description}</div>
                         )}
                       </td>
                       <td className="px-6 py-4">
@@ -358,7 +358,7 @@ function NoticeFormModal({ item, onClose }) {
       onClick={onClose}
     >
       <div 
-        className="bg-white rounded-2xl w-full max-w-xl max-h-[90vh] shadow-2xl overflow-hidden transform transition-all flex flex-col ring-1 ring-slate-900/5 animate-in zoom-in-95 duration-200"
+        className="bg-white rounded-2xl w-full max-w-2xl max-h-[calc(100dvh-2rem)] sm:max-h-[90vh] shadow-2xl overflow-hidden transform transition-all flex flex-col ring-1 ring-slate-900/5 animate-in zoom-in-95 duration-200"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}

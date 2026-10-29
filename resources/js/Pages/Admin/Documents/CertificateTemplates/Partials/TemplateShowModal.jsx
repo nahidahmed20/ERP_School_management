@@ -92,7 +92,7 @@ export default function TemplateShowModal({ item, onClose, schoolName = "Your Sc
             <div className="my-auto pl-6 border-l-4 border-slate-200">
               <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-2">Presented To</p>
               <h2 className="text-4xl font-bold text-slate-800 mb-4">Student Name Here</h2>
-              <p className="text-sm text-slate-600 leading-relaxed max-w-lg">
+              <p className="text-sm text-slate-600 leading-relaxed max-w-xl">
                 {item.content_body || 'Description text goes here...'}
               </p>
             </div>
@@ -220,7 +220,7 @@ export default function TemplateShowModal({ item, onClose, schoolName = "Your Sc
       `}} />
 
       <div
-        className="modal-wrapper w-full max-w-4xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden transform transition-all animate-in zoom-in-95 duration-200 print:shadow-none print:rounded-none print:border-none print:max-h-max"
+        className="modal-wrapper w-full max-w-4xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[calc(100dvh-2rem)] sm:max-h-[90vh] overflow-hidden transform transition-all animate-in zoom-in-95 duration-200 print:shadow-none print:rounded-none print:border-none print:max-h-max"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0 no-print">

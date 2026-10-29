@@ -20,7 +20,7 @@ export default function OrderShowModal({ item, onClose }) {
       {/* Modal Box */}
       <div
         id="invoice-print-area"
-        className="w-full max-w-xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200 print:max-h-max print:overflow-visible"
+        className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[calc(100dvh-2rem)] sm:max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200 print:max-h-max print:overflow-visible"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header - Screen Only */}

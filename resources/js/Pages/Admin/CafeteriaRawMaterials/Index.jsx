@@ -82,7 +82,7 @@ export default function Index({ materials, filters }) {
     
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm" onClick={onClose}>
-        <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+        <div className="w-full max-w-xl bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
           <div className="px-6 py-5 border-b border-slate-100 bg-slate-50 flex justify-between items-center rounded-t-2xl">
             <div>
               <h3 className="text-xl font-bold text-slate-900">{isEdit ? 'Edit Raw Material' : 'Add Kitchen Stock'}</h3>

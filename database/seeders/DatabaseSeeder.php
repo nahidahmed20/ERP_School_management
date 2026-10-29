@@ -17,6 +17,14 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RolePermissionSeeder::class,
             MenuSeeder::class,
+            StaffSeeder::class,
+            OfficialDocumentSeeder::class,
+            MenuOrderSeeder::class,
+            QuestionPaperMenuSeeder::class,
+            StaffHrMenuSeeder::class,
+            StudentDevelopmentMenuSeeder::class,
+            StudentPortalMenuSeeder::class,
+            StudentPortalPermissionSeeder::class,
         ]);
     }
 }

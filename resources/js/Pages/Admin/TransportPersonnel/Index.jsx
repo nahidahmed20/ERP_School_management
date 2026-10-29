@@ -51,7 +51,7 @@ export default function Index({ personnel, filters }) {
 
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm" onClick={onClose}>
-        <div className="w-full max-w-xl bg-white rounded-2xl shadow-2xl flex flex-col" onClick={e => e.stopPropagation()}>
+        <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col" onClick={e => e.stopPropagation()}>
           <div className="px-6 py-5 border-b flex justify-between items-center bg-slate-50 rounded-t-2xl">
             <h3 className="text-xl font-bold">{isEdit ? 'Edit Personnel' : 'Add Personnel'}</h3>
             <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200"><Icon name="close" className="w-4 h-4" /></button>
