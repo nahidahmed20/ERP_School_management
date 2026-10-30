@@ -1,5 +1,6 @@
 @import './sidebar.css';
 @import './idcard-form.css';
+@import './select2.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

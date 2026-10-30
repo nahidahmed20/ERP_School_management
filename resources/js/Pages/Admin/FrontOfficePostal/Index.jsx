@@ -76,9 +76,13 @@ export default function Index({ records, filters }) {
     Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Data copied to clipboard!', showConfirmButton: false, timer: 2000 });
   };
 
+  const totalCount = records?.total ?? records?.data?.length ?? 0;
+  const receiveCount = records?.data?.filter(r => r.type === 'Receive').length ?? 0;
+  const dispatchCount = records?.data?.filter(r => r.type === 'Dispatch').length ?? 0;
+
   return (
     <AuthenticatedLayout>
-      <Head title="Postal Dispatch / Receive" />
+      <Head title="Postal Dispatch & Receive" />
 
       {/* Print Specific CSS */}
       <style dangerouslySetInnerHTML={{__html: `
@@ -91,23 +95,61 @@ export default function Index({ records, filters }) {
         @media screen { .print-title { display: none; } }
       `}} />
 
-      <div className="print-title">Postal Dispatch / Receive - {new Date().toLocaleDateString('en-GB')}</div>
+      <div className="print-title">Postal Dispatch & Receive - {new Date().toLocaleDateString('en-GB')}</div>
 
       <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8 no-print">
 
-        {/* Page Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">Front Office</span>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Postal Dispatch / Receive</h1>
-            <p className="text-sm text-slate-500 mt-1">স্কুলে আসা চিঠি বা পার্সেল এবং পাঠানো ডকুমেন্টস ট্র্যাক করুন।</p>
+        {/* Top Header Card */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600 shadow-inner shrink-0">
+              <Icon name="mail" className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-bold tracking-wider text-indigo-700 uppercase bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-100">Reception & Front Desk</span>
+              </div>
+              <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Postal Dispatch & Receive</h1>
+              <p className="text-sm text-slate-500">স্কুলে আসা চিঠি বা পার্সেল এবং পাঠানো ডকুমেন্টস ট্র্যাক ও ম্যানেজ করুন।</p>
+            </div>
           </div>
           <button
             onClick={() => { setEditingItem(null); setFormOpen(true); }}
-            className="w-full sm:w-auto inline-flex justify-center items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md shadow-indigo-500/20 active:scale-95"
+            className="w-full sm:w-auto inline-flex justify-center items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md shadow-indigo-500/20 active:scale-95 shrink-0"
           >
             <Icon name="plus" className="w-4 h-4" /> Add Record
           </button>
+        </div>
+
+        {/* Stat Cards Strip */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 border border-indigo-100">
+              <Icon name="mail" className="w-6 h-6" />
+            </div>
+            <div>
+              <h4 className="text-2xl font-bold text-slate-900">{totalCount}</h4>
+              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">Total Records</p>
+            </div>
+          </div>
+          <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100">
+              <Icon name="download" className="w-6 h-6" />
+            </div>
+            <div>
+              <h4 className="text-2xl font-bold text-emerald-700">{receiveCount}</h4>
+              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">Received (গৃহীত)</p>
+            </div>
+          </div>
+          <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100">
+              <Icon name="send" className="w-6 h-6" />
+            </div>
+            <div>
+              <h4 className="text-2xl font-bold text-blue-700">{dispatchCount}</h4>
+              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">Dispatched (প্রেরিত)</p>
+            </div>
+          </div>
         </div>
 
         {/* Unified Modern Toolbar */}
@@ -115,30 +157,35 @@ export default function Index({ records, filters }) {
           <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
 
             {/* Per Page */}
-            <select
-              value={perPage}
-              onChange={e => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}
-              className="appearance-none bg-none pr-3 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer text-center font-mono"
-              style={{ backgroundImage: 'none' }}
-            >
-              <option value="10">10 / Page</option>
-              <option value="20">20 / Page</option>
-              <option value="50">50 / Page</option>
-              <option value="all">All</option>
-            </select>
+            <div className="w-28 shrink-0">
+              <select
+                value={perPage}
+                data-no-select2="true"
+                onChange={e => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}
+                className="per-page-select w-full h-10 px-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer text-center font-mono shrink-0 transition-all"
+                title="Items per page"
+              >
+                <option value="10">10 / Page</option>
+                <option value="20">20 / Page</option>
+                <option value="50">50 / Page</option>
+                <option value="all">All</option>
+              </select>
+            </div>
 
             <div className="hidden sm:block w-px h-6 bg-slate-200"></div>
 
             {/* Type Filter */}
-            <select
-              value={typeFilter}
-              onChange={(e) => { setTypeFilter(e.target.value); applyFilters({ type: e.target.value }); }}
-              className="w-full sm:w-48 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
-            >
-              <option value="">All Types</option>
-              <option value="Receive">Receive (গৃহীত)</option>
-              <option value="Dispatch">Dispatch (প্রেরিত)</option>
-            </select>
+            <div className="w-full sm:w-44 shrink-0">
+              <select
+                value={typeFilter}
+                onChange={(e) => { setTypeFilter(e.target.value); applyFilters({ type: e.target.value }); }}
+                className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
+              >
+                <option value="">All Types</option>
+                <option value="Receive">Receive (গৃহীত)</option>
+                <option value="Dispatch">Dispatch (প্রেরিত)</option>
+              </select>
+            </div>
 
             {/* Search Input */}
             <div className="relative flex-1 min-w-[200px] sm:w-64">
@@ -147,43 +194,44 @@ export default function Index({ records, filters }) {
               </div>
               <input
                 type="text"
-                placeholder="Search title or ref..."
+                placeholder="Search title, sender or ref..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
-                className="block w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                className="block w-full h-10 pl-9 pr-3 bg-slate-50 border border-slate-200 rounded-xl text-xs placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
               />
             </div>
 
             {/* Apply Button */}
             <button
               onClick={() => applyFilters()}
-              className="w-full sm:w-auto px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
+              className="w-full sm:w-auto h-10 px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm shrink-0 flex items-center justify-center gap-1.5"
             >
               Filter
             </button>
+
+            {(search || typeFilter) && (
+              <button
+                onClick={() => { setSearch(''); setTypeFilter(''); applyFilters({ search: '', type: '' }); }}
+                className="h-10 px-3 text-xs font-semibold text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-all shrink-0 flex items-center justify-center"
+              >
+                Reset
+              </button>
+            )}
           </div>
 
           {/* Export Actions */}
           <div className="flex items-center justify-end gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-xl w-full xl:w-auto shadow-sm shrink-0 ml-auto">
             <button onClick={copyToClipboard} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Copy to Clipboard">
-              Copy
+              <Icon name="copy" className="w-3.5 h-3.5" /> Copy
             </button>
             <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
             <button onClick={exportToCSV} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-emerald-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export CSV">
-              CSV
-            </button>
-            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-            <button onClick={() => alert('Backend Excel plugin needed')} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-green-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export Excel">
-              Excel
-            </button>
-            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-            <button onClick={() => alert('Backend PDF plugin needed')} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-rose-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export PDF">
-              PDF
+              <Icon name="download" className="w-3.5 h-3.5" /> CSV
             </button>
             <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
             <button onClick={handlePrint} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-amber-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Print List">
-              Print
+              <Icon name="printer" className="w-3.5 h-3.5" /> Print
             </button>
           </div>
         </div>

@@ -9,5 +9,7 @@ class ClassSubject extends Model
 {
     use BelongsToCampus;
 
+    protected $table = 'class_subject';
+
     protected $guarded = [];
 }

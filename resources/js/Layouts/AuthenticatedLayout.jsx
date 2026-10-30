@@ -1,6 +1,7 @@
 import Sidebar from '@/Components/Sidebar';
 import Topbar from '@/Components/Topbar';
 import PageSizeEnhancer from '@/Components/PageSizeEnhancer';
+import Select2GlobalEnhancer from '@/Components/Select2GlobalEnhancer';
 import GlobalEventBanner from '@/Components/GlobalEventBanner';
 import { usePage } from '@inertiajs/react';
 import { useCallback, useEffect, useState } from 'react';
@@ -43,6 +44,7 @@ export default function AuthenticatedLayout({ header, children }) {
     return (
         <div className="shell">
             <PageSizeEnhancer />
+            <Select2GlobalEnhancer />
             {mobileOpen && <button type="button" aria-label="Close navigation" className="mobile-nav-backdrop" onClick={closeMenu} />}
             <Sidebar mobileOpen={mobileOpen} desktopCollapsed={desktopCollapsed} onNavigate={closeMenu} />
 
