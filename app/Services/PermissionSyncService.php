@@ -41,7 +41,7 @@ class PermissionSyncService
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         $branchAdmin = Role::firstOrCreate(['name' => 'Branch Admin', 'guard_name' => 'web']);
-        $centralOnly = ['admin.campus.', 'admin.campuses.', 'admin.saas', 'admin.roles.', 'admin.permissions.', 'admin.menu.', 'admin.menu-groups.', 'admin.security', 'admin.registry.'];
+        $centralOnly = ['admin.campus.', 'admin.campuses.', 'admin.saas', 'admin.roles.', 'admin.permissions.', 'admin.menu.', 'admin.menu-groups.', 'admin.security', 'admin.registry.', 'admin.translations.'];
         $branchPermissions = $permissions->filter(fn (string $name) => $name === 'dashboard' || (
             str_starts_with($name, 'admin.') && ! collect($centralOnly)->contains(fn ($prefix) => str_starts_with($name, $prefix))
         ));

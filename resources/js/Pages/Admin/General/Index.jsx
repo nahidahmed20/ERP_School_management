@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Icon from '@/Components/Icons';
 import SettingFormModal from './Partials/SettingFormModal';
@@ -122,6 +122,7 @@ export default function Index({ settings, groups, campuses, filters, websiteSett
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">General Settings</h1>
             <p className="text-sm text-slate-500 mt-1">School information, website appearance, and technical settings.</p>
           </div>
+          {canManageBranding && <Link href={route('admin.translations.index')} className="shrink-0 rounded-xl border border-indigo-200 bg-white px-5 py-2.5 text-sm font-semibold text-indigo-700 hover:bg-indigo-50">Manage translations</Link>}
         </div>
 
         <section className="rounded-2xl border border-indigo-100 bg-indigo-50/70 p-5 sm:p-6">

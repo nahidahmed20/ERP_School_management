@@ -250,9 +250,10 @@ class MenuSeeder extends Seeder
                     ['key' => 'admin.saas.queue.index', 'label' => 'Queue Monitor', 'route' => 'admin.saas.queue.index'],
                     ['key' => 'admin.saas.backups.index', 'label' => 'Backups', 'route' => 'admin.saas.backups.index'],
                 ]],
-                ['key' => 'settings', 'label' => 'Settings & Registry', 'icon' => 'settings', 'count' => 8, 'children' => [
+                ['key' => 'settings', 'label' => 'Settings & Registry', 'icon' => 'settings', 'count' => 9, 'children' => [
                     ['key' => 'admin.campuses.index', 'label' => 'School & Branches', 'route' => 'admin.campuses.index'],
                     ['key' => 'admin.general.index', 'label' => 'General Settings', 'route' => 'admin.general.index'],
+                    ['key' => 'admin.translations.index', 'label' => 'Language & Translations', 'route' => 'admin.translations.index'],
                     ['key' => 'admin.roles.index', 'label' => 'Roles', 'route' => 'admin.roles.index'],
                     ['key' => 'admin.permissions.index', 'label' => 'Permissions', 'route' => 'admin.permissions.index'],
                     ['key' => 'admin.users.index', 'label' => 'User Accounts', 'route' => 'admin.users.index'],

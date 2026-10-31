@@ -1,6 +1,6 @@
 import React from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -16,6 +16,7 @@ import {
 import { Line, Doughnut } from 'react-chartjs-2';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Activity, Users, DollarSign } from 'lucide-react';
+import { translateText } from '@/localization/catalog';
 
 ChartJS.register(
     CategoryScale,
@@ -30,18 +31,20 @@ ChartJS.register(
 );
 
 export default function AnalyticsIndex({ auth, stats, financialChart, genderDistribution }) {
+    const { locale = 'en' } = usePage().props;
+    const localize = (value) => translateText(String(value ?? ''), locale);
     const financialData = {
-        labels: financialChart.labels,
+        labels: financialChart.labels.map(localize),
         datasets: [
             {
-                label: 'Revenue',
+                label: localize('Revenue'),
                 data: financialChart.revenue,
                 borderColor: 'rgb(75, 192, 192)',
                 backgroundColor: 'rgba(75, 192, 192, 0.5)',
                 tension: 0.3
             },
             {
-                label: 'Expenses',
+                label: localize('Expenses'),
                 data: financialChart.expenses,
                 borderColor: 'rgb(255, 99, 132)',
                 backgroundColor: 'rgba(255, 99, 132, 0.5)',
@@ -51,7 +54,7 @@ export default function AnalyticsIndex({ auth, stats, financialChart, genderDist
     };
 
     const genderData = {
-        labels: genderDistribution.map(g => g.gender === 'male' ? 'Male' : (g.gender === 'female' ? 'Female' : 'Other')),
+        labels: genderDistribution.map(g => localize(g.gender === 'male' ? 'Male' : (g.gender === 'female' ? 'Female' : 'Other'))),
         datasets: [
             {
                 data: genderDistribution.map(g => g.count),

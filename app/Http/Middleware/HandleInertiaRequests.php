@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Models\Campus;
 use App\Models\Event;
 use App\Models\Setting; 
+use App\Models\TranslationEntry;
 use App\Services\NavigationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -44,6 +45,12 @@ class HandleInertiaRequests extends Middleware
 
             'locale' => app()->getLocale(),
             'available_locales' => ['en', 'bn'],
+            'translation_overrides' => fn () => TranslationEntry::query()
+                ->get(['source_key', 'english_text', 'bangla_text'])
+                ->mapWithKeys(fn (TranslationEntry $entry) => [$entry->source_key => [
+                    'english' => $entry->english_text,
+                    'bangla' => $entry->bangla_text,
+                ]]),
 
             'global_settings' => [
                 'school_name' => $schoolName ?? config('app.name', 'Your School Name'),

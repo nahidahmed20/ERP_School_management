@@ -52,6 +52,7 @@ use App\Http\Controllers\Admin\FileManagerController;
 use App\Http\Controllers\Admin\FoodItemController;
 use App\Http\Controllers\Admin\FormBuilderController;
 use App\Http\Controllers\Admin\GeneralSettingController;
+use App\Http\Controllers\Admin\TranslationController;
 use App\Http\Controllers\Admin\GeneratedCertificateController;
 use App\Http\Controllers\Admin\GuardianController;
 use App\Http\Controllers\Admin\HealthRecordController;
@@ -284,6 +285,10 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
     Route::resource('campuses', CampusController::class);
     Route::resource('sessions', AcademicSessionController::class);
     Route::resource('general', GeneralSettingController::class)->parameters(['general' => 'setting']);
+    Route::get('translations', [TranslationController::class, 'index'])->name('translations.index');
+    Route::post('translations', [TranslationController::class, 'store'])->name('translations.store');
+    Route::put('translations/{translation}', [TranslationController::class, 'update'])->name('translations.update');
+    Route::delete('translations/{translation}', [TranslationController::class, 'destroy'])->name('translations.destroy');
     Route::post('general/website', [GeneralSettingController::class, 'updateWebsite'])->name('general.website.update');
     Route::get('files/{file}/download', [FileManagerController::class, 'download'])->name('files.download');
     Route::resource('files', FileManagerController::class)->only(['index', 'store', 'destroy']);

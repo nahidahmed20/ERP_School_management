@@ -125,8 +125,8 @@ body { background: var(--paper); color: var(--ink); }
 .content { max-width: 1920px; }
 .main > header {
     width: calc(100% - 32px);
-    height: 76px;
-    min-height: 76px;
+    height: 64px;
+    min-height: 64px;
     margin: 0 16px;
     border: 1px solid rgba(221, 226, 221, .9);
     border-top: 0;
@@ -623,7 +623,7 @@ body { background: var(--paper); color: var(--ink); }
 .content button[class*="bg-indigo-600"]:hover,
 .content a[class*="bg-indigo-600"]:hover { transform: translateY(-1px); box-shadow: 0 10px 20px -11px rgba(8,32,28,.72); }
 .content td button { min-height: 34px; }
-.main > header button { min-height: 40px; border-radius: 10px; }
+.main > header button { min-height: 36px; border-radius: 10px; }
 
 .main > header [class~="bg-indigo-600"] { background-color: var(--forest) !important; }
 .main > header [class~="hover:bg-indigo-700"]:hover { background-color: var(--forest-light) !important; }
@@ -673,12 +673,18 @@ body { background: var(--paper); color: var(--ink); }
 .locale-switcher-select {
     width: 84px;
     min-width: 84px;
-    height: 34px;
+    height: 30px;
+    min-height: 30px !important;
     border-color: var(--line) !important;
     color: var(--forest-deep) !important;
     background-color: rgba(255,255,255,.94) !important;
-    padding: 4px 7px !important;
+    padding: 0 24px 0 7px !important;
     font-size: 11px !important;
+}
+.main > header .locale-switcher-select {
+    height: 30px !important;
+    min-height: 30px !important;
+    line-height: 1 !important;
 }
 .locale-switcher-select:focus {
     border-color: var(--forest-light) !important;
@@ -689,12 +695,12 @@ body { background: var(--paper); color: var(--ink); }
 }
 .main > header .campus-switcher select {
     width: 154px;
-    height: 34px;
-    min-height: 34px;
-    padding: 0 27px 0 9px;
+    height: 30px !important;
+    min-height: 30px !important;
+    padding: 0 27px 0 9px !important;
     border-radius: 9px;
     font-size: 11px;
-    line-height: 1;
+    line-height: 1 !important;
 }
 .main > header .campus-switcher p:last-child { display: none; }
 
@@ -732,8 +738,8 @@ html[lang="bn"] .nav-subitem > span:not(.dot) { min-width: 0; overflow-wrap: any
 @media (max-width: 640px) {
     .main > header {
         width: calc(100% - 16px);
-        height: 68px;
-        min-height: 68px;
+        height: 56px;
+        min-height: 56px;
         margin-inline: 8px;
         padding-inline: 10px;
         gap: 4px;
@@ -744,7 +750,7 @@ html[lang="bn"] .nav-subitem > span:not(.dot) { min-width: 0; overflow-wrap: any
 }
 
 @media (max-width: 400px) {
-    .main > header { height: 64px; min-height: 64px; padding-inline: 6px; }
+    .main > header { height: 52px; min-height: 52px; padding-inline: 6px; }
     .main > header > div:last-child { gap: 2px; }
     .campus-switcher-static { display: none; }
     .main > header .campus-switcher { max-width: 78px !important; }

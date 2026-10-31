@@ -214,6 +214,7 @@ class MenuOrderService
         'settings' => [
             'admin.campuses.index',
             'admin.general.index',
+            'admin.translations.index',
             'admin.roles.index',
             'admin.permissions.index',
             'admin.users.index',

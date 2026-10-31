@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { translateText } from './catalog';
+import { setTranslationOverrides, translateText } from './catalog';
 
 const SKIP_TEXT_PARENTS = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEXTAREA', 'INPUT', 'CODE', 'PRE']);
 const LOCALIZED_ATTRIBUTES = ['placeholder', 'title', 'aria-label', 'aria-description', 'alt'];
@@ -11,6 +11,15 @@ export default function LocalizationObserver() {
     const textNodes = new Set();
     const elements = new Set();
     let locale = document.documentElement.lang === 'bn' ? 'bn' : 'en';
+    const readPage = () => {
+      try {
+        return JSON.parse(document.getElementById('app')?.dataset.page ?? '{}');
+      } catch {
+        return {};
+      }
+    };
+    const initialOverrides = readPage().props?.translation_overrides;
+    if (initialOverrides) setTranslationOverrides(initialOverrides);
 
     const localizeTextNode = (node) => {
       const parent = node.parentElement;
@@ -98,11 +107,20 @@ export default function LocalizationObserver() {
     observer.observe(document.head, observerOptions);
     observer.observe(document.body, observerOptions);
     const onLocaleChange = (event) => applyLocale(event.detail?.locale ?? document.documentElement.lang);
+    const onInertiaSuccess = (event) => {
+      const page = event.detail?.page ?? readPage();
+      if (page.props && Object.hasOwn(page.props, 'translation_overrides')) {
+        setTranslationOverrides(page.props.translation_overrides ?? {});
+      }
+      applyLocale(page.props?.locale ?? document.documentElement.lang);
+    };
     window.addEventListener('app:locale-changed', onLocaleChange);
+    document.addEventListener('inertia:success', onInertiaSuccess);
 
     return () => {
       observer.disconnect();
       window.removeEventListener('app:locale-changed', onLocaleChange);
+      document.removeEventListener('inertia:success', onInertiaSuccess);
     };
   }, []);
 

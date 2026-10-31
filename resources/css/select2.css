@@ -219,7 +219,7 @@ select optgroup {
     justify-content: space-between;
     width: 100%;
     min-height: 42px;
-    padding: 7px 12px;
+    padding: 0 12px;
     background-color: #ffffff;
     border: 1px solid #d5dde3;
     border-radius: 0.75rem;

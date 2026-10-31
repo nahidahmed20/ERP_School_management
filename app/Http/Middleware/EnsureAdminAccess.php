@@ -32,6 +32,7 @@ class EnsureAdminAccess
             'admin.menu-groups.*', 'admin.saas.*', 'admin.security*',
             'admin.registry.*',
             'admin.general.website.update',
+            'admin.translations.*',
         );
 
         if (! $centralOperation && ! $request->isMethodSafe()) {
