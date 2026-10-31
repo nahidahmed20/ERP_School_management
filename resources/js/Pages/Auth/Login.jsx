@@ -4,10 +4,10 @@ import InputError from '@/Components/InputError';
 import Checkbox from '@/Components/Checkbox';
 
 const ROLE_THEME = {
-    admin:   { hex: '#1F5D42', label: 'Admin / Branch Admin', short: 'Admin Portal',   prefix: 'ADM' },
-    student: { hex: '#3E7C59', label: 'Student Portal',       short: 'Student Portal', prefix: 'STU' },
-    staff:   { hex: '#A9762F', label: 'Staff Portal',         short: 'Staff Portal',   prefix: 'STF' },
-    parent:  { hex: '#0F6657', label: 'Parent Portal',        short: 'Parent Portal',  prefix: 'PAR' },
+    admin:   { hex: '#002546', label: 'Admin / Branch Admin', short: 'Admin Portal',   prefix: 'ADM' },
+    student: { hex: '#32806C', label: 'Student Portal',       short: 'Student Portal', prefix: 'STU' },
+    staff:   { hex: '#B27A2E', label: 'Staff Portal',         short: 'Staff Portal',   prefix: 'STF' },
+    parent:  { hex: '#4579A5', label: 'Parent Portal',        short: 'Parent Portal',  prefix: 'PAR' },
 };
 
 const BARCODE_WIDTHS = [2, 4, 1, 3, 2, 5, 1, 2, 4, 3, 1, 2, 5, 2, 3, 1, 4, 2, 1, 3, 2, 5, 1, 3, 2, 1, 4];
@@ -81,12 +81,13 @@ export default function Login({ status, canResetPassword, captchaQuestion, isMai
 
     return (
         <div
-            className="relative min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-[#F7F5EF] overflow-hidden"
+            className="login-shell relative min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-[#F2F6F8] overflow-hidden"
             style={{ '--accent': theme.hex }}
         >
             <Head title="Sign in">
                 <link rel="preconnect" href="https://fonts.googleapis.com" />
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+                <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet" />
                 <link
                     href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap"
                     rel="stylesheet"
@@ -105,9 +106,9 @@ export default function Login({ status, canResetPassword, captchaQuestion, isMai
                 style={{ fontFamily: "'Inter', sans-serif" }}
             >
                 {/* Left Side: Brand + Digital ID preview */}
-                <div className="lg:w-[42%] text-white p-6 sm:p-10 flex flex-col justify-between relative overflow-hidden" style={{ background: 'linear-gradient(160deg, #14301F 0%, #0A1F15 100%)' }}>
+                <div className="lg:w-[42%] text-white p-6 sm:p-10 flex flex-col justify-between relative overflow-hidden" style={{ background: 'linear-gradient(155deg, #06456B 0%, #002546 58%, #00182D 100%)' }}>
                     {/* Subtle campus-map dot texture, not a generic slate grid */}
-                    <div className="absolute inset-0 opacity-[0.08] bg-[radial-gradient(#C7A252_1px,transparent_1px)] [background-size:18px_18px] pointer-events-none"></div>
+                    <div className="absolute inset-0 opacity-[0.1] bg-[radial-gradient(#F4C66D_1px,transparent_1px)] [background-size:18px_18px] pointer-events-none"></div>
 
                     {/* Top Branding */}
                     <div className="relative z-10 flex items-center justify-between">
@@ -129,7 +130,7 @@ export default function Login({ status, canResetPassword, captchaQuestion, isMai
                         <div
                             key={role}
                             className="w-full max-w-[280px] rounded-2xl p-5 text-white shadow-2xl border border-white/15 relative overflow-hidden animate-[card-in_0.4s_ease-out] motion-reduce:animate-none"
-                            style={{ background: `linear-gradient(135deg, ${theme.hex}, #0A1F15)` }}
+                            style={{ background: `linear-gradient(135deg, ${theme.hex}, #002546)` }}
                         >
                             <div className="flex justify-between items-center mb-6">
                                 <span className="text-[11px] text-white/70 font-medium">Digital ID</span>

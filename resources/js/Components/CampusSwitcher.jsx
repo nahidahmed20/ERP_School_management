@@ -39,7 +39,7 @@ export default function CampusSwitcher({ auth, campuses = [] }) {
 
     if (!canSwitch) {
         return (
-            <div className="min-w-0 max-w-[144px] sm:max-w-[180px]">
+            <div className="campus-switcher-static min-w-0 max-w-[144px] sm:max-w-[180px]">
                 <p className="text-[10px] leading-3 text-slate-500">Assigned campus</p>
                 <p className="truncate text-xs font-semibold text-slate-700" title={auth?.active_campus?.name}>
                     {auth?.active_campus?.name || 'No assigned campus'}
@@ -49,7 +49,7 @@ export default function CampusSwitcher({ auth, campuses = [] }) {
     }
 
     return (
-        <div className="relative min-w-0 max-w-[144px] sm:max-w-[180px]">
+        <div className="campus-switcher relative min-w-0 max-w-[144px] sm:max-w-[180px]">
             <label htmlFor={id} className="block text-[10px] leading-3 text-slate-500">Working campus</label>
             <select
                 id={id}

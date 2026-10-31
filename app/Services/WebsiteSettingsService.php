@@ -37,8 +37,8 @@ class WebsiteSettingsService
         'hero_description' => 'A caring, future-ready learning community connecting students, teachers and families.',
         'principal_name' => 'Head of School',
         'principal_message' => 'We nurture curiosity, character and confidence so every learner is ready for tomorrow.',
-        'primary_color' => '#12372A',
-        'accent_color' => '#E9B949',
+        'primary_color' => '#00213e',
+        'accent_color' => '#F28B6B',
     ];
 
     public function values(): array

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AcademicSessionController;
+use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\Admin\AcademicOperationsController;
 use App\Http\Controllers\Admin\AttendanceOperationsController;
 use App\Http\Controllers\Admin\AccountingChartController;
@@ -167,6 +168,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', [PublicSiteController::class,'home'])->name('home');
+Route::post('/locale', LocaleController::class)->name('locale.update');
 Route::get('/campuses', [PublicSiteController::class,'campuses'])->name('site.campuses');
 Route::get('/academics', [PublicSiteController::class,'academics'])->name('site.academics');
 Route::get('/admissions', [PublicSiteController::class,'admissions'])->name('site.admissions');

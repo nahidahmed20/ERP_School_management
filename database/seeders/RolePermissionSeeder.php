@@ -114,6 +114,20 @@ class RolePermissionSeeder extends Seeder
             ]
         )));
 
+        $accountantRole = Role::firstOrCreate(['name' => 'Accountant', 'guard_name' => 'web']);
+        $accountantPermissions = $permissions->filter(fn (string $permission) =>
+            $permission === 'dashboard'
+            || str_starts_with($permission, 'admin.accounting.')
+            || str_starts_with($permission, 'admin.fees.')
+            || str_starts_with($permission, 'admin.fees-groups.')
+            || str_starts_with($permission, 'admin.fees-types.')
+            || str_starts_with($permission, 'admin.studentfees.')
+            || str_starts_with($permission, 'admin.payments.transactions.')
+            || str_starts_with($permission, 'admin.payments.refunds.')
+            || $permission === 'admin.reports.financial-summary'
+        );
+        $accountantRole->syncPermissions($accountantPermissions);
+
         $studentRole = Role::firstOrCreate(['name' => 'student', 'guard_name' => 'web']);
         $parentRole = Role::firstOrCreate(['name' => 'parent', 'guard_name' => 'web']);
         $studentRole->givePermissionTo(['dashboard', 'portal.services.view', 'portal.exams.attempt']);

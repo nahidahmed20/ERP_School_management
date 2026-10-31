@@ -4,6 +4,7 @@ import './bootstrap';
 import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
+import LocalizationObserver from './localization/LocalizationObserver';
 
 const appName = window.__schoolName || import.meta.env.VITE_APP_NAME || 'School ERP';
 
@@ -17,7 +18,7 @@ createInertiaApp({
     setup({ el, App, props }) {
         const root = createRoot(el);
 
-        root.render(<App {...props} />);
+        root.render(<><LocalizationObserver /><App {...props} /></>);
     },
     progress: {
         color: '#C99A2E',

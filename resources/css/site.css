@@ -1824,12 +1824,13 @@ html {
 
 /* 2026 public experience */
 .sf-site {
-    --sf-primary: #12372a;
-    --sf-accent: #e9b949;
-    --sf-ink: #10211a;
-    --sf-muted: #64746d;
-    --sf-line: #dfe7e2;
-    background: #fbfdfb;
+    --sf-primary: #00213e;
+    --sf-accent: #f28b6b;
+    --sf-highlight: #f28b6b;
+    --sf-ink: #1b2d3f;
+    --sf-muted: #627386;
+    --sf-line: #dfe7ef;
+    background: #fbfaf9;
     color: var(--sf-ink);
     font-family: Inter, ui-sans-serif, system-ui, sans-serif;
     min-height: 100vh
@@ -1845,7 +1846,7 @@ html {
 }
 
 .sf-shell {
-    width: min(1180px, calc(100% - 40px));
+    width: min(1600px, calc(100% - 64px));
     margin: auto
 }
 
@@ -2622,4 +2623,183 @@ html {
         flex-direction: column;
         gap: 8px
     }
+}
+
+/* Public website palette: deep navy with a clear teal action color. */
+.sf-announcement {
+    min-height: 42px;
+    background: linear-gradient(90deg, color-mix(in srgb, var(--sf-primary) 88%, #071827), var(--sf-primary));
+}
+.sf-announcement span { color: var(--sf-accent); }
+.sf-announcement a { color: #fff; transition: color .18s ease; }
+.sf-announcement a:hover { color: var(--sf-accent); }
+.sf-header {
+    background: rgba(255,255,255,.94);
+    border-bottom-color: color-mix(in srgb, var(--sf-primary) 12%, #fff);
+    box-shadow: 0 8px 26px rgba(20,48,76,.055);
+}
+.sf-nav nav>a:not(.sf-login) {
+    position: relative;
+    color: #43566d;
+    transition: color .18s ease;
+}
+.sf-nav nav>a:not(.sf-login)::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -8px;
+    height: 2px;
+    border-radius: 99px;
+    background: var(--sf-accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform .18s ease;
+}
+.sf-nav nav>a.active,
+.sf-nav nav>a:hover { color: var(--sf-primary) !important; }
+.sf-nav nav>a.active::after,
+.sf-nav nav>a:not(.sf-login):hover::after { transform: scaleX(1); }
+.sf-nav .sf-login {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 11px 20px;
+    border: 1px solid color-mix(in srgb, var(--sf-accent) 55%, transparent);
+    border-radius: 13px;
+    background: var(--sf-accent);
+    color: #102d43;
+    white-space: nowrap;
+    box-shadow: 0 7px 18px color-mix(in srgb, var(--sf-accent) 24%, transparent);
+    transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+}
+.sf-nav .sf-login:hover {
+    color: #102d43 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 10px 22px color-mix(in srgb, var(--sf-accent) 32%, transparent);
+}
+.sf-menu {
+    min-height: 42px;
+    background: var(--sf-primary);
+    border-radius: 12px;
+}
+.sf-hero {
+    background: linear-gradient(132deg, color-mix(in srgb, var(--sf-primary) 84%, #071827), var(--sf-primary) 58%, color-mix(in srgb, var(--sf-primary) 76%, #28647c));
+}
+.sf-hero h1 { letter-spacing: -.045em; }
+.sf-hero-copy>p { color: #d5e2ee; }
+.sf-orb-one { opacity: .2; }
+.sf-orb-two { opacity: .14; }
+.sf-button-accent {
+    background: linear-gradient(135deg, color-mix(in srgb, var(--sf-accent) 88%, #fff), var(--sf-accent));
+    color: #102d43;
+    box-shadow: 0 12px 26px color-mix(in srgb, var(--sf-accent) 28%, transparent);
+}
+.sf-button-accent:hover {
+    color: #102d43;
+    box-shadow: 0 16px 30px color-mix(in srgb, var(--sf-accent) 36%, transparent);
+}
+.sf-button-ghost { border-color: rgba(255,255,255,.36); }
+.sf-button-ghost:hover { background: rgba(255,255,255,.1); }
+.sf-hero-card {
+    border-color: rgba(206,235,242,.24);
+    background: linear-gradient(145deg, rgba(255,255,255,.12), rgba(255,255,255,.055));
+}
+.sf-quick-grid>a:hover { border-color: color-mix(in srgb, var(--sf-accent) 45%, var(--sf-line)); }
+.sf-family-panel { background: linear-gradient(135deg, #fff, #eef5fa); }
+.sf-campus-art,
+.sf-teacher-photo,
+.sf-blog-placeholder { background: linear-gradient(135deg, var(--sf-primary), #496B91); }
+.sf-mini-cta { background: #f6f0ee; }
+.sf-footer { background: linear-gradient(155deg, color-mix(in srgb, var(--sf-primary) 76%, #091d32), var(--sf-primary)); }
+
+/* Small warm highlights balance the cool navy/teal brand without taking over. */
+.sf-announcement span,
+.sf-eyebrow,
+.sf-card-top b,
+.sf-location-list article>div>span { color: var(--sf-highlight, #F28B6B); }
+.sf-eyebrow span { background: var(--sf-highlight, #F28B6B); }
+.sf-quick-grid i { color: var(--sf-primary); font-weight: 800; }
+.sf-quick-grid>a>span { color: var(--sf-accent); font-size: 20px; transition: transform .18s ease; }
+.sf-quick-grid>a:hover>span { transform: translate(2px, -2px); }
+.sf-feature-grid article,
+.sf-campus-grid article,
+.sf-home-teachers article,
+.sf-home-articles>a { transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+.sf-feature-grid article:hover,
+.sf-campus-grid article:hover,
+.sf-home-teachers article:hover,
+.sf-home-articles>a:hover {
+    transform: translateY(-4px);
+    border-color: color-mix(in srgb, var(--sf-accent) 38%, var(--sf-line));
+    box-shadow: 0 18px 42px rgba(23,59,87,.1);
+}
+
+@media (max-width: 1100px) {
+    .sf-nav nav { gap: 18px; }
+    .sf-nav nav>a { font-size: 13px; }
+    .sf-hero-grid { gap: 44px; }
+}
+
+@media (max-width: 900px) {
+    .sf-hero { padding: 64px 0 78px; }
+    .sf-hero-card { width: min(100%, 680px); margin-inline: auto; }
+    .sf-nav nav { top: 72px; }
+}
+
+@media (max-width: 640px) {
+    .sf-shell { width: calc(100% - 32px); }
+    .sf-announcement { min-height: 38px; padding: 7px 14px; gap: 10px; font-size: 10px; }
+    .sf-announcement span { font-size: 9px; }
+    .sf-announcement a { font-size: 10px; white-space: nowrap; }
+    .sf-nav { height: 68px; gap: 8px; }
+    .sf-brand { min-width: 0; flex: 1 1 auto; gap: 8px; }
+    .sf-brand>span { min-width: 0; }
+    .sf-brand b { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .sf-brand small { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .sf-brand img { max-width: min(150px, 42vw); height: 38px; }
+    .sf-brand i { width: 40px; height: 40px; flex-basis: 40px; }
+    .sf-menu { min-height: 40px; height: 40px; padding-inline: 12px; font-size: 14px; }
+    .sf-nav .locale-switcher-select { min-width: 82px; padding-inline: 7px; }
+    .sf-nav nav { left: 14px; right: 14px; top: 64px; padding: 12px; }
+    .sf-nav nav>a:not(.sf-login)::after { display: none; }
+    .sf-nav nav>a.active { border-radius: 10px; background: color-mix(in srgb, var(--sf-accent) 12%, #fff); }
+    .sf-nav .sf-login { width: 100%; min-height: 44px; }
+    .sf-hero { padding: 54px 0 66px; }
+    .sf-hero-grid { gap: 34px; }
+    .sf-eyebrow { font-size: 10px; letter-spacing: .12em; }
+    .sf-hero h1 { margin: 17px 0; font-size: clamp(38px, 10.5vw, 54px); line-height: 1.08; letter-spacing: -.035em; }
+    .sf-hero-copy>p { font-size: 15px; line-height: 1.65; }
+    .sf-actions { gap: 10px; margin-top: 24px; }
+    .sf-actions .sf-button { width: 100%; min-height: 48px; }
+    .sf-trust { gap: 10px 14px; margin-top: 22px; font-size: 11px; }
+    .sf-hero-card { padding: 20px; border-radius: 21px; }
+    .sf-metric-grid { margin: 18px 0; }
+    .sf-metric-grid div { padding: 16px 13px; }
+    .sf-metric-grid strong { font-size: 27px; }
+    .sf-hero-card blockquote { font-size: 15px; line-height: 1.55; }
+    .sf-section { padding: 62px 0; }
+    .sf-quick-grid { transform: translateY(-18px); border-radius: 16px; }
+    .sf-quick-grid>a { gap: 12px; padding: 17px 15px; }
+    .sf-feature-grid { grid-template-columns: 1fr; gap: 13px; }
+    .sf-campus-grid { grid-template-columns: 1fr; gap: 15px; }
+    .sf-cta { gap: 22px; padding: 29px 22px; border-radius: 22px; }
+    .sf-cta>div:last-child { width: 100%; }
+    .sf-footer { margin-top: 50px; padding: 48px 0 22px; }
+    .sf-footer-grid { gap: 28px 18px; }
+}
+
+@media (max-width: 390px) {
+    .sf-shell { width: calc(100% - 24px); }
+    .sf-nav { gap: 6px; }
+    .sf-brand img { max-width: 126px; }
+    .sf-brand b { font-size: 15px; }
+    .sf-brand small { font-size: 8px; letter-spacing: .12em; }
+    .sf-nav .locale-switcher-select { min-width: 76px; font-size: 11px; }
+    .sf-menu { padding-inline: 9px; }
+    .sf-announcement { padding-inline: 11px; }
+    .sf-announcement span { font-size: 8px; }
+    .sf-announcement a { font-size: 9px; }
+    .sf-hero-card { padding: 17px; }
 }

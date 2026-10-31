@@ -3,6 +3,7 @@ import { Link, router, usePage } from '@inertiajs/react';
 import { Dialog, DialogPanel, DialogTitle, Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import Icon from './Icons';
 import CampusSwitcher from '@/Components/CampusSwitcher';
+import LocaleSwitcher from '@/Components/LocaleSwitcher';
 
 const EMPTY_NAVIGATION = [];
 const SEARCH_MODULES = [
@@ -118,6 +119,7 @@ export default function Topbar({ onHamburgerClick, sidebarOpen = false }) {
 
                 <div className="mx-1 hidden h-6 w-px bg-slate-200 sm:block" />
                 <CampusSwitcher auth={auth} campuses={all_campuses} />
+                <LocaleSwitcher />
 
                 <Menu as="div" className="relative shrink-0">
                     <MenuButton className="flex items-center gap-2 rounded-lg p-1 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/50" aria-label="Open user menu">

@@ -83,8 +83,8 @@ export default function Index({ admissions, classes, filters }) {
         </div>
 
         {/* Unified Modern Toolbar */}
-        <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col lg:flex-row items-center gap-4">
-          <div className="flex flex-wrap items-center gap-3 w-full">
+        <div className="students-admissions-toolbar bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col lg:flex-row items-center gap-4">
+          <div className="students-admissions-filters flex flex-wrap items-center gap-3 w-full">
             
             {/* Per Page */}
             <select
@@ -106,7 +106,7 @@ export default function Index({ admissions, classes, filters }) {
             <select 
               value={classId} 
               onChange={(e) => { setClassId(e.target.value); applyFilters({ class_id: e.target.value }); }}
-              className="w-full sm:w-36 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
+              className="student-admissions-class-filter w-full sm:w-36 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
             >
               <option value="">All Classes</option>
               {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -116,7 +116,7 @@ export default function Index({ admissions, classes, filters }) {
             <select 
               value={status} 
               onChange={(e) => { setStatus(e.target.value); applyFilters({ status: e.target.value }); }}
-              className="w-full sm:w-36 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
+              className="student-admissions-status-filter w-full sm:w-36 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
             >
               <option value="">All Status</option>
               <option value="Pending">Pending</option>

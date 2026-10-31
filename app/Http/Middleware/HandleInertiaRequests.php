@@ -42,6 +42,9 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
 
+            'locale' => app()->getLocale(),
+            'available_locales' => ['en', 'bn'],
+
             'global_settings' => [
                 'school_name' => $schoolName ?? config('app.name', 'Your School Name'),
             ],

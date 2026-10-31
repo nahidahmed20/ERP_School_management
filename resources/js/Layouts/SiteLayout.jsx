@@ -1,5 +1,6 @@
 import { Head, Link, usePage } from "@inertiajs/react";
 import { useState } from "react";
+import LocaleSwitcher from '@/Components/LocaleSwitcher';
 import "../../css/site.css";
 import "../../css/site-pages.css";
 
@@ -52,8 +53,9 @@ export default function SiteLayout({ children, activePage = "" }) {
             <div
                 className="sf-site"
                 style={{
-                    "--sf-primary": settings.primary_color || "#12372A",
-                    "--sf-accent": settings.accent_color || "#E9B949",
+                    "--sf-primary": settings.primary_color || "#00213e",
+                    "--sf-accent": settings.accent_color || "#F28B6B",
+                    "--sf-highlight": settings.accent_color || "#F28B6B",
                 }}
             >
                 <div className="sf-announcement">
@@ -98,6 +100,7 @@ export default function SiteLayout({ children, activePage = "" }) {
                         >
                             {open ? "Close" : "Menu"}
                         </button>
+                        <LocaleSwitcher />
                     </div>
                 </header>
                 {(flash.success || flash.error) && (

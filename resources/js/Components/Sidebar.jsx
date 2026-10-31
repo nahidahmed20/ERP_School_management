@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useId, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import Icon from './Icons';
 import { activeSidebarKey, buildSidebarNavigation, toggleSidebarKey } from '@/Utils/sidebarNavigation';
@@ -54,17 +54,63 @@ export default memo(function Sidebar({ mobileOpen = false, desktopCollapsed = fa
   const groups = useMemo(() => buildSidebarNavigation(navigation, url, resolveRoute), [navigation, url]);
   const activeKey = useMemo(() => activeSidebarKey(groups), [groups]);
   const [openKey, setOpenKey] = useState(activeKey);
+  const sidebarRef = useRef(null);
+  const scrollTopBeforeMenuChange = useRef(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    const storageKey = 'school-sidebar-scroll-top';
+    let savedScrollTop = 0;
+    try {
+      const storedValue = Number(window.sessionStorage.getItem(storageKey));
+      if (Number.isFinite(storedValue) && storedValue >= 0) savedScrollTop = storedValue;
+    } catch {
+      // Keep sidebar navigation usable if browser storage is unavailable.
+    }
+
+    const saveScrollTop = () => {
+      if (!sidebarRef.current) return;
+      try {
+        window.sessionStorage.setItem(storageKey, String(sidebarRef.current.scrollTop));
+      } catch {
+        // Scroll preservation is optional when browser storage is unavailable.
+      }
+    };
+
+    const sidebar = sidebarRef.current;
+    if (sidebar) sidebar.scrollTop = savedScrollTop;
+    sidebar?.addEventListener('scroll', saveScrollTop, { passive: true });
+    return () => {
+      sidebar?.removeEventListener('scroll', saveScrollTop);
+    };
+  }, []);
+
+  useLayoutEffect(() => {
     // One update per navigation, not one update per matching parent menu.
+    if (sidebarRef.current) scrollTopBeforeMenuChange.current = sidebarRef.current.scrollTop;
     setOpenKey((previous) => activeKey ?? (groups.some((group) => group.items.some(
       (item) => item.menuKey === previous && item.children.length,
     )) ? previous : null));
   }, [url, groups, activeKey]);
 
-  const toggle = useCallback((key) => setOpenKey((previous) => toggleSidebarKey(previous, key)), []);
+  useLayoutEffect(() => {
+    if (scrollTopBeforeMenuChange.current === null || !sidebarRef.current) return;
+    sidebarRef.current.scrollTop = scrollTopBeforeMenuChange.current;
+    scrollTopBeforeMenuChange.current = null;
+  }, [openKey]);
 
-  return <aside id="school-sidebar" className={'sidebar' + (mobileOpen ? ' mobile-open' : '') + (desktopCollapsed ? ' desktop-collapsed' : '')} aria-label="School navigation">
+  const toggle = useCallback((key) => {
+    if (sidebarRef.current) scrollTopBeforeMenuChange.current = sidebarRef.current.scrollTop;
+    setOpenKey((previous) => toggleSidebarKey(previous, key));
+  }, []);
+
+  const handleNavigate = useCallback((event) => {
+    if (sidebarRef.current) scrollTopBeforeMenuChange.current = sidebarRef.current.scrollTop;
+    // A focused link can make the browser scroll its overflow container after navigation.
+    event?.currentTarget?.blur();
+    onNavigate?.();
+  }, [onNavigate]);
+
+  return <aside ref={sidebarRef} id="school-sidebar" className={'sidebar' + (mobileOpen ? ' mobile-open' : '') + (desktopCollapsed ? ' desktop-collapsed' : '')} aria-label="School navigation">
     <div className="brand">
       {site.admin_logo ? (
           <div className="brand-logo" style={{ maxWidth: '100%', height: '42px', flexShrink: 0 }}>
@@ -87,7 +133,7 @@ export default memo(function Sidebar({ mobileOpen = false, desktopCollapsed = fa
       {groups.map((group) => <div className="nav-group" key={group.menuKey}>
         <div className="nav-label">{group.label}</div>
         {group.items.map((item) => <MenuEntry key={item.menuKey} item={item}
-          isOpen={openKey === item.menuKey} onToggle={toggle} onNavigate={onNavigate} />)}
+          isOpen={openKey === item.menuKey} onToggle={toggle} onNavigate={handleNavigate} />)}
       </div>)}
     </nav> : <p className="nav-empty">No menus are available for this account.</p>}
 

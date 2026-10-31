@@ -310,10 +310,10 @@ export default function Index({ students, classes, filters }) {
         {/* ----------------------------------------------------- */}
         {/* Unified Modern Toolbar (FULLY RESPONSIVE)           */}
         {/* ----------------------------------------------------- */}
-        <div className="bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 lg:gap-6">
+        <div className="student-directory-toolbar bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 lg:gap-6">
 
           {/* Left Group: Filters */}
-          <div className="flex flex-col sm:flex-row flex-wrap items-center gap-3 w-full lg:w-auto">
+          <div className="student-directory-filters flex flex-col sm:flex-row flex-wrap items-center gap-3 w-full lg:w-auto">
 
             <select
               value={perPage}
@@ -349,7 +349,7 @@ export default function Index({ students, classes, filters }) {
             <select
               value={classId}
               onChange={e => { setClassId(e.target.value); setSectionId(''); }}
-              className="w-full sm:w-36 py-2.5 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
+              className="student-directory-class-select w-full sm:w-36 py-2.5 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
             >
               <option value="">All Classes</option>
               {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -359,7 +359,7 @@ export default function Index({ students, classes, filters }) {
               value={sectionId}
               onChange={e => setSectionId(e.target.value)}
               disabled={!classId}
-              className="w-full sm:w-36 py-2.5 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer disabled:opacity-50"
+              className="student-directory-section-select w-full sm:w-36 py-2.5 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer disabled:opacity-50"
             >
               <option value="">All Sections</option>
               {selectedClass?.sections?.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}

@@ -10,11 +10,11 @@
   --ink:#1A2624;
   --muted:#5E6A67;
   --line:#DDE2DD;
-  --radius:14px;
+  --radius:18px;
 }
 
 .sidebar{
-  width:264px;
+  width:276px;
   flex:none;
   background:
     radial-gradient(circle at 20% 0%, rgba(224,113,74,.13), transparent 27%),
@@ -26,6 +26,7 @@
   top:0;
   height:100vh;
   overflow-y:auto;
+  overflow-anchor:none;
   transition:transform .15s ease-out;
   z-index:40;
 }
