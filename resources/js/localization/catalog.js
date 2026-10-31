@@ -535,14 +535,97 @@ const bn = {
   'Are you sure you want to delete this material? The file will be permanently removed.': 'আপনি কি এই উপকরণটি মুছে ফেলতে চান? ফাইলটি স্থায়ীভাবে মুছে যাবে।',
 };
 
+const phraseLookup = new Map(Object.entries(bn).map(([key, translation]) => [key.toLocaleLowerCase(), translation]));
+const phrasePattern = new RegExp(
+  `(?<![\\p{L}\\p{N}])(?:${Object.keys(bn)
+    .filter((key) => key.trim().length > 1)
+    .sort((a, b) => b.length - a.length)
+    .map((key) => key.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\$&'))
+    .join('|')})(?![\\p{L}\\p{N}])`,
+  'giu',
+);
+
 export function translateText(value, locale = 'en') {
   if (locale !== 'bn' || typeof value !== 'string') return value;
   const trimmed = value.trim();
   const translated = bn[trimmed];
-  if (!translated) return value;
+  if (translated) {
+    const start = value.match(/^\s*/)?.[0] ?? '';
+    const end = value.match(/\s*$/)?.[0] ?? '';
+    return `${start}${translated}${end}`;
+  }
+
+  // Translate known phrases inside longer labels, helper text, and messages.
+  // This covers JSX text that includes a value or extra context around a label.
+  let result = value.replace(phrasePattern, (phrase) => phraseLookup.get(phrase.toLocaleLowerCase()) ?? phrase);
+
+  // Common standalone UI words are translated when a full phrase is not in
+  // the catalog. Product names and unknown user-provided values stay intact.
+  const words = {
+    allocation: 'বরাদ্দ', adjusting: 'সমন্বয় করা হচ্ছে', admin: 'প্রশাসক', applicant: 'আবেদনকারী',
+    asset: 'সম্পদ', card: 'কার্ড', cash: 'নগদ', category: 'বিভাগ', center: 'কেন্দ্র',
+    clipboard: 'ক্লিপবোর্ড', click: 'ক্লিক করুন', configure: 'কনফিগার করুন', current: 'বর্তমান',
+    custom: 'কাস্টম', device: 'ডিভাইস', devices: 'ডিভাইসসমূহ', due: 'বকেয়া', end: 'শেষ',
+    exam: 'পরীক্ষা', expense: 'খরচ', export: 'রপ্তানি করুন', fee: 'ফি', fees: 'ফি',
+    filter: 'ফিল্টার', filters: 'ফিল্টারসমূহ', full: 'পূর্ণ', gateway: 'গেটওয়ে', generate: 'তৈরি করুন',
+    group: 'গ্রুপ', here: 'এখানে', history: 'ইতিহাস', hostel: 'হোস্টেল', invoice: 'চালান',
+    issue: 'ইস্যু', job: 'চাকরি', key: 'কী', leave: 'ছুটি', location: 'অবস্থান', log: 'লগ',
+    logs: 'লগসমূহ', maintenance: 'রক্ষণাবেক্ষণ', marks: 'নম্বর', medical: 'চিকিৎসা',
+    menu: 'মেনু', notice: 'নোটিশ', number: 'নম্বর', operations: 'কার্যক্রম', order: 'অর্ডার',
+    orders: 'অর্ডারসমূহ', outlet: 'আউটলেট', parent: 'অভিভাবক', period: 'সময়কাল',
+    plan: 'পরিকল্পনা', preview: 'পূর্বরূপ', price: 'মূল্য', provided: 'প্রদান করা হয়েছে',
+    purchase: 'ক্রয়', question: 'প্রশ্ন', questions: 'প্রশ্নসমূহ', reason: 'কারণ', refund: 'ফেরত',
+    remarks: 'মন্তব্য', report: 'প্রতিবেদন', reports: 'প্রতিবেদনসমূহ', room: 'কক্ষ', route: 'রুট',
+    salary: 'বেতন', school: 'বিদ্যালয়', securely: 'নিরাপদে', session: 'শিক্ষাবর্ষ',
+    signature: 'স্বাক্ষর', statuses: 'অবস্থাসমূহ', template: 'টেমপ্লেট', templates: 'টেমপ্লেটসমূহ',
+    text: 'লেখা', try: 'চেষ্টা করুন', type: 'ধরন', user: 'ব্যবহারকারী', users: 'ব্যবহারকারীগণ',
+    vendor: 'বিক্রেতা', vehicle: 'যানবাহন', vehicles: 'যানবাহনসমূহ', only: 'শুধু', yet: 'এখনও',
+    a: 'একটি', an: 'একটি', and: 'এবং', are: 'আছে', as: 'হিসেবে', at: 'এ',
+    can: 'পারেন', cannot: 'পারেন না', for: 'জন্য', has: 'আছে', have: 'আছে',
+    in: 'এ', is: 'হয়', it: 'এটি', of: 'এর', on: 'এ', or: 'অথবা', the: 'টি',
+    this: 'এই', was: 'ছিল', were: 'ছিল', will: 'হবে', with: 'সাথে', your: 'আপনার',
+    you: 'আপনি', successfully: 'সফলভাবে', failed: 'ব্যর্থ হয়েছে', error: 'ত্রুটি',
+    unable: 'সম্ভব নয়', please: 'দয়া করে', enter: 'লিখুন', select: 'নির্বাচন করুন',
+    showing: 'দেখানো হচ্ছে', loading: 'লোড হচ্ছে', processing: 'প্রক্রিয়াধীন',
+    active: 'সক্রিয়', inactive: 'নিষ্ক্রিয়', approved: 'অনুমোদিত', rejected: 'প্রত্যাখ্যাত',
+    pending: 'অপেক্ষমাণ', completed: 'সম্পন্ন', cancelled: 'বাতিল', deleted: 'মুছে ফেলা হয়েছে',
+    added: 'যোগ করা হয়েছে', created: 'তৈরি করা হয়েছে', updated: 'হালনাগাদ করা হয়েছে',
+    saved: 'সংরক্ষিত হয়েছে', uploaded: 'আপলোড হয়েছে', downloaded: 'ডাউনলোড হয়েছে',
+    submitted: 'জমা হয়েছে', sent: 'পাঠানো হয়েছে', received: 'গ্রহণ করা হয়েছে',
+    total: 'মোট', today: 'আজ', yesterday: 'গতকাল', daily: 'দৈনিক', weekly: 'সাপ্তাহিক',
+    monthly: 'মাসিক', yearly: 'বার্ষিক', recent: 'সাম্প্রতিক', latest: 'সর্বশেষ',
+    selectall: 'সব নির্বাচন করুন', none: 'কোনোটিই নয়', other: 'অন্যান্য', unknown: 'অজানা',
+    male: 'পুরুষ', female: 'নারী', yes: 'হ্যাঁ', no: 'না', next: 'পরবর্তী', previous: 'আগের',
+    about: 'সম্পর্কে', account: 'অ্যাকাউন্ট', address: 'ঠিকানা', amount: 'পরিমাণ',
+    application: 'আবেদন', applications: 'আবেদনসমূহ', attendance: 'উপস্থিতি', balance: 'ব্যালেন্স',
+    contact: 'যোগাযোগ', directory: 'তালিকা', document: 'নথি', documents: 'নথিপত্র',
+    entry: 'তথ্য', entries: 'তথ্য', found: 'পাওয়া গেছে', help: 'সহায়তা', language: 'ভাষা',
+    month: 'মাস', more: 'আরও', please: 'দয়া করে', record: 'রেকর্ড', records: 'রেকর্ডসমূহ',
+    request: 'অনুরোধ', staff: 'কর্মী', start: 'শুরু',
+    add: 'যোগ করুন', all: 'সব', available: 'উপলভ্য', approved: 'অনুমোদিত',
+    assign: 'বরাদ্দ করুন', assigned: 'বরাদ্দকৃত', assignment: 'বরাদ্দ',
+    back: 'ফিরে যান', book: 'বুক করুন', by: 'দ্বারা', campus: 'ক্যাম্পাস',
+    change: 'পরিবর্তন', choose: 'নির্বাচন করুন', class: 'শ্রেণি', clear: 'মুছুন',
+    close: 'বন্ধ করুন', completed: 'সম্পন্ন', confirm: 'নিশ্চিত করুন',
+    create: 'তৈরি করুন', date: 'তারিখ', delete: 'মুছুন', description: 'বিবরণ',
+    details: 'বিস্তারিত', download: 'ডাউনলোড', edit: 'সম্পাদনা', email: 'ইমেইল',
+    file: 'ফাইল', filter: 'ফিল্টার', first: 'প্রথম', from: 'থেকে',
+    home: 'হোম', inactive: 'নিষ্ক্রিয়', information: 'তথ্য', item: 'আইটেম',
+    last: 'শেষ', list: 'তালিকা', manage: 'পরিচালনা করুন', message: 'বার্তা',
+    name: 'নাম', new: 'নতুন', next: 'পরবর্তী', no: 'না', note: 'নোট',
+    optional: 'ঐচ্ছিক', page: 'পৃষ্ঠা', paid: 'পরিশোধিত', pending: 'অপেক্ষমাণ',
+    phone: 'ফোন', previous: 'আগের', print: 'প্রিন্ট', required: 'আবশ্যক',
+    reset: 'রিসেট', save: 'সংরক্ষণ করুন', search: 'খুঁজুন', select: 'নির্বাচন করুন',
+    send: 'পাঠান', status: 'অবস্থা', student: 'শিক্ষার্থী', subject: 'বিষয়',
+    submit: 'জমা দিন', teacher: 'শিক্ষক', time: 'সময়', title: 'শিরোনাম',
+    to: 'পর্যন্ত', total: 'মোট', update: 'হালনাগাদ করুন', updated: 'হালনাগাদ',
+    upload: 'আপলোড করুন', view: 'দেখুন', yes: 'হ্যাঁ', year: 'বছর',
+  };
+  result = result.replace(/[\p{L}]+/gu, (word) => words[word.toLocaleLowerCase()] ?? word);
+
   const start = value.match(/^\s*/)?.[0] ?? '';
   const end = value.match(/\s*$/)?.[0] ?? '';
-  return `${start}${translated}${end}`;
+  return `${start}${result.trim()}${end}`;
 }
 
 export const translations = { bn };
