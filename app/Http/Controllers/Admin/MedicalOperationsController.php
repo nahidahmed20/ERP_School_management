@@ -25,7 +25,11 @@ class MedicalOperationsController extends Controller
             'alerts' => MedicalEmergencyAlert::with('user')->latest('occurred_at')->take(20)->get(),
             'appointments' => DoctorAppointment::with('user')->orderBy('scheduled_at', 'desc')->take(20)->get(),
             'issues' => MedicineIssue::with(['user', 'medicineStock'])->latest('issued_at')->take(20)->get(),
-            'students' => User::where('campus_id', $campusId)->where('role', 'student')->select('id', 'name')->get(),
+            'students' => User::where('campus_id', $campusId)
+                ->whereHas('roles', fn ($query) => $query->whereIn('name', ['Student', 'student']))
+                ->select('id', 'name')
+                ->orderBy('name')
+                ->get(),
         ]);
     }
 

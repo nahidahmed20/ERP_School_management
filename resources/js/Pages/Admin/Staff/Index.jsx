@@ -221,7 +221,7 @@ export default function Index({ staff, departments, designations, filters }) {
 
       <div className="print-title">Staff & Teachers Directory - {new Date().toLocaleDateString('en-GB')}</div>
 
-      <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8 no-print">
+      <div className="staff-directory-page w-full space-y-6 py-8 no-print">
 
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -239,8 +239,8 @@ export default function Index({ staff, departments, designations, filters }) {
         </div>
 
         {/* Unified Modern Toolbar */}
-        <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
+        <div className="staff-directory-toolbar bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4">
+          <div className="staff-directory-filters flex flex-wrap items-center gap-3 w-full xl:w-auto">
 
             {/* Per Page */}
             <select
@@ -261,7 +261,7 @@ export default function Index({ staff, departments, designations, filters }) {
             <select
               value={departmentId}
               onChange={e => setDepartmentId(e.target.value)}
-              className="w-full sm:w-44 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
+              className="staff-department-filter w-full sm:w-44 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
             >
               <option value="">All Departments</option>
               {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
@@ -271,14 +271,14 @@ export default function Index({ staff, departments, designations, filters }) {
             <select
               value={designationId}
               onChange={e => setDesignationId(e.target.value)}
-              className="w-full sm:w-44 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
+              className="staff-designation-filter w-full sm:w-44 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
             >
               <option value="">All Designations</option>
               {designations.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
             </select>
 
             {/* Search Input */}
-            <div className="relative flex-1 min-w-[200px] sm:w-64">
+            <div className="staff-directory-search relative flex-1 min-w-[200px] sm:w-64">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Icon name="search" className="w-4 h-4 text-slate-400" />
               </div>
@@ -302,7 +302,7 @@ export default function Index({ staff, departments, designations, filters }) {
           </div>
 
           {/* Export Actions */}
-          <div className="flex items-center justify-end gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-xl w-full xl:w-auto shadow-sm shrink-0 ml-auto">
+          <div className="staff-directory-export-actions flex items-center justify-end gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-xl w-full xl:w-auto shadow-sm shrink-0 ml-auto">
             <button onClick={copyToClipboard} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Copy to Clipboard">
               Copy
             </button>
@@ -326,7 +326,16 @@ export default function Index({ staff, departments, designations, filters }) {
         </div>
 
         {/* Main Table Card */}
-        <div className="bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 print-table-wrapper">
+        <div className="staff-directory-table bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 print-table-wrapper">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 px-5 sm:px-6 py-4 border-b border-slate-100">
+            <div>
+              <h2 className="text-sm font-bold text-slate-800">Staff records</h2>
+              <p className="text-xs text-slate-500 mt-0.5">Staff profiles, roles and contact details</p>
+            </div>
+            <span className="staff-directory-count inline-flex items-center self-start sm:self-auto rounded-full px-3 py-1 text-xs font-semibold">
+              {staff.total ?? staff.data.length} records
+            </span>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -390,24 +399,24 @@ export default function Index({ staff, departments, designations, filters }) {
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => setViewingItem(s)}
-                            className=" text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                            className="staff-action-button text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
                             title="View Profile"
                           >
                             <Icon name="eye" className="w-4 h-4" />
                           </button>
                           <Link
                             href={route('admin.staff.edit', s.id)}
-                            className=" text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            className="staff-action-button text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                             title="Edit Staff"
                           >
                             <Icon name="edit" className="w-4 h-4" />
                           </Link>
-                          <Link href={route('admin.staff.report',s.id)} className=" text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="Staff Reports"><Icon name="chart" className="w-4 h-4"/></Link>
-                          <Link href={route('admin.staff.id-card',s.id)} className=" text-slate-500 hover:text-violet-600 hover:bg-violet-50 rounded-lg transition-colors" title="Print ID Card"><Icon name="printer" className="w-4 h-4"/></Link>
-                          {s.user_id&&<Link href={route('admin.documents.certificates.index',{user_id:s.user_id})} className=" text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Certificates"><Icon name="document" className="w-4 h-4"/></Link>}
+                          <Link href={route('admin.staff.report',s.id)} className="staff-action-button text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="Staff Reports"><Icon name="chart" className="w-4 h-4"/></Link>
+                          <Link href={route('admin.staff.id-card',s.id)} className="staff-action-button text-slate-500 hover:text-violet-600 hover:bg-violet-50 rounded-lg transition-colors" title="Print ID Card"><Icon name="printer" className="w-4 h-4"/></Link>
+                          {s.user_id&&<Link href={route('admin.documents.certificates.index',{user_id:s.user_id})} className="staff-action-button text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Certificates"><Icon name="document" className="w-4 h-4"/></Link>}
                           <button
                             onClick={() => setDeletingItem(s)}
-                            className=" text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                            className="staff-action-button text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
                             title="Delete Staff"
                           >
                             <Icon name="trash" className="w-4 h-4" />

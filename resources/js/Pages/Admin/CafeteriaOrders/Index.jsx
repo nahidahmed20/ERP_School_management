@@ -53,26 +53,27 @@ export default function Index({ orders, outlets, users, foods, campuses, activeC
     <AuthenticatedLayout>
       <Head title="Cafeteria Orders" />
 
-      <div className="max-w-7xl mx-auto p-6 space-y-6">
-        <div className="flex justify-between items-center">
+      <div className="standard-directory-page w-full space-y-6 py-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Orders</h1>
             <p className="text-sm text-slate-500">Manage cafeteria food orders and payments.</p>
           </div>
-          <button onClick={() => setIsFormOpen(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 shadow-md">
+          <button onClick={() => setIsFormOpen(true)} className="w-full sm:w-auto justify-center bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 shadow-md">
             <Icon name="plus" className="w-4 h-4" /> New Order
           </button>
         </div>
 
         {/* Filters */}
-        <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap items-center gap-3">
+        <div className="standard-directory-toolbar bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200">
+          <div className="standard-directory-filters flex flex-wrap items-center gap-3 w-full">
           <select value={perPage} onChange={e => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }} className="bg-slate-50 border border-slate-200 rounded-xl text-sm">
             <option value="10">10 / Page</option>
             <option value="25">25 / Page</option>
             <option value="50">50 / Page</option>
           </select>
           
-          <select value={status} onChange={e => { setStatus(e.target.value); applyFilters({ status: e.target.value }); }} className="bg-slate-50 border border-slate-200 rounded-xl text-sm">
+          <select value={status} onChange={e => { setStatus(e.target.value); applyFilters({ status: e.target.value }); }} className="standard-directory-filter bg-slate-50 border border-slate-200 rounded-xl text-sm">
             <option value="">All Order Status</option>
             <option value="Pending">Pending</option>
             <option value="Preparing">Preparing</option>
@@ -81,23 +82,28 @@ export default function Index({ orders, outlets, users, foods, campuses, activeC
             <option value="Voided">Voided / Cancelled</option>
           </select>
 
-          <select value={paymentStatus} onChange={e => { setPaymentStatus(e.target.value); applyFilters({ payment_status: e.target.value }); }} className="bg-slate-50 border border-slate-200 rounded-xl text-sm">
+          <select value={paymentStatus} onChange={e => { setPaymentStatus(e.target.value); applyFilters({ payment_status: e.target.value }); }} className="standard-directory-filter bg-slate-50 border border-slate-200 rounded-xl text-sm">
             <option value="">All Payments</option>
             <option value="Paid">Paid</option>
             <option value="Unpaid">Unpaid</option>
             <option value="Refunded">Refunded</option>
           </select>
 
-          <div className="relative flex-1 min-w-[200px]">
+          <div className="standard-directory-search relative flex-1 min-w-[200px]">
             <Icon name="search" className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
             <input type="text" placeholder="Search Order No..." value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && applyFilters()} className="w-full pl-9 bg-slate-50 border border-slate-200 rounded-xl text-sm" />
           </div>
-          <button onClick={() => applyFilters()} className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl">Search</button>
+          <button onClick={() => applyFilters()} className="w-full sm:w-auto px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl">Search</button>
+          </div>
         </div>
 
         {/* Table */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <table className="w-full text-left">
+        <div className="standard-directory-table bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 px-5 sm:px-6 py-4 border-b border-slate-100">
+            <div><h2 className="text-sm font-bold text-slate-800">Order records</h2><p className="text-xs text-slate-500 mt-0.5">Orders, payments and fulfilment</p></div>
+            <span className="standard-directory-count inline-flex items-center self-start sm:self-auto rounded-full px-3 py-1 text-xs font-semibold">{orders.total ?? orders.data.length} records</span>
+          </div>
+          <div className="overflow-x-auto"><table className="w-full text-left">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
                 <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Order No</th>
@@ -118,7 +124,7 @@ export default function Index({ orders, outlets, users, foods, campuses, activeC
                   </td>
                   <td className="px-6 py-4 text-right font-black text-emerald-700 font-mono">৳ {Number(order.total_amount).toFixed(2)}</td>
                   <td className="px-6 py-4 text-center">
-                    <select value={order.status} onChange={(e) => handleStatusUpdate(order, 'status', e.target.value)} className={`px-2 py-1 rounded text-xs font-bold uppercase border cursor-pointer ${getOrderStatusBadge(order.status)}`}>
+                    <select data-no-select2="true" value={order.status} onChange={(e) => handleStatusUpdate(order, 'status', e.target.value)} className={`standard-inline-select px-2 py-1 rounded text-xs font-bold uppercase border cursor-pointer ${getOrderStatusBadge(order.status)}`}>
                       <option value="Pending">Pending</option>
                       <option value="Preparing">Preparing</option>
                       <option value="Ready">Ready</option>
@@ -127,20 +133,20 @@ export default function Index({ orders, outlets, users, foods, campuses, activeC
                     </select>
                   </td>
                   <td className="px-6 py-4 text-center">
-                    <select value={order.payment_status} onChange={(e) => handleStatusUpdate(order, 'payment_status', e.target.value)} className={`px-2 py-1 rounded text-xs font-bold uppercase border cursor-pointer ${getPaymentStatusBadge(order.payment_status)}`}>
+                    <select data-no-select2="true" value={order.payment_status} onChange={(e) => handleStatusUpdate(order, 'payment_status', e.target.value)} className={`standard-inline-select px-2 py-1 rounded text-xs font-bold uppercase border cursor-pointer ${getPaymentStatusBadge(order.payment_status)}`}>
                       <option value="Unpaid">Unpaid</option>
                       <option value="Paid">Paid</option>
                       <option value="Refunded">Refunded</option>
                     </select>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button onClick={() => setViewingItem(order)} className="p-2 text-slate-400 hover:text-indigo-600"><Icon name="eye" className="w-4 h-4" /></button>
-                    <button onClick={() => setDeletingItem(order)} className="p-2 text-slate-400 hover:text-rose-600"><Icon name="trash" className="w-4 h-4" /></button>
+                    <button onClick={() => setViewingItem(order)} className="standard-directory-action p-2 text-slate-400 hover:text-indigo-600"><Icon name="eye" className="w-4 h-4" /></button>
+                    <button onClick={() => setDeletingItem(order)} className="standard-directory-action p-2 text-slate-400 hover:text-rose-600"><Icon name="trash" className="w-4 h-4" /></button>
                   </td>
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
           <div className="p-4 bg-white border-t border-slate-100"><Pagination meta={orders} /></div>
         </div>
       </div>

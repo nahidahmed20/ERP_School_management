@@ -137,7 +137,7 @@ export default function Index({ files, folders, campuses, filters }) {
 
       <div className="print-title">System File Manager - {new Date().toLocaleDateString('en-GB')}</div>
 
-      <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8 no-print">
+      <div className="standard-directory-page w-full space-y-6 py-8 no-print">
         
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -163,8 +163,8 @@ export default function Index({ files, folders, campuses, filters }) {
         </div>
 
         {/* Unified Modern Toolbar */}
-        <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
+        <div className="standard-directory-toolbar bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4">
+          <div className="standard-directory-filters flex flex-wrap items-center gap-3 w-full xl:w-auto">
             
             {/* Per Page */}
             <select
@@ -186,7 +186,7 @@ export default function Index({ files, folders, campuses, filters }) {
             <select 
               value={folderId} 
               onChange={(e) => { setFolderId(e.target.value); applyFilters({ folder_id: e.target.value }); }}
-              className="w-full sm:w-40 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
+              className="standard-directory-filter w-full sm:w-40 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
             >
               <option value="">All Folders</option>
               {folders.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
@@ -196,7 +196,7 @@ export default function Index({ files, folders, campuses, filters }) {
             <select 
               value={type} 
               onChange={(e) => { setType(e.target.value); applyFilters({ type: e.target.value }); }}
-              className="w-full sm:w-36 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
+              className="standard-directory-filter w-full sm:w-36 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
             >
               <option value="">All Types</option>
               <option value="image">Images</option>
@@ -205,7 +205,7 @@ export default function Index({ files, folders, campuses, filters }) {
             </select>
 
             {/* Search Input */}
-            <div className="relative flex-1 min-w-[200px] sm:w-64">
+            <div className="standard-directory-search relative flex-1 min-w-[200px] sm:w-64">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Icon name="search" className="w-4 h-4 text-slate-400" />
               </div>
@@ -229,7 +229,7 @@ export default function Index({ files, folders, campuses, filters }) {
           </div>
 
           {/* Export Actions */}
-          <div className="flex items-center justify-end gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-xl w-full xl:w-auto shadow-sm shrink-0 ml-auto">
+          <div className="standard-directory-export-actions flex items-center justify-end gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-xl w-full xl:w-auto shadow-sm shrink-0 ml-auto">
             <button onClick={copyToClipboard} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Copy to Clipboard">Copy</button>
             <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
             <button onClick={exportToCSV} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-emerald-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export CSV">CSV</button>
@@ -243,7 +243,11 @@ export default function Index({ files, folders, campuses, filters }) {
         </div>
 
         {/* Main Table Card */}
-        <div className="bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 print-table-wrapper">
+        <div className="standard-directory-table bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 print-table-wrapper">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 px-5 sm:px-6 py-4 border-b border-slate-100">
+            <div><h2 className="text-sm font-bold text-slate-800">Files</h2><p className="text-xs text-slate-500 mt-0.5">Uploaded files and folders</p></div>
+            <span className="standard-directory-count inline-flex items-center self-start sm:self-auto rounded-full px-3 py-1 text-xs font-semibold">{files.total ?? files.data.length} records</span>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -315,13 +319,13 @@ export default function Index({ files, folders, campuses, filters }) {
                         </td>
                         <td className="px-6 py-4 text-right no-print">
                           <div className="flex items-center justify-end gap-1.5">
-                            <button onClick={() => viewFile(item)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="View Info">
+                            <button onClick={() => viewFile(item)} className="standard-directory-action p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="View Info">
                               <Icon name="eye" className="w-4 h-4" />
                             </button>
-                            <a href={item.url} target="_blank" rel="noreferrer" className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors inline-block" title="Download">
+                            <a href={item.url} target="_blank" rel="noreferrer" className="standard-directory-action p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors inline-block" title="Download">
                               <Icon name="download" className="w-4 h-4" />
                             </a>
-                            <button onClick={() => setDeletingItem(item)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Delete File">
+                            <button onClick={() => setDeletingItem(item)} className="standard-directory-action p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Delete File">
                               <Icon name="trash" className="w-4 h-4" />
                             </button>
                           </div>

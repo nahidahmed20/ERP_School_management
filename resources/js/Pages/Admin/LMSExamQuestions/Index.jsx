@@ -83,7 +83,7 @@ export default function Index({ examQuestions, exams, questions, filters }) {
 
       <div className="print-title">Exam Questions Directory - {new Date().toLocaleDateString('en-GB')}</div>
 
-      <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8 no-print">
+      <div className="standard-directory-page w-full space-y-6 py-8 no-print">
         
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -101,8 +101,8 @@ export default function Index({ examQuestions, exams, questions, filters }) {
         </div>
 
         {/* Unified Modern Toolbar */}
-        <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
+        <div className="standard-directory-toolbar bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4">
+          <div className="standard-directory-filters flex flex-wrap items-center gap-3 w-full xl:w-auto">
             
             {/* Per Page */}
             <select
@@ -123,7 +123,7 @@ export default function Index({ examQuestions, exams, questions, filters }) {
             <select 
               value={examId} 
               onChange={(e) => { setExamId(e.target.value); applyFilters({ exam_id: e.target.value }); }}
-              className="w-full sm:w-64 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer truncate"
+              className="standard-directory-filter w-full sm:w-64 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer truncate"
             >
               <option value="">-- All Exams --</option>
               {exams.map(e => <option key={e.id} value={e.id}>{e.title}</option>)}
@@ -139,7 +139,7 @@ export default function Index({ examQuestions, exams, questions, filters }) {
           </div>
 
           {/* Export Actions (Fixed: All 5 Buttons Added) */}
-          <div className="flex items-center justify-end gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-xl w-full xl:w-auto shadow-sm shrink-0 ml-auto">
+          <div className="standard-directory-export-actions flex items-center justify-end gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-xl w-full xl:w-auto shadow-sm shrink-0 ml-auto">
             <button onClick={copyToClipboard} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Copy to Clipboard">
               Copy
             </button>
@@ -178,7 +178,11 @@ export default function Index({ examQuestions, exams, questions, filters }) {
         )}
 
         {/* Main Table Card */}
-        <div className="bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 print-table-wrapper">
+        <div className="standard-directory-table bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 print-table-wrapper">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 px-5 sm:px-6 py-4 border-b border-slate-100">
+            <div><h2 className="text-sm font-bold text-slate-800">Assigned questions</h2><p className="text-xs text-slate-500 mt-0.5">Questions linked to exams</p></div>
+            <span className="standard-directory-count inline-flex items-center self-start sm:self-auto rounded-full px-3 py-1 text-xs font-semibold">{examQuestions.total ?? examQuestions.data.length} records</span>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -229,7 +233,7 @@ export default function Index({ examQuestions, exams, questions, filters }) {
                       <td className="px-6 py-4 text-right no-print">
                         <button 
                           onClick={() => setDeletingItem(item)} 
-                          className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" 
+                          className="standard-directory-action p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" 
                           title="Remove from Exam"
                         >
                           <Icon name="trash" className="w-4 h-4" />

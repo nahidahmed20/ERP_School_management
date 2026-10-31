@@ -231,6 +231,318 @@ body { background: var(--paper); color: var(--ink); }
     background-color: #fff !important;
     box-shadow: 0 0 0 3px rgba(28, 83, 71, .12) !important;
 }
+.staff-directory-filters > .select2-root,
+.staff-directory-filters > select.staff-department-filter,
+.staff-directory-filters > select.staff-designation-filter {
+    width: 100% !important;
+    max-width: none !important;
+}
+.staff-directory-filters > .staff-directory-search {
+    flex: 1 1 260px;
+    min-width: min(100%, 220px);
+}
+.staff-directory-search input {
+    min-height: 42px;
+    border: 1px solid #d5dde3 !important;
+    border-radius: 12px !important;
+    background-color: #f9fafb !important;
+}
+.staff-directory-search input:focus {
+    border-color: var(--forest-light) !important;
+    background-color: #fff !important;
+    box-shadow: 0 0 0 3px rgba(28, 83, 71, .12) !important;
+}
+.staff-directory-filters .select2-root .select2-control {
+    min-height: 42px;
+    border-color: #d5dde3;
+    border-radius: 12px;
+}
+.staff-directory-export-actions button {
+    min-height: 36px !important;
+    padding: 0 10px !important;
+    border-radius: 9px !important;
+    white-space: nowrap;
+}
+.staff-directory-count {
+    background: rgba(28, 83, 71, .08);
+    color: var(--forest);
+}
+.staff-directory-table .staff-action-button {
+    display: inline-flex;
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    min-height: 34px !important;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
+    border: 1px solid transparent;
+    border-radius: 9px !important;
+}
+.staff-directory-table .staff-action-button:hover {
+    border-color: #e2e8f0;
+}
+.applicants-directory-filters > .select2-root,
+.applicants-directory-filters > select.applicants-job-filter,
+.applicants-directory-filters > select.applicants-status-filter {
+    width: 100% !important;
+    max-width: none !important;
+}
+.applicants-directory-filters > .applicants-directory-search {
+    flex: 1 1 260px;
+    min-width: min(100%, 220px);
+}
+.applicants-directory-search input {
+    min-height: 42px;
+    border: 1px solid #d5dde3 !important;
+    border-radius: 12px !important;
+    background-color: #f9fafb !important;
+}
+.applicants-directory-search input:focus {
+    border-color: var(--forest-light) !important;
+    background-color: #fff !important;
+    box-shadow: 0 0 0 3px rgba(28, 83, 71, .12) !important;
+}
+.applicants-directory-filters .select2-control {
+    min-height: 42px;
+    border-color: #d5dde3;
+    border-radius: 12px;
+}
+.applicants-directory-export-actions button {
+    min-height: 36px !important;
+    padding: 0 10px !important;
+    border-radius: 9px !important;
+    white-space: nowrap;
+}
+.applicants-directory-count {
+    background: rgba(28, 83, 71, .08);
+    color: var(--forest);
+}
+.applicants-directory-table .applicants-action-button {
+    display: inline-flex;
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    min-height: 34px !important;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
+    border: 1px solid transparent;
+    border-radius: 9px !important;
+}
+.applicants-directory-table .applicants-action-button:hover { border-color: #e2e8f0; }
+.lessons-directory-filters > .select2-root,
+.lessons-directory-filters > select.lesson-class-filter,
+.lessons-directory-filters > select.lesson-subject-filter {
+    width: 100% !important;
+    max-width: none !important;
+}
+.lessons-directory-filters > .lessons-directory-search {
+    flex: 1 1 260px;
+    min-width: min(100%, 220px);
+}
+.lessons-directory-search input {
+    min-height: 42px;
+    border: 1px solid #d5dde3 !important;
+    border-radius: 12px !important;
+    background-color: #f9fafb !important;
+}
+.lessons-directory-search input:focus {
+    border-color: var(--forest-light) !important;
+    background-color: #fff !important;
+    box-shadow: 0 0 0 3px rgba(28, 83, 71, .12) !important;
+}
+.lessons-directory-filters .select2-control {
+    min-height: 42px;
+    border-color: #d5dde3;
+    border-radius: 12px;
+}
+.lessons-directory-export-actions button {
+    min-height: 36px !important;
+    padding: 0 10px !important;
+    border-radius: 9px !important;
+    white-space: nowrap;
+}
+.lessons-directory-count {
+    background: rgba(28, 83, 71, .08);
+    color: var(--forest);
+}
+.lessons-directory-table .lesson-action-button {
+    display: inline-flex;
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    min-height: 34px !important;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
+    border: 1px solid transparent;
+    border-radius: 9px !important;
+}
+.lessons-directory-table .lesson-action-button:hover { border-color: #e2e8f0; }
+@media (min-width: 640px) {
+    .lessons-directory-filters > .select2-root,
+    .lessons-directory-filters > select.lesson-class-filter,
+    .lessons-directory-filters > select.lesson-subject-filter {
+        width: 205px !important;
+        flex: 0 0 205px;
+    }
+}
+@media (min-width: 640px) and (max-width: 1279px) {
+    .lessons-directory-filters > .select2-root,
+    .lessons-directory-filters > select.lesson-class-filter,
+    .lessons-directory-filters > select.lesson-subject-filter {
+        width: calc(50% - 8px) !important;
+        flex-basis: calc(50% - 8px);
+    }
+    .lessons-directory-filters > .lessons-directory-search { flex-basis: calc(100% - 8px); }
+}
+@media (max-width: 639px) {
+    .lessons-directory-filters > .lessons-directory-search { flex-basis: 100%; }
+    .lessons-directory-export-actions { justify-content: space-between; overflow-x: auto; }
+    .lessons-directory-export-actions button { padding-inline: 8px !important; }
+}
+.standard-directory-page { min-width: 0; }
+.standard-directory-filters > .select2-root,
+.standard-directory-filters > select.standard-directory-filter {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0;
+}
+.standard-directory-filters > .standard-directory-search {
+    flex: 1 1 260px;
+    min-width: min(100%, 220px);
+}
+.standard-directory-search input {
+    min-height: 42px;
+    border: 1px solid #d5dde3 !important;
+    border-radius: 12px !important;
+    background-color: #f9fafb !important;
+}
+.standard-directory-search input:focus {
+    border-color: var(--forest-light) !important;
+    background-color: #fff !important;
+    box-shadow: 0 0 0 3px rgba(28, 83, 71, .12) !important;
+}
+.standard-directory-filters .select2-control {
+    min-height: 42px;
+    border-color: #d5dde3;
+    border-radius: 12px;
+}
+.standard-directory-export-actions button {
+    min-height: 36px !important;
+    padding: 0 10px !important;
+    border-radius: 9px !important;
+    white-space: nowrap;
+}
+.standard-directory-count {
+    background: rgba(28, 83, 71, .08);
+    color: var(--forest);
+}
+.standard-directory-table .standard-directory-action {
+    display: inline-flex;
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    min-height: 34px !important;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
+    border: 1px solid transparent;
+    border-radius: 9px !important;
+}
+.standard-directory-table .standard-directory-action:hover { border-color: #e2e8f0; }
+.standard-directory-table select.standard-inline-select {
+    width: auto !important;
+    max-width: 140px !important;
+    min-height: 34px !important;
+    height: 34px !important;
+    padding: 0 26px 0 9px !important;
+    border-radius: 9px !important;
+    font-size: 11px !important;
+    line-height: 1.2 !important;
+}
+.standard-inline-select[class*="bg-emerald-50"] { background-color: #ecfdf5 !important; color: #047857 !important; border-color: #a7f3d0 !important; }
+.standard-inline-select[class*="bg-rose-50"] { background-color: #fff1f2 !important; color: #be123c !important; border-color: #fecdd3 !important; }
+.standard-inline-select[class*="bg-amber-50"] { background-color: #fffbeb !important; color: #b45309 !important; border-color: #fde68a !important; }
+@media (min-width: 640px) {
+    .standard-directory-filters > .select2-root,
+    .standard-directory-filters > select.standard-directory-filter {
+        width: 220px !important;
+        flex: 0 0 220px;
+    }
+}
+@media (min-width: 640px) and (max-width: 1279px) {
+    .standard-directory-filters > .select2-root,
+    .standard-directory-filters > select.standard-directory-filter {
+        width: calc(50% - 8px) !important;
+        flex-basis: calc(50% - 8px);
+    }
+    .standard-directory-filters > .standard-directory-search { flex-basis: calc(100% - 8px); }
+}
+@media (max-width: 639px) {
+    .standard-directory-filters > .standard-directory-search { flex-basis: 100%; }
+    .standard-directory-export-actions { justify-content: space-between; overflow-x: auto; }
+    .standard-directory-export-actions button { padding-inline: 8px !important; }
+}
+.applicants-directory-table select.applicant-inline-status {
+    width: auto !important;
+    max-width: 130px !important;
+    min-height: 34px !important;
+    height: 34px !important;
+    padding: 0 26px 0 9px !important;
+    border-radius: 9px !important;
+    font-size: 11px !important;
+    line-height: 1.2 !important;
+}
+.applicant-inline-status[class*="bg-emerald-50"] { background-color: #ecfdf5 !important; color: #047857 !important; border-color: #a7f3d0 !important; }
+.applicant-inline-status[class*="bg-blue-50"] { background-color: #eff6ff !important; color: #1d4ed8 !important; border-color: #bfdbfe !important; }
+.applicant-inline-status[class*="bg-amber-50"] { background-color: #fffbeb !important; color: #b45309 !important; border-color: #fde68a !important; }
+.applicant-inline-status[class*="bg-rose-50"] { background-color: #fff1f2 !important; color: #be123c !important; border-color: #fecdd3 !important; }
+@media (min-width: 640px) {
+    .applicants-directory-filters > .select2-root,
+    .applicants-directory-filters > select.applicants-job-filter,
+    .applicants-directory-filters > select.applicants-status-filter {
+        width: 205px !important;
+        flex: 0 0 205px;
+    }
+}
+@media (min-width: 640px) and (max-width: 1279px) {
+    .applicants-directory-filters > .select2-root,
+    .applicants-directory-filters > select.applicants-job-filter,
+    .applicants-directory-filters > select.applicants-status-filter {
+        width: calc(50% - 8px) !important;
+        flex-basis: calc(50% - 8px);
+    }
+    .applicants-directory-filters > .applicants-directory-search { flex-basis: calc(100% - 8px); }
+}
+@media (max-width: 639px) {
+    .applicants-directory-filters > .applicants-directory-search { flex-basis: 100%; }
+    .applicants-directory-export-actions { justify-content: space-between; overflow-x: auto; }
+    .applicants-directory-export-actions button { padding-inline: 8px !important; }
+}
+@media (min-width: 640px) {
+    .staff-directory-filters > .select2-root,
+    .staff-directory-filters > select.staff-department-filter,
+    .staff-directory-filters > select.staff-designation-filter {
+        width: 205px !important;
+        flex: 0 0 205px;
+    }
+}
+@media (min-width: 640px) and (max-width: 1279px) {
+    .staff-directory-filters > .select2-root,
+    .staff-directory-filters > select.staff-department-filter,
+    .staff-directory-filters > select.staff-designation-filter {
+        width: calc(50% - 8px) !important;
+        flex-basis: calc(50% - 8px);
+    }
+    .staff-directory-filters > .staff-directory-search { flex-basis: calc(100% - 8px); }
+}
+@media (max-width: 639px) {
+    .staff-directory-filters > .staff-directory-search { flex-basis: 100%; }
+    .staff-directory-export-actions { justify-content: space-between; overflow-x: auto; }
+    .staff-directory-export-actions button { padding-inline: 8px !important; }
+}
 @media (min-width: 640px) {
     .students-admissions-toolbar .students-admissions-filters > .select2-root,
     .students-admissions-toolbar .students-admissions-filters > select.student-admissions-class-filter,

@@ -103,7 +103,7 @@ export default function Index({ lessons, classes, subjects, filters }) {
 
       <div className="print-title">Lesson & Syllabus - {new Date().toLocaleDateString('en-GB')}</div>
 
-      <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8 no-print">
+      <div className="lessons-directory-page w-full space-y-6 py-8 no-print">
 
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -121,8 +121,8 @@ export default function Index({ lessons, classes, subjects, filters }) {
         </div>
 
         {/* Unified Modern Toolbar */}
-        <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
+        <div className="lessons-directory-toolbar bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4">
+          <div className="lessons-directory-filters flex flex-wrap items-center gap-3 w-full xl:w-auto">
 
             {/* Per Page */}
             <select
@@ -146,7 +146,7 @@ export default function Index({ lessons, classes, subjects, filters }) {
                 setSubjectId('');
                 applyFilters({ class_id: e.target.value, subject_id: '' });
               }}
-              className="w-full sm:w-36 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
+              className="lesson-class-filter w-full sm:w-36 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
             >
               <option value="">All Classes</option>
               {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -156,14 +156,14 @@ export default function Index({ lessons, classes, subjects, filters }) {
             <select
               value={subjectId}
               onChange={(e) => { setSubjectId(e.target.value); applyFilters({ subject_id: e.target.value }); }}
-              className="w-full sm:w-44 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
+              className="lesson-subject-filter w-full sm:w-44 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
             >
               <option value="">All Subjects</option>
               {filterSubjects.map(s => <option key={s.id} value={s.id}>{s.name} ({s.code})</option>)}
             </select>
 
             {/* Search Input */}
-            <div className="relative flex-1 min-w-[200px] sm:w-64">
+            <div className="lessons-directory-search relative flex-1 min-w-[200px] sm:w-64">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Icon name="search" className="w-4 h-4 text-slate-400" />
               </div>
@@ -187,7 +187,7 @@ export default function Index({ lessons, classes, subjects, filters }) {
           </div>
 
           {/* Export Actions */}
-          <div className="flex items-center justify-end gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-xl w-full xl:w-auto shadow-sm shrink-0 ml-auto">
+          <div className="lessons-directory-export-actions flex items-center justify-end gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-xl w-full xl:w-auto shadow-sm shrink-0 ml-auto">
             <button onClick={copyToClipboard} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Copy to Clipboard">
               Copy
             </button>
@@ -211,7 +211,16 @@ export default function Index({ lessons, classes, subjects, filters }) {
         </div>
 
         {/* Main Table Card */}
-        <div className="bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 print-table-wrapper">
+        <div className="lessons-directory-table bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 print-table-wrapper">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 px-5 sm:px-6 py-4 border-b border-slate-100">
+            <div>
+              <h2 className="text-sm font-bold text-slate-800">Lesson plans</h2>
+              <p className="text-xs text-slate-500 mt-0.5">Syllabus, class assignments and learning resources</p>
+            </div>
+            <span className="lessons-directory-count inline-flex items-center self-start sm:self-auto rounded-full px-3 py-1 text-xs font-semibold">
+              {lessons.total ?? lessons.data.length} records
+            </span>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -266,13 +275,13 @@ export default function Index({ lessons, classes, subjects, filters }) {
                       </td>
                       <td className="px-6 py-4 text-right no-print">
                         <div className="flex items-center justify-end gap-1.5">
-                          <button onClick={() => setShowItem(item)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="View Details">
+                          <button onClick={() => setShowItem(item)} className="lesson-action-button p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="View Details">
                             <Icon name="eye" className="w-4 h-4" />
                           </button>
-                          <button onClick={() => { setEditingItem(item); setFormOpen(true); }} className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Edit Lesson">
+                          <button onClick={() => { setEditingItem(item); setFormOpen(true); }} className="lesson-action-button p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Edit Lesson">
                             <Icon name="edit" className="w-4 h-4" />
                           </button>
-                          <button onClick={() => setDeleteId(item.id)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Delete Lesson">
+                          <button onClick={() => setDeleteId(item.id)} className="lesson-action-button p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Delete Lesson">
                             <Icon name="trash" className="w-4 h-4" />
                           </button>
                         </div>
