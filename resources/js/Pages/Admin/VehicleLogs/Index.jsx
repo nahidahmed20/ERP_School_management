@@ -19,7 +19,7 @@ export default function Index({ logs, tab }) {
   };
 
   const TabButton = ({ name, label, icon }) => (
-    <Link href={route('admin.vehicle-logs.index', { tab: name })} className={`flex items-center gap-2 px-6 py-3 font-semibold text-sm transition-all border-b-2 ${tab === name ? 'border-indigo-600 text-indigo-700 bg-indigo-50/50' : 'border-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-700'}`}>
+    <Link href={route('admin.vehicle-logs.index', { tab: name })} className={`flex shrink-0 items-center gap-2 border-b-2 px-5 py-3.5 text-sm font-bold transition-all sm:px-6 ${tab === name ? 'border-emerald-700 bg-emerald-50/70 text-emerald-800' : 'border-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-700'}`}>
       <Icon name={icon} className="w-4 h-4" /> {label}
     </Link>
   );
@@ -27,19 +27,24 @@ export default function Index({ logs, tab }) {
   return (
     <AuthenticatedLayout>
       <Head title="Vehicle Logs & Expenses" />
-      <div className="max-w-7xl mx-auto p-6 space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Vehicle Logs & Expenses</h1>
-          <p className="text-sm text-slate-500">Track and manage fuel, maintenance, and other transport expenses.</p>
+      <div className="w-full space-y-5 px-3 py-4 sm:space-y-6 sm:px-5 sm:py-6 lg:px-8">
+        <div className="flex flex-col gap-4 rounded-3xl border border-emerald-100 bg-gradient-to-r from-emerald-50 via-white to-slate-50 px-5 py-6 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-7">
+          <div>
+            <span className="text-xs font-extrabold uppercase tracking-[0.18em] text-emerald-800">Fleet Management</span>
+            <h1 className="mt-1 text-2xl font-black text-slate-900 sm:text-3xl">Vehicle Logs &amp; Expenses</h1>
+            <p className="mt-1 text-sm text-slate-600">Track and manage fuel, maintenance, and other transport expenses.</p>
+          </div>
+          <div className="rounded-2xl border border-white bg-white/80 px-4 py-3 shadow-sm"><p className="text-xs font-bold uppercase tracking-wide text-slate-500">Current view</p><p className="mt-1 text-base font-black capitalize text-emerald-800">{tab} logs</p></div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="flex border-b border-slate-200">
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="flex overflow-x-auto border-b border-slate-200 bg-slate-50/70">
             <TabButton name="fuel" label="Fuel Logs" icon="droplet" />
             <TabButton name="maintenance" label="Maintenance" icon="tool" />
             <TabButton name="expense" label="Other Expenses" icon="dollar-sign" />
           </div>
 
+          <div className="border-b border-slate-100 px-5 py-4 sm:px-6"><h2 className="text-sm font-bold text-slate-900">{tab === 'fuel' ? 'Fuel transactions' : tab === 'maintenance' ? 'Maintenance history' : 'Other vehicle expenses'}</h2><p className="mt-0.5 text-xs text-slate-500">{logs.total ?? logs.data.length} records</p></div>
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead className="bg-slate-50 border-b border-slate-200">

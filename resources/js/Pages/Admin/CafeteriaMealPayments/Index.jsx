@@ -42,18 +42,18 @@ export default function Index({ payments, users, campuses, summary, activeCampus
         }
       `}} />
 
-      <div className="max-w-7xl mx-auto p-6 space-y-6 no-print">
+      <div className="w-full space-y-5 px-3 py-4 sm:space-y-6 sm:px-5 sm:py-6 lg:px-8 no-print">
 
         {/* Header Section */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex flex-col gap-4 rounded-3xl border border-emerald-100 bg-gradient-to-r from-emerald-50 via-white to-slate-50 px-5 py-6 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-7">
           <div>
-            <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">Wallet Management</span>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Top-ups & Payments</h1>
-            <p className="text-sm text-slate-500 mt-1">Manage student and staff wallet balances and view transaction history.</p>
+            <span className="text-xs font-extrabold uppercase tracking-[0.18em] text-emerald-800">Cafeteria Management</span>
+            <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Top-ups &amp; Payments</h1>
+            <p className="mt-1 text-sm text-slate-600">Manage student and staff wallet balances and view transaction history.</p>
           </div>
           <button
             onClick={() => { setEditingItem(null); setIsFormOpen(true); }}
-            className="w-full sm:w-auto inline-flex justify-center items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md active:scale-95"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-6 py-3 text-sm font-bold text-white shadow-sm transition-colors hover:bg-emerald-800 sm:w-auto"
           >
             <Icon name="plus" className="w-4 h-4" /> Add Top-up
           </button>

@@ -152,24 +152,29 @@ export default function Index({ classes, students, filters, sheetLocked, isHolid
     <AuthenticatedLayout>
       <Head title="Student Attendance" />
 
-      <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8">
+      <div className="w-full space-y-5 px-3 py-4 sm:space-y-6 sm:px-5 sm:py-6 lg:px-8">
         
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex flex-col gap-4 rounded-3xl border border-emerald-100 bg-gradient-to-r from-emerald-50 via-white to-slate-50 px-5 py-6 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-7">
           <div>
-            <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">Attendance</span>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Daily Attendance</h1>
-            <p className="text-sm text-slate-500 mt-1">Manage daily student attendance, track absent students, and send SMS notifications to guardians.</p>
+            <span className="text-xs font-extrabold tracking-[0.18em] text-emerald-800 uppercase">Attendance management</span>
+            <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Daily Attendance</h1>
+            <p className="mt-1 max-w-2xl text-sm text-slate-600">Take student attendance, review absences, and notify guardians.</p>
           </div>
           
           <button 
             onClick={handleSendAbsentSms}
-            className="w-full sm:w-auto inline-flex justify-center items-center gap-2 bg-rose-600 hover:bg-rose-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md shadow-rose-500/20 active:scale-95"
+            className="w-full sm:w-auto inline-flex min-h-11 justify-center items-center gap-2 rounded-xl bg-rose-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-rose-700"
           >
             <Icon name="mail" className="w-4 h-4" /> Send Absent SMS
           </button>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 border-t-4 border-t-slate-900">
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-4 sm:px-6">
+            <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-emerald-700">Select a class and date</p>
+            <h2 className="mt-1 text-lg font-bold text-slate-900">Load attendance sheet</h2>
+          </div>
+          <div className="p-5 sm:p-6">
           <form onSubmit={fetchStudents} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 items-end">
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1.5">Attendance Date <span className="text-rose-500">*</span></label>
@@ -177,7 +182,7 @@ export default function Index({ classes, students, filters, sheetLocked, isHolid
                 type="date" 
                 value={attendanceDate} 
                 onChange={e => setAttendanceDate(e.target.value)} 
-                className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                className="block w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none transition-all focus:border-emerald-600 focus:bg-white focus:ring-2 focus:ring-emerald-600/20"
                 required 
               />
             </div>
@@ -186,7 +191,7 @@ export default function Index({ classes, students, filters, sheetLocked, isHolid
               <select 
                 value={classId} 
                 onChange={e => { setClassId(e.target.value); setSectionId(''); }} 
-                className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
+                className="block w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none transition-all focus:border-emerald-600 focus:bg-white focus:ring-2 focus:ring-emerald-600/20 cursor-pointer"
                 required
               >
                 <option value="">-- Select Class --</option>
@@ -199,7 +204,7 @@ export default function Index({ classes, students, filters, sheetLocked, isHolid
                 value={sectionId} 
                 onChange={e => setSectionId(e.target.value)} 
                 disabled={!classId} 
-                className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer disabled:bg-slate-100 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="block w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none transition-all focus:border-emerald-600 focus:bg-white focus:ring-2 focus:ring-emerald-600/20 cursor-pointer disabled:bg-slate-100 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <option value="">-- All Sections --</option>
                 {selectedClass?.sections?.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -207,11 +212,12 @@ export default function Index({ classes, students, filters, sheetLocked, isHolid
             </div>
             <button 
               type="submit" 
-              className="w-full px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 h-[42px]"
+              className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-800 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-900"
             >
               <Icon name="search" className="w-4 h-4" /> Fetch Students
             </button>
           </form>
+          </div>
         </div>
 
         {sheetLocked && (
@@ -230,8 +236,8 @@ export default function Index({ classes, students, filters, sheetLocked, isHolid
 
         {students && students.length > 0 && (
           <form onSubmit={submitAttendance} className="bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 overflow-hidden">
-            <div className="px-6 py-4 bg-slate-50/70 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <h3 className="text-base font-bold text-slate-900">Student List <span className="text-indigo-600">(Total: {students.length})</span></h3>
+            <div className="px-5 py-4 sm:px-6 bg-slate-50/70 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div><h3 className="text-base font-bold text-slate-900">Student List</h3><p className="mt-0.5 text-sm text-slate-500">{students.length} students in this attendance sheet</p></div>
               <div className="flex items-center gap-2 w-full sm:w-auto">
                 <button type="button" disabled={sheetLocked || isHoliday} onClick={() => markAll('present')} className="flex-1 sm:flex-none px-3.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold transition-colors shadow-sm disabled:opacity-50">
                   Mark All Present
@@ -338,7 +344,7 @@ export default function Index({ classes, students, filters, sheetLocked, isHolid
               <button 
                 type="submit" 
                 disabled={processing || sheetLocked || isHoliday} 
-                className="flex items-center gap-2 px-8 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md shadow-indigo-500/20 disabled:opacity-70 disabled:cursor-not-allowed active:scale-95"
+                className="flex items-center gap-2 rounded-xl bg-emerald-800 px-8 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-900 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <Icon name={sheetLocked || isHoliday ? "lock" : "check-circle"} className="w-4 h-4" />
                 {processing ? 'Saving...' : (isHoliday ? 'Holiday Set' : (sheetLocked ? 'Sheet Locked' : 'Save Attendance'))}

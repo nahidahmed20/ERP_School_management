@@ -65,7 +65,7 @@ class TimeTableController extends Controller
     {
         $request->validate([
             'class_id' => ['required', $this->existsRule('school_classes')],
-            'section_id' => ['required', $this->existsRule('sections')],
+            'section_id' => ['nullable', $this->existsRule('sections')],
             'day' => 'required|in:'.self::DAYS,
         ]);
         $this->validateClassSection($request->class_id, $request->section_id);
@@ -127,7 +127,7 @@ class TimeTableController extends Controller
     private function validateClassSection($classId, $sectionId): SchoolClass
     {
         $class = SchoolClass::findOrFail($classId);
-        if (! $class->sections()->whereKey($sectionId)->exists()) {
+        if ($sectionId !== null && ! $class->sections()->whereKey($sectionId)->exists()) {
             throw ValidationException::withMessages(['section_id' => 'Select a section assigned to this class.']);
         }
         return $class;
@@ -137,7 +137,7 @@ class TimeTableController extends Controller
     {
         $data = $request->validate([
             'class_id' => ['required', $this->existsRule('school_classes')],
-            'section_id' => ['required', $this->existsRule('sections')],
+            'section_id' => ['nullable', $this->existsRule('sections')],
             'day_of_week' => 'required|in:'.self::DAYS,
             'periods' => $replace ? 'present|array' : 'required|array|min:1',
             'periods.*.subject_id' => ['required', $this->existsRule('subjects')],
@@ -147,6 +147,7 @@ class TimeTableController extends Controller
             'periods.*.end_time' => 'required|date_format:H:i|after:periods.*.start_time',
         ]);
 
+        $data['section_id'] = $data['section_id'] ?? null;
         $class = $this->validateClassSection($data['class_id'], $data['section_id']);
         $subjectIds = $class->subjects()->pluck('subjects.id')->all();
         foreach ($data['periods'] as $index => $period) {

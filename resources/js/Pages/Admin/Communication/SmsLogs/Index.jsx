@@ -223,7 +223,7 @@ export default function Index({ logs, campuses, activeCampusId, filters, classes
             </button>
           </div>
 
-          <div className="flex items-center justify-end gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-xl w-full xl:w-auto shadow-sm shrink-0 ml-auto">
+          <div className="project-export-toolbar flex items-center justify-end gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-xl w-full xl:w-auto shadow-sm shrink-0 ml-auto">
             <button onClick={copyToClipboard} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-white rounded-lg transition-all">Copy</button>
             <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
             <button onClick={exportToCSV} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-white rounded-lg transition-all">CSV</button>

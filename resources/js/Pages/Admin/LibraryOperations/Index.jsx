@@ -4,14 +4,15 @@ import { useState } from 'react';
 import Icon from '@/Components/Icons';
 import Swal from 'sweetalert2';
 
-const InputClass = 'mt-1 w-full rounded-xl border-slate-300 text-sm focus:ring-indigo-500 focus:border-indigo-500';
+const InputClass = 'mt-1 w-full rounded-xl border-slate-200 bg-slate-50 text-sm text-slate-700 transition focus:border-emerald-600 focus:bg-white focus:ring-emerald-600/20';
 
 const Box = ({ title, children, icon }) => (
-  <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-    <h2 className="mb-4 font-bold text-slate-800 flex items-center gap-2">
-      {icon && <Icon name={icon} className="w-5 h-5 text-indigo-500" />} {title}
-    </h2>
-    {children}
+  <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div className="flex items-center gap-3 border-b border-slate-100 bg-slate-50/70 px-5 py-4 sm:px-6">
+      {icon && <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-800"><Icon name={icon} className="h-5 w-5" /></span>}
+      <h2 className="font-bold text-slate-900">{title}</h2>
+    </div>
+    <div className="p-4 sm:p-6">{children}</div>
   </section>
 );
 
@@ -59,31 +60,37 @@ export default function Index({ books, reservations, issues, stockChecks, users 
   return (
     <AuthenticatedLayout>
       <Head title="Library Operations" />
-      <main className="mx-auto max-w-7xl space-y-8 p-6">
+      <main className="w-full space-y-5 px-3 py-4 sm:space-y-6 sm:px-5 sm:py-6 lg:px-8">
 
-        <div>
-          <span className="text-xs font-bold uppercase tracking-wider text-indigo-600">LMS Library</span>
-          <h1 className="text-2xl font-black text-slate-900 mt-1">Library Circulation & Operations</h1>
-          <p className="text-sm text-slate-500 mt-1">Accession copies, scan-based issue/return, members, and physical stock.</p>
+        <div className="flex flex-col gap-4 rounded-3xl border border-emerald-100 bg-gradient-to-r from-emerald-50 via-white to-slate-50 px-5 py-6 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-7">
+          <div>
+            <span className="text-xs font-extrabold uppercase tracking-[0.18em] text-emerald-800">LMS Library</span>
+            <h1 className="mt-1 text-2xl font-black text-slate-900 sm:text-3xl">Library Circulation &amp; Operations</h1>
+            <p className="mt-1 max-w-3xl text-sm text-slate-600">Accession copies, scan-based issue and return, members, and physical stock.</p>
+          </div>
+          <div className="rounded-2xl border border-white bg-white/80 px-4 py-3 shadow-sm">
+            <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Active issues</p>
+            <p className="mt-1 text-2xl font-black text-emerald-800">{issues.length}</p>
+          </div>
         </div>
 
         {/* Master Scanner */}
         <Box title="Barcode / QR Master Scanner" icon="maximize">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Icon name="search" className="w-5 h-5 text-slate-400" />
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
+                <Icon name="search" className="h-5 w-5 text-emerald-700" />
               </div>
               <input
                 autoFocus
-                className="w-full pl-10 py-3 rounded-xl border-slate-300 focus:ring-indigo-500 text-sm font-mono shadow-inner"
+                className="w-full min-h-12 rounded-xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm font-medium text-slate-800 shadow-sm outline-none transition focus:border-emerald-600 focus:bg-white focus:ring-2 focus:ring-emerald-600/20"
                 value={scan}
                 onChange={e => setScan(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && doScan()}
                 placeholder="Scan book barcode, QR, accession or member card..."
               />
             </div>
-            <button onClick={doScan} className="rounded-xl bg-indigo-600 hover:bg-indigo-700 px-8 py-3 text-white font-bold transition-all shadow-md active:scale-95">
+            <button onClick={doScan} className="rounded-xl bg-emerald-800 px-8 py-3 font-bold text-white shadow-sm transition hover:bg-emerald-900">
               Scan
             </button>
           </div>
@@ -124,7 +131,7 @@ export default function Index({ books, reservations, issues, stockChecks, users 
                 <label className="text-xs font-bold text-slate-600">Due Date <span className="text-rose-500">*</span></label>
                 <input className={InputClass} type="date" value={issue.data.due_date} onChange={e => issue.setData('due_date', e.target.value)} required />
               </div>
-              <button disabled={!issue.data.book_copy_id || !issue.data.library_member_id} className="rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 px-4 disabled:opacity-50 transition-all">
+              <button disabled={!issue.data.book_copy_id || !issue.data.library_member_id} className="rounded-xl bg-emerald-800 px-4 py-2.5 font-bold text-white transition-all hover:bg-emerald-900 disabled:cursor-not-allowed disabled:opacity-50">
                 Confirm Issue
               </button>
             </div>
@@ -158,7 +165,7 @@ export default function Index({ books, reservations, issues, stockChecks, users 
                 <div key={x.id} className="border border-slate-200 p-4 rounded-xl text-sm bg-white shadow-sm">
                   <div className="flex justify-between items-start mb-2">
                     <div>
-                      <b className="text-indigo-900 text-base block">{x.book?.title}</b>
+                      <b className="block text-base text-slate-900">{x.book?.title}</b>
                       <span className="text-slate-500 font-medium">Member: {x.user?.name}</span>
                     </div>
                     <span className={`px-2 py-1 rounded text-xs font-bold ${x.status === 'Overdue' ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-700'}`}>
@@ -196,7 +203,7 @@ export default function Index({ books, reservations, issues, stockChecks, users 
               <select className={InputClass} value={cp.data.condition} onChange={e => cp.setData('condition', e.target.value)}>
                 {['new', 'good', 'fair', 'damaged'].map(x => <option key={x} value={x}>{x.charAt(0).toUpperCase() + x.slice(1)}</option>)}
               </select>
-              <button className="rounded-xl bg-indigo-600 hover:bg-indigo-700 py-2.5 text-white font-bold transition-colors">Add Book Copy</button>
+              <button className="rounded-xl bg-emerald-800 py-2.5 font-bold text-white transition-colors hover:bg-emerald-900">Add Book Copy</button>
             </form>
           </Box>
 
@@ -228,7 +235,7 @@ export default function Index({ books, reservations, issues, stockChecks, users 
               </select>
               <input className={InputClass} placeholder="Name" value={master.data.name} onChange={e => master.setData('name', e.target.value)} required />
               <textarea rows="2" className={InputClass} placeholder="Description (Optional)" value={master.data.description} onChange={e => master.setData('description', e.target.value)} />
-              <button className="rounded-xl bg-slate-800 hover:bg-slate-900 py-2.5 text-white font-bold transition-colors">Save Master Data</button>
+              <button className="rounded-xl bg-emerald-800 py-2.5 font-bold text-white transition-colors hover:bg-emerald-900">Save Master Data</button>
             </form>
           </Box>
         </div>
@@ -237,7 +244,7 @@ export default function Index({ books, reservations, issues, stockChecks, users 
         <Box title="Physical Stock Verification (Audit)" icon="check-square">
           <div className="flex items-center gap-4 mb-4 pb-4 border-b border-slate-100">
             <p className="text-sm text-slate-500 flex-1">Annual or monthly stock check. Scan all physical books to identify missing items.</p>
-            <button onClick={() => router.post(route('admin.library.stock.start'))} className="rounded-xl bg-rose-600 hover:bg-rose-700 px-6 py-2.5 text-white font-bold text-sm shadow-sm transition-all">
+            <button onClick={() => router.post(route('admin.library.stock.start'))} className="rounded-xl bg-emerald-800 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-emerald-900">
               Start New Audit
             </button>
           </div>
@@ -254,8 +261,8 @@ export default function Index({ books, reservations, issues, stockChecks, users 
                 {x.status === 'open' && (
                   <div className="flex gap-2 w-full md:w-auto">
                     <input className={`${InputClass} !mt-0 md:w-48`} placeholder="Scan copy barcode" value={stock.data.code} onChange={e => stock.setData('code', e.target.value)} />
-                    <button onClick={() => stock.post(route('admin.library.stock.scan', x.id))} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-colors">Count</button>
-                    <button onClick={() => { if(confirm("Are you sure? Unscanned items will be marked as missing!")) router.patch(route('admin.library.stock.complete', x.id)) }} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-colors">Finish Audit</button>
+                    <button onClick={() => stock.post(route('admin.library.stock.scan', x.id))} className="rounded-lg bg-emerald-800 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-emerald-900">Count</button>
+                    <button onClick={() => { if(confirm("Are you sure? Unscanned items will be marked as missing!")) router.patch(route('admin.library.stock.complete', x.id)) }} className="rounded-lg bg-slate-900 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-slate-800">Finish Audit</button>
                   </div>
                 )}
               </div>

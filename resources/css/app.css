@@ -258,9 +258,9 @@ body { background: var(--paper); color: var(--ink); }
     border-radius: 12px;
 }
 .staff-directory-export-actions button {
-    min-height: 36px !important;
+    min-height: 40px !important;
     padding: 0 10px !important;
-    border-radius: 9px !important;
+    border-radius: 12px !important;
     white-space: nowrap;
 }
 .staff-directory-count {
@@ -731,6 +731,14 @@ html[lang="bn"] .nav-item { min-height: 42px; line-height: 1.55; }
 html[lang="bn"] .nav-item > span:not(.nav-count),
 html[lang="bn"] .nav-subitem > span:not(.dot) { min-width: 0; overflow-wrap: anywhere; }
 
+.translation-bangla,
+textarea.translation-bangla[lang="bn"] {
+    font-family: "Noto Sans Bengali", "Nirmala UI", "Vrinda", sans-serif !important;
+    font-size: 1rem;
+    letter-spacing: 0;
+    line-height: 1.8;
+}
+
 @media (max-width: 900px) {
     .sidebar { width: min(292px, calc(100vw - 44px)); }
 }
@@ -758,4 +766,165 @@ html[lang="bn"] .nav-subitem > span:not(.dot) { min-width: 0; overflow-wrap: any
     .main > header .campus-switcher select { width: 78px; padding-inline: 5px; font-size: 10px; }
     .locale-switcher-select { width: 76px; min-width: 76px; padding-inline: 6px !important; font-size: 10px !important; }
     .content { padding-inline: 10px; }
+}
+
+/* Project-wide search fields and export controls. */
+input[type="search"],
+input[placeholder*="search" i] {
+    min-height: 42px;
+    border: 1px solid #d5dde3;
+    border-radius: 12px;
+    background-color: #f8fafc;
+    color: #1e293b;
+    transition: border-color .18s ease, background-color .18s ease, box-shadow .18s ease;
+}
+
+input[type="search"]:focus,
+input[placeholder*="search" i]:focus {
+    border-color: var(--forest-light, #1c5347) !important;
+    background-color: #fff !important;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(28, 83, 71, .13) !important;
+}
+
+input[type="search"]::placeholder,
+input[placeholder*="search" i]::placeholder { color: #94a3b8; }
+
+div:has(> button[title="Copy to Clipboard"]),
+div:has(> button[title^="Export"]),
+div:has(> button[title="CSV"]),
+div:has(> button[title="Excel"]),
+div:has(> button[title="PDF"]) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .375rem;
+    padding: .375rem;
+    border: 1px solid #dbe3e7;
+    border-radius: 14px;
+    background: #f8fafc;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+
+div:has(> button[title="Copy to Clipboard"]) > button,
+div:has(> button[title^="Export"]) > button,
+div:has(> button[title="CSV"]) > button,
+div:has(> button[title="Excel"]) > button,
+div:has(> button[title="PDF"]) > button {
+    display: inline-flex;
+    min-height: 40px;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    padding: 0 .875rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #fff;
+    color: #475569;
+    font-size: .75rem;
+    font-weight: 700;
+    transition: color .16s ease, background-color .16s ease, border-color .16s ease, box-shadow .16s ease;
+}
+
+div:has(> button[title="Copy to Clipboard"]) > button:hover,
+div:has(> button[title^="Export"]) > button:hover,
+div:has(> button[title="CSV"]) > button:hover,
+div:has(> button[title="Excel"]) > button:hover,
+div:has(> button[title="PDF"]) > button:hover {
+    border-color: #a7c9bf;
+    background: #ecfdf5;
+    color: #155e49;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, .08);
+}
+
+button[title*="Export CSV"] {
+    border-color: var(--forest, #0f3830) !important;
+    background: var(--forest, #0f3830) !important;
+    color: #fff !important;
+}
+
+button[title="CSV"] {
+    border-color: var(--forest, #0f3830) !important;
+    background: var(--forest, #0f3830) !important;
+    color: #fff !important;
+}
+
+button[title*="Export CSV"]:hover,
+button[title="CSV"]:hover {
+    border-color: var(--forest-light, #1c5347) !important;
+    background: var(--forest-light, #1c5347) !important;
+    color: #fff !important;
+}
+
+.standard-directory-export-actions,
+.staff-directory-export-actions,
+.lessons-directory-export-actions,
+.applicants-directory-export-actions,
+.project-export-toolbar {
+    flex-wrap: wrap;
+    gap: .5rem;
+    border-radius: 16px;
+}
+
+.standard-directory-export-actions button,
+.staff-directory-export-actions button,
+.lessons-directory-export-actions button,
+.applicants-directory-export-actions button,
+.project-export-toolbar button {
+    min-height: 40px !important;
+    border-radius: 10px !important;
+    font-weight: 700;
+}
+
+.project-export-button {
+    min-height: 42px;
+    border-color: var(--forest, #0f3830) !important;
+    background: var(--forest, #0f3830) !important;
+    color: #fff !important;
+    font-weight: 700;
+}
+
+.project-export-button:hover {
+    border-color: var(--forest-light, #1c5347) !important;
+    background: var(--forest-light, #1c5347) !important;
+}
+
+input.pos-product-search-input[placeholder*="search" i] {
+    height: 56px;
+    min-height: 56px;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+input.pos-product-search-input[placeholder*="search" i]:focus {
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+@media (max-width: 640px) {
+    div:has(> button[title="Copy to Clipboard"]),
+    div:has(> button[title^="Export"]),
+    div:has(> button[title="CSV"]),
+    div:has(> button[title="Excel"]),
+    div:has(> button[title="PDF"]) {
+        width: 100%;
+    }
+
+    div:has(> button[title="Copy to Clipboard"]) > button,
+    div:has(> button[title^="Export"]) > button,
+    div:has(> button[title="CSV"]) > button,
+    div:has(> button[title="Excel"]) > button,
+    div:has(> button[title="PDF"]) > button {
+        flex: 1 1 auto;
+    }
+
+    .project-export-toolbar {
+        width: 100%;
+    }
+
+    .project-export-toolbar button {
+        flex: 1 1 auto;
+    }
 }

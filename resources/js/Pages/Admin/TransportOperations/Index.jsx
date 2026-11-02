@@ -4,14 +4,15 @@ import { useEffect } from 'react';
 import Swal from 'sweetalert2';
 import Icon from '@/Components/Icons';
 
-const InputClass = 'mt-1 w-full rounded-xl border-slate-300 text-sm focus:ring-indigo-500 focus:border-indigo-500 shadow-sm';
+const InputClass = 'mt-1 w-full rounded-xl border-slate-200 bg-slate-50 text-sm text-slate-700 shadow-sm transition focus:border-emerald-600 focus:bg-white focus:ring-emerald-600/20';
 
 const Box = ({ title, children, icon }) => (
-  <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-    <h2 className="mb-5 font-bold text-slate-800 flex items-center gap-2">
-      {icon && <Icon name={icon} className="w-5 h-5 text-indigo-500" />} {title}
-    </h2>
-    {children}
+  <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div className="flex items-center gap-3 border-b border-slate-100 bg-slate-50/70 px-5 py-4 sm:px-6">
+      {icon && <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-800"><Icon name={icon} className="h-5 w-5" /></span>}
+      <h2 className="font-bold text-slate-900">{title}</h2>
+    </div>
+    <div className="p-4 sm:p-6">{children}</div>
   </section>
 );
 
@@ -51,20 +52,26 @@ export default function Index({ vehicles, routes, stops, personnel, allocations,
   return (
     <AuthenticatedLayout>
       <Head title="Transport Operations" />
-      <main className="mx-auto max-w-7xl space-y-8 p-6">
+      <main className="w-full space-y-5 px-3 py-4 sm:space-y-6 sm:px-5 sm:py-6 lg:px-8">
 
         {/* Header */}
-        <div>
-          <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">Fleet Management</span>
-          <h1 className="text-2xl font-black text-slate-900 mt-1">Transport Operations</h1>
-          <p className="text-sm text-slate-500 mt-1">Manage vehicles, drivers, routes, fuel logs, and student boarding.</p>
+        <div className="flex flex-col gap-4 rounded-3xl border border-emerald-100 bg-gradient-to-r from-emerald-50 via-white to-slate-50 px-5 py-6 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-7">
+          <div>
+            <span className="text-xs font-extrabold tracking-[0.18em] text-emerald-800 uppercase">Fleet Management</span>
+            <h1 className="mt-1 text-2xl font-black text-slate-900 sm:text-3xl">Transport Operations</h1>
+            <p className="mt-1 text-sm text-slate-600">Manage vehicles, drivers, routes, fuel logs, and student boarding.</p>
+          </div>
+          <div className="rounded-2xl border border-white bg-white/80 px-4 py-3 shadow-sm">
+            <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Fleet size</p>
+            <p className="mt-1 text-2xl font-black text-emerald-800">{vehicles.length}</p>
+          </div>
         </div>
 
         {/* Summary Dashboard */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="rounded-2xl bg-indigo-600 p-6 text-white shadow-md relative overflow-hidden">
+          <div className="relative overflow-hidden rounded-2xl bg-emerald-800 p-6 text-white shadow-sm">
             <Icon name="droplet" className="absolute -right-4 -bottom-4 w-24 h-24 text-white opacity-20" />
-            <small className="font-semibold uppercase tracking-wider text-indigo-100">Total Fuel Cost</small>
+            <small className="font-semibold uppercase tracking-wider text-emerald-100">Total Fuel Cost</small>
             <b className="block text-3xl mt-1">৳{Number(summary.fuel || 0).toLocaleString()}</b>
           </div>
           <div className="rounded-2xl bg-rose-600 p-6 text-white shadow-md relative overflow-hidden">
@@ -96,7 +103,7 @@ export default function Index({ vehicles, routes, stops, personnel, allocations,
                 <label className="text-xs text-slate-500 font-bold ml-1">License Expiry Date</label>
                 <input className={InputClass} type="date" value={p.data.license_expires_at} onChange={x => p.setData('license_expires_at', x.target.value)} />
               </div>
-              <button disabled={p.processing} className="w-full rounded-xl bg-indigo-600 hover:bg-indigo-700 p-2.5 font-bold text-white transition-colors">Save Personnel</button>
+              <button disabled={p.processing} className="w-full rounded-xl bg-emerald-800 p-2.5 font-bold text-white transition-colors hover:bg-emerald-900 disabled:opacity-60">Save Personnel</button>
             </form>
           </Box>
 
@@ -218,7 +225,7 @@ export default function Index({ vehicles, routes, stops, personnel, allocations,
                   <option value="absent">Absent (অনুপস্থিত)</option>
                 </select>
               </div>
-              <button disabled={b.processing} className="w-full rounded-xl bg-indigo-600 hover:bg-indigo-700 p-2.5 font-bold text-white transition-colors">Record & Notify Guardian (SMS)</button>
+              <button disabled={b.processing} className="w-full rounded-xl bg-emerald-800 p-2.5 font-bold text-white transition-colors hover:bg-emerald-900 disabled:opacity-60">Record & Notify Guardian (SMS)</button>
             </form>
           </Box>
 

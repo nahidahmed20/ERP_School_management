@@ -27,16 +27,21 @@ export default function Index({ boardings }) {
   return (
     <AuthenticatedLayout>
       <Head title="Boarding History" />
-      <div className="max-w-7xl mx-auto p-6 space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Student Boarding History</h1>
-          <p className="text-sm text-slate-500">Track daily student pickups and drop-offs.</p>
+      <div className="w-full space-y-5 px-3 py-4 sm:space-y-6 sm:px-5 sm:py-6 lg:px-8">
+        <div className="flex flex-col gap-4 rounded-3xl border border-emerald-100 bg-gradient-to-r from-emerald-50 via-white to-slate-50 px-5 py-6 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-7">
+          <div>
+            <span className="text-xs font-extrabold uppercase tracking-[0.18em] text-emerald-800">Fleet Management</span>
+            <h1 className="mt-1 text-2xl font-black text-slate-900 sm:text-3xl">Student Boarding History</h1>
+            <p className="mt-1 text-sm text-slate-600">Track daily student pickups, drop-offs and boarding status.</p>
+          </div>
+          <div className="rounded-2xl border border-white bg-white/80 px-4 py-3 shadow-sm"><p className="text-xs font-bold uppercase tracking-wide text-slate-500">History records</p><p className="mt-1 text-2xl font-black text-emerald-800">{boardings.total ?? boardings.data.length}</p></div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-4 sm:px-6"><h2 className="text-sm font-bold text-slate-900">Boarding events</h2><p className="mt-0.5 text-xs text-slate-500">Passenger, route and trip activity</p></div>
           <div className="overflow-x-auto">
             <table className="w-full text-left">
-              <thead className="bg-slate-50 border-b border-slate-200">
+              <thead className="border-b border-slate-200 bg-slate-50/70">
                 <tr>
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Passenger / Point</th>
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Vehicle</th>
@@ -48,21 +53,21 @@ export default function Index({ boardings }) {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {boardings.data.length === 0 ? <tr><td colSpan={6} className="p-8 text-center text-slate-400">No records found.</td></tr> : boardings.data.map(item => (
-                  <tr key={item.id} className="hover:bg-slate-50">
+                  <tr key={item.id} className="transition-colors hover:bg-slate-50/70">
                     <td className="px-6 py-4">
                       <b className="block text-slate-900">{item.passenger_name}</b>
                       <span className="text-xs text-slate-500">{item.pickup_point}</span>
                     </td>
                     <td className="px-6 py-4 font-bold text-slate-800">{item.vehicle_number}</td>
                     <td className="px-6 py-4 text-sm font-mono text-slate-600">
-                      {item.trip_date}<br/><span className="uppercase text-xs font-bold text-indigo-500">{item.trip_type}</span>
+                      {item.trip_date}<br/><span className="uppercase text-xs font-bold text-emerald-700">{item.trip_type}</span>
                     </td>
                     <td className="px-6 py-4 text-sm font-mono text-slate-600">{new Date(item.event_at).toLocaleTimeString()}</td>
                     <td className="px-6 py-4 text-center">
                       <span className={`px-2 py-1 rounded text-[11px] font-bold uppercase border ${getEventBadge(item.event)}`}>{item.event}</span>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button onClick={() => deleteRecord(item.id)} className="p-2 text-slate-400 hover:text-rose-600"><Icon name="trash" className="w-4 h-4" /></button>
+                      <button onClick={() => deleteRecord(item.id)} className="rounded-lg p-2 text-slate-400 transition hover:bg-rose-50 hover:text-rose-700" title="Delete boarding record"><Icon name="trash" className="w-4 h-4" /></button>
                     </td>
                   </tr>
                 ))}

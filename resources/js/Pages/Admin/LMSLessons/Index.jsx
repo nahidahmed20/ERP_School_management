@@ -91,133 +91,73 @@ export default function Index({ lessons, courses, classes, campuses, filters }) 
 
       <div className="print-title">LMS Lessons & Materials - {new Date().toLocaleDateString('en-GB')}</div>
 
-      <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8 no-print">
+      <div className="w-full space-y-5 px-3 py-4 sm:space-y-6 sm:px-5 sm:py-6 lg:px-8 no-print">
 
         {/* Page Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex flex-col gap-4 rounded-3xl border border-emerald-100 bg-gradient-to-r from-emerald-50 via-white to-slate-50 px-5 py-6 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-7">
           <div>
-            <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">LMS (Learning Management)</span>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Lessons & Study Materials</h1>
+            <span className="text-xs font-extrabold tracking-[0.18em] text-emerald-800 uppercase">LMS · Learning Management</span>
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight mt-1 sm:text-3xl">Lessons &amp; Study Materials</h1>
             <p className="text-sm text-slate-500 mt-1">কোর্সের জন্য ভিডিও লেসন এবং পিডিএফ ম্যাটেরিয়াল আপলোড করুন।</p>
           </div>
           <button
             onClick={() => { setEditingItem(null); setFormOpen(true); }}
-            className="w-full sm:w-auto inline-flex justify-center items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md shadow-indigo-500/20 active:scale-95"
+            className="w-full sm:w-auto inline-flex min-h-11 justify-center items-center gap-2 rounded-xl bg-emerald-800 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-900"
           >
             <Icon name="plus" className="w-4 h-4" /> Add Lesson
           </button>
         </div>
 
-        {/* Unified Modern Toolbar */}
-        <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-
-            <select
-              value={perPage}
-              onChange={e => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}
-              className="appearance-none bg-none pr-3 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer text-center"
-              style={{ backgroundImage: 'none' }}
-            >
-              <option value="10">10 / Page</option>
-              <option value="50">50 / Page</option>
-              <option value="all">All</option>
-            </select>
-
-            <div className="hidden sm:block w-px h-6 bg-slate-200"></div>
-
-            {/* Class Filter */}
-            <select
-              value={classId}
-              onChange={(e) => {
-                setClassId(e.target.value);
-                setSubjectId('');
-                setCourseId('');
-                applyFilters({ class_id: e.target.value, subject_id: '', course_id: '' });
-              }}
-              className="w-full sm:w-32 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
-            >
-              <option value="">All Classes</option>
-              {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-
-            {/* Subject Filter */}
-            <select
-              value={subjectId}
-              onChange={(e) => {
-                setSubjectId(e.target.value);
-                setCourseId('');
-                applyFilters({ subject_id: e.target.value, course_id: '' });
-              }}
-              className="w-full sm:w-32 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
-              disabled={!classId}
-            >
-              <option value="">{classId ? 'All Subjects' : 'Class First'}</option>
-              {filterAvailableSubjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
-
-            {/* Course Filter */}
-            <select
-              value={courseId}
-              onChange={(e) => { setCourseId(e.target.value); applyFilters({ course_id: e.target.value }); }}
-              className="w-full sm:w-48 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
-            >
-              <option value="">All Courses</option>
-              {filterAvailableCourses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
-            </select>
-
-            {/* Search Input */}
-            <div className="relative flex-1 min-w-[150px] sm:w-48">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Icon name="search" className="w-4 h-4 text-slate-400" />
+        {/* Search, filters and export tools */}
+        <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="flex flex-col gap-1 border-b border-slate-100 bg-slate-50/70 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+            <div><h2 className="text-sm font-extrabold text-slate-800">Find lessons and materials</h2><p className="mt-0.5 text-xs text-slate-500">Narrow the library by class, subject or course.</p></div>
+            <span className="text-xs font-semibold text-slate-500">{lessons.total ?? lessons.data.length} lessons</span>
+          </div>
+          <div className="p-4 sm:p-5">
+            <div className="lms-lessons-filters grid w-full grid-cols-1 items-center gap-3 sm:grid-cols-2 xl:grid-cols-7">
+              <select value={perPage} onChange={e => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-700 outline-none transition focus:border-emerald-600 focus:bg-white focus:ring-2 focus:ring-emerald-600/20 cursor-pointer" style={{ backgroundImage: 'none' }}>
+                <option value="10">10 / Page</option><option value="50">50 / Page</option><option value="all">All</option>
+              </select>
+              <select value={classId} onChange={e => { setClassId(e.target.value); setSubjectId(''); setCourseId(''); applyFilters({ class_id: e.target.value, subject_id: '', course_id: '' }); }} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-emerald-600 focus:bg-white focus:ring-2 focus:ring-emerald-600/20 cursor-pointer">
+                <option value="">All Classes</option>{classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+              <select value={subjectId} onChange={e => { setSubjectId(e.target.value); setCourseId(''); applyFilters({ subject_id: e.target.value, course_id: '' }); }} disabled={!classId} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-emerald-600 focus:bg-white focus:ring-2 focus:ring-emerald-600/20 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60">
+                <option value="">{classId ? 'All Subjects' : 'Class First'}</option>{filterAvailableSubjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+              <select value={courseId} onChange={e => { setCourseId(e.target.value); applyFilters({ course_id: e.target.value }); }} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-emerald-600 focus:bg-white focus:ring-2 focus:ring-emerald-600/20 cursor-pointer">
+                <option value="">All Courses</option>{filterAvailableCourses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+              </select>
+              <div className="relative min-w-0 sm:col-span-2 xl:col-span-2">
+                <Icon name="search" className="pointer-events-none absolute inset-y-0 left-3 my-auto h-4 w-4 text-emerald-700" />
+                <input type="text" placeholder="Search lessons..." value={search} onChange={e => setSearch(e.target.value)} onKeyDown={e => e.key === 'Enter' && applyFilters()} className="block min-h-11 w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-sm text-slate-700 outline-none transition focus:border-emerald-600 focus:bg-white focus:ring-2 focus:ring-emerald-600/20" />
               </div>
-              <input
-                type="text"
-                placeholder="Search..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
-                className="block w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-              />
+              <button onClick={() => applyFilters()} className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-800 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-900 sm:col-span-2 xl:col-span-1"><Icon name="filter" className="h-4 w-4" /> Filter lessons</button>
             </div>
 
-            <button
-              onClick={() => applyFilters()}
-              className="w-full sm:w-auto px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
-            >
-              Filter
-            </button>
+            <div className="project-export-toolbar mt-4 flex flex-col gap-2 rounded-2xl border border-slate-200 bg-slate-50/70 p-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500"><Icon name="download" className="h-4 w-4" /> Export current list</div>
+              <div className="flex flex-wrap items-center gap-2">
+                <button onClick={copyToClipboard} title="Copy to Clipboard"><Icon name="copy" className="h-4 w-4" /> Copy</button>
+                <button onClick={exportToCSV} title="Export CSV"><Icon name="excel" className="h-4 w-4" /> CSV</button>
+                <button onClick={() => alert('Backend Excel plugin needed')} title="Export Excel"><Icon name="excel" className="h-4 w-4" /> Excel</button>
+                <button onClick={() => alert('Backend PDF plugin needed')} title="Export PDF"><Icon name="pdf" className="h-4 w-4" /> PDF</button>
+                <button onClick={handlePrint} title="Print List"><Icon name="printer" className="h-4 w-4" /> Print</button>
+              </div>
+            </div>
           </div>
-
-          {/* Export Actions */}
-          <div className="flex items-center justify-end gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-xl w-full xl:w-auto shadow-sm shrink-0 ml-auto">
-            <button onClick={copyToClipboard} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Copy to Clipboard">
-              Copy
-            </button>
-            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-            <button onClick={exportToCSV} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-emerald-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export CSV">
-              CSV
-            </button>
-            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-            <button onClick={() => alert('Backend Excel plugin needed')} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-green-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export Excel">
-              Excel
-            </button>
-            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-            <button onClick={() => alert('Backend PDF plugin needed')} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-rose-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export PDF">
-              PDF
-            </button>
-            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-            <button onClick={handlePrint} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-amber-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Print List">
-              Print
-            </button>
-          </div>
-        </div>
+        </section>
 
         {/* Main Table Card */}
-        <div className="bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 print-table-wrapper">
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm print-table-wrapper">
+          <div className="flex flex-col gap-1 border-b border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+            <div><h2 className="text-sm font-bold text-slate-900">Lesson library</h2><p className="mt-0.5 text-xs text-slate-500">Videos, downloadable files and lesson notes</p></div>
+            <span className="self-start rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-800 sm:self-auto">{lessons.total ?? lessons.data.length} records</span>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/50">
+                <tr className="border-b border-slate-200 bg-slate-50/70">
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Lesson Title</th>
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Course Name</th>
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Materials</th>
@@ -234,11 +174,11 @@ export default function Index({ lessons, courses, classes, campuses, filters }) 
                   </tr>
                 ) : (
                   lessons.data.map((item) => (
-                    <tr key={item.id} className="hover:bg-slate-50/60 transition-colors">
+                    <tr key={item.id} className="transition-colors hover:bg-slate-50/70">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-500 flex items-center justify-center shrink-0">
-                            <Icon name="play-circle" className="w-4 h-4" />
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-800">
+                            <Icon name="play-circle" className="h-4 w-4" />
                           </div>
                           <span className="text-sm font-bold text-slate-900">{item.title}</span>
                         </div>
@@ -269,14 +209,14 @@ export default function Index({ lessons, courses, classes, campuses, filters }) 
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right no-print">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button onClick={() => setViewingItem(item)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="View Details">
+                        <div className="inline-flex items-center justify-end gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1">
+                          <button onClick={() => setViewingItem(item)} className="rounded-lg p-2 text-slate-500 transition hover:bg-white hover:text-emerald-800 hover:shadow-sm" title="View Details" aria-label={`View ${item.title}`}>
                             <Icon name="eye" className="w-4 h-4" />
                           </button>
-                          <button onClick={() => { setEditingItem(item); setFormOpen(true); }} className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Edit Lesson">
+                          <button onClick={() => { setEditingItem(item); setFormOpen(true); }} className="rounded-lg p-2 text-slate-500 transition hover:bg-white hover:text-amber-700 hover:shadow-sm" title="Edit Lesson" aria-label={`Edit ${item.title}`}>
                             <Icon name="edit" className="w-4 h-4" />
                           </button>
-                          <button onClick={() => setDeletingItem(item)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Delete Lesson">
+                          <button onClick={() => setDeletingItem(item)} className="rounded-lg p-2 text-slate-500 transition hover:bg-white hover:text-rose-700 hover:shadow-sm" title="Delete Lesson" aria-label={`Delete ${item.title}`}>
                             <Icon name="trash" className="w-4 h-4" />
                           </button>
                         </div>

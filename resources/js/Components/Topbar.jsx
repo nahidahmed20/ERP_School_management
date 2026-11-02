@@ -138,7 +138,7 @@ export default function Topbar({ onHamburgerClick, sidebarOpen = false }) {
                             <p className="text-xs text-slate-500">{user?.roles?.[0]?.name || 'Account'}</p>
                         </div>
                         <MenuItem as={Link} href={route('profile.edit')} className={menuItemClass}>
-                            <Icon name="user" className="h-4 w-4" />My Profile
+                            <Icon name="user" className="h-4 w-4" />My Profile &amp; Password
                         </MenuItem>
                         {actions.settings && (
                             <MenuItem as={Link} href={actions.settings.href} className={menuItemClass}>

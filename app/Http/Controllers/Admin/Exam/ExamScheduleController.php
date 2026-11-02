@@ -64,7 +64,7 @@ class ExamScheduleController extends Controller
         $data = $request->validate([
             'exam_id' => ['required', $this->existsRule('exams')],
             'class_id' => ['required', $this->existsRule('school_classes')],
-            'section_id' => ['required', $this->existsRule('sections')],
+            'section_id' => ['nullable', $this->existsRule('sections')],
             'periods' => 'present|array',
             'periods.*.subject_id' => ['required', $this->existsRule('subjects'), 'distinct'],
             'periods.*.exam_date' => 'required|date_format:Y-m-d',
@@ -75,7 +75,7 @@ class ExamScheduleController extends Controller
 
         $class = SchoolClass::findOrFail($data['class_id']);
         
-        if (! $class->sections()->whereKey($data['section_id'])->exists()) {
+        if (($data['section_id'] ?? null) !== null && ! $class->sections()->whereKey($data['section_id'])->exists()) {
             throw ValidationException::withMessages(['section_id' => 'Select a section assigned to this class.']);
         }
         

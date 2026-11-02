@@ -38,6 +38,54 @@ class NavigationService
             }
         }
 
+        // Keep each destination in one logical place even when old database
+        // menu rows still contain copies created by earlier seed data.
+        $preferredKeys = [
+            'admin.biometric.synclogs' => 'admin.biometric.synclogs',
+            'admin.studentAttendance.report' => 'admin.reports.student_attendance',
+            'admin.staff-attendance.index' => 'admin.staff-attendance.index',
+        ];
+        $seenRoutes = [];
+
+        foreach ($data as &$group) {
+            $uniqueItems = [];
+            foreach ($group['items'] as $item) {
+                $children = $item['children'] ?? [];
+                if ($children) {
+                    $item['children'] = array_values(array_filter($children, function (array $child) use (&$seenRoutes, $preferredKeys): bool {
+                        $route = $child['route_name'] ?? $child['route'] ?? null;
+                        $key = $child['key'] ?? null;
+                        if (! $route || (isset($preferredKeys[$route]) && $preferredKeys[$route] !== $key) || isset($seenRoutes[$route])) {
+                            return false;
+                        }
+
+                        $seenRoutes[$route] = true;
+                        return true;
+                    }));
+                }
+
+                $route = $item['route_name'] ?? $item['route'] ?? null;
+                $key = $item['key'] ?? null;
+                $hasChildren = ! empty($item['children']);
+                if ($route) {
+                    if ((isset($preferredKeys[$route]) && $preferredKeys[$route] !== $key) || isset($seenRoutes[$route])) {
+                        if (! $hasChildren) {
+                            continue;
+                        }
+                        $item['route'] = null;
+                    } else {
+                        $seenRoutes[$route] = true;
+                    }
+                }
+
+                if (array_key_exists('children', $item) && ! $hasChildren && ! $route) {
+                    continue;
+                }
+                $uniqueItems[] = $item;
+            }
+            $group['items'] = $uniqueItems;
+        }
+
         return $data;
     }
 }

@@ -1,20 +1,24 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import Icon from '@/Components/Icons';
 import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 import Swal from 'sweetalert2';
 
-const C = 'mt-1 w-full rounded-xl border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500';
+const C = 'mt-1.5 w-full rounded-xl border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 shadow-sm focus:border-emerald-600 focus:bg-white focus:ring-2 focus:ring-emerald-600/15';
 
-const Box = ({ title, children }) => (
-    <section className="rounded-2xl border bg-white p-4 sm:p-5 shadow-sm overflow-hidden">
-        <h2 className="mb-4 font-bold text-base sm:text-lg text-slate-800">{title}</h2>
-        {children}
+const Box = ({ title, icon = 'building', children }) => (
+    <section className="min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="flex items-center gap-3 border-b border-slate-100 bg-gradient-to-r from-emerald-50/80 via-white to-white px-4 py-4 sm:px-5">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800"><Icon name={icon} className="h-5 w-5" /></span>
+            <h2 className="font-extrabold text-base text-slate-900 sm:text-lg">{title}</h2>
+        </div>
+        <div className="p-4 sm:p-5">{children}</div>
     </section>
 );
 
 const Btn = ({ children }) => (
-    <button className="mt-3 w-full sm:w-auto rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white shadow hover:bg-indigo-700 transition">
+    <button className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-emerald-800 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-700/30 sm:w-auto">
         {children}
     </button>
 );
@@ -59,32 +63,33 @@ export default function Index({ tenants, plans, usage, invoices, backups, report
         <AuthenticatedLayout>
             <Head title="SaaS Control Center" />
 
-            <main className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
+            <main className="w-full max-w-none space-y-6 px-3 py-4 sm:px-5 sm:py-6 lg:px-8">
                 
                 {/* Header */}
-                <div>
-                    <h1 className="text-xl sm:text-2xl font-black text-slate-900">SaaS / Multi-campus Control</h1>
-                    <p className="text-sm text-slate-500 mt-1">Manage SaaS operations securely.</p>
+                <div className="rounded-3xl border border-emerald-100 bg-gradient-to-r from-emerald-50 via-white to-slate-50 px-5 py-6 shadow-sm sm:px-7">
+                    <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-emerald-800">Platform administration</p>
+                    <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">SaaS / Multi-campus Control</h1>
+                    <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">Manage tenants, subscriptions, campus limits, billing and backups from one workspace.</p>
                 </div>
 
                 {/* Top Statistics Cards */}
-                <div className="grid gap-3 grid-cols-2 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
                     {[
-                        ['Tenants', tenants.length],
-                        ['Active', tenants.filter(x => x.status === 'Active').length],
-                        ['Campuses', tenants.reduce((n, x) => n + (x.campuses?.length || 0), 0)],
-                        ['Unpaid invoices', invoices.filter(x => x.status === 'unpaid').length]
+                        ['Tenants', tenants.length, 'building', 'emerald'],
+                        ['Active', tenants.filter(x => x.status === 'Active').length, 'check-circle', 'blue'],
+                        ['Campuses', tenants.reduce((n, x) => n + (x.campuses?.length || 0), 0), 'home', 'violet'],
+                        ['Unpaid invoices', invoices.filter(x => x.status === 'unpaid').length, 'card', 'amber']
                     ].map(x => (
-                        <div key={x[0]} className="rounded-2xl bg-slate-900 p-4 text-white">
-                            <small className="text-slate-400 text-xs font-medium">{x[0]}</small>
-                            <b className="block text-2xl font-bold mt-1">{x[1]}</b>
+                        <div key={x[0]} className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+                            <div><small className="text-xs font-bold text-slate-500">{x[0]}</small><b className="mt-1 block text-2xl font-black text-slate-900">{x[1]}</b></div>
+                            <span className={`flex h-11 w-11 items-center justify-center rounded-xl ${x[3] === 'emerald' ? 'bg-emerald-50 text-emerald-800' : x[3] === 'blue' ? 'bg-blue-50 text-blue-800' : x[3] === 'violet' ? 'bg-violet-50 text-violet-800' : 'bg-amber-50 text-amber-800'}`}><Icon name={x[2]} className="h-5 w-5" /></span>
                         </div>
                     ))}
                 </div>
 
-                <div className="grid gap-6 lg:grid-cols-2">
+                <div className="grid items-start gap-5 xl:grid-cols-2 2xl:grid-cols-3">
                     {/* Tenant Provisioning */}
-                    <Box title="Tenant Provisioning">
+                    <Box title="Tenant Provisioning" icon="plus">
                         <form onSubmit={post(pv, 'admin.saas.provision')} className="space-y-3">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 {['company_name', 'domain', 'admin_email', 'admin_phone', 'password'].map(k => (
@@ -123,7 +128,7 @@ export default function Index({ tenants, plans, usage, invoices, backups, report
                     </Box>
 
                     {/* Plan-wise Features & Limits */}
-                    <Box title="Plan-wise Features & Limits">
+                    <Box title="Plan-wise Features & Limits" icon="settings">
                         <form onSubmit={e => { e.preventDefault(); lim.patch(route('admin.saas.plan-limits', lim.data.plan_id), { preserveScroll: true }); }} className="space-y-3">
                             <div>
                                 <label className="text-xs font-semibold text-slate-600">Select Plan</label>
@@ -170,8 +175,8 @@ export default function Index({ tenants, plans, usage, invoices, backups, report
                 </div>
 
                 {/* Tenant Subscription, Domain & Usage */}
-                <Box title="Tenant Subscription, Domain & Usage">
-                    <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
+                <Box title="Tenant Subscription, Domain & Usage" icon="chart">
+                    <div className="grid gap-4 grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3">
                         {tenants.map(t => (
                             <div key={t.id} className="rounded-xl border p-4 bg-slate-50/50 flex flex-col justify-between">
                                 <div>
@@ -215,9 +220,9 @@ export default function Index({ tenants, plans, usage, invoices, backups, report
                     </div>
                 </Box>
 
-                <div className="grid gap-6 lg:grid-cols-2">
+                <div className="grid items-start gap-5 xl:grid-cols-2 2xl:grid-cols-3">
                     {/* Central Billing */}
-                    <Box title="Central Billing">
+                    <Box title="Central Billing" icon="card">
                         <form onSubmit={post(inv, 'admin.saas.invoice', inv.data.tenant_id)} className="space-y-3">
                             <div>
                                 <label className="text-xs font-semibold text-slate-600">Select Tenant</label>
@@ -253,7 +258,7 @@ export default function Index({ tenants, plans, usage, invoices, backups, report
                     </Box>
 
                     {/* Tenant Backup / Restore */}
-                    <Box title="Tenant Backup / Restore">
+                    <Box title="Tenant Backup / Restore" icon="database">
                         <div className="space-y-3">
                             {backups.map(x => (
                                 <div key={x.id} className="rounded-xl border p-3 text-sm bg-slate-50/50">
@@ -274,7 +279,7 @@ export default function Index({ tenants, plans, usage, invoices, backups, report
                 </div>
 
                 {/* Consolidated Table */}
-                <Box title="Cross-tenant / Cross-campus Consolidated Report">
+                <Box title="Cross-tenant / Cross-campus Consolidated Report" icon="file-text">
                     <div className="overflow-x-auto -mx-4 sm:mx-0">
                         <div className="inline-block min-w-full align-middle px-4 sm:px-0">
                             <table className="min-w-full text-sm whitespace-nowrap">

@@ -478,7 +478,7 @@ class StudentController extends Controller
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'campus_id'     => 'required|exists:campuses,id',
             'class_id'      => ['required', CampusRule::exists('school_classes')],
-            'section_id'    => ['required', CampusRule::exists('sections')],
+            'section_id'    => ['nullable', CampusRule::exists('sections')],
             'guardian_id'   => ['nullable', CampusRule::exists('guardians')],
             'roll_no'       => 'nullable|string|max:50',
 

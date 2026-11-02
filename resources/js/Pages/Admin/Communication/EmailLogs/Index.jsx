@@ -36,20 +36,20 @@ export default function Index({ logs, templates, campuses, activeCampusId, activ
     <AuthenticatedLayout>
       <Head title="Email Management" />
 
-      <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8">
+      <div className="w-full space-y-5 px-3 py-4 sm:space-y-6 sm:px-5 sm:py-6 lg:px-8">
         
         {/* Page Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex flex-col gap-4 rounded-3xl border border-emerald-100 bg-gradient-to-r from-emerald-50 via-white to-slate-50 px-5 py-6 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-7">
           <div>
-            <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">Communication</span>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Email Logs &amp; Templates</h1>
+            <span className="text-xs font-extrabold uppercase tracking-[0.18em] text-emerald-800">Communication</span>
+            <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Email Logs &amp; Templates</h1>
             <p className="text-sm text-slate-500 mt-1">সেন্ট ইমেইল লগ এবং নোটিফিকেশন ইমেইল টেমপ্লেট পরিচালনা করুন।</p>
           </div>
           <div className="flex items-center gap-3 w-full sm:w-auto">
             {activeTab === 'templates' && (
               <button
                 onClick={() => { setEditingTemplate(null); setIsFormOpen(true); }}
-                className="w-full sm:w-auto inline-flex justify-center items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md shadow-indigo-500/20 active:scale-95"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-5 py-3 text-sm font-bold text-white shadow-sm transition-colors hover:bg-emerald-800 sm:w-auto"
               >
                 <Icon name="plus" className="w-4 h-4" /> Add Template
               </button>
@@ -63,7 +63,7 @@ export default function Index({ logs, templates, campuses, activeCampusId, activ
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                  className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm"
+                  className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm shadow-sm outline-none transition-all focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20"
                 />
               </div>
             )}
@@ -71,26 +71,26 @@ export default function Index({ logs, templates, campuses, activeCampusId, activ
         </div>
 
         {/* Tabs Navigation */}
-        <div className="flex items-center gap-2 border-b border-slate-200">
+        <div className="flex items-center gap-1 overflow-x-auto rounded-t-2xl border border-slate-200 bg-slate-50/70 px-2 pt-2">
           <button 
             onClick={() => handleTabSwitch('logs')}
-            className={`flex items-center gap-2 px-6 py-3.5 text-sm font-bold border-b-2 transition-all ${
-              activeTab === 'logs' ? 'border-indigo-600 text-indigo-600 bg-white shadow-[0_-4px_6px_-2px_rgba(0,0,0,0.05)] rounded-t-xl' : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50/50'
+            className={`flex shrink-0 items-center gap-2 border-b-2 px-5 py-3.5 text-sm font-bold transition-all sm:px-6 ${
+              activeTab === 'logs' ? 'border-emerald-700 bg-emerald-50/70 text-emerald-800' : 'border-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-700'
             }`}
           >
             <Icon name="mail" className="w-4 h-4" /> Sent Emails (Logs)
           </button>
           <button 
             onClick={() => handleTabSwitch('templates')}
-            className={`flex items-center gap-2 px-6 py-3.5 text-sm font-bold border-b-2 transition-all ${
-              activeTab === 'templates' ? 'border-indigo-600 text-indigo-600 bg-white shadow-[0_-4px_6px_-2px_rgba(0,0,0,0.05)] rounded-t-xl' : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50/50'
+            className={`flex shrink-0 items-center gap-2 border-b-2 px-5 py-3.5 text-sm font-bold transition-all sm:px-6 ${
+              activeTab === 'templates' ? 'border-emerald-700 bg-emerald-50/70 text-emerald-800' : 'border-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-700'
             }`}
           >
             <Icon name="layout" className="w-4 h-4" /> Email Templates
           </button>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 overflow-hidden">
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           
           {/* --- LOGS TAB CONTENT --- */}
           {activeTab === 'logs' && (

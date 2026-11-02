@@ -1,17 +1,23 @@
 import { Head, router, useForm } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import Icon from '@/Components/Icons';
 
-const C = 'mt-1 w-full rounded-xl border-slate-300 text-sm';
+const C = 'mt-1.5 w-full rounded-xl border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 shadow-sm focus:border-emerald-600 focus:bg-white focus:ring-2 focus:ring-emerald-600/15';
 
-const Box = ({ title, children }) => (
-    <section className="rounded-2xl border bg-white p-4 sm:p-5 shadow-sm overflow-hidden">
-        <h2 className="mb-4 font-bold text-lg">{title}</h2>
+const Box = ({ title, icon = 'file-text', children }) => (
+    <section className="min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="flex items-center gap-3 border-b border-slate-100 bg-gradient-to-r from-emerald-50/80 via-white to-white px-4 py-4 sm:px-5">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800"><Icon name={icon} className="h-5 w-5" /></span>
+            <h2 className="font-extrabold text-base text-slate-900 sm:text-lg">{title}</h2>
+        </div>
+        <div className="p-4 sm:p-5">
         {children}
+        </div>
     </section>
 );
 
 const Btn = ({ children }) => (
-    <button className="mt-3 w-full sm:w-auto rounded-xl bg-indigo-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-indigo-700">
+    <button className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-emerald-800 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-700/30 sm:w-auto">
         {children}
     </button>
 );
@@ -35,33 +41,34 @@ export default function Index({ sources, reports, schedules, exports, imports, a
         <AuthenticatedLayout>
             <Head title="Reporting & Administration" />
 
-            <main className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
+            <main className="w-full max-w-none space-y-6 px-3 py-4 sm:px-5 sm:py-6 lg:px-8">
 
                 {/* Header Section */}
-                <div>
-                    <h1 className="text-xl sm:text-2xl font-black">Reporting & Administration</h1>
-                    <p className="text-sm text-slate-500">Build, schedule, import, approve, compare and measure.</p>
+                <div className="rounded-3xl border border-emerald-100 bg-gradient-to-r from-emerald-50 via-white to-slate-50 px-5 py-6 shadow-sm sm:px-7">
+                    <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-emerald-800">Insights / Administration</p>
+                    <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Reporting & Administration</h1>
+                    <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">Build and schedule reports, manage imports and approvals, compare campuses, and track performance.</p>
                 </div>
 
                 {/* Top Metrics / Statistics - Responsive Grid */}
-                <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-3 2xl:grid-cols-5">
                     {[
-                        ['Reports', reports.length],
-                        ['Scheduled', schedules.length],
-                        ['Exports', exports.length],
-                        ['Pending approvals', approvals.length],
-                        ['Notifications', notifications.length]
+                        ['Reports', reports.length, 'file-text'],
+                        ['Scheduled', schedules.length, 'calendar'],
+                        ['Exports', exports.length, 'download'],
+                        ['Pending approvals', approvals.length, 'check-circle'],
+                        ['Notifications', notifications.length, 'bell']
                     ].map(x => (
-                        <div key={x[0]} className="rounded-2xl bg-slate-900 p-4 text-white">
-                            <small className="text-slate-300">{x[0]}</small>
-                            <b className="block text-2xl">{x[1]}</b>
+                        <div key={x[0]} className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+                            <div><small className="text-xs font-bold text-slate-500">{x[0]}</small><b className="mt-1 block text-2xl font-black text-slate-900">{x[1]}</b></div>
+                            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-800"><Icon name={x[2]} className="h-5 w-5" /></span>
                         </div>
                     ))}
                 </div>
 
-                <div className="grid gap-6 lg:grid-cols-2">
+                <div className="grid items-start gap-5 xl:grid-cols-2">
                     {/* Custom Report Builder */}
-                    <Box title="Custom Report Builder">
+                    <Box title="Custom Report Builder" icon="settings">
                         <form onSubmit={post(rp, 'admin.reporting-administration.reports')}>
                             <input className={C} placeholder="Report name" value={rp.data.name} onChange={e => rp.setData('name', e.target.value)} />
                             <select className={C} value={rp.data.data_source} onChange={e => rp.setData({ ...rp.data, data_source: e.target.value, columns: [] })}>
@@ -105,7 +112,7 @@ export default function Index({ sources, reports, schedules, exports, imports, a
                     </Box>
 
                     {/* Scheduled Report Delivery */}
-                    <Box title="Scheduled Report Delivery">
+                    <Box title="Scheduled Report Delivery" icon="calendar">
                         <form onSubmit={post(sc, 'admin.reporting-administration.schedules')}>
                             <select className={C} value={sc.data.custom_report_id} onChange={e => sc.setData('custom_report_id', e.target.value)}>
                                 <option value="">Select a Report</option>
@@ -124,9 +131,9 @@ export default function Index({ sources, reports, schedules, exports, imports, a
                     </Box>
                 </div>
 
-                <div className="grid gap-6 lg:grid-cols-2">
+                <div className="grid items-start gap-5 xl:grid-cols-2">
                     {/* Campus Comparison Report */}
-                    <Box title="Campus Comparison Report">
+                    <Box title="Campus Comparison Report" icon="chart">
                         <div className="overflow-x-auto">
                             <table className="w-full text-sm whitespace-nowrap">
                                 <thead>
@@ -154,7 +161,7 @@ export default function Index({ sources, reports, schedules, exports, imports, a
                     </Box>
 
                     {/* Bulk Import Center */}
-                    <Box title="Bulk Import Center">
+                    <Box title="Bulk Import Center" icon="upload">
                         <form onSubmit={post(im, 'admin.reporting-administration.imports', { forceFormData: true })}>
                             <select className={C} value={im.data.entity_type} onChange={e => im.setData('entity_type', e.target.value)}>
                                 <option>expenses</option>
@@ -181,9 +188,9 @@ export default function Index({ sources, reports, schedules, exports, imports, a
                     </Box>
                 </div>
 
-                <div className="grid gap-6 lg:grid-cols-3">
+                <div className="grid items-start gap-5 xl:grid-cols-2 2xl:grid-cols-3">
                     {/* Approval Dashboard */}
-                    <Box title="Approval Dashboard">
+                    <Box title="Approval Dashboard" icon="check-circle">
                         <div className="space-y-2">
                             {approvals.map(x => (
                                 <a href={route('admin.workflow-approvals.index')} key={x.id} className="block rounded-xl border border-slate-200 p-3 text-sm hover:bg-slate-50 transition">
@@ -196,7 +203,7 @@ export default function Index({ sources, reports, schedules, exports, imports, a
                     </Box>
 
                     {/* Notification Center */}
-                    <Box title="Notification Center">
+                    <Box title="Notification Center" icon="bell">
                         <div className="space-y-2">
                             {notifications.slice(0, 10).map(x => (
                                 <a href={route('admin.communication-notifications.index')} key={x.id} className="block rounded-xl border border-slate-200 p-3 text-sm hover:bg-slate-50 transition">
@@ -208,7 +215,7 @@ export default function Index({ sources, reports, schedules, exports, imports, a
                     </Box>
 
                     {/* KPI Target */}
-                    <Box title="KPI Target">
+                    <Box title="KPI Target" icon="chart">
                         <form onSubmit={post(kp, 'admin.reporting-administration.kpis')} className="space-y-3">
 
                             <input className={C} placeholder="KPI name" value={kp.data.name} onChange={e => kp.setData('name', e.target.value)} />
@@ -245,9 +252,9 @@ export default function Index({ sources, reports, schedules, exports, imports, a
                     </Box>
                 </div>
 
-                <div className="grid gap-6 lg:grid-cols-2">
+                <div className="grid items-start gap-5 xl:grid-cols-2">
                     {/* Export History */}
-                    <Box title="Export History">
+                    <Box title="Export History" icon="download">
                         <div className="space-y-2">
                             {exports.map(x => (
                                 <a key={x.id} href={route('admin.reporting-administration.exports.download', x.id)} className="flex flex-col sm:flex-row justify-between items-start sm:items-center rounded-lg bg-slate-50 border border-slate-100 p-3 text-sm hover:bg-slate-100 transition">
@@ -265,7 +272,7 @@ export default function Index({ sources, reports, schedules, exports, imports, a
                     </Box>
 
                     {/* Activity Timeline */}
-                    <Box title="Activity Timeline">
+                    <Box title="Activity Timeline" icon="activity">
                         <div className="space-y-4">
                             {activities.map(x => (
                                 <div key={x.id} className="border-l-4 border-indigo-300 pl-4 text-sm relative">

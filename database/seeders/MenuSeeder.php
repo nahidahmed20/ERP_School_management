@@ -57,12 +57,9 @@ class MenuSeeder extends Seeder
                     ['key' => 'admin.student-services.index', 'label' => 'Student Service Requests', 'route' => 'admin.student-services.index'],
                     ['key' => 'admin.student-development-records.index', 'label' => 'Student Development & Support', 'route' => 'admin.student-development-records.index'],
                 ]],
-                ['key' => 'attendance', 'label' => 'Attendance', 'icon' => 'calendar', 'count' => 5, 'children' => [
+                ['key' => 'attendance', 'label' => 'Attendance', 'icon' => 'calendar', 'count' => 2, 'children' => [
                     ['key' => 'admin.attendance-control.index', 'label' => 'Attendance Control & Policy', 'route' => 'admin.attendance-control.index'],
                     ['key' => 'admin.student-attendance.index', 'label' => 'Student Attendance', 'route' => 'admin.student-attendance.index'],
-                    ['key' => 'admin.biometric.sync-logs.index', 'label' => 'Biometric Sync Logs', 'route' => 'admin.biometric.synclogs'],
-                    ['key' => 'admin.student_attendance.report', 'label' => 'Student Attendance Report', 'route' => 'admin.studentAttendance.report'],
-                    ['key' => 'admin.attendance-report.index', 'label' => 'Staff Attendance', 'route' => 'admin.staff-attendance.index'],
                 ]],
                 ['key' => 'exams', 'label' => 'Exams & Marks', 'icon' => 'pencil', 'count' => 6, 'children' => [
                     ['key' => 'admin.grades.index', 'label' => 'Grade Setup', 'route' => 'admin.grades.index'],

@@ -110,9 +110,9 @@ export default function Create({ classes, classrooms, campuses, staffList = [] }
               </div>
 
               <div>
-                <label className={labelClass}>Section <span className="text-rose-500">*</span></label>
-                <select className={`${inputClass} disabled:bg-slate-100 disabled:opacity-60 disabled:cursor-not-allowed`} value={data.section_id} onChange={(e) => setData('section_id', e.target.value)} required disabled={!data.class_id}>
-                  <option value="" disabled>Select Section</option>
+                <label className={labelClass}>Section (optional)</label>
+                <select className={`${inputClass} disabled:bg-slate-100 disabled:opacity-60 disabled:cursor-not-allowed`} value={data.section_id} onChange={(e) => setData('section_id', e.target.value)} disabled={!data.class_id}>
+                  <option value="">No section</option>
                   {availableSections.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
                 {errors.section_id && <span className="text-xs text-rose-500 mt-1.5 block font-medium">{errors.section_id}</span>}

@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             BangladeshAcademicDataSeeder::class,
             MenuSeeder::class,
             StaffSeeder::class,
+            SchoolLoginAndDemoStudentsSeeder::class,
             OfficialDocumentSeeder::class,
             MenuOrderSeeder::class,
             QuestionPaperMenuSeeder::class,

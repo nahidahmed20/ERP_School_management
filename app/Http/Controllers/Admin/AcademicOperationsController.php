@@ -47,7 +47,7 @@ class AcademicOperationsController extends Controller
         $data = $request->validate([
             'staff_id' => ['required', $this->existsRule('staff')],
             'class_id' => ['required', $this->existsRule('school_classes')],
-            'section_id' => ['required', $this->existsRule('sections')],
+            'section_id' => ['nullable', $this->existsRule('sections')],
             'subject_id' => ['required', $this->existsRule('subjects')],
             'is_class_teacher' => 'boolean'
         ]);
@@ -88,7 +88,7 @@ class AcademicOperationsController extends Controller
         $data = $request->validate([
             'date' => 'required|date',
             'class_id' => ['required', $this->existsRule('school_classes')],
-            'section_id' => ['required', $this->existsRule('sections')],
+            'section_id' => ['nullable', $this->existsRule('sections')],
             'subject_id' => ['nullable', $this->existsRule('subjects')],
             'teacher_id' => ['required', $this->existsRule('staff')],
             'topic' => 'required|string|max:255',
@@ -106,7 +106,7 @@ class AcademicOperationsController extends Controller
         $data = $request->validate([
             'date' => 'required|date',
             'class_id' => ['required', $this->existsRule('school_classes')],
-            'section_id' => ['required', $this->existsRule('sections')],
+            'section_id' => ['nullable', $this->existsRule('sections')],
             'subject_id' => ['nullable', $this->existsRule('subjects')],
             'absent_teacher_id' => ['required', 'different:substitute_teacher_id', $this->existsRule('staff')],
             'substitute_teacher_id' => ['required', $this->existsRule('staff')],

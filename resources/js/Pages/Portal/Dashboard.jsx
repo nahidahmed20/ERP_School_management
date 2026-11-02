@@ -87,6 +87,7 @@ function StudentParentDashboard({ portal }) {
     const isParent = portal.type === 'parent';
     const todayExams = portal.exams?.filter((exam) => exam.is_today) ?? [];
     const upcomingExams = portal.exams?.filter((exam) => !exam.is_today) ?? [];
+    const actionItems = portal.action_items ?? [];
 
     if (!portal.student) {
         return (
@@ -94,6 +95,7 @@ function StudentParentDashboard({ portal }) {
                 <Icon name="users" className="mx-auto h-10 w-10 text-amber-700" />
                 <h2 className="mt-4 text-xl font-bold text-amber-950">কোনো student profile linked নেই</h2>
                 <p className="mt-2 text-sm text-amber-800">School office থেকে এই parent account-এর সঙ্গে student link করুন।</p>
+                <Link href={route('profile.edit')} className="mt-4 inline-flex rounded-xl bg-emerald-800 px-4 py-2 text-sm font-bold text-white">পাসওয়ার্ড বদলান</Link>
             </div>
         );
     }
@@ -105,13 +107,14 @@ function StudentParentDashboard({ portal }) {
                     <div>
                         <p className="text-xs font-bold uppercase tracking-[0.18em] text-amber-300">{portal.today}</p>
                         <h1 className="mt-2 text-2xl font-bold text-white sm:text-3xl">
-                            {isParent ? `${portal.student.name}-এর আজকের update` : `স্বাগতম, ${portal.greeting_name}`}
+                            {isParent ? `${portal.student.name}-এর আজকের আপডেট` : `স্বাগতম, ${portal.greeting_name}`}
                         </h1>
                         <p className="mt-2 text-sm text-emerald-100">
-                            {portal.student.class} · Section {portal.student.section} · ID {portal.student.admission_no}
+                            {portal.student.class}{portal.student.section && portal.student.section !== 'Not assigned' ? ` · Section ${portal.student.section}` : ''} · ID {portal.student.admission_no}
                         </p>
                         {!isParent && <Link href={route('portal.services')} className="mt-4 inline-flex rounded-xl bg-white px-4 py-2 text-sm font-bold text-emerald-950 shadow-sm">Open My Student Account</Link>}
                         {isParent && <Link href={route('portal.parent.services')} className="mt-4 inline-flex rounded-xl bg-white px-4 py-2 text-sm font-bold text-emerald-950 shadow-sm">Parent Service Center</Link>}
+                        <Link href={route('profile.edit')} className="mt-4 ml-2 inline-flex rounded-xl border border-white/30 bg-white/10 px-4 py-2 text-sm font-bold text-white hover:bg-white/20">পাসওয়ার্ড বদলান</Link>
                     </div>
                     {isParent && portal.children?.length > 1 && (
                         <label className="min-w-52 text-xs font-semibold text-emerald-100">
@@ -146,6 +149,20 @@ function StudentParentDashboard({ portal }) {
                     <p className="mt-2 text-xl font-black text-emerald-900">৳ {Number(portal.dues ?? 0).toLocaleString()}</p>
                 </div>
             </div>
+
+            <section className="overflow-hidden rounded-2xl border border-amber-200 bg-white shadow-sm">
+                <div className="flex items-center gap-3 border-b border-amber-100 bg-amber-50 px-5 py-4">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-800"><Icon name="check-circle" className="h-5 w-5" /></span>
+                    <div><h2 className="text-base font-bold text-slate-900">এখন কী করতে হবে?</h2><p className="mt-0.5 text-xs text-slate-600">জরুরি কাজ ও নতুন আপডেট এখানে দেখুন।</p></div>
+                </div>
+                {actionItems.length ? <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {actionItems.map((item) => <article key={item.key} className="rounded-xl border border-slate-200 p-4">
+                        <div className="flex items-start justify-between gap-3"><h3 className="font-bold text-slate-900">{item.title}</h3><span className="flex h-8 min-w-8 items-center justify-center rounded-full bg-rose-100 px-2 text-sm font-black text-rose-700">{item.count}</span></div>
+                        <p className="mt-2 text-sm leading-6 text-slate-600">{item.detail}</p>
+                        <Link href={item.href} className="mt-3 inline-flex rounded-lg bg-emerald-800 px-3 py-2 text-sm font-bold text-white hover:bg-emerald-900">এখানে দেখুন →</Link>
+                    </article>)}
+                </div> : <div className="flex items-center gap-3 p-5 text-sm text-emerald-800"><Icon name="check-circle" className="h-5 w-5 shrink-0" />এখন কোনো কাজ বাকি নেই। নতুন homework, fee, exam বা permission এলে এখানে দেখানো হবে।</div>}
+            </section>
 
             <div className="grid gap-4 lg:grid-cols-2">
                 <Section title="My Recent Attendance" subtitle="সর্বশেষ ৭টি attendance record" icon="check-circle">

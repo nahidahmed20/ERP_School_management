@@ -93,7 +93,7 @@ export default function Index({ personnel, filters }) {
             </div>
             <div className="flex justify-end gap-3 pt-4 border-t">
               <button type="button" onClick={onClose} className="px-5 py-2.5 rounded-xl border font-semibold">Cancel</button>
-              <button type="submit" disabled={processing} className="px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-semibold flex items-center gap-2">
+              <button type="submit" disabled={processing} className="inline-flex items-center gap-2 rounded-xl bg-emerald-800 px-5 py-2.5 font-semibold text-white transition hover:bg-emerald-900 disabled:opacity-60">
                 <Icon name="save" className="w-4 h-4" /> Save
               </button>
             </div>
@@ -106,28 +106,32 @@ export default function Index({ personnel, filters }) {
   return (
     <AuthenticatedLayout>
       <Head title="Transport Personnel" />
-      <div className="max-w-7xl mx-auto p-6 space-y-6">
+      <div className="w-full space-y-5 px-3 py-4 sm:space-y-6 sm:px-5 sm:py-6 lg:px-8">
 
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col gap-4 rounded-3xl border border-emerald-100 bg-gradient-to-r from-emerald-50 via-white to-slate-50 px-5 py-6 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-7">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Transport Personnel</h1>
-            <p className="text-sm text-slate-500">Manage drivers and helpers.</p>
+            <span className="text-xs font-extrabold uppercase tracking-[0.18em] text-emerald-800">Fleet Management</span>
+            <h1 className="mt-1 text-2xl font-black text-slate-900 sm:text-3xl">Transport Personnel</h1>
+            <p className="mt-1 text-sm text-slate-600">Manage drivers and helpers, their licenses and contact details.</p>
           </div>
-          <button onClick={() => { setEditingItem(null); setIsFormOpen(true); }} className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 shadow-md">
+          <button onClick={() => { setEditingItem(null); setIsFormOpen(true); }} className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-800 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-900 sm:w-auto">
             <Icon name="plus" className="w-4 h-4" /> Add Personnel
           </button>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex justify-between items-center">
-          <div className="flex gap-4">
-            <select value={perPage} onChange={e => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }} className="rounded-xl border-slate-200 text-sm">
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-4 sm:px-6"><h2 className="text-sm font-bold text-slate-900">Find personnel</h2><p className="mt-0.5 text-xs text-slate-500">Search by name or phone number.</p></div>
+          <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 sm:p-5">
+            <select value={perPage} onChange={e => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }} className="w-full rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-700 focus:border-emerald-600 focus:ring-emerald-600/20">
               <option value="10">10 / Page</option><option value="25">25 / Page</option><option value="All">All</option>
             </select>
-            <input type="text" placeholder="Search name or phone..." value={search} onChange={e => setSearch(e.target.value)} onKeyDown={e => e.key === 'Enter' && applyFilters()} className="rounded-xl border-slate-200 text-sm w-64" />
+            <input type="text" placeholder="Search name or phone..." value={search} onChange={e => setSearch(e.target.value)} onKeyDown={e => e.key === 'Enter' && applyFilters()} className="w-full rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-emerald-600 focus:ring-emerald-600/20" />
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="border-b border-slate-100 px-5 py-4 sm:px-6"><h2 className="text-sm font-bold text-slate-900">Personnel directory</h2><p className="mt-0.5 text-xs text-slate-500">{personnel.total ?? personnel.data.length} staff members</p></div>
+          <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
@@ -163,6 +167,7 @@ export default function Index({ personnel, filters }) {
               ))}
             </tbody>
           </table>
+          </div>
           <div className="p-4 bg-white border-t border-slate-100"><Pagination meta={personnel} /></div>
         </div>
       </div>

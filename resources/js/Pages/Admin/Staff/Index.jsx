@@ -221,32 +221,37 @@ export default function Index({ staff, departments, designations, filters }) {
 
       <div className="print-title">Staff & Teachers Directory - {new Date().toLocaleDateString('en-GB')}</div>
 
-      <div className="staff-directory-page w-full space-y-6 py-8 no-print">
+      <div className="staff-directory-page w-full space-y-5 px-3 py-4 sm:space-y-6 sm:px-5 sm:py-6 lg:px-8 no-print">
 
         {/* Page Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex flex-col gap-4 rounded-3xl border border-emerald-100 bg-gradient-to-r from-emerald-50 via-white to-slate-50 px-5 py-6 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-7">
           <div>
-            <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">Directory</span>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Staff &amp; Teachers Directory</h1>
+            <span className="text-xs font-extrabold tracking-[0.18em] text-emerald-800 uppercase">Directory</span>
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight mt-1 sm:text-3xl">Staff &amp; Teachers Directory</h1>
             <p className="text-sm text-slate-500 mt-1">কর্মচারী, শিক্ষক ও স্টাফদের তথ্য, ফিল্টারিং ও পোর্টাল অ্যাক্সেস পরিচালনা করুন।</p>
           </div>
           <Link
             href={route('admin.staff.create')}
-            className="w-full sm:w-auto inline-flex justify-center items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md shadow-indigo-500/20 active:scale-95"
+            className="w-full sm:w-auto inline-flex min-h-11 justify-center items-center gap-2 rounded-xl bg-emerald-800 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-900"
           >
             <Icon name="plus" className="w-4 h-4" /> Add New Staff
           </Link>
         </div>
 
         {/* Unified Modern Toolbar */}
-        <div className="staff-directory-toolbar bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4">
-          <div className="staff-directory-filters flex flex-wrap items-center gap-3 w-full xl:w-auto">
+        <div className="staff-directory-toolbar overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="flex flex-col gap-1 border-b border-slate-100 bg-slate-50/70 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+            <div><h2 className="text-sm font-extrabold text-slate-800">Find staff members</h2><p className="mt-0.5 text-xs text-slate-500">Search by ID, name or phone, or filter by department and designation.</p></div>
+            <span className="text-xs font-semibold text-slate-500">{staff.total ?? staff.data.length} records</span>
+          </div>
+          <div className="p-4 sm:p-5">
+          <div className="staff-directory-filters grid w-full grid-cols-1 items-center gap-3 sm:grid-cols-2 xl:grid-cols-6">
 
             {/* Per Page */}
             <select
               value={perPage}
               onChange={e => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}
-              className="appearance-none bg-none pr-3 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer text-center font-mono"
+              className="w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-700 outline-none transition focus:border-emerald-600 focus:bg-white focus:ring-2 focus:ring-emerald-600/20 cursor-pointer"
               style={{ backgroundImage: 'none' }}
             >
               <option value="10">10 / Page</option>
@@ -255,13 +260,11 @@ export default function Index({ staff, departments, designations, filters }) {
               <option value="all">All</option>
             </select>
 
-            <div className="hidden sm:block w-px h-6 bg-slate-200"></div>
-
             {/* Department Filter */}
             <select
               value={departmentId}
               onChange={e => setDepartmentId(e.target.value)}
-              className="staff-department-filter w-full sm:w-44 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
+              className="staff-department-filter w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-emerald-600 focus:bg-white focus:ring-2 focus:ring-emerald-600/20 cursor-pointer"
             >
               <option value="">All Departments</option>
               {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
@@ -271,57 +274,59 @@ export default function Index({ staff, departments, designations, filters }) {
             <select
               value={designationId}
               onChange={e => setDesignationId(e.target.value)}
-              className="staff-designation-filter w-full sm:w-44 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
+              className="staff-designation-filter w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-emerald-600 focus:bg-white focus:ring-2 focus:ring-emerald-600/20 cursor-pointer"
             >
               <option value="">All Designations</option>
               {designations.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
             </select>
 
             {/* Search Input */}
-            <div className="staff-directory-search relative flex-1 min-w-[200px] sm:w-64">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Icon name="search" className="w-4 h-4 text-slate-400" />
+            <div className="staff-directory-search relative min-w-0 sm:col-span-2 xl:col-span-2">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
+                <Icon name="search" className="h-4 w-4 text-emerald-700" />
               </div>
               <input
                 type="text"
-                placeholder="Search ID, Name, Phone..."
+                aria-label="Search staff by ID, name or phone"
+                placeholder="Search by staff ID, name or phone"
                 value={search}
                 onChange={handleSearchChange}
                 onKeyDown={e => e.key === 'Enter' && applyFilters()}
-                className="block w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                className="block w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-sm placeholder:text-slate-400 outline-none transition-all focus:border-emerald-600 focus:bg-white focus:ring-2 focus:ring-emerald-600/20"
               />
             </div>
 
             {/* Apply Button */}
             <button
               onClick={() => applyFilters()}
-              className="w-full sm:w-auto px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
+              className="w-full sm:col-span-2 xl:col-span-1 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-emerald-800 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-900"
             >
-              Filter
+              <Icon name="search" className="h-4 w-4" />
+              Search
             </button>
           </div>
 
           {/* Export Actions */}
-          <div className="staff-directory-export-actions flex items-center justify-end gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-xl w-full xl:w-auto shadow-sm shrink-0 ml-auto">
-            <button onClick={copyToClipboard} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Copy to Clipboard">
-              Copy
+          <div className="staff-directory-export-actions mt-4 flex flex-col gap-2 rounded-2xl border border-slate-200 bg-slate-50/70 p-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500"><Icon name="download" className="h-4 w-4" /> Export current list</div>
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
+            <button onClick={copyToClipboard} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-800" title="Copy to Clipboard">
+              <Icon name="copy" className="h-4 w-4" /> Copy
             </button>
-            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-            <button onClick={exportToCSV} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-emerald-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export CSV">
-              CSV
+            <button onClick={exportToCSV} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-emerald-800 px-3 text-xs font-bold text-white transition hover:bg-emerald-900" title="Export CSV">
+              <Icon name="excel" className="h-4 w-4" /> CSV
             </button>
-            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-            <button onClick={() => alert('Backend Excel plugin needed')} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-green-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export Excel">
-              Excel
+            <button onClick={() => alert('Backend Excel plugin needed')} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-800" title="Export Excel">
+              <Icon name="excel" className="h-4 w-4" /> Excel
             </button>
-            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-            <button onClick={() => alert('Backend PDF plugin needed')} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-rose-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export PDF">
-              PDF
+            <button onClick={() => alert('Backend PDF plugin needed')} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700" title="Export PDF">
+              <Icon name="pdf" className="h-4 w-4" /> PDF
             </button>
-            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-            <button onClick={handlePrint} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-amber-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Print List">
-              Print
+            <button onClick={handlePrint} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 transition hover:border-amber-200 hover:bg-amber-50 hover:text-amber-800" title="Print List">
+              <Icon name="printer" className="h-4 w-4" /> Print
             </button>
+            </div>
+          </div>
           </div>
         </div>
 
@@ -396,28 +401,31 @@ export default function Index({ staff, departments, designations, filters }) {
                         <span className="text-xs text-slate-500 block mt-0.5">{s.email || 'N/A'}</span>
                       </td>
                       <td className="px-6 py-4 text-right no-print">
-                        <div className="flex items-center justify-end gap-1.5">
+                        <div className="inline-flex items-center justify-end gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1">
                           <button
                             onClick={() => setViewingItem(s)}
-                            className="staff-action-button text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                            className="staff-action-button text-slate-500 hover:text-indigo-700 hover:bg-white hover:shadow-sm rounded-lg transition-all"
                             title="View Profile"
+                            aria-label={`View ${s.first_name} profile`}
                           >
                             <Icon name="eye" className="w-4 h-4" />
                           </button>
                           <Link
                             href={route('admin.staff.edit', s.id)}
-                            className="staff-action-button text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            className="staff-action-button text-slate-500 hover:text-sky-700 hover:bg-white hover:shadow-sm rounded-lg transition-all"
                             title="Edit Staff"
+                            aria-label={`Edit ${s.first_name}`}
                           >
                             <Icon name="edit" className="w-4 h-4" />
                           </Link>
-                          <Link href={route('admin.staff.report',s.id)} className="staff-action-button text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="Staff Reports"><Icon name="chart" className="w-4 h-4"/></Link>
-                          <Link href={route('admin.staff.id-card',s.id)} className="staff-action-button text-slate-500 hover:text-violet-600 hover:bg-violet-50 rounded-lg transition-colors" title="Print ID Card"><Icon name="printer" className="w-4 h-4"/></Link>
-                          {s.user_id&&<Link href={route('admin.documents.certificates.index',{user_id:s.user_id})} className="staff-action-button text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Certificates"><Icon name="document" className="w-4 h-4"/></Link>}
+                          <Link href={route('admin.staff.report',s.id)} className="staff-action-button text-slate-500 hover:text-emerald-700 hover:bg-white hover:shadow-sm rounded-lg transition-all" title="Staff Reports" aria-label={`${s.first_name} reports`}><Icon name="chart" className="w-4 h-4"/></Link>
+                          <Link href={route('admin.staff.id-card',s.id)} className="staff-action-button text-slate-500 hover:text-violet-700 hover:bg-white hover:shadow-sm rounded-lg transition-all" title="Print ID Card" aria-label={`Print ${s.first_name} ID card`}><Icon name="printer" className="w-4 h-4"/></Link>
+                          {s.user_id&&<Link href={route('admin.documents.certificates.index',{user_id:s.user_id})} className="staff-action-button text-slate-500 hover:text-amber-700 hover:bg-white hover:shadow-sm rounded-lg transition-all" title="Certificates" aria-label={`${s.first_name} certificates`}><Icon name="document" className="w-4 h-4"/></Link>}
                           <button
                             onClick={() => setDeletingItem(s)}
-                            className="staff-action-button text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                            className="staff-action-button text-slate-500 hover:text-rose-700 hover:bg-white hover:shadow-sm rounded-lg transition-all"
                             title="Delete Staff"
+                            aria-label={`Delete ${s.first_name}`}
                           >
                             <Icon name="trash" className="w-4 h-4" />
                           </button>

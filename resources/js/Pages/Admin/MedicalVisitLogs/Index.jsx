@@ -87,18 +87,18 @@ export default function Index({ logs, rooms, users, campuses, activeCampusId, fi
 
       <div className="print-title">Medical Visit Logs Directory - {new Date().toLocaleDateString('en-GB')}</div>
 
-      <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8 no-print">
+      <div className="w-full space-y-5 px-3 py-4 sm:space-y-6 sm:px-5 sm:py-6 lg:px-8 no-print">
         
         {/* Page Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex flex-col gap-4 rounded-3xl border border-emerald-100 bg-gradient-to-r from-emerald-50 via-white to-slate-50 px-5 py-6 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-7">
           <div>
-            <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">Medical Room</span>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Visit Logs</h1>
+            <span className="text-xs font-extrabold uppercase tracking-[0.18em] text-emerald-800">Medical Center</span>
+            <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Visit Logs</h1>
             <p className="text-sm text-slate-500 mt-1">শিক্ষার্থী এবং স্টাফদের মেডিকেল রুমে ভিজিটের রেকর্ড পরিচালনা করুন।</p>
           </div>
           <button
             onClick={() => { setEditingItem(null); setIsFormOpen(true); }}
-            className="w-full sm:w-auto inline-flex justify-center items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md active:scale-95"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-5 py-3 text-sm font-bold text-white shadow-sm transition-colors hover:bg-emerald-800 sm:w-auto"
           >
             <Icon name="plus" className="w-4 h-4" /> Add Visit Log
           </button>
@@ -124,12 +124,13 @@ export default function Index({ logs, rooms, users, campuses, activeCampusId, fi
           </div>
 
           {/* Export Actions */}
-          <div className="flex items-center justify-end gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-xl w-full xl:w-auto shadow-sm shrink-0 ml-auto">
-            <button onClick={copyToClipboard} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5">Copy</button>
-            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-            <button onClick={exportToCSV} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-emerald-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5">CSV</button>
-            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-            <button onClick={handlePrint} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-amber-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5">Print</button>
+          <div className="project-export-toolbar flex w-full shrink-0 flex-col gap-2 rounded-2xl border border-emerald-100 bg-emerald-50/60 p-3 shadow-sm xl:w-auto xl:min-w-[260px]">
+            <span className="px-1 text-[11px] font-extrabold uppercase tracking-[0.16em] text-emerald-900">Export &amp; Print</span>
+            <div className="flex w-full items-center gap-2">
+            <button onClick={copyToClipboard} className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-800">Copy</button>
+            <button onClick={exportToCSV} className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-800">CSV</button>
+            <button onClick={handlePrint} className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-800">Print</button>
+            </div>
           </div>
         </div>
 

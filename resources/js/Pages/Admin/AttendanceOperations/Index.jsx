@@ -3,7 +3,7 @@ import { Head, router, useForm, usePage } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import Swal from "sweetalert2";
 
-const input = "mt-1 block w-full rounded-xl border-slate-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-colors";
+const input = "mt-1 block w-full rounded-xl border-slate-200 bg-slate-50 text-sm text-slate-700 shadow-sm transition-colors focus:border-emerald-600 focus:bg-white focus:ring-emerald-600/20";
 
 export default function Index({ policy, locks, classes, holidays }) {
     const { flash } = usePage().props;
@@ -36,25 +36,35 @@ export default function Index({ policy, locks, classes, holidays }) {
         <AuthenticatedLayout>
             <Head title="Attendance Control" />
 
-            <div className="mx-auto max-w-6xl space-y-5 sm:space-y-6 p-4 sm:p-6">
+            <div className="w-full space-y-5 px-3 py-4 sm:space-y-6 sm:px-5 sm:py-6 lg:px-8">
 
                 {/* Header */}
-                <div>
-                    <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
-                        Attendance Control & Policy
-                    </h1>
-                    <p className="mt-1 text-sm text-slate-500">
-                        Manual, biometric, holiday and approved-leave attendance rules in one place.
-                    </p>
+                <div className="flex flex-col gap-4 rounded-3xl border border-emerald-100 bg-gradient-to-r from-emerald-50 via-white to-slate-50 px-5 py-6 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-7">
+                    <div>
+                        <span className="text-xs font-extrabold uppercase tracking-[0.18em] text-emerald-800">Attendance management</span>
+                        <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
+                            Attendance Control & Policy
+                        </h1>
+                        <p className="mt-1 max-w-2xl text-sm text-slate-600">
+                            Set attendance rules, close a day when records are complete, and review upcoming holidays.
+                        </p>
+                    </div>
+                    <div className="rounded-2xl border border-white bg-white/80 px-4 py-3 shadow-sm">
+                        <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Configured holidays</p>
+                        <p className="mt-1 text-2xl font-black text-emerald-800">{holidays.length}</p>
+                    </div>
                 </div>
 
                 <div className="grid gap-5 sm:gap-6 lg:grid-cols-2">
 
                     {/* Policy Section */}
-                    <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
-                        <h2 className="mb-4 sm:mb-5 text-lg font-bold text-slate-800">
-                            Automatic Attendance Rules
-                        </h2>
+                    <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                        <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-4 sm:px-6">
+                            <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-emerald-700">Policy setup</p>
+                            <h2 className="mt-1 text-lg font-bold text-slate-900">Automatic Attendance Rules</h2>
+                            <p className="mt-1 text-sm text-slate-500">Choose start times, grace periods and weekly holidays.</p>
+                        </div>
+                        <div className="p-5 sm:p-6">
                         <form
                             onSubmit={(e) => {
                                 e.preventDefault();
@@ -89,11 +99,11 @@ export default function Index({ policy, locks, classes, holidays }) {
                                     ].map((day, i) => (
                                         <label
                                             key={day}
-                                            className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm transition-colors hover:bg-slate-100"
+                                                className="flex cursor-pointer items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors hover:border-emerald-200 hover:bg-emerald-50"
                                         >
                                             <input
                                                 type="checkbox"
-                                                className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                                className="rounded border-slate-300 text-emerald-700 focus:ring-emerald-600"
                                                 checked={p.data.weekly_holidays.includes(i)}
                                                 onChange={(e) =>
                                                     p.setData(
@@ -114,7 +124,7 @@ export default function Index({ policy, locks, classes, holidays }) {
                                 <label className="flex cursor-pointer items-center text-sm font-medium text-slate-700">
                                     <input
                                         type="checkbox"
-                                        className="mr-2.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                        className="mr-2.5 h-4 w-4 rounded border-slate-300 text-emerald-700 focus:ring-emerald-600"
                                         checked={p.data.block_holiday_entry}
                                         onChange={(e) => p.setData("block_holiday_entry", e.target.checked)}
                                     />
@@ -123,7 +133,7 @@ export default function Index({ policy, locks, classes, holidays }) {
                                 <label className="flex cursor-pointer items-center text-sm font-medium text-slate-700">
                                     <input
                                         type="checkbox"
-                                        className="mr-2.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                        className="mr-2.5 h-4 w-4 rounded border-slate-300 text-emerald-700 focus:ring-emerald-600"
                                         checked={p.data.auto_absent_sms}
                                         onChange={(e) => p.setData("auto_absent_sms", e.target.checked)}
                                     />
@@ -132,18 +142,22 @@ export default function Index({ policy, locks, classes, holidays }) {
                             </div>
 
                             <div className="mt-2 sm:col-span-2">
-                                <button disabled={p.processing} className="w-full sm:w-auto rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-indigo-700 active:scale-95 disabled:opacity-70">
+                                <button disabled={p.processing} className="w-full sm:w-auto rounded-xl bg-emerald-800 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-emerald-900 disabled:cursor-not-allowed disabled:opacity-60">
                                     {p.processing ? 'Saving...' : 'Save policy'}
                                 </button>
                             </div>
                         </form>
+                        </div>
                     </section>
 
                     {/* Lock/Close Day Section */}
-                    <section className="flex flex-col rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
-                        <h2 className="mb-4 sm:mb-5 text-lg font-bold text-slate-800">
-                            Close Attendance Day
-                        </h2>
+                    <section className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                        <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-4 sm:px-6">
+                            <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-amber-700">Daily records</p>
+                            <h2 className="mt-1 text-lg font-bold text-slate-900">Close Attendance Day</h2>
+                            <p className="mt-1 text-sm text-slate-500">Lock a completed day to prevent further attendance changes.</p>
+                        </div>
+                        <div className="flex flex-1 flex-col p-5 sm:p-6">
                         <form
                             onSubmit={(e) => {
                                 e.preventDefault();
@@ -206,13 +220,13 @@ export default function Index({ policy, locks, classes, holidays }) {
                             )}
 
                             <div className="mt-2 sm:col-span-2">
-                                <button disabled={l.processing} className="w-full sm:w-auto rounded-xl bg-slate-900 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-slate-800 active:scale-95 disabled:opacity-70">
+                                <button disabled={l.processing} className="w-full sm:w-auto rounded-xl bg-slate-900 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60">
                                     {l.processing ? 'Locking...' : 'Lock day'}
                                 </button>
                             </div>
                         </form>
 
-                        <div className="mt-6 flex-1 rounded-xl border border-slate-100 bg-slate-50 p-1">
+                        <div className="mt-6 flex-1 rounded-2xl border border-slate-200 bg-slate-50 p-2">
                             {locks.length === 0 && (
                                 <p className="p-4 text-center text-sm text-slate-500">No locked days found.</p>
                             )}
@@ -236,19 +250,22 @@ export default function Index({ policy, locks, classes, holidays }) {
                                 ))}
                             </div>
                         </div>
+                        </div>
                     </section>
                 </div>
 
                 {/* Holidays Section */}
-                <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
-                    <h2 className="mb-4 text-lg font-bold text-slate-800">
-                        Government / Academic Holidays
-                    </h2>
+                <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                    <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-4 sm:px-6">
+                        <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-sky-700">School calendar</p>
+                        <h2 className="mt-1 text-lg font-bold text-slate-900">Government / Academic Holidays</h2>
+                        <p className="mt-1 text-sm text-slate-500">Configured holidays that may affect attendance entry.</p>
+                    </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                    <div className="grid grid-cols-1 gap-3 p-5 sm:grid-cols-2 sm:gap-4 sm:p-6 lg:grid-cols-3">
                         {holidays.length ? (
                             holidays.map((h) => (
-                                <div key={h.id} className="flex flex-col justify-center rounded-xl border border-slate-100 bg-slate-50 p-4 text-sm">
+                                <div key={h.id} className="flex flex-col justify-center rounded-xl border border-slate-200 bg-gradient-to-br from-white to-sky-50 p-4 text-sm shadow-sm">
                                     <span className="font-bold text-slate-800">{h.title}</span>
                                     <span className="mt-1 text-slate-500">{new Date(h.start_datetime).toLocaleDateString('en-GB')}</span>
                                 </div>

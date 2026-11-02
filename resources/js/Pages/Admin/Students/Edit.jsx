@@ -89,7 +89,7 @@ export default function Edit({ student, classes, campuses, categories, houses })
     post(route('admin.students.update', student.id), { forceFormData: true });
   };
 
-  const academicComplete = !!(data.campus_id && data.class_id && data.section_id);
+  const academicComplete = !!(data.campus_id && data.class_id);
   const personalComplete = !!(data.first_name && data.date_of_birth && data.gender && data.nationality && data.present_address && data.permanent_address);
   const guardianComplete = !!(data.father_name && data.father_phone && data.mother_name);
 
@@ -297,9 +297,9 @@ export default function Edit({ student, classes, campuses, categories, houses })
                     {errors.class_id && <span className="mod-error-text">{errors.class_id}</span>}
                   </div>
                   <div className="mod-field">
-                    <label className="mod-label">Section <span className="mod-req">*</span></label>
-                    <select className={`mod-input ${errors.section_id ? 'mod-input-error' : ''}`} value={data.section_id} onChange={e => setData('section_id', e.target.value)} required disabled={!data.class_id}>
-                      <option value="">Select Section</option>
+                    <label className="mod-label">Section (optional)</label>
+                    <select className={`mod-input ${errors.section_id ? 'mod-input-error' : ''}`} value={data.section_id} onChange={e => setData('section_id', e.target.value)} disabled={!data.class_id}>
+                      <option value="">No section</option>
                       {availableSections.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                     </select>
                     {errors.section_id && <span className="mod-error-text">{errors.section_id}</span>}

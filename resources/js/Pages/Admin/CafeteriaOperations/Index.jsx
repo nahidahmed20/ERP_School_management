@@ -3,13 +3,13 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 
 const C = "mt-1 w-full rounded-xl border-slate-300 text-sm",
     Box = ({ title, children }) => (
-        <section className="rounded-2xl border bg-white p-5 shadow-sm">
-            <h2 className="mb-4 font-bold">{title}</h2>
+        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <h2 className="mb-4 font-bold text-slate-900">{title}</h2>
             {children}
         </section>
     ),
     Btn = ({ children }) => (
-        <button className="mt-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-bold text-white hover:bg-indigo-700 transition-colors">
+        <button className="mt-2 rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-emerald-800">
             {children}
         </button>
     );
@@ -47,17 +47,18 @@ export default function Index({
     return (
         <AuthenticatedLayout>
             <Head title="Cafeteria POS Dashboard" />
-            <main className="mx-auto max-w-7xl space-y-6 p-6">
+            <main className="w-full space-y-5 px-3 py-4 sm:space-y-6 sm:px-5 sm:py-6 lg:px-8">
                 
-                <div>
-                    <h1 className="text-2xl font-black text-slate-900">Cafeteria & Wallet POS</h1>
-                    <p className="text-sm text-slate-500">ID purchase, wallet control, kitchen tracking, stock, and daily closing.</p>
+                <div className="flex flex-col gap-3 rounded-3xl border border-emerald-100 bg-gradient-to-r from-emerald-50 via-white to-slate-50 px-5 py-6 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-7">
+                    <div><span className="text-xs font-extrabold uppercase tracking-[0.18em] text-emerald-800">Cafeteria Management</span><h1 className="mt-1 text-2xl font-black text-slate-900 sm:text-3xl">Cafeteria &amp; Wallet POS</h1>
+                    <p className="mt-1 text-sm text-slate-600">ID purchase, wallet control, kitchen tracking, stock, and daily closing.</p></div>
+                    <span className="w-fit rounded-full bg-white px-4 py-2 text-xs font-bold text-emerald-800 shadow-sm">Point of Sale</span>
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                     {Object.entries(summary).map(([k, v]) => (
-                        <div className="rounded-2xl bg-slate-900 p-4 text-white shadow-sm" key={k}>
-                            <small className="capitalize text-slate-300 font-semibold">{k.replace(/([A-Z])/g, " $1")}</small>
+                        <div className="rounded-2xl border border-slate-200 bg-white p-4 text-slate-900 shadow-sm" key={k}>
+                            <small className="capitalize font-semibold text-slate-500">{k.replace(/([A-Z])/g, " $1")}</small>
                             <b className="block text-2xl font-mono mt-1">
                                 {k.toLowerCase().includes("balance") || k === "sales" ? "৳ " : ""}{Number(v).toLocaleString()}
                             </b>

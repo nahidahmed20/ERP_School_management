@@ -4,14 +4,14 @@ import { useMemo, useEffect } from 'react';
 import Icon from '@/Components/Icons';
 import Swal from 'sweetalert2';
 
-const inputClass = 'mt-1 block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all';
+const inputClass = 'mt-1 block w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none transition-all focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20';
 const labelClass = 'block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5';
 
 const Box = ({ title, icon, children, action }) => (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col">
+    <section className="flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
         <div className="mb-5 flex items-center justify-between border-b border-slate-100 pb-3">
             <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
                     <Icon name={icon} className="w-4 h-4" />
                 </div>
                 <h2 className="font-bold text-slate-800">{title}</h2>
@@ -56,16 +56,16 @@ export default function Center({ templates, segments, campaigns, providers }) {
         <AuthenticatedLayout>
             <Head title="Communication Center" />
             
-            <main className="mx-auto max-w-7xl space-y-8 py-8 px-4 sm:px-6 lg:px-8">
+            <main className="w-full space-y-5 px-3 py-4 sm:space-y-6 sm:px-5 sm:py-6 lg:px-8">
                 
                 {/* Page Header */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="flex flex-col gap-4 rounded-3xl border border-emerald-100 bg-gradient-to-r from-emerald-50 via-white to-slate-50 px-5 py-6 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-7">
                     <div>
-                        <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">Messaging & Notifications</span>
-                        <h1 className="text-3xl font-black text-slate-900 mt-1">Communication Center</h1>
-                        <p className="text-sm text-slate-500 mt-1">Manage SMS, Email, WhatsApp campaigns and track delivery status.</p>
+                        <span className="text-xs font-extrabold uppercase tracking-[0.18em] text-emerald-800">Messaging &amp; Notifications</span>
+                        <h1 className="mt-1 text-2xl font-black text-slate-900 sm:text-3xl">Communication Center</h1>
+                        <p className="mt-1 text-sm text-slate-600">Manage SMS, Email, WhatsApp campaigns and track delivery status.</p>
                     </div>
-                    <button onClick={() => router.post(route('admin.communication-center.balance'))} className="w-full sm:w-auto inline-flex justify-center items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md active:scale-95">
+                    <button onClick={() => router.post(route('admin.communication-center.balance'))} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-5 py-3 text-sm font-bold text-white shadow-sm transition-colors hover:bg-emerald-800 sm:w-auto">
                         <Icon name="refresh-cw" className="w-4 h-4" /> Check Balance
                     </button>
                 </div>
@@ -203,7 +203,7 @@ export default function Center({ templates, segments, campaigns, providers }) {
                                 </div>
 
                                 <div className="md:col-span-2 border-t border-slate-100 pt-4 flex justify-end">
-                                    <button disabled={cForm.processing} className="rounded-xl bg-indigo-600 px-8 py-3 font-bold text-white shadow-md hover:bg-indigo-700 disabled:opacity-70 flex items-center gap-2">
+                                    <button disabled={cForm.processing} className="flex items-center gap-2 rounded-xl bg-emerald-700 px-8 py-3 font-bold text-white shadow-sm transition-colors hover:bg-emerald-800 disabled:opacity-70">
                                         <Icon name="edit" className="w-4 h-4" /> Save as Draft
                                     </button>
                                 </div>
@@ -248,7 +248,7 @@ export default function Center({ templates, segments, campaigns, providers }) {
                                         </td>
                                         <td className="px-5 py-3 text-right">
                                             {x.status === 'draft' && <button onClick={() => router.patch(route('admin.communication-center.approve', x.id))} className="px-4 py-1.5 text-xs font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg transition-colors">Approve</button>}
-                                            {x.status === 'approved' && <button onClick={() => router.post(route('admin.communication-center.dispatch', x.id))} className="px-4 py-1.5 text-xs font-bold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg transition-colors flex items-center gap-1 ml-auto"><Icon name="send" className="w-3 h-3" /> Queue</button>}
+                                            {x.status === 'approved' && <button onClick={() => router.post(route('admin.communication-center.dispatch', x.id))} className="ml-auto flex items-center gap-1 rounded-lg bg-emerald-50 px-4 py-1.5 text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-100"><Icon name="send" className="w-3 h-3" /> Queue</button>}
                                             {['queued', 'completed', 'scheduled'].includes(x.status) && <span className="text-[10px] text-slate-400 font-semibold italic">Locked</span>}
                                         </td>
                                     </tr>

@@ -57,23 +57,28 @@ export default function Index({ rooms, medicineStocks, alerts, appointments, iss
         >
             <Head title="Medical Operations" />
 
-            <div className="py-12">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                    <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
+            <div className="w-full space-y-5 px-3 py-4 sm:space-y-6 sm:px-5 sm:py-6 lg:px-8">
+                <div className="w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                    <header className="border-b border-emerald-100 bg-gradient-to-r from-emerald-50 via-white to-slate-50 px-5 py-6 sm:px-7">
+                        <span className="text-xs font-extrabold uppercase tracking-[0.18em] text-emerald-800">Medical Center</span>
+                        <h1 className="mt-1 text-2xl font-black text-slate-900 sm:text-3xl">Medical Operations</h1>
+                        <p className="mt-1 text-sm text-slate-600">Monitor medical alerts, issue medicine, and manage appointments.</p>
+                    </header>
+                    <div className="p-4 sm:p-6">
                         
                         {/* Tabs */}
-                        <div className="flex border-b mb-6 space-x-4 overflow-x-auto">
-                            <button onClick={() => setActiveTab('overview')} className={`py-2 px-4 whitespace-nowrap ${activeTab === 'overview' ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-500'}`}>Overview</button>
-                            <button onClick={() => setActiveTab('issue-medicine')} className={`py-2 px-4 whitespace-nowrap ${activeTab === 'issue-medicine' ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-500'}`}>Issue Medicine</button>
-                            <button onClick={() => setActiveTab('appointment')} className={`py-2 px-4 whitespace-nowrap ${activeTab === 'appointment' ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-500'}`}>Book Appointment</button>
-                            <button onClick={() => setActiveTab('emergency')} className={`py-2 px-4 whitespace-nowrap ${activeTab === 'emergency' ? 'border-b-2 border-red-500 text-red-600 font-bold' : 'text-red-500'}`}>Report Emergency</button>
+                        <div className="mb-6 flex overflow-x-auto border-b border-slate-200">
+                            <button onClick={() => setActiveTab('overview')} className={`shrink-0 border-b-2 px-4 py-3 text-sm font-bold transition-colors ${activeTab === 'overview' ? 'border-emerald-700 bg-emerald-50/60 text-emerald-800' : 'border-transparent text-slate-500 hover:bg-slate-50'}`}>Overview</button>
+                            <button onClick={() => setActiveTab('issue-medicine')} className={`shrink-0 border-b-2 px-4 py-3 text-sm font-bold transition-colors ${activeTab === 'issue-medicine' ? 'border-emerald-700 bg-emerald-50/60 text-emerald-800' : 'border-transparent text-slate-500 hover:bg-slate-50'}`}>Issue Medicine</button>
+                            <button onClick={() => setActiveTab('appointment')} className={`shrink-0 border-b-2 px-4 py-3 text-sm font-bold transition-colors ${activeTab === 'appointment' ? 'border-emerald-700 bg-emerald-50/60 text-emerald-800' : 'border-transparent text-slate-500 hover:bg-slate-50'}`}>Book Appointment</button>
+                            <button onClick={() => setActiveTab('emergency')} className={`shrink-0 border-b-2 px-4 py-3 text-sm font-bold transition-colors ${activeTab === 'emergency' ? 'border-red-600 bg-red-50 text-red-700' : 'border-transparent text-red-600 hover:bg-red-50/60'}`}>Report Emergency</button>
                         </div>
 
                         {/* Overview Tab */}
                         {activeTab === 'overview' && (
                             <div>
-                                <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Emergency Alerts</h3>
-                                <div className="overflow-x-auto mb-8 border border-red-200 rounded-md">
+                                <h3 className="mb-4 text-lg font-bold text-slate-900">Recent Emergency Alerts</h3>
+                                <div className="mb-8 overflow-x-auto rounded-xl border border-rose-200">
                                     <table className="min-w-full divide-y divide-gray-200">
                                         <thead className="bg-red-50">
                                             <tr>
@@ -98,8 +103,8 @@ export default function Index({ rooms, medicineStocks, alerts, appointments, iss
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     <div>
-                                        <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Appointments</h3>
-                                        <div className="overflow-x-auto border rounded-md">
+                                        <h3 className="mb-4 text-lg font-bold text-slate-900">Recent Appointments</h3>
+                                        <div className="overflow-x-auto rounded-xl border border-slate-200">
                                             <table className="min-w-full divide-y divide-gray-200">
                                                 <thead className="bg-gray-50">
                                                     <tr>
@@ -122,8 +127,8 @@ export default function Index({ rooms, medicineStocks, alerts, appointments, iss
                                     </div>
                                     
                                     <div>
-                                        <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Medicine Issued</h3>
-                                        <div className="overflow-x-auto border rounded-md">
+                                        <h3 className="mb-4 text-lg font-bold text-slate-900">Recent Medicine Issued</h3>
+                                        <div className="overflow-x-auto rounded-xl border border-slate-200">
                                             <table className="min-w-full divide-y divide-gray-200">
                                                 <thead className="bg-gray-50">
                                                     <tr>
@@ -150,7 +155,7 @@ export default function Index({ rooms, medicineStocks, alerts, appointments, iss
 
                         {/* Issue Medicine Tab */}
                         {activeTab === 'issue-medicine' && (
-                            <form onSubmit={submitMedicine} className="space-y-4 max-w-lg">
+                            <form onSubmit={submitMedicine} className="grid max-w-4xl gap-4 rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:grid-cols-2 sm:p-6">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">Select Student</label>
                                     <select className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value={medicineForm.user_id} onChange={e => medicineForm.setData('user_id', e.target.value)} required>
@@ -183,7 +188,7 @@ export default function Index({ rooms, medicineStocks, alerts, appointments, iss
 
                         {/* Book Appointment Tab */}
                         {activeTab === 'appointment' && (
-                            <form onSubmit={submitAppointment} className="space-y-4 max-w-lg">
+                            <form onSubmit={submitAppointment} className="grid max-w-4xl gap-4 rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:grid-cols-2 sm:p-6">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">Select Student</label>
                                     <select className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value={appointmentForm.user_id} onChange={e => appointmentForm.setData('user_id', e.target.value)} required>
@@ -209,7 +214,7 @@ export default function Index({ rooms, medicineStocks, alerts, appointments, iss
 
                         {/* Emergency Tab */}
                         {activeTab === 'emergency' && (
-                            <form onSubmit={submitEmergency} className="space-y-4 max-w-lg bg-red-50 p-6 rounded-md border border-red-200">
+                            <form onSubmit={submitEmergency} className="grid max-w-4xl gap-4 rounded-2xl border border-rose-200 bg-rose-50/70 p-4 sm:grid-cols-2 sm:p-6">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">Select Student</label>
                                     <select className="mt-1 block w-full rounded-md border-red-300 shadow-sm focus:border-red-500 focus:ring-red-500" value={emergencyForm.user_id} onChange={e => emergencyForm.setData('user_id', e.target.value)} required>

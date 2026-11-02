@@ -91,21 +91,21 @@ export default function Index({ overrides = [] }) {
   return (
     <AuthenticatedLayout>
       <Head title="Language & Translations" />
-      <div className="w-full space-y-4 py-4 sm:space-y-6 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
-        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+      <div className="w-full space-y-5 px-3 py-4 sm:space-y-6 sm:px-5 sm:py-6 lg:px-8">
+        <header className="flex flex-col items-start justify-between gap-4 rounded-3xl border border-emerald-100 bg-gradient-to-r from-emerald-50 via-white to-slate-50 px-5 py-6 shadow-sm sm:flex-row sm:items-center sm:px-7">
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-indigo-600">Settings &amp; Registry</span>
-            <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900">Language &amp; Translations</h1>
-            <p className="mt-1 text-sm text-slate-500">Edit the English and Bangla text used across the project.</p>
+            <span className="text-xs font-extrabold uppercase tracking-[0.18em] text-emerald-800">Settings &amp; Registry</span>
+            <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Language &amp; Translations</h1>
+            <p className="mt-1 text-sm text-slate-600">Add new phrases or edit the English and Bangla text used across the project.</p>
           </div>
-          <button onClick={() => openEditor()} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-indigo-500/20 transition-all hover:bg-indigo-700 active:scale-95 sm:w-auto sm:shrink-0">
+          <button onClick={() => openEditor()} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-5 py-3 text-sm font-bold text-white shadow-sm transition-colors hover:bg-emerald-800 sm:w-auto sm:shrink-0">
             <Icon name="plus" className="h-4 w-4" /> Add Translation
           </button>
-        </div>
+        </header>
 
         <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center xl:w-auto">
-            <select value={perPage} onChange={(event) => setPerPage(event.target.value)} className="w-full cursor-pointer rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-center font-mono text-sm font-medium text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 sm:w-auto">
+            <select value={perPage} onChange={(event) => setPerPage(event.target.value)} className="w-full cursor-pointer rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-center font-mono text-sm font-medium text-slate-700 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 sm:w-auto">
               <option value="10">10 / Page</option>
               <option value="25">25 / Page</option>
               <option value="50">50 / Page</option>
@@ -115,7 +115,7 @@ export default function Index({ overrides = [] }) {
             <div className="hidden h-6 w-px bg-slate-200 sm:block" />
             <div className="relative w-full min-w-0 sm:w-80 sm:flex-1 xl:flex-none">
               <Icon name="search" className="pointer-events-none absolute inset-y-0 left-3 my-auto h-4 w-4 text-slate-400" />
-              <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search English or Bangla text..." className="block w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm outline-none transition-all placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500" />
+              <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search English or Bangla text..." className="block w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm outline-none transition-all placeholder:text-slate-400 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20" />
             </div>
           </div>
           <div className="flex items-center justify-between gap-3 text-sm text-slate-500 xl:justify-end">
@@ -125,7 +125,7 @@ export default function Index({ overrides = [] }) {
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-900/5">
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[850px] border-collapse text-left">
               <thead><tr className="border-b border-slate-200 bg-slate-50/70">
@@ -144,10 +144,10 @@ export default function Index({ overrides = [] }) {
                 ) : shown.map((item) => (
                   <tr key={item.source_key} className="transition-colors hover:bg-slate-50/70">
                     <td className="max-w-sm px-5 py-4 text-sm font-medium text-slate-800">{item.english_text}</td>
-                    <td lang="bn" className="max-w-sm px-5 py-4 text-sm text-slate-800">{item.bangla_text}</td>
+                    <td lang="bn" className="translation-bangla max-w-sm px-5 py-4 text-slate-800">{item.bangla_text || '—'}</td>
                     <td className="max-w-sm px-5 py-4 text-xs text-slate-500">{item.source_key}</td>
                     <td className="whitespace-nowrap px-5 py-4 text-right">
-                      <button type="button" onClick={() => openEditor(item)} className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-indigo-50 hover:text-indigo-600" title="Edit translation" aria-label="Edit translation"><Icon name="edit" className="h-4 w-4" /></button>
+                      <button type="button" onClick={() => openEditor(item)} className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-emerald-50 hover:text-emerald-700" title="Edit translation" aria-label="Edit translation"><Icon name="edit" className="h-4 w-4" /></button>
                       {item.isOverride && <button type="button" onClick={() => remove(item)} className="ml-1 rounded-lg p-2 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600" title="Reset translation" aria-label="Reset translation"><Icon name="refresh" className="h-4 w-4" /></button>}
                     </td>
                   </tr>
@@ -168,22 +168,22 @@ export default function Index({ overrides = [] }) {
       {editorOpen && <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-[2px]" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setEditorOpen(false); }}>
         <form onSubmit={save} role="dialog" aria-modal="true" aria-labelledby="translation-form-title" className="w-full max-w-2xl space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl sm:p-8">
           <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
-            <div><span className="text-xs font-bold uppercase tracking-wider text-indigo-600">Language &amp; Translations</span><h2 id="translation-form-title" className="mt-1 text-xl font-bold text-slate-900">{editing ? 'Edit Translation' : 'Add Translation'}</h2><p className="mt-1 text-sm text-slate-500">The source phrase links this translation to text in the app.</p></div>
+            <div><span className="text-xs font-extrabold uppercase tracking-wider text-emerald-800">Language &amp; Translations</span><h2 id="translation-form-title" className="mt-1 text-xl font-bold text-slate-900">{editing ? 'Edit Translation' : 'Add Translation'}</h2><p className="mt-1 text-sm text-slate-500">Add a phrase for a new app label, or update an existing English and Bangla translation.</p></div>
             <button type="button" onClick={() => setEditorOpen(false)} className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="Close dialog"><Icon name="x" className="h-5 w-5" /></button>
           </div>
           <label className="block text-sm font-semibold text-slate-700">Source phrase
-            <input required maxLength="500" value={form.data.source_key} onChange={(event) => form.setData('source_key', event.target.value)} readOnly={Boolean(editing)} className="mt-1.5 block w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-normal text-slate-700 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 read-only:bg-slate-100" />
+            <input required maxLength="500" value={form.data.source_key} onChange={(event) => form.setData('source_key', event.target.value)} className="mt-1.5 block w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-normal text-slate-700 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20" />
             {form.errors.source_key && <span className="mt-1 block text-xs font-normal text-rose-600">{form.errors.source_key}</span>}
           </label>
           <label className="block text-sm font-semibold text-slate-700">English text
-            <textarea required maxLength="2000" rows="2" value={form.data.english_text} onChange={(event) => form.setData('english_text', event.target.value)} className="mt-1.5 block w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-normal text-slate-700 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500" />
+            <textarea required maxLength="2000" rows="2" value={form.data.english_text} onChange={(event) => form.setData('english_text', event.target.value)} className="mt-1.5 block w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-normal text-slate-700 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20" />
             {form.errors.english_text && <span className="mt-1 block text-xs font-normal text-rose-600">{form.errors.english_text}</span>}
           </label>
           <label className="block text-sm font-semibold text-slate-700">Bangla text
-            <textarea required maxLength="2000" rows="2" lang="bn" value={form.data.bangla_text} onChange={(event) => form.setData('bangla_text', event.target.value)} className="mt-1.5 block w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-normal text-slate-700 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500" />
+            <textarea required maxLength="2000" rows="2" lang="bn" value={form.data.bangla_text} onChange={(event) => form.setData('bangla_text', event.target.value)} className="translation-bangla mt-1.5 block w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-slate-700 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20" />
             {form.errors.bangla_text && <span className="mt-1 block text-xs font-normal text-rose-600">{form.errors.bangla_text}</span>}
           </label>
-          <div className="flex justify-end gap-3 border-t border-slate-100 pt-4"><button type="button" onClick={() => setEditorOpen(false)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50">Cancel</button><button type="submit" disabled={form.processing} className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50">{form.processing && <Icon name="refresh" className="h-4 w-4 animate-spin" />}{form.processing ? 'Saving...' : 'Save Translation'}</button></div>
+          <div className="flex justify-end gap-3 border-t border-slate-100 pt-4"><button type="button" onClick={() => setEditorOpen(false)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50">Cancel</button><button type="submit" disabled={form.processing} className="inline-flex items-center gap-2 rounded-xl bg-emerald-700 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50">{form.processing && <Icon name="refresh" className="h-4 w-4 animate-spin" />}{form.processing ? 'Saving...' : 'Save Translation'}</button></div>
         </form>
       </div>}
     </AuthenticatedLayout>

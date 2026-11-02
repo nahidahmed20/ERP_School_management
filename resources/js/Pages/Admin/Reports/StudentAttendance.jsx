@@ -82,31 +82,31 @@ export default function StudentAttendance({ classes, reportData, filters }) {
         }
       `}} />
 
-      <div className="w-full space-y-8 sm:px-6 lg:px-8 py-8">
+      <div className="w-full space-y-5 px-3 py-4 sm:space-y-6 sm:px-5 sm:py-6 lg:px-8">
         
         {/* Modern Page Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 no-print bg-white p-6 rounded-3xl shadow-sm border border-slate-100 relative overflow-hidden">
-          <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-indigo-50 rounded-full blur-2xl opacity-60"></div>
+        <div className="flex flex-col gap-4 no-print overflow-hidden rounded-3xl border border-emerald-100 bg-gradient-to-r from-emerald-50 via-white to-slate-50 px-5 py-6 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-7 relative">
+          <div className="absolute -right-5 -top-8 h-32 w-32 rounded-full bg-emerald-100/70 blur-2xl"></div>
           <div className="relative z-10">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 text-xs font-bold tracking-wider uppercase mb-2">
+            <div className="inline-flex items-center gap-2 rounded-full bg-emerald-100/80 px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-800 mb-2">
               <Icon name="chart" className="w-3.5 h-3.5" />
               Reports & Analytics
             </div>
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Student Attendance Report</h1>
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight sm:text-3xl">Student Attendance Report</h1>
             <p className="text-sm text-slate-500 mt-1 font-medium">মাসিক ভিত্তিতে শিক্ষার্থীদের উপস্থিতির বিস্তারিত সামারি ও রেকর্ড।</p>
           </div>
         </div>
 
         {/* Premium Filter Section */}
-        <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200 border-t-4 border-t-indigo-600 no-print">
-          <div className="flex items-center gap-2 mb-6">
-            <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">
+        <div className="no-print overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="flex items-center gap-3 border-b border-slate-100 bg-slate-50/70 px-5 py-4 sm:px-6">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800">
               <Icon name="filter" className="w-4 h-4" />
             </div>
-            <h2 className="text-base font-bold text-slate-800">Report Parameters</h2>
+            <div><h2 className="text-base font-bold text-slate-900">Report Parameters</h2><p className="mt-0.5 text-xs text-slate-500">Choose a period and class to build the report.</p></div>
           </div>
           
-          <form onSubmit={applyFilters} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-5 items-end">
+          <form onSubmit={applyFilters} className="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2 sm:gap-5 sm:p-6 lg:grid-cols-4 xl:grid-cols-5 items-end">
             
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Month <span className="text-rose-500">*</span></label>
@@ -115,7 +115,7 @@ export default function StudentAttendance({ classes, reportData, filters }) {
                   value={month} 
                   onChange={e => setMonth(e.target.value)} 
                   required 
-                  className="block w-full pl-4 pr-10 py-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-2xl text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all cursor-pointer appearance-none"
+                  className="block w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 py-3 pl-4 pr-10 text-sm font-semibold text-slate-700 outline-none transition-all hover:bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 cursor-pointer"
                   style={{ backgroundImage: 'none' }} // 💡 FIX: ডিফল্ট আইকন রিমুভ করা হলো
                 >
                   <option value="" disabled>Select Month</option>
@@ -134,7 +134,7 @@ export default function StudentAttendance({ classes, reportData, filters }) {
                   value={year} 
                   onChange={e => setYear(e.target.value)} 
                   required 
-                  className="block w-full pl-4 pr-10 py-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-2xl text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all cursor-pointer appearance-none"
+                  className="block w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 py-3 pl-4 pr-10 text-sm font-semibold text-slate-700 outline-none transition-all hover:bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 cursor-pointer"
                   style={{ backgroundImage: 'none' }} // 💡 FIX: ডিফল্ট আইকন রিমুভ করা হলো
                 >
                   <option value="" disabled>Select Year</option>
@@ -153,7 +153,7 @@ export default function StudentAttendance({ classes, reportData, filters }) {
                   value={classId} 
                   onChange={e => { setClassId(e.target.value); setSectionId(''); }} 
                   required 
-                  className="block w-full pl-4 pr-10 py-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-2xl text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all cursor-pointer appearance-none"
+                  className="block w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 py-3 pl-4 pr-10 text-sm font-semibold text-slate-700 outline-none transition-all hover:bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 cursor-pointer"
                   style={{ backgroundImage: 'none' }} // 💡 FIX: ডিফল্ট আইকন রিমুভ করা হলো
                 >
                   <option value="" disabled>Select Class</option>
@@ -172,7 +172,7 @@ export default function StudentAttendance({ classes, reportData, filters }) {
                   value={sectionId} 
                   onChange={e => setSectionId(e.target.value)} 
                   disabled={!classId} 
-                  className="block w-full pl-4 pr-10 py-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-2xl text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all cursor-pointer appearance-none disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="block w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 py-3 pl-4 pr-10 text-sm font-semibold text-slate-700 outline-none transition-all hover:bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{ backgroundImage: 'none' }} // 💡 FIX: ডিফল্ট আইকন রিমুভ করা হলো
                 >
                   <option value="">All Sections</option>
@@ -185,7 +185,7 @@ export default function StudentAttendance({ classes, reportData, filters }) {
             </div>
 
             <div className="xl:col-span-1 sm:col-span-2 lg:col-span-4 flex justify-end mt-2 xl:mt-0">
-              <button type="submit" className="w-full xl:w-auto bg-slate-900 hover:bg-indigo-600 text-white px-3 py-3 rounded-2xl text-sm font-bold transition-all shadow-lg shadow-slate-900/20 hover:shadow-indigo-500/30 active:scale-95 flex items-center justify-center gap-2.5">
+              <button type="submit" className="flex w-full items-center justify-center gap-2.5 rounded-xl bg-emerald-800 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-900 xl:w-auto">
                 <Icon name="search" className="w-4 h-4" /> Generate Report
               </button>
             </div>
@@ -209,7 +209,7 @@ export default function StudentAttendance({ classes, reportData, filters }) {
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
             
             <div className="flex justify-end no-print">
-              <div className="flex items-center gap-1.5 bg-white border border-slate-200 p-1.5 rounded-2xl shadow-sm">
+              <div className="flex w-full flex-wrap items-center justify-center gap-1.5 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm sm:w-auto sm:justify-end">
                 <button onClick={copyToClipboard} className="px-4 py-2 text-xs font-bold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all flex items-center gap-2" title="Copy to Clipboard">
                   <Icon name="clipboard" className="w-3.5 h-3.5" /> Copy
                 </button>

@@ -14,7 +14,9 @@ function HomeworkForm({item}) {
 }
 
 export default function StudentServices(props) {
- const [tab,setTab]=useState('tasks');
+ const allowedTabs=['tasks','attendance','fees','exams','library','campus','support'];
+ const requestedTab=typeof window==='undefined'?null:new URLSearchParams(window.location.search).get('tab');
+ const [tab,setTab]=useState(allowedTabs.includes(requestedTab)?requestedTab:'tasks');
  const leave=useForm({leave_type:'Sick Leave',start_date:'',end_date:'',reason:'',attachment:null});
  const correction=useForm({attendance_date:'',requested_status:'present',reason:''});
  const profile=useForm({phone:'',email:'',present_address:'',permanent_address:'',reason:''});

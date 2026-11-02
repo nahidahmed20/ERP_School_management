@@ -142,16 +142,16 @@ export default function Index({ materials, filters }) {
 
       <div className="print-title">Kitchen Raw Materials Directory - {new Date().toLocaleDateString('en-GB')}</div>
 
-      <div className="max-w-7xl mx-auto p-6 space-y-6 no-print">
+      <div className="w-full space-y-5 px-3 py-4 sm:space-y-6 sm:px-5 sm:py-6 lg:px-8 no-print">
         
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex flex-col gap-4 rounded-3xl border border-emerald-100 bg-gradient-to-r from-emerald-50 via-white to-slate-50 px-5 py-6 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-7">
           <div>
-            <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">Cafeteria</span>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Kitchen Raw Materials</h1>
+            <span className="text-xs font-extrabold uppercase tracking-[0.18em] text-emerald-800">Cafeteria Management</span>
+            <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Kitchen Raw Materials</h1>
             <p className="text-sm text-slate-500 mt-1">ক্যাফেটেরিয়ার রান্নার কাঁচামাল ও মুদি সামগ্রীর স্টক ম্যানেজ করুন।</p>
           </div>
-          <button onClick={() => { setEditingItem(null); setIsFormOpen(true); }} className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 shadow-md shadow-indigo-500/20 active:scale-95">
+          <button onClick={() => { setEditingItem(null); setIsFormOpen(true); }} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-5 py-3 text-sm font-bold text-white shadow-sm transition-colors hover:bg-emerald-800 sm:w-auto">
             <Icon name="plus" className="w-4 h-4" /> Add Material
           </button>
         </div>

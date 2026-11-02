@@ -128,44 +128,62 @@ export default function POS({ inventory_items, accounts, sale }) {
             <Link href={route('admin.sales.index')} className="inline-flex items-center gap-1.5 text-slate-500 hover:text-slate-900 text-xs font-semibold mb-1 transition-colors">
               <Icon name="arrow-left" className="w-3.5 h-3.5"/> Back to Sales History
             </Link>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{isEdit ? 'Edit Sale / Invoice' : 'POS Terminal'}</h1>
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight">{isEdit ? 'Edit Sale / Invoice' : 'POS Terminal'}</h1>
           </div>
         </div>
       }
     >
       <Head title={isEdit ? 'Edit POS' : 'POS'} />
 
-      <div className="w-full h-full p-4 lg:p-6 bg-slate-50">
-        <form onSubmit={submit} className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full items-start">
+      <div className="w-full space-y-5 bg-slate-50/70 px-3 py-4 sm:space-y-6 sm:px-5 sm:py-6 lg:px-8">
+        <div className="flex flex-col gap-3 rounded-2xl border border-emerald-100 bg-white px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-5">
+          <div><p className="text-xs font-extrabold uppercase tracking-[0.16em] text-emerald-800">Quick checkout</p><p className="mt-1 text-sm text-slate-600">Search the catalog, add items and take payment.</p></div>
+          <div className="flex flex-wrap gap-2 text-xs font-bold"><span className="rounded-full bg-slate-100 px-3 py-1.5 text-slate-700">{inventory_items.length} products</span><span className="rounded-full bg-emerald-50 px-3 py-1.5 text-emerald-800">{cart.length} in cart</span></div>
+        </div>
+
+        <form onSubmit={submit} className="grid grid-cols-1 items-start gap-5 xl:grid-cols-12 xl:gap-6">
 
           {/* Left Column: Product Catalog & Search */}
-          <div className="lg:col-span-8 flex flex-col gap-4 h-[calc(100vh-150px)]">
-            <div className="relative shrink-0 shadow-sm rounded-2xl overflow-hidden bg-white border border-slate-200">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
-                <Icon name="search" className="w-5 h-5" />
+          <div className="flex min-h-0 flex-col gap-4 xl:col-span-8 xl:h-[calc(100vh-235px)]">
+            <div className="pos-product-search relative shrink-0 rounded-2xl border border-emerald-100 bg-gradient-to-r from-white via-white to-emerald-50 p-2 shadow-sm transition focus-within:border-emerald-300 focus-within:ring-4 focus-within:ring-emerald-700/10">
+              <div className="pointer-events-none absolute inset-y-2 left-2 flex items-center pl-1.5">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-800 text-white shadow-sm">
+                  <Icon name="search" className="h-5 w-5" />
+                </span>
               </div>
               <input
                 type="text"
+                aria-label="Search products by name or barcode"
                 placeholder="Search products by name or barcode..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 autoFocus
-                className="block w-full pl-11 pr-4 py-4 bg-transparent border-none outline-none text-slate-900 text-lg placeholder-slate-400 focus:ring-0"
+                className="pos-product-search-input block min-h-14 w-full rounded-xl border-0 bg-transparent py-4 pl-14 pr-28 text-base font-medium text-slate-900 outline-none placeholder:text-slate-400 focus:ring-0 sm:pl-16 sm:pr-32 sm:text-lg"
               />
+              <div className="absolute inset-y-2 right-2 flex items-center gap-2 pr-1.5">
+                {searchTerm ? (
+                  <button type="button" onClick={() => setSearchTerm('')} className="inline-flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-bold text-slate-500 transition hover:bg-white hover:text-rose-700" aria-label="Clear product search">
+                    <Icon name="close" className="h-3.5 w-3.5" /> Clear
+                  </button>
+                ) : (
+                  <span className="hidden rounded-lg border border-slate-200 bg-white/80 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-400 sm:inline-flex">Catalog</span>
+                )}
+                <span className="min-w-9 rounded-lg bg-emerald-100 px-2 py-1.5 text-center text-xs font-extrabold text-emerald-900" title="Matching products">{filteredItems.length}</span>
+              </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto bg-transparent rounded-xl pr-2 custom-scrollbar">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pb-10">
+            <div className="min-h-[40vh] flex-1 overflow-y-auto rounded-xl bg-transparent pr-1 custom-scrollbar xl:min-h-0 xl:pr-2">
+              <div className="grid grid-cols-2 gap-3 pb-6 sm:grid-cols-3 sm:gap-4 xl:grid-cols-4 xl:pb-10">
                 {filteredItems.length > 0 ? (
                   filteredItems.map(item => (
                     <button
                       key={item.id}
                       type="button"
                       onClick={() => addToCart(item)}
-                      className={`relative bg-white border rounded-2xl p-4 flex flex-col items-start text-left transition-all active:scale-95 shadow-sm hover:shadow-md ${item.quantity > 0 ? 'border-slate-200 hover:border-indigo-400' : 'border-rose-100 opacity-70'}`}
+                      className={`relative flex flex-col items-start rounded-2xl border bg-white p-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98] sm:p-4 ${item.quantity > 0 ? 'border-slate-200 hover:border-emerald-300' : 'border-rose-100 opacity-70'}`}
                     >
                       <div className="flex justify-between w-full items-start mb-2">
-                        <span className="font-mono text-[10px] uppercase font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">{item.item_code}</span>
+                        <span className="rounded bg-emerald-50 px-2 py-0.5 font-mono text-[10px] font-bold uppercase text-emerald-800">{item.item_code}</span>
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${item.quantity > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
                           {item.quantity} In Stock
                         </span>
@@ -173,7 +191,7 @@ export default function POS({ inventory_items, accounts, sale }) {
                       <h3 className="font-semibold text-slate-800 text-sm leading-snug mb-3">{item.name}</h3>
                       <div className="mt-auto w-full flex justify-between items-center border-t border-slate-100 pt-3">
                         <span className="font-black text-slate-900">৳ {item.selling_price}</span>
-                        <div className="bg-indigo-50 p-1.5 rounded-lg text-indigo-600">
+                        <div className="rounded-lg bg-emerald-50 p-1.5 text-emerald-800">
                            <Icon name="plus" className="w-4 h-4" />
                         </div>
                       </div>
@@ -190,25 +208,26 @@ export default function POS({ inventory_items, accounts, sale }) {
           </div>
 
           {/* Right Column: Cart & Checkout (Fixed Sidebar) */}
-          <div className="lg:col-span-4 bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col h-[calc(100vh-150px)] sticky top-4 overflow-y-auto">
-            <div className="p-4 border-b border-slate-100 bg-slate-50/50 rounded-t-2xl space-y-3 shrink-0">
+          <div className="flex min-h-[560px] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm xl:sticky xl:top-4 xl:col-span-4 xl:h-[calc(100vh-235px)]">
+            <div className="shrink-0 space-y-3 border-b border-slate-100 bg-slate-50/70 p-4 sm:p-5">
+              <div className="flex items-center justify-between gap-2"><div><p className="text-xs font-extrabold uppercase tracking-[0.14em] text-emerald-700">Checkout</p><h2 className="mt-0.5 text-base font-bold text-slate-900">Customer &amp; payment</h2></div><span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-slate-600 ring-1 ring-slate-200">{cart.length} items</span></div>
               <input
                 type="text"
-                className="block w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm placeholder-slate-400 outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
+                className="block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none shadow-sm transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15 placeholder:text-slate-400"
                 placeholder="Customer Name (Walk-in)"
                 value={data.customer_name}
                 onChange={(e) => setData('customer_name', e.target.value)}
               />
               <input
                 type="text"
-                className="block w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm placeholder-slate-400 outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
+                className="block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none shadow-sm transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15 placeholder:text-slate-400"
                 placeholder="Customer Phone"
                 value={data.customer_phone}
                 onChange={(e) => setData('customer_phone', e.target.value)}
               />
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 bg-slate-50/30 min-h-[250px]">
+            <div className="min-h-[180px] flex-1 overflow-y-auto bg-slate-50/40 p-4 sm:p-5 xl:min-h-0">
               {cart.length > 0 ? (
                 <div className="space-y-3">
                   {cart.map((c, index) => {
@@ -217,7 +236,7 @@ export default function POS({ inventory_items, accounts, sale }) {
                     const hasColor = p?.color && p.color.length > 0;
                     
                     return (
-                      <div key={index} className="bg-white border border-slate-200 rounded-xl p-3 shadow-sm flex flex-col gap-3 relative group">
+                      <div key={index} className="relative flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:border-emerald-200">
                         <div className="flex justify-between items-start gap-2 pr-6">
                           <div className="font-semibold text-sm text-slate-900 leading-tight">{p?.name}</div>
                         </div>
@@ -228,13 +247,13 @@ export default function POS({ inventory_items, accounts, sale }) {
                         {(hasSize || hasColor) && (
                           <div className="flex gap-2">
                             {hasSize && (
-                              <select className="block w-1/2 py-1 px-2 border-slate-200 rounded-md text-xs bg-slate-50 text-slate-700 outline-none focus:border-indigo-500" value={c.size} onChange={(e) => handleCartChange(index, 'size', e.target.value)} required>
+                              <select className="block w-1/2 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-xs text-slate-700 outline-none focus:border-emerald-600" value={c.size} onChange={(e) => handleCartChange(index, 'size', e.target.value)} required>
                                 <option value="" disabled>Size</option>
                                 {p.size.map((s, i) => <option key={i} value={s}>{s}</option>)}
                               </select>
                             )}
                             {hasColor && (
-                              <select className="block w-1/2 py-1 px-2 border-slate-200 rounded-md text-xs bg-slate-50 text-slate-700 outline-none focus:border-indigo-500" value={c.color} onChange={(e) => handleCartChange(index, 'color', e.target.value)} required>
+                              <select className="block w-1/2 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-xs text-slate-700 outline-none focus:border-emerald-600" value={c.color} onChange={(e) => handleCartChange(index, 'color', e.target.value)} required>
                                 <option value="" disabled>Color</option>
                                 {p.color.map((color, i) => <option key={i} value={color}>{color}</option>)}
                               </select>
@@ -266,7 +285,7 @@ export default function POS({ inventory_items, accounts, sale }) {
               )}
             </div>
 
-            <div className="shrink-0 border-t border-slate-200 bg-white rounded-b-2xl p-4 space-y-3">
+            <div className="shrink-0 space-y-3 border-t border-slate-200 bg-white p-4 sm:p-5">
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between items-center text-slate-600">
                   <span>Subtotal</span>
@@ -281,9 +300,9 @@ export default function POS({ inventory_items, accounts, sale }) {
                 </div>
               </div>
 
-              <div className="bg-slate-900 text-white rounded-xl p-2.5 flex justify-between items-center shadow-md">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Total Pay</span>
-                <span className="text-lg font-black text-amber-400 font-mono">৳ {Number(data.total_amount).toFixed(2)}</span>
+              <div className="flex items-center justify-between rounded-xl bg-gradient-to-r from-slate-900 to-emerald-950 p-3 text-white shadow-sm">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-300">Total Pay</span>
+                <span className="font-mono text-lg font-black text-emerald-300">৳ {Number(data.total_amount).toFixed(2)}</span>
               </div>
 
               {/* Payment Method Selector */}
@@ -291,7 +310,7 @@ export default function POS({ inventory_items, accounts, sale }) {
                 <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Payment Method</label>
                 <div className="grid grid-cols-3 gap-1">
                   {['Cash', 'bKash', 'Card'].map(method => (
-                    <button type="button" key={method} className={`py-1 px-2 rounded-lg border text-[11px] font-bold transition-all shadow-sm ${data.payment_method === method ? 'bg-slate-900 text-amber-400 border-slate-900' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`} onClick={() => setData('payment_method', method)}>
+                    <button type="button" key={method} className={`rounded-lg border px-2 py-2 text-xs font-bold transition-all ${data.payment_method === method ? 'bg-emerald-800 text-white border-emerald-800 shadow-sm' : 'bg-white text-slate-600 border-slate-200 hover:bg-emerald-50 hover:text-emerald-800'}`} onClick={() => setData('payment_method', method)}>
                       {method}
                     </button>
                   ))}
@@ -304,7 +323,7 @@ export default function POS({ inventory_items, accounts, sale }) {
                 <select 
                   value={data.account_id} 
                   onChange={(e) => setData('account_id', e.target.value)}
-                  className="w-full py-1.5 px-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:border-indigo-500"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-2 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15"
                   required
                 >
                   <option value="" disabled>Select Account</option>
@@ -319,13 +338,13 @@ export default function POS({ inventory_items, accounts, sale }) {
 
               {/* Quick Pay Buttons */}
               <div className="flex gap-1.5">
-                <button type="button" onClick={() => setData('paid_amount', data.total_amount)} className="flex-1 py-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-[11px] font-bold rounded-lg transition-colors">
+                <button type="button" onClick={() => setData('paid_amount', data.total_amount)} className="min-h-9 flex-1 rounded-lg bg-emerald-100 py-1 text-[11px] font-bold text-emerald-800 transition-colors hover:bg-emerald-200">
                   Full Paid
                 </button>
-                <button type="button" onClick={() => setData('paid_amount', 500)} className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-lg">
+                <button type="button" onClick={() => setData('paid_amount', 500)} className="min-h-9 rounded-lg bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-200">
                   ৳500
                 </button>
-                <button type="button" onClick={() => setData('paid_amount', 1000)} className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-lg">
+                <button type="button" onClick={() => setData('paid_amount', 1000)} className="min-h-9 rounded-lg bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-200">
                   ৳1000
                 </button>
               </div>
@@ -341,7 +360,7 @@ export default function POS({ inventory_items, accounts, sale }) {
                 </div>
               )}
 
-              <button type="submit" className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold uppercase tracking-wide text-xs rounded-xl shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-60" disabled={processing}>
+              <button type="submit" className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-800 py-3 text-xs font-bold uppercase tracking-wide text-white shadow-sm transition-all hover:bg-emerald-900 disabled:cursor-not-allowed disabled:opacity-60" disabled={processing}>
                 <Icon name="check-circle" className="w-4 h-4" />
                 {processing ? 'Processing...' : (isEdit ? 'Update Invoice' : 'Confirm Sale')}
               </button>

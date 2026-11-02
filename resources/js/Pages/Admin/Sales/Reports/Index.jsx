@@ -52,7 +52,7 @@ export default function ReportIndex({ sales, summary, filters }) {
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Sales Reports &amp; Analytics</h1>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={exportToCSV} className="inline-flex items-center gap-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm">
+            <button onClick={exportToCSV} className="project-export-button inline-flex items-center gap-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm">
               <Icon name="download" className="w-4 h-4" /> Export CSV
             </button>
             <button onClick={handlePrint} className="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm">

@@ -21,7 +21,7 @@ export default function Index({ records, tab }) {
   const TabButton = ({ name, label, icon }) => (
     <Link 
       href={route('admin.hostel-records.index', { tab: name })} 
-      className={`flex items-center gap-2 px-6 py-3 font-semibold text-sm transition-all border-b-2 ${tab === name ? 'border-indigo-600 text-indigo-700 bg-indigo-50/50' : 'border-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-700'}`}
+      className={`flex shrink-0 items-center gap-2 border-b-2 px-5 py-3.5 text-sm font-bold transition-all sm:px-6 ${tab === name ? 'border-emerald-700 bg-emerald-50/70 text-emerald-800' : 'border-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-700'}`}
     >
       <Icon name={icon} className="w-4 h-4" /> {label}
     </Link>
@@ -30,24 +30,29 @@ export default function Index({ records, tab }) {
   return (
     <AuthenticatedLayout>
       <Head title="Hostel Logs & Records" />
-      <div className="max-w-7xl mx-auto p-6 space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Hostel Logs & Records</h1>
-          <p className="text-sm text-slate-500">Manage and delete incorrect entries for finance, attendance, meals, and visitors.</p>
+      <div className="w-full space-y-5 px-3 py-4 sm:space-y-6 sm:px-5 sm:py-6 lg:px-8">
+        <div className="flex flex-col gap-4 rounded-3xl border border-emerald-100 bg-gradient-to-r from-emerald-50 via-white to-slate-50 px-5 py-6 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-7">
+          <div>
+            <span className="text-xs font-extrabold uppercase tracking-[0.18em] text-emerald-800">Residence Management</span>
+            <h1 className="mt-1 text-2xl font-black text-slate-900 sm:text-3xl">Hostel Logs &amp; Records</h1>
+            <p className="mt-1 text-sm text-slate-600">Review finance, attendance, meals, and visitor records.</p>
+          </div>
+          <div className="rounded-2xl border border-white bg-white/80 px-4 py-3 shadow-sm"><p className="text-xs font-bold uppercase tracking-wide text-slate-500">Current section</p><p className="mt-1 text-base font-black capitalize text-emerald-800">{tab}</p></div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           {/* Tabs */}
-          <div className="flex border-b border-slate-200 overflow-x-auto custom-scrollbar">
+          <div className="flex overflow-x-auto border-b border-slate-200 bg-slate-50/70 custom-scrollbar">
             <TabButton name="ledger" label="Financial Ledger" icon="dollar-sign" />
             <TabButton name="attendance" label="Attendance" icon="check-square" />
             <TabButton name="meals" label="Meal Allocations" icon="coffee" />
             <TabButton name="visitors" label="Visitors Log" icon="users" />
           </div>
 
+          <div className="border-b border-slate-100 px-5 py-4 sm:px-6"><h2 className="text-sm font-bold text-slate-900">{tab === 'ledger' ? 'Financial ledger' : tab === 'attendance' ? 'Attendance records' : tab === 'meals' ? 'Meal allocations' : 'Visitor records'}</h2><p className="mt-0.5 text-xs text-slate-500">{records.total ?? records.data.length} records</p></div>
           <div className="overflow-x-auto">
             <table className="w-full text-left">
-              <thead className="bg-slate-50 border-b border-slate-200">
+              <thead className="border-b border-slate-200 bg-slate-50/70">
                 <tr>
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Resident Name</th>
                   {tab === 'ledger' && <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Charge Details</th>}
@@ -61,7 +66,7 @@ export default function Index({ records, tab }) {
                 {records.data.length === 0 ? (
                   <tr><td colSpan={3} className="p-8 text-center text-slate-400">No records found for {tab}.</td></tr>
                 ) : records.data.map(item => (
-                  <tr key={item.id} className="hover:bg-slate-50">
+                  <tr key={item.id} className="transition-colors hover:bg-slate-50/70">
                     <td className="px-6 py-4 font-bold text-slate-800">
                       {item.resident_name} <br/>
                       <span className="text-xs font-normal text-slate-500">Alloc ID: #{item.hostel_allocation_id}</span>
@@ -103,7 +108,7 @@ export default function Index({ records, tab }) {
                     </td>
 
                     <td className="px-6 py-4 text-right">
-                      <button onClick={() => deleteRecord(item.id)} className="p-2 text-slate-400 hover:text-rose-600 transition-colors" title="Delete Record">
+                      <button onClick={() => deleteRecord(item.id)} className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-700" title="Delete Record">
                         <Icon name="trash" className="w-4 h-4" />
                       </button>
                     </td>

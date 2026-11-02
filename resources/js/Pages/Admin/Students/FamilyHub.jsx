@@ -1,14 +1,18 @@
 import { Head, router, useForm } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import Pagination from "@/Components/Pagination";
+import Icon from "@/Components/Icons";
 import { useState } from "react";
 
-const C = "mt-1 w-full rounded-lg border-slate-300 text-sm";
+const C = "mt-1.5 w-full rounded-xl border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 shadow-sm focus:border-emerald-600 focus:bg-white focus:ring-2 focus:ring-emerald-600/15";
 const Card = ({ title, children }) => (
-    <div>
-        <h3 className="mb-3 font-bold">{title}</h3>
-        {children}
-    </div>
+    <section className="min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <h3 className="flex items-center gap-2 border-b border-slate-100 bg-gradient-to-r from-emerald-50/80 to-white px-4 py-3 font-extrabold text-slate-900">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-800"><Icon name="users" className="h-4 w-4" /></span>
+            {title}
+        </h3>
+        <div className="space-y-3 p-4">{children}</div>
+    </section>
 );
 
 export default function FamilyHub({ students, guardians, filters }) {
@@ -61,14 +65,12 @@ export default function FamilyHub({ students, guardians, filters }) {
     return (
         <AuthenticatedLayout>
             <Head title="Student & Guardian Hub" />
-            <div className="mx-auto max-w-7xl space-y-5 p-6">
-                <div>
-                    <h1 className="text-2xl font-bold text-slate-900">
-                        Student & Guardian Hub
-                    </h1>
-                    <p className="text-sm text-slate-500">
-                        Family permissions, verified pickup, consent and
-                        transfer clearance.
+            <div className="w-full max-w-none space-y-5 px-3 py-4 sm:px-5 sm:py-6 lg:px-8">
+                <div className="rounded-3xl border border-emerald-100 bg-gradient-to-r from-emerald-50 via-white to-slate-50 px-5 py-6 shadow-sm sm:px-7">
+                    <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-emerald-800">Students / Family services</p>
+                    <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Student & Guardian Hub</h1>
+                    <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+                        Manage family permissions, authorized pickup, consent forms and transfer clearance for each student.
                     </p>
                 </div>
                 <form
@@ -80,15 +82,19 @@ export default function FamilyHub({ students, guardians, filters }) {
                             { preserveState: true },
                         );
                     }}
-                    className="flex gap-2"
+                    className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:flex-row sm:items-center"
                 >
+                    <div className="relative min-w-0 flex-1">
+                    <Icon name="search" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                     <input
-                        className="w-full max-w-md rounded-xl border-slate-300"
+                        className="w-full rounded-xl border-slate-200 bg-slate-50 py-3 pl-10 pr-3 text-sm focus:border-emerald-600 focus:bg-white focus:ring-2 focus:ring-emerald-600/15"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Student name or admission no"
                     />
-                    <button className="rounded-xl bg-slate-900 px-5 text-white">
+                    </div>
+                    <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-emerald-800 px-5 text-sm font-bold text-white transition hover:bg-emerald-900">
+                        <Icon name="search" className="h-4 w-4" />
                         Search
                     </button>
                 </form>
@@ -96,7 +102,7 @@ export default function FamilyHub({ students, guardians, filters }) {
                     {students.data.map((student) => (
                         <section
                             key={student.id}
-                            className="rounded-2xl border bg-white shadow-sm"
+                            className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md"
                         >
                             <button
                                 onClick={() =>
@@ -104,13 +110,13 @@ export default function FamilyHub({ students, guardians, filters }) {
                                         open === student.id ? null : student.id,
                                     )
                                 }
-                                className="flex w-full items-center justify-between p-5 text-left"
+                                className="flex w-full flex-col gap-3 bg-gradient-to-r from-white via-white to-emerald-50/70 p-4 text-left transition hover:bg-emerald-50 sm:flex-row sm:items-center sm:justify-between sm:p-5"
                             >
                                 <span>
-                                    <b>
+                                    <b className="block text-base font-extrabold text-slate-900">
                                         {student.first_name} {student.last_name}
                                     </b>
-                                    <small className="ml-3 text-slate-500">
+                                    <small className="mt-1 block text-xs text-slate-500 sm:ml-0">
                                         {student.admission_no} ·{" "}
                                         {
                                             student.current_enrollment
@@ -123,13 +129,13 @@ export default function FamilyHub({ students, guardians, filters }) {
                                         }
                                     </small>
                                 </span>
-                                <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-700">
+                                <span className="inline-flex w-fit items-center rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-800">
                                     {student.guardians.length} guardian ·{" "}
                                     {student.authorized_pickups.length} pickup
                                 </span>
                             </button>
                             {open === student.id && (
-                                <div className="grid gap-6 border-t p-5 lg:grid-cols-2 xl:grid-cols-4">
+                                <div className="grid gap-4 border-t border-slate-200 bg-slate-50/70 p-4 lg:grid-cols-2 2xl:grid-cols-4 sm:p-5">
                                     <Card title="Guardians & permissions">
                                         {student.guardians.map((guardian) => (
                                             <div
@@ -261,7 +267,7 @@ export default function FamilyHub({ students, guardians, filters }) {
                                                     </label>
                                                 ))}
                                             </div>
-                                            <button className="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-bold text-white">
+                                            <button className="rounded-xl bg-emerald-800 px-3 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-900">
                                                 Link
                                             </button>
                                         </form>
@@ -501,7 +507,7 @@ export default function FamilyHub({ students, guardians, filters }) {
                                                     )
                                                 }
                                             />
-                                            <button className="rounded-lg bg-violet-600 px-3 py-2 text-sm font-bold text-white">
+                                            <button className="rounded-xl bg-emerald-800 px-3 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-900">
                                                 Assign consent
                                             </button>
                                         </form>
@@ -620,7 +626,7 @@ export default function FamilyHub({ students, guardians, filters }) {
                                                 />{" "}
                                                 Confidential
                                             </label>
-                                            <button className="rounded-lg bg-amber-600 px-3 py-2 text-sm font-bold text-white">
+                                            <button className="rounded-xl bg-emerald-800 px-3 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-900">
                                                 Save note
                                             </button>
                                         </form>

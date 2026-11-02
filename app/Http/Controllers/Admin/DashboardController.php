@@ -246,10 +246,10 @@ class DashboardController extends Controller
         $classId = $enrollment?->class_id;
         $sectionId = $enrollment?->section_id;
 
-        $classes = $classId && $sectionId
+        $classes = $classId
             ? TimeTable::with(['subject:id,name', 'teacher:id,first_name,last_name', 'classroom:id,room_number'])
                 ->where('class_id', $classId)
-                ->where('section_id', $sectionId)
+                ->where(fn ($query) => $query->whereNull('section_id')->orWhere('section_id', $sectionId))
                 ->whereRaw('LOWER(day_of_week) = ?', [strtolower($today->englishDayOfWeek)])
                 ->orderBy('start_time')
                 ->get()
@@ -263,10 +263,10 @@ class DashboardController extends Controller
                 ])->values()
             : collect();
 
-        $exams = $classId && $sectionId
+        $exams = $classId
             ? ExamSchedule::with(['exam:id,name', 'subject:id,name', 'classroom:id,room_number'])
                 ->where('class_id', $classId)
-                ->where('section_id', $sectionId)
+                ->where(fn ($query) => $query->whereNull('section_id')->orWhere('section_id', $sectionId))
                 ->whereBetween('exam_date', [$today, $today->copy()->addDays(14)])
                 ->orderBy('exam_date')
                 ->orderBy('start_time')
@@ -324,6 +324,29 @@ class DashboardController extends Controller
             ->get()
             ->sum(fn (Invoice $invoice) => max(0, (float) $invoice->amount + (float) $invoice->fine - (float) $invoice->discount - (float) $invoice->paid_amount));
 
+        $submittedHomeworkIds = DB::table('homework_submissions')->where('student_id', $student->id)->pluck('homework_id');
+        $pendingHomeworkCount = $classId
+            ? Homework::where('school_class_id', $classId)->where('is_active', true)
+                ->whereDate('submission_date', '>=', $today)->whereNotIn('id', $submittedHomeworkIds)->count()
+            : 0;
+        $pendingFeeCount = Invoice::where('student_id', $student->id)->whereIn('status', ['Unpaid', 'Partial'])->count();
+        $todayAttendance = StudentAttendance::where('student_id', $student->id)->whereDate('attendance_date', $today)->value('status');
+        $pendingConsentCount = $type === 'parent' && request()->user()->guardian
+            ? DB::table('parent_consents')->where('guardian_id', request()->user()->guardian->id)
+                ->where('student_id', $student->id)->whereNull('responded_at')->count()
+            : 0;
+        $actionItems = collect();
+        if ($pendingHomeworkCount) $actionItems->push(['key' => 'homework', 'title' => 'Homework to submit', 'detail' => "{$pendingHomeworkCount} assignment(s) are waiting for your answer.", 'count' => $pendingHomeworkCount, 'href' => route('portal.services', ['tab' => 'tasks'])]);
+        if ($pendingFeeCount) $actionItems->push(['key' => 'fees', 'title' => 'Fees to review', 'detail' => 'There are unpaid or partly paid invoices for this student.', 'count' => $pendingFeeCount, 'href' => $type === 'parent' ? route('portal.parent.services') : route('portal.services', ['tab' => 'fees'])]);
+        if ($exams->isNotEmpty()) $actionItems->push(['key' => 'exams', 'title' => 'Upcoming exams', 'detail' => 'Check the exam dates, subjects and room details.', 'count' => $exams->count(), 'href' => $type === 'parent' ? route('portal.parent.services') : route('portal.services', ['tab' => 'exams'])]);
+        if ($pendingConsentCount) $actionItems->push(['key' => 'consent', 'title' => 'Parent permission needed', 'detail' => 'Please review and respond to the school consent request.', 'count' => $pendingConsentCount, 'href' => route('portal.parent.services')]);
+        if (in_array(strtolower((string) $todayAttendance), ['absent', 'late'], true)) $actionItems->push(['key' => 'attendance', 'title' => 'Attendance update', 'detail' => "Today's attendance is marked {$todayAttendance}. Please review it or contact the school.", 'count' => 1, 'href' => $type === 'parent' ? route('portal.parent.services') : route('portal.services', ['tab' => 'attendance'])]);
+        if ($type === 'parent' && request()->user()->guardian) {
+            $schoolReplies = DB::table('guardian_messages')->where('guardian_id', request()->user()->guardian->id)
+                ->where('student_id', $student->id)->whereNotNull('reply')->count();
+            if ($schoolReplies) $actionItems->push(['key' => 'replies', 'title' => 'School message replies', 'detail' => 'Open the Parent Service Center to read replies from school staff.', 'count' => $schoolReplies, 'href' => route('portal.parent.services')]);
+        }
+
         return [
             'type' => $type,
             'today' => $today->format('l, d F Y'),
@@ -352,6 +375,7 @@ class DashboardController extends Controller
             ],
             'can_view_results' => $type === 'student' && request()->user()->can('portal.results.view'),
             'dues' => round($dues, 2),
+            'action_items' => $actionItems->values(),
             'notices' => $this->portalNotices(),
         ];
     }
