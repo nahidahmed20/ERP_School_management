@@ -4,7 +4,7 @@ import InputError from '@/Components/InputError';
 import Checkbox from '@/Components/Checkbox';
 
 const ROLE_THEME = {
-    admin:   { hex: '#002546', label: 'Admin / Branch Admin', short: 'Admin Portal',   prefix: 'ADM' },
+    admin:   { hex: '#002546', label: 'School Management',     short: 'Management Portal', prefix: 'ADM' },
     student: { hex: '#32806C', label: 'Student Portal',       short: 'Student Portal', prefix: 'STU' },
     staff:   { hex: '#B27A2E', label: 'Staff Portal',         short: 'Staff Portal',   prefix: 'STF' },
     parent:  { hex: '#4579A5', label: 'Parent Portal',        short: 'Parent Portal',  prefix: 'PAR' },
@@ -175,7 +175,7 @@ export default function Login({ status, canResetPassword, captchaQuestion, isMai
                             <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 font-medium tracking-tight" style={{ fontFamily: "'Fraunces', serif" }}>
                                 Welcome back
                             </h1>
-                            <p className="text-gray-600 text-sm mt-1">Select your portal and enter your credentials.</p>
+                            <p className="text-gray-600 text-sm mt-1">Choose the portal for your account, then enter your login details.</p>
                         </div>
 
                         {status && (
@@ -207,6 +207,12 @@ export default function Login({ status, canResetPassword, captchaQuestion, isMai
                                 );
                             })}
                         </div>
+
+                        {role === 'admin' && (
+                            <p className="-mt-4 mb-5 text-xs leading-relaxed text-gray-500">
+                                For Super Admin, Branch Admin, HR, Accounts, Teacher and other management roles.
+                            </p>
+                        )}
 
                         <form onSubmit={submit} className="space-y-4 sm:space-y-5">
                             {/* Identifier Input */}

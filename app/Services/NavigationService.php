@@ -2,8 +2,7 @@
 namespace App\Services;
 
 use App\Models\MenuGroup;
-use App\Http\Resources\MenuGroupResource;
-use Illuminate\Support\Facades\Auth;
+use App\Models\MenuItem;
 
 class NavigationService
 {
@@ -28,7 +27,13 @@ class NavigationService
 
         $resolvers = $this->countResolvers();
 
-        $data = MenuGroupResource::collection($groups)->resolve();
+        $data = $groups->map(fn (MenuGroup $group): array => [
+            'id' => $group->id,
+            'label' => $group->label,
+            'items' => $group->items
+                ->map(fn (MenuItem $item): array => $this->menuItemData($item))
+                ->all(),
+        ])->all();
 
         foreach ($data as &$group) {
             foreach ($group['items'] as &$item) {
@@ -52,16 +57,20 @@ class NavigationService
             foreach ($group['items'] as $item) {
                 $children = $item['children'] ?? [];
                 if ($children) {
-                    $item['children'] = array_values(array_filter($children, function (array $child) use (&$seenRoutes, $preferredKeys): bool {
-                        $route = $child['route_name'] ?? $child['route'] ?? null;
-                        $key = $child['key'] ?? null;
-                        if (! $route || (isset($preferredKeys[$route]) && $preferredKeys[$route] !== $key) || isset($seenRoutes[$route])) {
-                            return false;
-                        }
+                    $item['children'] = collect($children)
+                        ->filter(function (array $child) use (&$seenRoutes, $preferredKeys): bool {
+                            $route = $child['route'] ?? null;
+                            $key = $child['key'] ?? null;
+                            if (! $route || (isset($preferredKeys[$route]) && $preferredKeys[$route] !== $key) || isset($seenRoutes[$route])) {
+                                return false;
+                            }
 
-                        $seenRoutes[$route] = true;
-                        return true;
-                    }));
+                            $seenRoutes[$route] = true;
+
+                            return true;
+                        })
+                        ->values()
+                        ->all();
                 }
 
                 $route = $item['route_name'] ?? $item['route'] ?? null;
@@ -87,5 +96,20 @@ class NavigationService
         }
 
         return $data;
+    }
+
+    private function menuItemData(MenuItem $item): array
+    {
+        return [
+            'key' => $item->key,
+            'label' => $item->label,
+            'icon' => $item->icon,
+            'route' => $item->route_name,
+            'count' => $item->badge_count,
+            'permission' => $item->permission,
+            'children' => $item->relationLoaded('children')
+                ? $item->children->map(fn (MenuItem $child): array => $this->menuItemData($child))->all()
+                : [],
+        ];
     }
 }

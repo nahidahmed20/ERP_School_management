@@ -19,7 +19,7 @@
     .ui-pagination-active {
         background: var(--forest);
         border-color: var(--forest);
-        box-shadow: 0 8px 18px -10px rgba(15, 43, 33, .7);
+        box-shadow: 0 8px 18px -10px rgba(8, 32, 28, .7);
     }
 
     .ui-primary-button:hover { background: var(--forest-light); }

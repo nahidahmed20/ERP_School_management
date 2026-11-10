@@ -1,26 +1,26 @@
 :root {
     /* মডার্ন কালার স্কিম */
-    --forest-deep: #061B11;
-    --forest: #0F3F27;
-    --forest-soft: #1D6944;
-    --gold: #D4AF37;
-    --gold-soft: #FDF9EE;
-    --gold-bright: #F5CC3D;
+    --forest-deep: #3B2118;
+    --forest: #C65A24;
+    --forest-soft: #E47732;
+    --gold: #E99A3C;
+    --gold-soft: #FFF3E5;
+    --gold-bright: #FFC36B;
 
     /* Parchment-এর বদলে মডার্ন হোয়াইট ও সফট গ্রে */
     --parchment: #FFFFFF;
-    --parchment-alt: #F8FAFC;
+    --parchment-alt: #FFFAF5;
 
-    --ink: #1E293B;
-    --ink-soft: #475569;
+    --ink: #30241F;
+    --ink-soft: #74645B;
     --red: #E11D48;
-    --line: #E2E8F0;
+    --line: #EADFD5;
     --radius: 14px;
 
     /* মডার্ন শ্যাডো ভ্যারিয়েবল */
     --shadow-sm: 0 4px 15px rgba(0, 0, 0, 0.03);
     --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.06);
-    --shadow-hover: 0 20px 40px rgba(15, 63, 39, 0.12);
+    --shadow-hover: 0 20px 40px rgba(16, 36, 58, 0.14);
 }
 
 .verdant-front-site * {
@@ -96,7 +96,7 @@ html {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: radial-gradient(circle at 35% 30%, var(--gold-bright), var(--gold) 55%, #8f6a22 100%);
+    background: radial-gradient(circle at 35% 30%, #FFD58B, var(--gold) 55%, #B65A26 100%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -586,7 +586,7 @@ html {
     font-weight: 700;
     text-transform: uppercase;
     color: var(--forest);
-    background: rgba(27, 67, 50, 0.08);
+    background: rgba(198, 90, 36, 0.08);
     padding: 4px 10px;
     border-radius: 100px;
     margin-bottom: 14px;

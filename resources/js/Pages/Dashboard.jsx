@@ -69,7 +69,7 @@ export default function Dashboard({ overview = {}, attendance = {}, alerts = {},
                 <div className="absolute -right-16 -top-20 h-56 w-56 rounded-full border-[34px] border-white/5" />
                 <div className="absolute bottom-[-90px] right-32 h-48 w-48 rounded-full bg-amber-300/10 blur-2xl" />
                 <div className="relative flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
-                    <div><span className="text-xs font-bold uppercase tracking-[.2em] text-emerald-200">School command center</span><h1 className="mt-2 text-2xl font-bold text-white sm:text-3xl">Good day, {auth?.user?.name || 'Administrator'}</h1><p className="mt-2 max-w-2xl text-sm text-emerald-50/75">Attendance, finance, communication and daily operations—সব গুরুত্বপূর্ণ তথ্য এক জায়গায়।</p></div>
+                    <div><span className="text-xs font-bold uppercase tracking-[.2em] text-emerald-200">School command center</span><h1 className="mt-2 text-2xl font-bold text-white sm:text-3xl">Good day, {auth?.user?.name || 'Administrator'}</h1><p className="mt-2 max-w-2xl text-sm text-emerald-50/75">Attendance, finance, communication and daily operations—all the key information in one place.</p></div>
                     <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur"><Icon name="calendar" className="h-5 w-5 text-amber-300"/><div><p className="text-[10px] uppercase tracking-widest text-emerald-100/70">Today</p><p className="text-sm font-semibold">{new Intl.DateTimeFormat('en-BD', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date())}</p></div></div>
                 </div>
             </section>

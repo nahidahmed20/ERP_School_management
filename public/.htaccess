@@ -23,3 +23,22 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+# Do not let browsers or shared proxies keep stale Laravel pages. A fresh
+# response reads the current Vite manifest and points at the current assets.
+<IfModule mod_headers.c>
+    <Files "index.php">
+        Header always set Cache-Control "private, no-store, no-cache, must-revalidate, max-age=0"
+        Header always set Pragma "no-cache"
+        Header always set Expires "0"
+    </Files>
+</IfModule>
+
+# Vite fingerprints production assets in their filenames, so these files are
+# safe to cache for a year. A changed asset gets a new URL on the next build.
+<IfModule mod_setenvif.c>
+    SetEnvIfNoCase Request_URI "^/(?:.*/)?build/assets/.+-[A-Za-z0-9_-]{8,}\.(?:css|js)$" VITE_FINGERPRINTED_ASSET
+</IfModule>
+<IfModule mod_headers.c>
+    Header set Cache-Control "public, max-age=31536000, immutable" env=VITE_FINGERPRINTED_ASSET
+</IfModule>

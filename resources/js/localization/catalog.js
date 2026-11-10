@@ -3356,6 +3356,12 @@ const bn = {
     'Show password': 'পাসওয়ার্ড দেখুন',
     'Hide password': 'পাসওয়ার্ড লুকান',
     'Signing in…': 'প্রবেশ করা হচ্ছে…',
+    'This module is under development. More features will be available here soon.': 'এই মডিউলটি তৈরি করা হচ্ছে। শিগগিরই এখানে আরও সুবিধা পাওয়া যাবে।',
+    'is coming soon': 'শিগগিরই আসছে',
+    'This module is being built. You will be able to use it here when it is ready.': 'এই মডিউলের কাজ চলছে। প্রস্তুত হলে এখান থেকে ব্যবহার করতে পারবেন।',
+    'Return to Dashboard': 'ড্যাশবোর্ডে ফিরে যান',
+    'Enter the 6-digit code sent to your email. The code expires in 5 minutes.': 'আপনার ইমেইলে পাঠানো ৬ সংখ্যার কোড লিখুন। কোডটির মেয়াদ ৫ মিনিট।',
+    'Attendance, finance, communication and daily operations—all the key information in one place.': 'উপস্থিতি, অর্থ, যোগাযোগ ও দৈনন্দিন কাজ—সব গুরুত্বপূর্ণ তথ্য এক জায়গায়।',
     'Send message →': 'বার্তা পাঠান →',
 };
 
