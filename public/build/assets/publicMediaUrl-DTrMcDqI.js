@@ -1,0 +1,1 @@
+function n(e,r=null){if(typeof e!="string"||!e.trim())return r;const t=e.trim().replaceAll("\\","/");if(/^(?:https?:\/\/|blob:|data:image\/)/i.test(t))return t;if(/^(?:[a-z][a-z\d+.-]*:|\/\/)/i.test(t))return r;const i=t.replace(/^\/+/,"").replace(/^(?:public\/)?storage\//,"").replace(/^public\//,"");return!i||i.split("/").some(p=>p==="..")?r:`/storage/${i}`}export{n as p};

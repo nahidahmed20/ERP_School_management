@@ -1,0 +1,1 @@
+import{r as u}from"./app-Cx-9cu95.js";function n(e,r=null){const[s,t]=u.useState(r);return u.useEffect(()=>{if(!e){t(r);return}const o=URL.createObjectURL(e);return t(o),()=>URL.revokeObjectURL(o)},[e,r]),s}export{n as u};

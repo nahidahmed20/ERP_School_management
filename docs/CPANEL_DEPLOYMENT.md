@@ -16,31 +16,38 @@ Vite build must be at `public/build/` inside the project.
 Do not use `server.php` for production. It is only for PHP's built-in local
 development server.
 
-## Build and upload
+## Deploy from Git
 
-From the project root on Windows, build a release archive:
+Keep the Git checkout in the Laravel project root. Set cPanel Git Version
+Control to track the production branch, or update that checkout from the server
+terminal. The production `.env`, `vendor/`, `storage/`, local databases, and
+`public/hot` stay on the server and are not committed.
+
+On the development machine, build the frontend and commit its manifest/assets
+with the matching source changes:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\deploy\build-cpanel-release.ps1
+npm ci
+npm run build
+git add .gitignore resources/js resources/css public/build deploy/deploy-cpanel.sh docs/CPANEL_DEPLOYMENT.md
+git commit -m "Prepare production release"
+git push origin main
 ```
 
-Upload the generated `deploy/releases/erp-school-cpanel-*.zip` and extract it
-into the Laravel project root. The script builds the frontend, confirms every
-manifest asset exists, and packages source plus `public/build/manifest.json`
-and all hashed assets together. The archive excludes `.env`, `vendor`,
-`node_modules`, `storage`, local databases, and tests. The `.gitignore` excludes
-`public/build`, so do not rely on Git alone to send compiled assets.
+`public/build/` is intentionally no longer ignored, so Git carries both
+`manifest.json` and every hashed asset to cPanel. Do not commit `.env`, local
+database files, `vendor/`, `node_modules/`, `storage/`, or `public/hot`.
 
-Use these destinations:
+On the server, update the same checkout and install production dependencies:
 
-| cPanel Document Root | Build destination |
-| --- | --- |
-| Laravel project root | `<project>/public/build/` |
-| Laravel `public/` directory | `<document-root>/build/` |
+```bash
+bash deploy/deploy-cpanel.sh
+```
 
-Do not upload the development machine's `.env`, `public/hot`, `vendor`, or
-`storage` contents over production data. Keep the production `.env`, `APP_KEY`,
-database, uploads, and private files on the server.
+Back up the database before migrations. Do not run `db:seed` on production;
+the seeders create demo users and set their default passwords. If a deployment
+fails, the script leaves the app in maintenance mode. Fix the reported issue,
+then run `php artisan up` to restore service.
 
 ## Configure the server
 
@@ -62,18 +69,8 @@ Keep the existing production `APP_KEY`; configure the production database,
 session, cache, mail, and payment credentials there as well. Do not copy the
 local `.env` file from this repository.
 
-Ensure `storage/` and `bootstrap/cache/` are writable by the PHP process. From
-the project root on the server, run:
-
-```bash
-php artisan down
-composer install --no-dev --prefer-dist --optimize-autoloader
-php artisan migrate --force
-php artisan optimize:clear
-php artisan app:production-check
-php artisan optimize
-php artisan up
-```
+Ensure `storage/` and `bootstrap/cache/` are writable by the PHP process. Then
+follow the server update commands in **Deploy from Git**.
 
 Back up the database before migrations. Do not run `db:seed` on production;
 the seeders create demo users and set their default passwords. If a deployment
