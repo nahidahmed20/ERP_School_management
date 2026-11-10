@@ -18,18 +18,18 @@ development server.
 
 ## Build and upload
 
-From the project root on the development machine:
+From the project root on Windows, build a release archive:
 
 ```powershell
-npm ci
-npm run build
+powershell -ExecutionPolicy Bypass -File .\deploy\build-cpanel-release.ps1
 ```
 
-Upload the **contents** of local `public/build/` together, including both
-`manifest.json` and every file in `assets/`. The `.gitignore` excludes this
-folder, so a Git-based upload will not include it automatically. Also upload
-the changed PHP, Blade, JS, CSS, and `.htaccess` source files; a frontend build
-does not contain PHP changes.
+Upload the generated `deploy/releases/erp-school-cpanel-*.zip` and extract it
+into the Laravel project root. The script builds the frontend, confirms every
+manifest asset exists, and packages source plus `public/build/manifest.json`
+and all hashed assets together. The archive excludes `.env`, `vendor`,
+`node_modules`, `storage`, local databases, and tests. The `.gitignore` excludes
+`public/build`, so do not rely on Git alone to send compiled assets.
 
 Use these destinations:
 
