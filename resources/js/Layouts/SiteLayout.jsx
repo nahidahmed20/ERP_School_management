@@ -91,16 +91,18 @@ export default function SiteLayout({ children, activePage = "" }) {
                                 Portal login
                             </Link>
                         </nav>
-                        <button
-                            type="button"
-                            className="sf-menu"
-                            onClick={() => setOpen(!open)}
-                            aria-expanded={open}
-                            aria-label="Toggle navigation"
-                        >
-                            {open ? "Close" : "Menu"}
-                        </button>
-                        <LocaleSwitcher />
+                        <div className="sf-header-controls">
+                            <button
+                                type="button"
+                                className="sf-menu"
+                                onClick={() => setOpen(!open)}
+                                aria-expanded={open}
+                                aria-label="Toggle navigation"
+                            >
+                                {open ? "Close" : "Menu"}
+                            </button>
+                            <LocaleSwitcher className="sf-locale-switcher" />
+                        </div>
                     </div>
                 </header>
                 {(flash.success || flash.error) && (

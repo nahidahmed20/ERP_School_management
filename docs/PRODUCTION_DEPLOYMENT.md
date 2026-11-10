@@ -1,5 +1,8 @@
 # ERP production deployment
 
+For cPanel paths, build uploads, and PHP handler setup, follow
+[`CPANEL_DEPLOYMENT.md`](CPANEL_DEPLOYMENT.md).
+
 Before launch, run `php artisan app:production-check` and resolve every failure.
 
 Required processes:
