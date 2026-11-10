@@ -30,6 +30,9 @@ on_deploy_exit() {
 trap on_deploy_exit EXIT
 
 git pull --ff-only origin main
+# A leftover Vite hot file makes Laravel bypass the production manifest and
+# request assets from a local development server. Always remove it on deploy.
+rm -f public/hot
 composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
 php artisan migrate --force
 php artisan optimize:clear

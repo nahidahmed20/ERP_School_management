@@ -23,13 +23,20 @@ Control to track the production branch, or update that checkout from the server
 terminal. The production `.env`, `vendor/`, `storage/`, local databases, and
 `public/hot` stay on the server and are not committed.
 
-On the development machine, build the frontend and commit its manifest/assets
-with the matching source changes:
+On the development machine, run the production build after making frontend
+changes. The build removes a stale local Vite hot-file, compiles the assets,
+and verifies that the manifest points to files that exist:
 
 ```powershell
 npm ci
 npm run build
-git add .gitignore resources/js resources/css public/build deploy/deploy-cpanel.sh docs/CPANEL_DEPLOYMENT.md
+```
+
+Then commit the source changes together with the generated build and push them
+to the production branch:
+
+```powershell
+git add -A
 git commit -m "Prepare production release"
 git push origin main
 ```
@@ -38,7 +45,9 @@ git push origin main
 `manifest.json` and every hashed asset to cPanel. Do not commit `.env`, local
 database files, `vendor/`, `node_modules/`, `storage/`, or `public/hot`.
 
-On the server, update the same checkout and install production dependencies:
+On the server, update the same checkout and install production dependencies.
+The deploy script also removes any old `public/hot` file so Laravel uses the
+new production manifest:
 
 ```bash
 bash deploy/deploy-cpanel.sh
