@@ -16,7 +16,28 @@ Vite build must be at `public/build/` inside the project.
 Do not use `server.php` for production. It is only for PHP's built-in local
 development server.
 
-## Deploy from Git
+## Build production assets
+
+After making frontend changes, run this from the project root:
+
+```powershell
+npm run build
+```
+
+This builds and verifies `public/build/`. It does not create an archive.
+
+Before uploading changed files, back up the live database and files. Preserve
+the server's existing `.env` and `storage/`, delete `public/hot` if present,
+and ensure `storage/` and `bootstrap/cache/` are writable. Then run
+`php artisan migrate --force` and `php artisan optimize:clear` from the project
+root.
+
+The project-root `.htaccess` forwards requests to `public/`; this setup assumes
+the Laravel project root is the domain's Document Root. If the domain points
+directly to `public/`, follow the hosting provider's Laravel document-root
+layout instead.
+
+## Deploy from Git (alternative)
 
 Keep the Git checkout in the Laravel project root. Set cPanel Git Version
 Control to track the production branch, or update that checkout from the server
