@@ -1,0 +1,86 @@
+<?php
+
+namespace App\Http\Controllers\Auth;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\LoginRequest;
+use App\Models\SecurityLoginHistory;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
+use Inertia\Inertia;
+use Inertia\Response;
+use App\Http\Controllers\Auth\TwoFactorChallengeController;
+
+class AuthenticatedSessionController extends Controller
+{
+    /**
+     * Display the login view.
+     */
+    public function create(\Illuminate\Http\Request $request): Response
+    {
+        if (session('captcha_required') && ! session('captcha_question')) {
+            $a=random_int(1,9);$b=random_int(1,9);session(['captcha_question'=>"{$a} + {$b} = ?",'captcha_answer'=>$a+$b]);
+        }
+        return Inertia::render('Auth/Login', [
+            'canResetPassword' => Route::has('password.request'),
+            'status' => session('status'),
+            'captchaQuestion' => session('captcha_required') ? session('captcha_question') : null,
+            'isMainDomain' => parse_url(config('app.url'), PHP_URL_HOST) === $request->getHost() || $request->getHost() === '127.0.0.1' || $request->getHost() === 'localhost',
+
+        ]);
+    }
+
+    /**
+     * Handle an incoming authentication request.
+     */
+    public function store(LoginRequest $request): RedirectResponse
+    {
+        $request->authenticate();
+
+        if ($request->user()->two_factor_enabled) {
+            $user = $request->user();
+            $request->session()->put(['two_factor_user_id'=>$user->id,'two_factor_remember'=>$request->boolean('remember')]);
+            Auth::logout();
+            TwoFactorChallengeController::send($user);
+            return redirect()->route('two-factor.show');
+        }
+
+        $request->session()->regenerate();
+
+        SecurityLoginHistory::create([
+            'user_id' => $request->user()->id,
+            'ip_address' => $request->ip(),
+            'user_agent' => Str::limit((string) $request->userAgent(), 65535, ''),
+            'device_type' => $this->deviceType((string) $request->userAgent()),
+            'login_at' => now(),
+        ]);
+
+        return redirect()->intended(route('dashboard', absolute: false));
+    }
+
+    /**
+     * Destroy an authenticated session.
+     */
+    public function destroy(Request $request): RedirectResponse
+    {
+        Auth::guard('web')->logout();
+
+        $request->session()->invalidate();
+
+        $request->session()->regenerateToken();
+
+        return redirect('/');
+    }
+
+    private function deviceType(string $userAgent): string
+    {
+        return match (true) {
+            preg_match('/tablet|ipad|playbook|silk/i', $userAgent) === 1 => 'Tablet',
+            preg_match('/mobile|iphone|ipod|android/i', $userAgent) === 1 => 'Mobile',
+            default => 'Desktop',
+        };
+    }
+}

@@ -1,0 +1,3 @@
+<?php
+use Illuminate\Database\Migrations\Migration;use Illuminate\Database\Schema\Blueprint;use Illuminate\Support\Facades\Schema;
+return new class extends Migration{public function up():void{Schema::table('id_card_templates',function(Blueprint$t){$t->string('audience')->default('student')->after('title');$t->string('design_template')->default('classic-solid')->after('layout_type');$t->string('text_align')->default('center');$t->string('photo_align')->default('center');$t->json('field_labels')->nullable();});}public function down():void{Schema::table('id_card_templates',fn(Blueprint$t)=>$t->dropColumn(['audience','design_template','text_align','photo_align','field_labels']));}};

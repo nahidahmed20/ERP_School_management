@@ -1,0 +1,152 @@
+<?php
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\Campus;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Illuminate\Support\Facades\DB; 
+use Illuminate\Validation\Rule;
+
+class CampusController extends Controller
+{
+    public function index(Request $request)
+    {
+        $query = Campus::query();
+        $user = $request->user();
+
+        if ($user && $user->hasRole('Tenant Admin') && !$user->hasRole('Super Admin')) {
+            $query->where('saas_tenant_id', $user->campus?->saas_tenant_id);
+        }
+
+        if ($search = $request->get('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('code', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('is_active', $request->get('status') === 'active');
+        }
+
+        $query->orderBy('order')->orderBy('name');
+
+        $perPage = $request->get('per_page', 10);
+        $campuses = $perPage === 'all'
+            ? $query->get()
+            : $query->paginate((int) $perPage)->withQueryString();
+
+        return Inertia::render('Admin/School/Index', [
+            'campuses' => $perPage === 'all'
+                ? ['data' => $campuses, 'links' => [], 'meta' => ['total' => $campuses->count()]]
+                : $campuses,
+            'filters' => $request->only(['search', 'status', 'per_page']),
+        ]);
+    }
+
+    public function store(Request $request)
+    {
+        $data = $this->validateData($request);
+        $user = $request->user();
+
+        if ($user && $user->hasRole('Tenant Admin') && !$user->hasRole('Super Admin')) {
+            $data['saas_tenant_id'] = $user->campus?->saas_tenant_id;
+        }
+
+        DB::transaction(function () use ($data) {
+            $campus = Campus::create($data);
+            if ($campus->is_main) {
+                Campus::where('id', '!=', $campus->id)
+                      ->when($campus->saas_tenant_id, function($q) use ($campus) {
+                          $q->where('saas_tenant_id', $campus->saas_tenant_id);
+                      })
+                      ->update(['is_main' => false]);
+            }
+        });
+
+        return back()->with('success', 'নতুন Campus সফলভাবে তৈরি করা হয়েছে।');
+    }
+
+    public function update(Request $request, Campus $campus)
+    {
+        $data = $this->validateData($request, $campus->id);
+        
+        $user = $request->user();
+        if ($user && $user->hasRole('Tenant Admin') && !$user->hasRole('Super Admin')) {
+            abort_unless($campus->saas_tenant_id === $user->campus?->saas_tenant_id, 403, 'Unauthorized.');
+        }
+
+        DB::transaction(function () use ($data, $campus) {
+            $campus->update($data);
+            if ($campus->is_main) {
+                Campus::where('id', '!=', $campus->id)
+                      ->when($campus->saas_tenant_id, function($q) use ($campus) {
+                          $q->where('saas_tenant_id', $campus->saas_tenant_id);
+                      })
+                      ->update(['is_main' => false]);
+            }
+        });
+
+        return back()->with('success', 'Campus তথ্য সফলভাবে আপডেট করা হয়েছে।');
+    }
+
+    public function destroy(Request $request, Campus $campus)
+    {
+        $user = $request->user();
+        if ($user && $user->hasRole('Tenant Admin') && !$user->hasRole('Super Admin')) {
+            abort_unless($campus->saas_tenant_id === $user->campus?->saas_tenant_id, 403, 'Unauthorized.');
+        }
+
+        if ($campus->is_main) {
+            return back()->with('error', 'Main Campus ডিলিট করা সম্ভব নয়। অন্য কোনো ক্যাম্পাসকে Main হিসেবে সেট করার পর এটি ডিলিট করুন।');
+        }
+
+        $campus->delete();
+
+        return back()->with('success', 'Campus সফলভাবে মুছে ফেলা হয়েছে।');
+    }
+
+    private function validateData(Request $request, $ignoreId = null): array
+    {
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'code' => 'required|string|max:50|unique:campuses,code' . ($ignoreId ? ",{$ignoreId}" : ''),
+            'phone' => 'nullable|string|max:30',
+            'email' => 'nullable|email|max:255',
+            'address' => 'nullable|string',
+            'public_description' => 'nullable|string|max:2000',
+            'facilities' => 'nullable|string|max:3000',
+            'map_url' => 'nullable|url|max:1000',
+            'established_year' => 'nullable|digits:4',
+            'is_main' => 'boolean',
+            'is_active' => 'boolean',
+            'order' => 'nullable|integer',
+        ]);
+
+        $data['facilities'] = collect(explode(',', $data['facilities'] ?? ''))
+            ->map(fn ($facility) => trim($facility))->filter()->unique()->values()->all();
+
+        return $data;
+    }
+
+    public function switchCampus(Request $request)
+    {
+        $user = $request->user();
+        abort_unless($user->hasAnyRole(['Super Admin', 'Tenant Admin']), 403, 'Unauthorized action.');
+        
+        $data = $request->validate([
+            'campus_id' => ['required', 'integer', Rule::exists('campuses', 'id')->where('is_active', true)],
+        ]);
+
+        if ($user->hasRole('Tenant Admin') && !$user->hasRole('Super Admin')) {
+            $campus = Campus::findOrFail($data['campus_id']);
+            abort_unless($campus->saas_tenant_id === $user->campus?->saas_tenant_id, 403, 'Unauthorized action.');
+        }
+
+        $request->session()->put('active_campus_id', (int) $data['campus_id']);
+
+        return redirect()->route('dashboard')->with('success', 'Working campus changed successfully.');
+    }
+}

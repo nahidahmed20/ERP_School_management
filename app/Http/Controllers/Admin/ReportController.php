@@ -1,0 +1,267 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\Department;
+use App\Models\FeeAssignment;
+use App\Models\Payment;
+use App\Models\SchoolClass;
+use App\Models\Staff;
+use App\Models\StaffAttendance;
+use App\Models\Student;
+use App\Models\StudentAttendance;
+use App\Models\User;
+use App\Models\Account;
+use App\Models\JournalEntry;
+use App\Models\PaymentTransaction;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
+
+class ReportController extends Controller
+{
+    // ১. Staff Attendance Report (GET)
+    public function financialSummary(Request $request)
+    {
+        $startDate = $request->start_date ?? now()->startOfMonth()->toDateString();
+        $endDate = $request->end_date ?? now()->endOfMonth()->toDateString();
+
+        $accounts = Account::query()->where('is_active', true)
+            ->withSum(['debitEntries as period_debit' => fn ($q) => $q->whereNull('reversed_at')->whereBetween('date', [$startDate, $endDate])], 'amount')
+            ->withSum(['creditEntries as period_credit' => fn ($q) => $q->whereNull('reversed_at')->whereBetween('date', [$startDate, $endDate])], 'amount')
+            ->orderBy('code')->get()->map(function ($account) {
+                $debit = (float) ($account->period_debit ?? 0);
+                $credit = (float) ($account->period_credit ?? 0);
+                $normalDebit = in_array($account->type, ['Asset', 'Expense'], true);
+                $account->balance = round((float) $account->opening_balance + ($normalDebit ? $debit - $credit : $credit - $debit), 2);
+                return $account;
+            });
+
+        $income = $accounts->where('type', 'Income')->sum('balance');
+        $expense = $accounts->where('type', 'Expense')->sum('balance');
+        $entries = JournalEntry::whereNull('reversed_at')->whereBetween('date', [$startDate, $endDate]);
+        $invalidEntries=(clone $entries)->where(fn($q)=>$q->whereColumn('debit_account_id','credit_account_id')->orWhere('amount','<=',0))->count();
+        $feeCash=(float)PaymentTransaction::whereBetween('transaction_date',[$startDate,$endDate])->whereIn('source_type',[Payment::class,\App\Models\Invoice::class])->whereIn('status',['Completed','Refunded'])->sum(DB::raw('amount-refunded_amount'));
+        $postedFees=(float)JournalEntry::whereNull('reversed_at')->whereBetween('date',[$startDate,$endDate])->where(fn($q)=>$q->where('source_key','like','fee-payment:%')->orWhere('source_key','like','online-payment:%'))->sum('amount');
+        $postedRefunds=(float)JournalEntry::whereNull('reversed_at')->whereBetween('date',[$startDate,$endDate])->where('source_key','like','payment-refund:%')->sum('amount');
+        $reconciliationDifference=round($feeCash-($postedFees-$postedRefunds),2);
+
+        return Inertia::render('Admin/Reports/FinancialSummary', [
+            'accounts' => $accounts->values(),
+            'summary' => [
+                'total_debit' => (float) (clone $entries)->sum('amount'),
+                'total_credit' => (float) (clone $entries)->sum('amount'),
+                'income' => (float) $income,
+                'expense' => (float) $expense,
+                'net_profit' => (float) ($income - $expense),
+                'is_balanced' => $invalidEntries===0 && abs($reconciliationDifference)<0.01,
+                'invalid_entries' => $invalidEntries,
+                'reconciliation_difference' => $reconciliationDifference,
+            ],
+            'filters' => compact('startDate', 'endDate'),
+        ]);
+    }
+
+    public function staffAttendanceReport()
+    {
+        $staffs = Staff::select('id', 'first_name', 'last_name', 'staff_id_no')
+            ->where('is_active', true)
+            ->get();
+
+        return Inertia::render('Admin/Reports/staffAttendanceReport', [
+            'staffs' => $staffs,
+            'reportData' => null,
+            'reportType' => null,
+        ]);
+    }
+
+    // ২. Staff Attendance Generate (POST)
+    public function generate(Request $request)
+    {
+        $request->validate([
+            'report_type' => 'required|in:single,all',
+            'staff_id' => 'required_if:report_type,single',
+            'from_date' => 'required|date',
+            'to_date' => 'required|date|after_or_equal:from_date',
+        ]);
+
+        $query = StaffAttendance::with('staff:id,first_name,last_name,staff_id_no')
+                    ->whereBetween('date', [$request->from_date, $request->to_date])
+                    ->orderBy('date', 'asc');
+
+        if ($request->report_type === 'single') {
+            $query->where('staff_id', $request->staff_id);
+            $reportData = $query->get();
+        } else {
+            $reportData = $query->get()->groupBy('staff_id');
+        }
+
+        return Inertia::render('Admin/Reports/staffAttendanceReport', [
+            'staffs' => Staff::select('id', 'first_name', 'last_name', 'staff_id_no')->where('is_active', true)->get(),
+            'reportData' => $reportData,
+            'reportType' => $request->report_type,
+            'filters' => $request->only(['report_type', 'staff_id', 'from_date', 'to_date'])
+        ]);
+    }
+
+    // ৩. Fee Collection Report (GET)
+    public function feeCollection(Request $request)
+    {
+        $startDate = $request->start_date ?? Carbon::now()->startOfMonth()->toDateString();
+        $endDate = $request->end_date ?? Carbon::now()->endOfMonth()->toDateString();
+        $classId = $request->class_id ?? '';
+
+        $query = Payment::with([
+            'student.currentEnrollment.schoolClass',
+            'feeAssignment.feeGroup'
+        ])->whereBetween('payment_date', [$startDate, $endDate]);
+
+        if ($classId) {
+            $query->whereHas('student.currentEnrollment', function($q) use ($classId) {
+                $q->where('class_id', $classId);
+            });
+        }
+
+        $payments = $query->latest()->get();
+        $totalCollection = $payments->sum('amount_paid');
+
+        return Inertia::render('Admin/Reports/FeeCollection', [
+            'payments' => $payments,
+            'totalCollection' => $totalCollection,
+            'classes' => SchoolClass::where('is_active', true)->get(),
+            'filters' => [
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'class_id' => $classId
+            ]
+        ]);
+    }
+
+    // ৪. Due Fees Report (GET)
+    public function dueFees(Request $request)
+    {
+        $classId = $request->class_id ?? '';
+        $sectionId = $request->section_id ?? '';
+        $dateUntil = $request->date_until ?? now()->toDateString();
+
+        $query = FeeAssignment::with([
+            'student.currentEnrollment.schoolClass',
+            'student.currentEnrollment.section',
+            'student.guardian',
+            'feeGroup.feeTypes',
+            'payments'
+        ])
+        ->whereIn('status', ['unpaid', 'partially_paid'])
+        ->whereDate('due_date', '<=', $dateUntil);
+
+        if ($classId) {
+            $query->whereHas('student.currentEnrollment', function($q) use ($classId, $sectionId) {
+                $q->where('class_id', $classId);
+                if ($sectionId) {
+                    $q->where('section_id', $sectionId);
+                }
+            });
+        }
+
+        $dueAssignments = $query->get()->map(function ($assignment) {
+            $totalFee = $assignment->feeGroup->feeTypes->sum('amount');
+            $paidFee = $assignment->payments->sum('amount_paid');
+            $dueAmount = $totalFee - $paidFee;
+
+            $assignment->total_fee = $totalFee;
+            $assignment->paid_fee = $paidFee;
+            $assignment->due_amount = $dueAmount;
+
+            return $assignment;
+        })->filter(function ($assignment) {
+            return $assignment->due_amount > 0;
+        });
+
+        return Inertia::render('Admin/Reports/DueFees', [
+            'dueAssignments' => $dueAssignments->values(),
+            'totalDue' => $dueAssignments->sum('due_amount'),
+            'classes' => SchoolClass::with('sections')->where('is_active', true)->get(),
+            'filters' => [
+                'class_id' => $classId,
+                'section_id' => $sectionId,
+                'date_until' => $dateUntil,
+            ]
+        ]);
+    }
+
+    // ৫. Student Attendance Report (GET)
+    public function studentReport(Request $request)
+    {
+        $campusId = config('app.active_campus_id');
+        $filter = fn($q) => $campusId ? $q->where('campus_id', $campusId) : $q;
+
+        $classId = $request->class_id;
+        $sectionId = $request->section_id;
+
+        $month = $request->month ?? date('m');
+        $year = $request->year ?? date('Y');
+
+        $reportData = [];
+
+        if ($classId) {
+            $students = Student::with(['currentEnrollment.schoolClass', 'currentEnrollment.section'])
+                ->where('status', true)
+                ->where($filter)
+                ->whereHas('currentEnrollment', function($q) use ($classId, $sectionId) {
+                    $q->where('class_id', $classId);
+                    if ($sectionId) {
+                        $q->where('section_id', $sectionId);
+                    }
+                })->get();
+
+            $studentIds = $students->pluck('id');
+            $allAttendances = StudentAttendance::whereIn('student_id', $studentIds)
+                ->whereMonth('attendance_date', $month)
+                ->whereYear('attendance_date', $year)
+                ->get()
+                ->groupBy('student_id');
+
+            foreach ($students as $student) {
+                $attendances = $allAttendances->get($student->id, collect());
+
+                $reportData[] = [
+                    'id' => $student->id,
+                    'name' => trim($student->first_name . ' ' . $student->last_name),
+                    'admission_no' => $student->admission_no,
+                    'roll_no' => $student->currentEnrollment?->roll_no,
+                    'class_name' => $student->currentEnrollment?->schoolClass?->name,
+                    'total_present' => $attendances->where('status', 'present')->count(),
+                    'total_absent' => $attendances->where('status', 'absent')->count(),
+                    'total_late' => $attendances->where('status', 'late')->count(),
+                    'total_half_day' => $attendances->where('status', 'half_day')->count(),
+                    'total_working_days' => $attendances->count(),
+                ];
+            }
+        }
+
+        return Inertia::render('Admin/Reports/StudentAttendance', [
+            'classes' => SchoolClass::with('sections')->where('is_active', true)->where($filter)->get(),
+            'reportData' => $reportData,
+            'filters' => [
+                'class_id' => $classId ?? '',
+                'section_id' => $sectionId ?? '',
+                'month' => $month,
+                'year' => $year,
+            ]
+        ]);
+    }
+
+    public function saved()
+    {
+        return Inertia::render('Admin/Reports/SavedReports', [
+            'reportGroups'=>[
+                ['name'=>'Students & Academics','items'=>[['Student Directory',route('admin.students.index')],['Student Attendance',route('admin.studentAttendance.report')],['Exam Report Cards',route('admin.exams.reportcards')],['Due Fees',route('admin.due_fees')]]],
+                ['name'=>'Staff & HR','items'=>[['Staff Directory',route('admin.staff.index')],['Staff Attendance',route('admin.staff.attendances-report')],['Payroll',route('admin.staff-payrolls.index')]]],
+                ['name'=>'Finance & Operations','items'=>[['Fee Collection',route('admin.reports.fees')],['Financial Summary',route('admin.reports.financial-summary')],['Stock Movement',route('admin.purchase.items.report')],['Sales Report',route('admin.sales.reports.index')]]],
+                ['name'=>'Advanced Reporting','items'=>[['Custom Report Builder',route('admin.reporting-administration.index')],['Export & Schedule History',route('admin.reporting-administration.index')]]],
+            ]
+        ]);
+    }
+}

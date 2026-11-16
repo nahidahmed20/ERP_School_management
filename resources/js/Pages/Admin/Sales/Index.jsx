@@ -1,0 +1,282 @@
+import { useState, useEffect } from 'react';
+import { Head, router, usePage, Link } from '@inertiajs/react';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import Icon from '@/Components/Icons';
+import Pagination from '@/Components/Pagination';
+import SaleShowModal from './Partials/SaleShowModal';
+import Swal from 'sweetalert2';
+
+export default function Index({ sales, filters, voidRequests = [], accounts = [] }) {
+  const { flash } = usePage().props;
+
+  const [search, setSearch] = useState(filters.search ?? '');
+  const [perPage, setPerPage] = useState(filters.per_page ?? '10');
+
+  const [viewingItem, setViewingItem] = useState(null);
+
+  useEffect(() => {
+    if (flash?.success) {
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: flash.success, showConfirmButton: false, timer: 3000, timerProgressBar: true });
+    }
+  }, [flash]);
+
+  function applyFilters(overrides = {}) {
+    router.get(route('admin.sales.index'), { search, per_page: perPage, ...overrides }, { preserveState: true, replace: true });
+  }
+
+  // --- Export Functions ---
+  const handlePrint = () => window.print();
+
+  const exportToCSV = () => {
+    if (!sales.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
+    const headers = ['Invoice Number', 'Customer Name', 'Phone', 'Date', 'Total Amount', 'Due Amount'];
+    const rows = sales.data.map(item => [
+      item.invoice_number || 'N/A',
+      item.customer_name || 'N/A',
+      item.customer_phone || 'N/A',
+      new Date(item.created_at).toLocaleDateString(),
+      item.total_amount || '0',
+      item.due_amount || '0'
+    ]);
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows.map(e => e.map(val => `"${val}"`).join(','))].join('\n');
+    const link = document.createElement("a");
+    link.setAttribute("href", encodeURI(csvContent));
+    link.setAttribute("download", `Sales_History_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const copyToClipboard = () => {
+    if (!sales.data.length) return;
+    let text = "Invoice Number\tCustomer Name\tPhone\tDate\tTotal\tDue\n";
+    sales.data.forEach(item => {
+      text += `${item.invoice_number}\t${item.customer_name}\t${item.customer_phone || '-'}\t${new Date(item.created_at).toLocaleDateString()}\t${item.total_amount}\t${item.due_amount}\n`;
+    });
+    navigator.clipboard.writeText(text);
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Data copied to clipboard!', showConfirmButton: false, timer: 2000 });
+  };
+
+  const collectDue = async (sale) => {
+    const accountOptions = accounts.map(account => `<option value="${account.id}">${account.code} — ${account.name}</option>`).join('');
+    const result = await Swal.fire({
+      title: `Receive due: ${sale.invoice_number}`,
+      html: `<input id="due-amount" class="swal2-input" type="number" min="0.01" step="0.01" value="${Number(sale.due_amount).toFixed(2)}" placeholder="Amount">
+        <select id="due-method" class="swal2-select"><option>Cash</option><option>bKash</option><option>Card</option><option>Bank</option></select>
+        <select id="due-account" class="swal2-select"><option value="">Select deposit account</option>${accountOptions}</select>
+        <input id="due-reference" class="swal2-input" maxlength="100" placeholder="Reference / receipt no. (optional)">`,
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: 'Receive payment',
+      preConfirm: () => {
+        const amount = document.getElementById('due-amount').value;
+        const account_id = document.getElementById('due-account').value;
+        if (!amount || Number(amount) <= 0 || Number(amount) > Number(sale.due_amount) || !account_id) {
+          Swal.showValidationMessage('Enter a valid amount and select the deposit account.');
+          return false;
+        }
+        return { amount, account_id, payment_method: document.getElementById('due-method').value, reference_no: document.getElementById('due-reference').value };
+      },
+    });
+    if (result.isConfirmed) router.post(route('admin.sales.receive-due', sale.id), result.value, { preserveScroll: true });
+  };
+
+  return (
+    <AuthenticatedLayout>
+      <Head title="Sales History" />
+
+      {/* Print Specific CSS */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @media print {
+          nav, aside, header, .no-print, button, a, select, input { display: none !important; }
+          body, html { background: #f8fafc !important; }
+          .print-table-wrapper { width: 100% !important; border: none !important; box-shadow: none !important; }
+          .print-title { display: block !important; font-size: 24px !important; font-weight: bold !important; margin-bottom: 20px !important; }
+        }
+        @media screen { .print-title { display: none; } }
+      `}} />
+
+      <div className="print-title">Sales History Directory - {new Date().toLocaleDateString('en-GB')}</div>
+
+      <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8 no-print">
+
+        {/* Page Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">Sales &amp; POS</span>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Sales History</h1>
+            <p className="text-sm text-slate-500 mt-1">সকল বিক্রয় ও ইনভয়েসের তালিকা এবং হিস্ট্রি।</p>
+          </div>
+          <Link
+            href={route('admin.sales.create')}
+            className="w-full sm:w-auto inline-flex justify-center items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md shadow-emerald-500/20 active:scale-95"
+          >
+            <Icon name="monitor" className="w-4 h-4" /> Open POS
+          </Link>
+        </div>
+
+        {/* Unified Modern Toolbar */}
+        <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
+
+            {/* Per Page */}
+            <select
+              value={perPage}
+              onChange={e => { setPerPage(e.target.value); applyFilters({ per_page: e.target.value }); }}
+              className="appearance-none bg-none pr-3 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer text-center font-mono"
+              style={{ backgroundImage: 'none' }}
+            >
+              <option value="10">10 / Page</option>
+              <option value="20">20 / Page</option>
+              <option value="50">50 / Page</option>
+              <option value="all">All</option>
+            </select>
+
+            <div className="hidden sm:block w-px h-6 bg-slate-200"></div>
+
+            {/* Search Input */}
+            <div className="relative flex-1 min-w-[200px] sm:w-80">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Icon name="search" className="w-4 h-4 text-slate-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search Invoice or Customer..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
+                className="block w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+              />
+            </div>
+
+            {/* Apply Button */}
+            <button
+              onClick={() => applyFilters()}
+              className="w-full sm:w-auto px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
+            >
+              Search
+            </button>
+          </div>
+
+          {/* Export Actions */}
+          <div className="flex items-center justify-end gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-xl w-full xl:w-auto shadow-sm shrink-0 ml-auto">
+            <button onClick={copyToClipboard} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Copy to Clipboard">
+              Copy
+            </button>
+            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+            <button onClick={exportToCSV} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-emerald-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export CSV">
+              CSV
+            </button>
+            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+            <button onClick={() => alert('Backend Excel plugin needed')} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-green-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export Excel">
+              Excel
+            </button>
+            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+            <button onClick={() => alert('Backend PDF plugin needed')} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-rose-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Export PDF">
+              PDF
+            </button>
+            <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+            <button onClick={handlePrint} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-amber-600 hover:bg-white hover:shadow-sm rounded-lg transition-all flex items-center gap-1.5" title="Print List">
+              Print
+            </button>
+          </div>
+        </div>
+
+        {/* Main Table Card */}
+        <div className="bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 print-table-wrapper">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50/50">
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider w-16">SL</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Invoice</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Customer</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Date</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Total</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Due / Status</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right no-print">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {sales.data.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-12 text-center text-slate-500">
+                      <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-3 border border-slate-100">
+                        <Icon name="receipt" className="w-8 h-8 text-slate-300" />
+                      </div>
+                      <p className="text-sm font-semibold text-slate-600">কোনো সেলস রেকর্ড পাওয়া যায়নি</p>
+                      <p className="text-xs text-slate-400 mt-1">Open POS terminal to create a new sale</p>
+                    </td>
+                  </tr>
+                ) : (
+                  sales.data.map((sale, index) => (
+                    <tr key={sale.id} className="hover:bg-slate-50/60 transition-colors">
+                      <td className="px-6 py-4 text-sm font-medium text-slate-500 font-mono">
+                        {(sales.from ?? 1) + index}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100 shrink-0">
+                            <Icon name="receipt" className="w-5 h-5" />
+                          </div>
+                          <span className="text-sm font-bold text-slate-900 font-mono">{sale.invoice_number}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm font-bold text-slate-900">{sale.customer_name}</div>
+                        <div className="text-xs text-slate-500 font-mono mt-0.5">{sale.customer_phone || '—'}</div>
+                      </td>
+                      <td className="px-6 py-4 text-sm font-semibold text-slate-600 font-mono">
+                        {new Date(sale.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <span className="text-sm font-black text-emerald-700 font-mono">
+                          ৳ {Number(sale.total_amount).toFixed(2)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        {sale.due_amount > 0 ? (
+                          <span className="inline-flex px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide uppercase bg-rose-50 text-rose-700 border border-rose-200">
+                            Due: ৳ {Number(sale.due_amount).toFixed(2)}
+                          </span>
+                        ) : (
+                          <span className="inline-flex px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            Paid
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-right no-print">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button onClick={() => setViewingItem(sale)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="View Details">
+                            <Icon name="eye" className="w-4 h-4" />
+                          </button>
+                          <Link href={route('admin.sales.invoice', sale.id)} target="_blank" rel="noreferrer" className="p-2 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors" title="Print Invoice">
+                            <Icon name="printer" className="w-4 h-4" />
+                          </Link>
+                          {!sale.voided_at && Number(sale.due_amount) > 0 && <button onClick={() => collectDue(sale)} className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="Receive due payment">
+                            <Icon name="wallet" className="w-4 h-4" />
+                          </button>}
+                           {!sale.voided_at && <button onClick={async () => { const result=await Swal.fire({title:'Request sale void',input:'textarea',inputLabel:'Reason',showCancelButton:true,inputValidator:v=>!v?'Reason is required':undefined});if(result.isConfirmed)router.post(route('admin.sales.void-request',sale.id),{reason:result.value},{preserveScroll:true}); }} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Request approved void">
+                             <Icon name="trash" className="w-4 h-4" />
+                           </button>}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="no-print border-t border-slate-100 bg-white px-6 py-4 rounded-b-2xl">
+            <Pagination meta={sales} />
+          </div>
+        </div>
+      </div>
+
+      {voidRequests.length > 0 && <div className="mx-auto mb-6 max-w-7xl rounded-2xl border border-amber-200 bg-amber-50 p-5 no-print"><h2 className="font-bold text-amber-900">Pending sale void approvals</h2><div className="mt-3 space-y-2">{voidRequests.map(v=><div key={v.id} className="flex flex-col justify-between gap-2 rounded-xl bg-white p-3 text-sm sm:flex-row sm:items-center"><span><b>{v.invoice_number}</b> · ৳{Number(v.total_amount).toFixed(2)}<small className="block text-slate-500">{v.reason}</small></span><span className="flex gap-3"><button onClick={()=>router.patch(route('admin.sales.void-decision',v.id),{decision:'approved'},{preserveScroll:true})} className="font-bold text-emerald-700">Approve</button><button onClick={()=>router.patch(route('admin.sales.void-decision',v.id),{decision:'rejected'},{preserveScroll:true})} className="font-bold text-rose-700">Reject</button></span></div>)}</div></div>}
+
+      {viewingItem && <SaleShowModal sale={viewingItem} onClose={() => setViewingItem(null)} />}
+    </AuthenticatedLayout>
+  );
+}

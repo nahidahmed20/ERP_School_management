@@ -1,0 +1,116 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration {
+    public function up(): void
+    {
+        if (! Schema::hasTable('cafeteria_wallets')) {
+            Schema::create('cafeteria_wallets', function (Blueprint $t) {
+                $t->id();
+                $t->foreignId('campus_id')->nullable()->constrained()->nullOnDelete();
+                $t->foreignId('user_id')->constrained()->cascadeOnDelete();
+                $t->string('card_uid')->nullable()->unique();
+                $t->decimal('balance', 12, 2)->default(0);
+                $t->decimal('daily_spending_limit', 12, 2)->nullable();
+                $t->boolean('is_active')->default(true);
+                $t->timestamps();
+                $t->unique(['user_id']);
+            });
+        }
+
+        if (! Schema::hasTable('cafeteria_wallet_transactions')) {
+            Schema::create('cafeteria_wallet_transactions', function (Blueprint $t) {
+                $t->id();
+                $t->foreignId('campus_id')->nullable()->constrained()->nullOnDelete();
+                $t->foreignId('cafeteria_wallet_id')->constrained()->cascadeOnDelete();
+                $t->string('type');
+                $t->decimal('amount', 12, 2);
+                $t->decimal('balance_after', 12, 2);
+                $t->string('reference_type')->nullable();
+                $t->unsignedBigInteger('reference_id')->nullable();
+                $t->string('payment_method')->nullable();
+                $t->string('reference_no')->nullable();
+                $t->text('notes')->nullable();
+                $t->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+                $t->timestamps();
+                $t->index(['reference_type', 'reference_id']);
+            });
+        }
+
+        Schema::table('food_items', function (Blueprint $t) {
+            if (! Schema::hasColumn('food_items', 'cafeteria_raw_material_id')) {
+                $column = $t->unsignedBigInteger('cafeteria_raw_material_id')->nullable();
+                if (Schema::hasTable('cafeteria_raw_materials')) {
+                    $column->constrained('cafeteria_raw_materials')->nullOnDelete();
+                }
+            }
+            if (! Schema::hasColumn('food_items', 'stock_quantity')) $t->decimal('stock_quantity', 12, 2)->default(0);
+            if (! Schema::hasColumn('food_items', 'reorder_level')) $t->decimal('reorder_level', 12, 2)->default(5);
+            if (! Schema::hasColumn('food_items', 'stock_unit')) $t->string('stock_unit')->default('pcs');
+        });
+
+        Schema::table('cafeteria_orders', function (Blueprint $t) {
+            if (! Schema::hasColumn('cafeteria_orders', 'payment_method')) $t->string('payment_method')->default('cash');
+            if (! Schema::hasColumn('cafeteria_orders', 'source')) $t->string('source')->default('counter');
+            if (! Schema::hasColumn('cafeteria_orders', 'accepted_at')) $t->dateTime('accepted_at')->nullable();
+            if (! Schema::hasColumn('cafeteria_orders', 'preparing_at')) $t->dateTime('preparing_at')->nullable();
+            if (! Schema::hasColumn('cafeteria_orders', 'ready_at')) $t->dateTime('ready_at')->nullable();
+            if (! Schema::hasColumn('cafeteria_orders', 'served_at')) $t->dateTime('served_at')->nullable();
+            if (! Schema::hasColumn('cafeteria_orders', 'processed_by')) $t->foreignId('processed_by')->nullable()->constrained('users')->nullOnDelete();
+        });
+
+        if (! Schema::hasTable('cafeteria_refund_requests')) Schema::create('cafeteria_refund_requests', function (Blueprint $t) {
+            $t->id();
+            $t->foreignId('campus_id')->nullable()->constrained()->nullOnDelete(); // 🟢 যুক্ত করা হলো
+            $t->foreignId('cafeteria_order_id')->constrained()->cascadeOnDelete();
+            $t->string('type');
+            $t->decimal('amount', 12, 2);
+            $t->text('reason');
+            $t->string('status')->default('pending');
+            $t->foreignId('requested_by')->nullable()->constrained('users')->nullOnDelete();
+            $t->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
+            $t->dateTime('decided_at')->nullable();
+            $t->timestamps();
+        });
+
+        if (! Schema::hasTable('cafeteria_cash_closings')) Schema::create('cafeteria_cash_closings', function (Blueprint $t) {
+            $t->id();
+            $t->foreignId('campus_id')->nullable()->constrained()->nullOnDelete(); // 🟢 যুক্ত করা হলো
+            $t->foreignId('cafeteria_outlet_id')->constrained()->cascadeOnDelete();
+            $t->date('business_date');
+            $t->decimal('opening_cash', 12, 2)->default(0);
+            $t->decimal('cash_sales', 12, 2)->default(0);
+            $t->decimal('refunds', 12, 2)->default(0);
+            $t->decimal('expected_cash', 12, 2)->default(0);
+            $t->decimal('counted_cash', 12, 2);
+            $t->decimal('variance', 12, 2)->default(0);
+            $t->text('notes')->nullable();
+            $t->foreignId('closed_by')->nullable()->constrained('users')->nullOnDelete();
+            $t->dateTime('closed_at');
+            $t->timestamps();
+            $t->unique(['cafeteria_outlet_id', 'business_date']);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('cafeteria_cash_closings');
+        Schema::dropIfExists('cafeteria_refund_requests');
+        
+        Schema::table('cafeteria_orders', function (Blueprint $t) {
+            $t->dropConstrainedForeignId('processed_by');
+            $t->dropColumn(['payment_method', 'source', 'accepted_at', 'preparing_at', 'ready_at', 'served_at']);
+        });
+        
+        Schema::table('food_items', function (Blueprint $t) {
+            $t->dropForeign(['cafeteria_raw_material_id']); // 🟢 আপডেট করা হলো
+            $t->dropColumn(['cafeteria_raw_material_id', 'stock_quantity', 'reorder_level', 'stock_unit']);
+        });
+        
+        Schema::dropIfExists('cafeteria_wallet_transactions');
+        Schema::dropIfExists('cafeteria_wallets');
+    }
+};

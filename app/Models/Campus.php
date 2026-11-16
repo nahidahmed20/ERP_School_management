@@ -1,0 +1,30 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Campus extends Model
+{
+    use HasFactory;
+
+    protected $guarded = ['id'];
+
+    protected $casts = [
+        'facilities' => 'array',
+        'is_main' => 'boolean',
+        'is_active' => 'boolean',
+    ];
+
+    public function academicSessions()
+    {
+        return $this->hasMany(AcademicSession::class);
+    }
+
+    public function campus()
+    {
+        return $this->belongsTo(Campus::class, 'campus_id');
+    }
+    public function tenant(){return $this->belongsTo(SaasTenant::class,'saas_tenant_id');}
+}

@@ -1,0 +1,520 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Jobs\SendStudentSms;
+use App\Models\AcademicSession;
+use App\Models\Campus;
+use App\Models\Enrollment;
+use App\Models\Guardian;
+use App\Models\House;
+use App\Models\SchoolClass;
+use App\Models\Student;
+use App\Models\StudentCategory;
+use App\Models\User;
+use App\Support\PerPage;
+use App\Support\CampusRule;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
+
+class StudentController extends Controller
+{
+    public function index(Request $request)
+    {
+        $perPage = PerPage::resolve();
+        $search = $request->input('search');
+
+        $query = Student::with(['currentEnrollment.schoolClass', 'currentEnrollment.section', 'guardian', 'campus'])->latest();
+
+        if ($request->filled('class_id')) {
+            $query->whereHas('currentEnrollment', function ($q) use ($request) {
+                $q->where('class_id', $request->class_id);
+            });
+        }
+        if ($request->filled('section_id')) {
+            $query->whereHas('currentEnrollment', function ($q) use ($request) {
+                $q->where('section_id', $request->section_id);
+            });
+        }
+
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('admission_no', 'like', "%{$search}%")
+                    ->orWhereHas('guardian', function ($gQ) use ($search) {
+                        $gQ->where('father_name', 'like', "%{$search}%")
+                            ->orWhere('father_phone', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        $students = $query->paginate($perPage)->withQueryString();
+
+        return Inertia::render('Admin/Students/Index', [
+            'students' => $students,
+            'classes' => SchoolClass::with('sections')->where('is_active', true)->get(),
+            'filters' => $request->only(['class_id', 'section_id', 'search', 'per_page']),
+        ]);
+    }
+
+    public function create()
+    {
+        return Inertia::render('Admin/Students/Create', [
+            'classes' => SchoolClass::with('sections')->where('is_active', true)->get(),
+            'active_session' => AcademicSession::where('campus_id', config('app.active_campus_id'))->where('is_active', 1)->where('is_current', 1)->first(),
+            'campuses' => Campus::whereKey(config('app.active_campus_id'))->get(),
+            'activeCampusId' => config('app.active_campus_id'),
+            'categories' => StudentCategory::all(),
+            'houses' => House::all(),
+        ]);
+    }
+
+    public function searchGuardian(Request $request)
+    {
+        $query = $request->input('query');
+
+        if (!$query) {
+            return response()->json(['guardian' => null]);
+        }
+        $guardian = Guardian::where('father_phone', $query)
+            ->orWhereHas('students', function ($q) use ($query) {
+                $q->where('admission_no', $query);
+            })
+            ->first();
+
+        return response()->json(['guardian' => $guardian]);
+    }
+
+    public function store(Request $request)
+    {
+        $request->merge(['campus_id' => config('app.active_campus_id')]);
+
+        $data = $request->validate($this->studentValidationRules());
+        $activeSession = AcademicSession::where('campus_id', config('app.active_campus_id'))->where('is_active', 1)->where('is_current', 1)->first();
+
+        if (!$activeSession) {
+            return back()->with('error', 'কোনো অ্যাক্টিভ শিক্ষাবর্ষ পাওয়া যায়নি! আগে একটি শিক্ষাবর্ষ চালু করুন।');
+        }
+
+        DB::beginTransaction();
+        try {
+            $guardianUserId = null;
+            $guardianId = null;
+
+            if ($request->filled('guardian_id')) {
+                $guardianId = $request->guardian_id;
+                $guardian = Guardian::find($guardianId);
+
+                if ($guardian && $request->create_parent_user && !$guardian->user_id) {
+                    $parentEmail = $request->guardian_email ?? $request->father_phone . '@parent.school.com';
+                    $guardianUser = User::firstOrCreate(
+                        ['email' => $parentEmail],
+                        [
+                            'name' => $request->father_name,
+                            'password' => Hash::make($request->father_phone),
+                            'campus_id' => $request->campus_id,
+                        ]
+                    );
+
+                    if (!$guardianUser->hasRole('parent')) {
+                        $guardianUser->assignRole('parent');
+                    }
+                    $guardian->update(['user_id' => $guardianUser->id]);
+                }
+            } else {
+                if ($request->create_parent_user) {
+                    $parentEmail = $request->guardian_email ?? $request->father_phone . '@parent.school.com';
+
+                    $guardianUser = User::firstOrCreate(
+                        ['email' => $parentEmail],
+                        [
+                            'name' => $request->father_name,
+                            'password' => Hash::make($request->father_phone),
+                            'campus_id'         => $request->campus_id,
+                        ]
+                    );
+
+                    if (!$guardianUser->hasRole('parent')) {
+                        $guardianUser->assignRole('parent');
+                    }
+                    $guardianUserId = $guardianUser->id;
+                }
+
+                $guardian = Guardian::firstOrCreate(
+                    ['father_phone' => $request->father_phone],
+                    [
+                        'user_id'       => $guardianUserId,
+                        'father_name'   => $request->father_name,
+                        'mother_name'   => $request->mother_name,
+                        'mother_phone'  => $request->mother_phone,
+                        'guardian_email' => $request->guardian_email,
+                        'address'       => $request->present_address,
+                    ]
+                );
+
+                $guardianId = $guardian->id;
+            }
+
+            // --- Updated Admission No Logic (Yearly Reset) ---
+            $currentYear = date('Y');
+            $lastStudentThisYear = Student::withoutGlobalScope('campus')
+                ->withTrashed()
+                ->where('admission_no', 'like', "{$currentYear}-%")
+                ->latest('id')
+                ->first();
+
+            if ($lastStudentThisYear) {
+                $lastSerial = (int) explode('-', $lastStudentThisYear->admission_no)[1];
+                $newSerial = $lastSerial + 1;
+            } else {
+                $newSerial = 1;
+            }
+            $admissionNo = $currentYear . '-' . sprintf('%04d', $newSerial);
+            // --------------------------------------------------
+
+            $studentUserId = null;
+            if ($request->create_student_user) {
+                $studentEmail = $request->email ?? $admissionNo . '@student.school.com';
+
+                $studentUser = User::create([
+                    'name'       => $request->first_name . ' ' . $request->last_name,
+                    'email'      => $studentEmail,
+                    'password'   => Hash::make($admissionNo),
+                    'campus_id'  => $request->campus_id,
+                ]);
+
+                $studentUser->assignRole('student');
+                $studentUserId = $studentUser->id;
+            }
+
+            $photoPath = null;
+            if ($request->hasFile('photo')) {
+                $photoPath = $request->file('photo')->store('students', 'public');
+            }
+
+            $student = Student::create([
+                'campus_id'         => $request->campus_id,
+                'user_id'           => $studentUserId,
+                'guardian_id'       => $guardianId,
+                'category_id'       => $request->category_id,
+                'house_id'          => $request->house_id,
+                'admission_no'      => $admissionNo,
+                'admission_date'    => $request->admission_date,
+                'first_name'        => $request->first_name,
+                'last_name'         => $request->last_name,
+                'gender'            => $request->gender,
+                'date_of_birth'     => $request->date_of_birth,
+                'birth_certificate_no' => $request->birth_certificate_no,
+                'national_id'       => $request->national_id,
+                'mother_tongue'     => $request->mother_tongue,
+                'blood_group'       => $request->blood_group,
+                'religion'          => $request->religion,
+                'nationality'       => $request->nationality,
+                'phone'             => $request->phone,
+                'email'             => $request->email,
+                'previous_school_details' => $request->previous_school_details,
+                'medical_history'   => $request->medical_history,
+                'present_address'   => $request->present_address,
+                'permanent_address' => $request->permanent_address,
+                'photo'             => $photoPath,
+                'status'            => true,
+            ]);
+
+            $student->guardians()->syncWithoutDetaching([$guardianId => [
+                'relationship' => 'primary guardian',
+                'is_primary' => true,
+                'can_pickup' => true,
+                'receives_sms' => true,
+                'receives_email' => true,
+            ]]);
+
+            // --- Updated Auto Roll Number Logic ---
+            $rollNo = $request->roll_no;
+            if (!$rollNo) {
+                // Find highest roll in this class and section for the active session
+                $lastEnrollmentRoll = Enrollment::where('academic_session_id', $activeSession->id)
+                    ->where('class_id', $request->class_id)
+                    ->where('section_id', $request->section_id)
+                    ->get()
+                    ->max(function ($enrollment) {
+                        return (int) $enrollment->roll_no;
+                    });
+
+                $rollNo = $lastEnrollmentRoll ? $lastEnrollmentRoll + 1 : 1;
+            }
+            // --------------------------------------
+
+            Enrollment::create([
+                'student_id'            => $student->id,
+                'academic_session_id'   => $activeSession->id,
+                'class_id'              => $request->class_id,
+                'section_id'            => $request->section_id,
+                'roll_no'               => $rollNo,
+                'is_current'            => true,
+            ]);
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'সমস্যা হয়েছে: ' . $e->getMessage());
+        }
+
+        $response = redirect()->route('admin.students.index')
+            ->with('success', 'স্টুডেন্ট ভর্তি এবং অ্যাকাউন্ট তৈরি সফল হয়েছে!');
+
+        try {
+            $student->load('guardian');
+            if (SendStudentSms::hasConsent($student, 'admission')) {
+                Bus::dispatch(new SendStudentSms((int) $student->campus_id, $student->id, $request->user()->id));
+                $response->with('success', 'স্টুডেন্ট ভর্তি এবং অ্যাকাউন্ট তৈরি সফল হয়েছে! Admission SMS queued.');
+            }
+        } catch (\Throwable $e) {
+            report($e);
+            $response->with('error', 'Admission saved successfully, but the admission SMS could not be queued.');
+        }
+
+        return $response;
+    }
+
+    public function edit($id)
+    {
+        $student = Student::with(['guardian.students:id,guardian_id', 'currentEnrollment'])->findOrFail($id);
+
+        return Inertia::render('Admin/Students/Edit', [
+            'student' => $student,
+            'classes' => SchoolClass::with('sections')->where('is_active', true)->get(),
+            'campuses' => Campus::all(),
+            'categories' => StudentCategory::all(),
+            'houses' => House::all(),
+        ]);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $request->merge(['campus_id' => config('app.active_campus_id')]);
+
+        $student = Student::with(['guardian', 'currentEnrollment'])->findOrFail($id);
+        $data = $request->validate($this->studentValidationRules(isUpdate: true, studentId: $student->id));
+
+        DB::beginTransaction();
+        try {
+            if ($student->guardian) {
+                $student->guardian->update([
+                    'father_name'   => $request->father_name,
+                    'father_phone'  => $request->father_phone,
+                    'mother_name'   => $request->mother_name,
+                    'mother_phone'  => $request->mother_phone,
+                    'guardian_email' => $request->guardian_email,
+                ]);
+
+                if ($student->guardian->user_id) {
+                    $guardianUser = User::find($student->guardian->user_id);
+                    if ($guardianUser) {
+                        $guardianUser->update([
+                            'name' => $request->father_name,
+                            'email' => $request->guardian_email ?? $guardianUser->email,
+                        ]);
+                    }
+                }
+            }
+
+            if ($student->user_id) {
+                $studentUser = User::find($student->user_id);
+                if ($studentUser) {
+                    $studentUser->update([
+                        'name' => $request->first_name . ' ' . $request->last_name,
+                        'email' => $request->email ?? $studentUser->email,
+                    ]);
+                }
+            }
+
+            $photoPath = $student->photo;
+            if ($request->hasFile('photo')) {
+                if ($student->photo && Storage::disk('public')->exists($student->photo)) {
+                    Storage::disk('public')->delete($student->photo);
+                }
+                $photoPath = $request->file('photo')->store('students', 'public');
+            }
+
+            $student->update([
+                'campus_id'         => $request->campus_id,
+                'category_id'       => $request->category_id,
+                'house_id'          => $request->house_id,
+                'first_name'        => $request->first_name,
+                'last_name'         => $request->last_name,
+                'gender'            => $request->gender,
+                'date_of_birth'     => $request->date_of_birth,
+                'birth_certificate_no' => $request->birth_certificate_no,
+                'national_id'       => $request->national_id,
+                'mother_tongue'     => $request->mother_tongue,
+                'blood_group'       => $request->blood_group,
+                'religion'          => $request->religion,
+                'nationality'       => $request->nationality,
+                'phone'             => $request->phone,
+                'email'             => $request->email,
+                'previous_school_details' => $request->previous_school_details,
+                'medical_history'   => $request->medical_history,
+                'present_address'   => $request->present_address,
+                'permanent_address' => $request->permanent_address,
+                'photo'             => $photoPath,
+            ]);
+
+            if ($student->currentEnrollment) {
+                $rollNo = $request->roll_no;
+
+                if (!$rollNo) {
+                    $lastEnrollmentRoll = Enrollment::where('academic_session_id', $student->currentEnrollment->academic_session_id)
+                        ->where('class_id', $request->class_id)
+                        ->where('section_id', $request->section_id)
+                        ->where('id', '!=', $student->currentEnrollment->id)
+                        ->get()
+                        ->max(function ($enrollment) {
+                            return (int) $enrollment->roll_no;
+                        });
+
+                    $rollNo = $lastEnrollmentRoll ? $lastEnrollmentRoll + 1 : 1;
+                }
+
+                $student->currentEnrollment->update([
+                    'class_id'      => $request->class_id,
+                    'section_id'    => $request->section_id,
+                    'roll_no'       => $rollNo,
+                ]);
+            }
+
+            DB::commit();
+            return redirect()->route('admin.students.index')->with('success', 'স্টুডেন্টের তথ্য এবং ইউজার অ্যাকাউন্ট সফলভাবে আপডেট হয়েছে!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'আপডেট করতে সমস্যা হয়েছে: ' . $e->getMessage());
+        }
+    }
+
+    public function destroy($id)
+    {
+        $student = Student::findOrFail($id);
+
+        DB::beginTransaction();
+        try {
+            if ($student->user_id) {
+                User::where('id', $student->user_id)->delete();
+            }
+
+            $guardianId = $student->guardian_id;
+
+            $student->delete();
+
+            $otherSiblingsCount = Student::where('guardian_id', $guardianId)->count();
+
+            if ($otherSiblingsCount === 0) {
+                $guardian = Guardian::find($guardianId);
+                if ($guardian) {
+                    if ($guardian->user_id) {
+                        User::where('id', $guardian->user_id)->delete();
+                    }
+                    $guardian->delete();
+                }
+            }
+
+            DB::commit();
+            return back()->with('success', 'স্টুডেন্ট এবং তার অ্যাক্সেস মুছে ফেলা হয়েছে!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'ডিলিট করতে সমস্যা হয়েছে: ' . $e->getMessage());
+        }
+    }
+
+    public function generateIdCard(Student $student)
+    {
+        $template = \App\Models\IdCardTemplate::where('is_active', true)
+            ->whereIn('audience', ['student', 'both'])
+            ->latest()
+            ->first();
+
+        if (!$template) {
+            return back()->with('error', 'কোনো অ্যাক্টিভ Student ID Card টেমপ্লেট পাওয়া যায়নি! আগে একটি টেমপ্লেট তৈরি করুন।');
+        }
+
+        return Inertia::render('Admin/Documents/PersonIdCard', $this->studentDocumentData($student, $template));
+    }
+    public function attendanceHistory(Student $student)
+    {
+        return $this->studentReport($student, 'attendance');
+    }
+    public function academicResults(Student $student)
+    {
+        return $this->studentReport($student, 'results');
+    }
+    public function feePayments(Student $student)
+    {
+        return $this->studentReport($student, 'fees');
+    }
+    public function sendMessage(Student $student)
+    {
+        return redirect()->route('admin.communication.chat.index', ['student_id' => $student->id]);
+    }
+    private function studentReport(Student $student, string $tab)
+    {
+        $student->load(['campus', 'guardian', 'currentEnrollment.schoolClass', 'currentEnrollment.section']);
+        return Inertia::render('Admin/Documents/PersonReport', ['personType' => 'student', 'person' => $student, 'initialTab' => $tab, 'attendance' => \App\Models\StudentAttendance::where('student_id', $student->id)->latest('attendance_date')->get(), 'results' => \App\Models\ExamMark::with(['exam:id,name', 'subject:id,name'])->where('student_id', $student->id)->latest()->get(), 'fees' => \App\Models\Invoice::with('feeGroup:id,name')->where('student_id', $student->id)->latest('invoice_date')->get(), 'leaves' => \App\Models\StudentLeaveRequest::where('student_id', $student->id)->latest()->get()]);
+    }
+    private function studentDocumentData(Student $student): array
+    {
+        $student->load(['campus', 'guardian', 'currentEnrollment.schoolClass', 'currentEnrollment.section']);
+        $template = \App\Models\IdCardTemplate::where('is_active', true)->whereIn('audience', ['student', 'both'])->latest()->first();
+        abort_unless($template, 422, 'Create an active Student ID card template first.');
+        return ['personType' => 'student', 'person' => $student, 'template' => $template, 'branding' => app(\App\Services\WebsiteSettingsService::class)->values()];
+    }
+
+    private function studentValidationRules(bool $isUpdate = false, $studentId = null): array
+    {
+        $rules = [
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'campus_id'     => 'required|exists:campuses,id',
+            'class_id'      => ['required', CampusRule::exists('school_classes')],
+            'section_id'    => ['nullable', CampusRule::exists('sections')],
+            'guardian_id'   => ['nullable', CampusRule::exists('guardians')],
+            'roll_no'       => 'nullable|string|max:50',
+
+            'category_id'   => ['nullable', CampusRule::exists('student_categories')],
+            'house_id'      => ['nullable', CampusRule::exists('houses')],
+            'birth_certificate_no' => 'nullable|string|max:100' . ($isUpdate ? "|unique:students,birth_certificate_no,{$studentId}" : '|unique:students,birth_certificate_no'),
+            'national_id'   => 'nullable|string|max:100' . ($isUpdate ? "|unique:students,national_id,{$studentId}" : '|unique:students,national_id'),
+            'mother_tongue' => 'nullable|string|max:100',
+            'previous_school_details' => 'nullable|string',
+            'medical_history' => 'nullable|string',
+
+            'first_name'    => 'required|string|max:255',
+            'last_name'     => 'nullable|string|max:255',
+            'date_of_birth' => 'required|date',
+            'gender'        => 'required|in:male,female,other',
+            'blood_group'   => 'nullable|string|max:10',
+            'religion'      => 'nullable|string|max:50',
+            'nationality'   => 'required|string|max:100',
+            'phone'         => 'nullable|string|max:20',
+            'email'         => 'nullable|email|max:255',
+            'present_address' => 'required|string',
+            'permanent_address' => 'required|string',
+
+            'father_name'   => 'required|string|max:255',
+            'father_phone'  => 'required|string|max:20',
+            'mother_name'   => 'required|string|max:255',
+            'mother_phone'  => 'nullable|string|max:20',
+            'guardian_email' => 'nullable|email|max:255',
+        ];
+
+        if (!$isUpdate) {
+            $rules['admission_date'] = 'required|date';
+            $rules['create_student_user'] = 'nullable|boolean';
+            $rules['create_parent_user'] = 'nullable|boolean';
+        }
+
+        return $rules;
+    }
+}

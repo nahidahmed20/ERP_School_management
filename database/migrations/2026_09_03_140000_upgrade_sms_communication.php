@@ -1,0 +1,6 @@
+<?php
+use Illuminate\Database\Migrations\Migration;use Illuminate\Database\Schema\Blueprint;use Illuminate\Support\Facades\Schema;
+return new class extends Migration { public function up():void {
+ Schema::table('sms_logs',function(Blueprint $t){$t->string('category')->default('custom')->index();$t->string('recipient_type')->nullable();$t->unsignedBigInteger('recipient_id')->nullable();$t->string('reference_key')->nullable()->unique();$t->string('provider_message_id')->nullable();$t->text('provider_response')->nullable();$t->timestamp('sent_at')->nullable();$t->foreignId('sent_by')->nullable()->constrained('users')->nullOnDelete();});
+ Schema::create('sms_templates',function(Blueprint $t){$t->id();$t->string('key')->unique();$t->string('name');$t->string('category')->index();$t->text('body');$t->boolean('is_active')->default(true);$t->boolean('auto_send')->default(false);$t->timestamps();});
+ } public function down():void {Schema::dropIfExists('sms_templates');Schema::table('sms_logs',function(Blueprint $t){$t->dropConstrainedForeignId('sent_by');$t->dropUnique(['reference_key']);$t->dropColumn(['category','recipient_type','recipient_id','reference_key','provider_message_id','provider_response','sent_at']);});}};
