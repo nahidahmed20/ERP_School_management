@@ -218,18 +218,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->whereIn('kind', ['homework', 'syllabus', 'material'])->whereNumber('record')->name('portal.learning.download');
     Route::get('/staff-services', [PortalServiceController::class, 'staff'])->name('portal.staff.services');
     Route::post('/staff-services/leave', [PortalServiceController::class, 'staffLeave'])->name('portal.staff.leave');
-    Route::get('/parent-services', [PortalServiceController::class, 'parent'])->name('portal.parent.services');
-    Route::post('/parent-services/{service}', [PortalServiceController::class, 'parentRequest'])
-        ->whereIn('service', ['message', 'meeting', 'leave'])->name('portal.parent.request');
-    Route::post('/parent-services/phone/send-otp', [GuardianPortalController::class,'sendOtp'])->middleware('throttle:3,10')->name('portal.parent.otp.send');
-    Route::post('/parent-services/phone/verify', [GuardianPortalController::class,'verifyOtp'])->middleware('throttle:10,10')->name('portal.parent.otp.verify');
-    Route::patch('/parent-services/preferences', [GuardianPortalController::class,'preferences'])->name('portal.parent.preferences');
-    Route::patch('/parent-services/consents/{consent}', [GuardianPortalController::class,'consent'])->name('portal.parent.consents.respond');
-    Route::post('/parent-services/push-subscription', [GuardianPortalController::class,'subscribe'])->name('portal.parent.push.subscribe');
-    Route::get('/parent-services/statement', [GuardianPortalController::class,'statement'])->name('portal.parent.statement');
-    Route::get('/parent-services/receipts/{payment}', [GuardianPortalController::class,'receipt'])->name('portal.parent.receipt');
-    Route::get('/parent-services/report-card/{student}/{exam}', [GuardianPortalController::class,'reportCard'])->name('portal.parent.report-card');
-    Route::get('/parent-services/transcript/{student}', [GuardianPortalController::class,'transcript'])->name('portal.parent.transcript');
+    Route::middleware('permission:portal.services.view')->group(function () {
+        Route::get('/parent-services', [PortalServiceController::class, 'parent'])->name('portal.parent.services');
+        Route::post('/parent-services/{service}', [PortalServiceController::class, 'parentRequest'])
+            ->whereIn('service', ['message', 'meeting', 'leave'])->name('portal.parent.request');
+        Route::post('/parent-services/phone/send-otp', [GuardianPortalController::class,'sendOtp'])->middleware('throttle:3,10')->name('portal.parent.otp.send');
+        Route::post('/parent-services/phone/verify', [GuardianPortalController::class,'verifyOtp'])->middleware('throttle:10,10')->name('portal.parent.otp.verify');
+        Route::patch('/parent-services/preferences', [GuardianPortalController::class,'preferences'])->name('portal.parent.preferences');
+        Route::patch('/parent-services/consents/{consent}', [GuardianPortalController::class,'consent'])->name('portal.parent.consents.respond');
+        Route::post('/parent-services/push-subscription', [GuardianPortalController::class,'subscribe'])->name('portal.parent.push.subscribe');
+        Route::get('/parent-services/statement', [GuardianPortalController::class,'statement'])->name('portal.parent.statement');
+        Route::get('/parent-services/receipts/{payment}', [GuardianPortalController::class,'receipt'])->name('portal.parent.receipt');
+        Route::get('/parent-services/report-card/{student}/{exam}', [GuardianPortalController::class,'reportCard'])->middleware('permission:portal.results.view')->name('portal.parent.report-card');
+        Route::get('/parent-services/transcript/{student}', [GuardianPortalController::class,'transcript'])->middleware('permission:portal.results.view')->name('portal.parent.transcript');
+    });
 });
 Route::middleware(['auth', 'verified', 'permission:portal.exams.attempt'])->group(function () {
     Route::get('/student-exams/{exam}', [StudentPortalController::class, 'startExam'])->name('portal.exams.start');

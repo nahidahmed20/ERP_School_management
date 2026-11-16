@@ -111,7 +111,7 @@ export default memo(function Sidebar({ mobileOpen = false, desktopCollapsed = fa
   }, [onNavigate]);
 
   return <aside ref={sidebarRef} id="school-sidebar" className={'sidebar' + (mobileOpen ? ' mobile-open' : '') + (desktopCollapsed ? ' desktop-collapsed' : '')} aria-label="School navigation">
-    <div className="brand">
+    <Link href={route('dashboard')} className="brand" onClick={handleNavigate} aria-label="Go to dashboard">
       {site.admin_logo ? (
           <div className="brand-logo" style={{ maxWidth: '100%', height: '42px', flexShrink: 0 }}>
               <img src={site.admin_logo} alt={shortName + ' logo'} style={{ width: 'auto', height: '100%', objectFit: 'contain' }} />
@@ -127,7 +127,7 @@ export default memo(function Sidebar({ mobileOpen = false, desktopCollapsed = fa
             </div>
           </>
       )}
-    </div>
+    </Link>
 
     {groups.length ? <nav className="nav" aria-label="Main menu">
       {groups.map((group) => <div className="nav-group" key={group.menuKey}>

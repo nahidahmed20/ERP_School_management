@@ -83,7 +83,7 @@ class DashboardController extends Controller
             'staff.designation',
         ]);
 
-        $isAdministrator = $user->hasAnyRole(['Super Admin', 'Branch Admin']);
+        $isAdministrator = $user->hasAnyRole(['Super Admin', 'Branch Admin', 'Tenant Admin']);
 
         if (! $isAdministrator && $user->student) {
             return Inertia::render('Portal/Dashboard', [
@@ -111,6 +111,17 @@ class DashboardController extends Controller
         if (! $isAdministrator && $user->staff) {
             return Inertia::render('Portal/Dashboard', [
                 'portal' => $this->staffPortal($user->staff),
+            ]);
+        }
+
+        if (! $isAdministrator) {
+            return Inertia::render('Portal/Dashboard', [
+                'portal' => [
+                    'type' => 'account',
+                    'today' => Carbon::today()->format('l, d F Y'),
+                    'greeting_name' => $user->name,
+                    'notices' => $this->portalNotices(),
+                ],
             ]);
         }
 

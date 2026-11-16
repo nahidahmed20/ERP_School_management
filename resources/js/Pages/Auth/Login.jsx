@@ -74,13 +74,10 @@ export default function Login({ status, canResetPassword, captchaQuestion, isMai
             onError: (formErrors) => {
                 if (formErrors.login) {
                     Swal.fire({
-                        toast: true,
-                        position: 'top-end',
                         icon: 'error',
-                        title: 'এই portal-এর login তথ্য সঠিক নয়। সঠিক portal নির্বাচন করে আবার চেষ্টা করুন।',
-                        showConfirmButton: false,
-                        timer: 4000,
-                        timerProgressBar: true,
+                        title: 'লগইন ব্যর্থ',
+                        text: 'ইউজার আইডি বা পাসওয়ার্ড সঠিক নয়, অথবা এই portal-এর জন্য account অনুমোদিত নয়।',
+                        confirmButtonText: 'ঠিক আছে',
                     });
                 }
             },

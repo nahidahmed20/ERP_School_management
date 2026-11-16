@@ -91,16 +91,29 @@ class StudentPortalController extends Controller
 
     public function downloadHomeworkSubmission(Request $request, HomeworkSubmission $submission)
     {
-        [$student]=$this->student($request);
-        abort_unless((int)$submission->student_id === (int)$student->id, 403);
+        $student = Student::findOrFail($submission->student_id);
+        $this->authorizeStudentViewer($request, $student);
         return $this->privateDownload($submission->attachment_path);
     }
 
     public function downloadLeaveAttachment(Request $request, StudentLeaveRequest $leave)
     {
-        [$student]=$this->student($request);
-        abort_unless((int)$leave->student_id === (int)$student->id, 403);
+        $student = Student::findOrFail($leave->student_id);
+        $this->authorizeStudentViewer($request, $student);
         return $this->privateDownload($leave->attachment_path);
+    }
+
+    private function authorizeStudentViewer(Request $request, Student $student): void
+    {
+        $user = $request->user();
+        $ownsStudent = (int) $student->user_id === (int) $user->id;
+        $guardian = $user->guardian;
+        $isLinkedGuardian = $guardian && (
+            (int) $student->guardian_id === (int) $guardian->id
+            || $student->guardians()->where('guardians.id', $guardian->id)->exists()
+        );
+
+        abort_unless(($ownsStudent || $isLinkedGuardian) && $user->can('portal.services.view'), 403);
     }
 
     public function attendanceCorrection(Request $request)

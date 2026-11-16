@@ -8,7 +8,26 @@ const C = 'rounded-xl border-slate-300 text-sm';
 const vapidKey = import.meta.env.VITE_WEB_PUSH_PUBLIC_KEY;
 const decodeKey = value => { const padded = `${value}${'='.repeat((4 - value.length % 4) % 4)}`.replace(/-/g, '+').replace(/_/g, '/'); return Uint8Array.from(atob(padded), c => c.charCodeAt(0)); };
 
-export default function ParentServices({ children, consents, invoices, payments = [], publishedExams = [], clearances = [], timeline = [], guardian }) {
+function StudentAccountOverview({ account }) {
+    const rows = (items, render) => items?.length
+        ? <div className="divide-y">{items.map((item, index) => <div key={item.id ?? index} className="py-2 text-sm">{render(item)}</div>)}</div>
+        : <p className="text-sm text-slate-500">No records available.</p>;
+    return <details open className="rounded-2xl border border-indigo-100 bg-white p-5 shadow-sm">
+        <summary className="cursor-pointer text-lg font-bold text-slate-900">{account.name} · Full Student Account</summary>
+        <div className="mt-5 grid gap-5 xl:grid-cols-2">
+            <Box title="Profile & Enrollment"><p>Admission: {account.admission_no || '—'} · Class: {account.class || 'Not assigned'} {account.section ? `· Section ${account.section}` : ''}</p><p>DOB: {account.date_of_birth || '—'} · Gender: {account.gender || '—'}</p><p>Phone: {account.phone || '—'} · Email: {account.email || '—'}</p><p>Address: {account.address || '—'}</p></Box>
+            <Box title="Attendance, Leave & Requests"><h3 className="font-semibold">Attendance (latest 100)</h3>{rows(account.attendance, x => <span>{x.attendance_date} · {x.status}{x.is_excused ? ' · Excused' : ''}</span>)}<h3 className="mt-3 font-semibold">Leave applications</h3>{rows(account.leaves, x => <span>{x.leave_type}: {x.start_date}–{x.end_date} · {x.school_status || x.status}</span>)}<h3 className="mt-3 font-semibold">Attendance corrections</h3>{rows(account.attendanceCorrections, x => <span>{x.attendance_date} · {x.status} · {x.reason}</span>)}</Box>
+            <Box title="Learning, Homework & Materials"><h3 className="font-semibold">Homework</h3>{rows(account.homework, x => <><b>{x.title}</b> · {x.subject || 'General'} · Due {x.due} · {x.submission?.status || 'Not submitted'}{x.submission?.teacher_feedback && <p className="text-slate-600">Teacher feedback: {x.submission.teacher_feedback}</p>}{x.submission?.has_attachment && <a className="ml-2 text-indigo-600" href={route('portal.homework-submission.download', x.submission.id)}>View submission</a>}{x.file_url && <a className="ml-2 text-indigo-600" href={x.file_url}>Homework file</a>}</>)}<h3 className="mt-3 font-semibold">Syllabus & learning materials</h3>{rows([...(account.learning?.syllabus || []), ...(account.learning?.materials || [])], x => <>{x.title} · {x.subject || 'General'} {x.download_url && <a className="ml-2 text-indigo-600" href={x.download_url}>Open</a>}</>)}</Box>
+            <Box title="Class Routine & Exams"><h3 className="font-semibold">Routine</h3>{rows(account.learning?.routine, x => <span>{x.day} · {x.start}–{x.end} · {x.subject} · {x.teacher || ''} · Room {x.room || 'TBA'}</span>)}<h3 className="mt-3 font-semibold">Exam schedule</h3>{rows(account.learning?.examSchedules, x => <span>{x.exam?.name || 'Exam'} · {x.subject?.name} · {x.exam_date} · {x.start_time}</span>)}<h3 className="mt-3 font-semibold">Online exams</h3>{rows(account.onlineExams, x => <span>{x.title} · {x.subject?.name} · {x.exam_date}</span>)}</Box>
+            <Box title="Published Results"><h3 className="font-semibold">Exam marks</h3>{rows(account.results, x => <span>{x.exam?.name} · {x.subject?.name} · {x.marks_obtained ?? 'Pending'} / {x.full_marks} · Grade {x.grade || '—'}</span>)}<h3 className="mt-3 font-semibold">Transcript</h3><a className="text-indigo-600" href={route('portal.parent.transcript', account.id)}>Download full transcript</a></Box>
+            <Box title="Fees, Payments & Clearances"><h3 className="font-semibold">Invoices</h3>{rows(account.invoices, x => <span>{x.invoice_no} · {x.fee_group?.name || 'Fee'} · {x.status} · Due {Number(x.amount) + Number(x.fine) - Number(x.discount) - Number(x.paid_amount)}</span>)}<h3 className="mt-3 font-semibold">Payments</h3>{rows(account.payments, x => <span>Payment #{x.id} · {x.payment_date} · {x.amount_paid}</span>)}<h3 className="mt-3 font-semibold">Clearances</h3>{rows(account.clearances, x => <span>{x.department} · {x.status} · Due {x.amount_due}</span>)}</Box>
+            <Box title="Library, Transport & Hostel"><h3 className="font-semibold">Issued books & reservations</h3>{rows(account.books, x => <span>{x.book?.title} · {x.status} · Due {x.due_date}</span>)}{rows(account.reservations, x => <span>Reservation: {x.book?.title} · {x.status}</span>)}<h3 className="mt-3 font-semibold">Transport</h3><p>{account.transport ? `${account.transport.vehicle?.vehicle_number || ''} · ${account.transport.vehicle?.route_name || ''} · Pickup ${account.transport.pickup_point || '—'}` : 'No transport assigned.'}</p><h3 className="mt-3 font-semibold">Hostel</h3><p>{account.hostel ? `${account.hostel.room?.hostel_name || ''} · Room ${account.hostel.room?.room_number || '—'}` : 'No hostel assigned.'}</p></Box>
+            <Box title="Support & Profile Requests"><h3 className="font-semibold">Helpdesk tickets</h3>{rows(account.tickets, x => <span>{x.ticket_number} · {x.subject} · {x.status}</span>)}<h3 className="mt-3 font-semibold">Profile update requests</h3>{rows(account.profileRequests, x => <span>{x.status} · {x.reason || 'Profile update request'}</span>)}</Box>
+        </div>
+    </details>;
+}
+
+export default function ParentServices({ children, studentAccounts = [], consents, invoices, payments = [], publishedExams = [], clearances = [], timeline = [], guardian }) {
     const [pushStatus, setPushStatus] = useState('');
     const otp = useForm({ otp: '' });
     const msg = useForm({ student_id: children[0]?.id || '', subject: '', message: '' });
@@ -32,6 +51,7 @@ export default function ParentServices({ children, consents, invoices, payments 
     };
 
     return <AuthenticatedLayout><Head title="Parent Services"/><main className="mx-auto max-w-7xl space-y-6 p-6">
+        {studentAccounts.map(account => <StudentAccountOverview key={account.id} account={account} />)}
         <div><Link href={route('dashboard')} className="text-indigo-600">← Dashboard</Link><h1 className="text-3xl font-black">Parent Service Center</h1></div>
         <div className="grid gap-6 lg:grid-cols-3">
             <Box title="Message school"><form onSubmit={send(msg, 'message')} className="grid gap-2">{student(msg)}<input className={C} required placeholder="Subject" value={msg.data.subject} onChange={e => msg.setData('subject', e.target.value)}/><textarea className={C} required placeholder="Message" value={msg.data.message} onChange={e => msg.setData('message', e.target.value)}/><button className="rounded-xl bg-indigo-600 p-2 text-white">Send</button></form></Box>

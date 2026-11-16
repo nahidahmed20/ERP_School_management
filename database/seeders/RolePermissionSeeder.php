@@ -85,7 +85,7 @@ class RolePermissionSeeder extends Seeder
             'admin.staff-hr-records.update',
             'admin.staff-hr-records.destroy',
         ];
-        $hrRole->syncPermissions($permissions->intersect($hrPermissions));
+        $hrRole->syncPermissions($permissions->intersect(array_merge(['dashboard'], $hrPermissions)));
 
         $payrollPermissions = [
             'admin.staff-payrolls.index',
@@ -100,6 +100,7 @@ class RolePermissionSeeder extends Seeder
 
         $hrManager = Role::firstOrCreate(['name' => 'HR Manager', 'guard_name' => 'web']);
         $hrManager->syncPermissions($permissions->intersect(array_merge(
+            ['dashboard'],
             $hrPermissions,
             $payrollPermissions,
             [
@@ -130,8 +131,8 @@ class RolePermissionSeeder extends Seeder
 
         $studentRole = Role::firstOrCreate(['name' => 'student', 'guard_name' => 'web']);
         $parentRole = Role::firstOrCreate(['name' => 'parent', 'guard_name' => 'web']);
-        $studentRole->givePermissionTo(['dashboard', 'portal.services.view', 'portal.exams.attempt']);
-        $parentRole->givePermissionTo('dashboard');
+        $studentRole->givePermissionTo(['dashboard', 'portal.services.view', 'portal.results.view', 'portal.exams.attempt']);
+        $parentRole->givePermissionTo(['dashboard', 'portal.services.view', 'portal.results.view']);
 
         $this->command->info('Roles and permissions seeded successfully!');
     }

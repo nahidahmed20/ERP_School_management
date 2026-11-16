@@ -18,8 +18,10 @@ class EnsureAdminAccess
             ? 'admin.students.store'
             : (MenuItem::where('route_name', $routeName)->value('permission') ?: $routeName);
 
+        $isDashboard = $routeName === 'dashboard';
+
         abort_unless(
-            $user && $permission && $user->can($permission),
+            $user && ($isDashboard || ($permission && $user->can($permission))),
             Response::HTTP_FORBIDDEN,
             'You do not have permission to access this area.'
         );

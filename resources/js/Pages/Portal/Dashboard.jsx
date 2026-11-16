@@ -248,12 +248,26 @@ function StaffDashboard({ portal }) {
     );
 }
 
+function AccountDashboard({ portal }) {
+    return (
+        <>
+            <div className="rounded-3xl bg-gradient-to-br from-emerald-950 to-emerald-800 p-6 text-white shadow-lg sm:p-8">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-amber-300">{portal.today}</p>
+                <h1 className="mt-2 text-2xl font-bold text-white sm:text-3xl">Welcome, {portal.greeting_name}</h1>
+                <p className="mt-2 text-sm text-emerald-100">Your account dashboard and school updates.</p>
+                <Link href={route('profile.edit')} className="mt-4 inline-flex rounded-xl bg-white px-4 py-2 text-sm font-bold text-emerald-950">My Profile</Link>
+            </div>
+            <Section title="School Notices" subtitle="Updates from your school" icon="bell"><NoticeList notices={portal.notices} /></Section>
+        </>
+    );
+}
+
 export default function PortalDashboard({ portal }) {
     return (
         <AuthenticatedLayout>
             <Head title={portal.type === 'student' ? 'Student Dashboard' : portal.type === 'parent' ? 'Parent Dashboard' : 'Staff Dashboard'} />
             <main className="space-y-6 py-4 sm:px-2 sm:py-6">
-                {portal.type === 'staff' ? <StaffDashboard portal={portal} /> : <StudentParentDashboard portal={portal} />}
+                {portal.type === 'staff' ? <StaffDashboard portal={portal} /> : portal.type === 'account' ? <AccountDashboard portal={portal} /> : <StudentParentDashboard portal={portal} />}
             </main>
         </AuthenticatedLayout>
     );

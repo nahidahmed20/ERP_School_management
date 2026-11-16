@@ -1,1 +1,0 @@
-import{r as u}from"./app-D8jIsuWX.js";function n(e,r=null){const[s,t]=u.useState(r);return u.useEffect(()=>{if(!e){t(r);return}const o=URL.createObjectURL(e);return t(o),()=>URL.revokeObjectURL(o)},[e,r]),s}export{n as u};

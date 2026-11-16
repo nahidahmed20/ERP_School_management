@@ -14,7 +14,7 @@ class StudentLearningController extends Controller
         $user = $request->user();
         $guardian = $user->guardian;
         $owns = (int) $student->user_id === (int) $user->id && $user->can('portal.services.view');
-        $linked = $guardian && ((int) $student->guardian_id === (int) $guardian->id || $student->guardians()->where('guardians.id', $guardian->id)->exists());
+        $linked = $guardian && $user->can('portal.services.view') && ((int) $student->guardian_id === (int) $guardian->id || $student->guardians()->where('guardians.id', $guardian->id)->exists());
         abort_unless($owns || $linked, 403, 'This learning resource is not available to your account.');
         $item = match ($kind) {
             'homework' => $learning->homework($student)->findOrFail($record),

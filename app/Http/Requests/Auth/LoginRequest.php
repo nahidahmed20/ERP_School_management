@@ -8,6 +8,7 @@ use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -138,12 +139,21 @@ class LoginRequest extends FormRequest
 
     private function recordFailedAttempt(): void
     {
+        try {
             SecurityFailedLogin::create([
-            'email_attempted' => trim($this->string('login')->toString()),
-            'ip_address' => $this->ip(),
-            'user_agent' => Str::limit((string) $this->userAgent(), 65535, ''),
-            'attempted_at' => now(),
-        ]);
+                'email_attempted' => trim($this->string('login')->toString()),
+                'ip_address' => $this->ip(),
+                'user_agent' => Str::limit((string) $this->userAgent(), 65535, ''),
+                'attempted_at' => now(),
+            ]);
+        } catch (\Throwable $exception) {
+            // Failed-login auditing must not replace the normal invalid-credentials response.
+            Log::warning('Could not record failed login attempt.', [
+                'exception' => $exception->getMessage(),
+                'ip_address' => $this->ip(),
+            ]);
+        }
+
         if (RateLimiter::attempts($this->throttleKey()) >= 3) {
             $a=random_int(1,9);$b=random_int(1,9);
             $this->session()->put(['captcha_required'=>true,'captcha_question'=>"{$a} + {$b} = ?",'captcha_answer'=>$a+$b]);

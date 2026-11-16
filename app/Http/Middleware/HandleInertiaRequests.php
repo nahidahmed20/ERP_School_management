@@ -178,6 +178,47 @@ class HandleInertiaRequests extends Middleware
                     return ! empty($group['items']);
                 })->values()->all();
 
+                $hasDashboardLink = collect($menus)->contains(fn ($group) => collect($group['items'] ?? [])->contains(
+                    fn ($item) => ($item['route_name'] ?? $item['route'] ?? null) === 'dashboard'
+                ));
+                if (! $hasDashboardLink) {
+                    array_unshift($menus, [
+                        'id' => 'dashboard-fallback',
+                        'label' => 'Overview',
+                        'items' => [[
+                            'key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'grid',
+                            'route' => 'dashboard', 'route_name' => 'dashboard', 'permission' => 'dashboard',
+                            'children' => [],
+                        ]],
+                    ]);
+                }
+
+                $portalLinks = [];
+                if ($user->student && $user->can('portal.services.view')) {
+                    $portalLinks[] = [
+                        'key' => 'portal.services', 'label' => 'My Student Account', 'icon' => 'book',
+                        'route' => 'portal.services', 'route_name' => 'portal.services',
+                        'permission' => 'portal.services.view', 'children' => [],
+                    ];
+                }
+                if ($user->student && $user->can('portal.results.view')) {
+                    $portalLinks[] = [
+                        'key' => 'portal.results.view', 'label' => 'My Results', 'icon' => 'chart',
+                        'route' => 'portal.results.view', 'route_name' => 'portal.results.view',
+                        'permission' => 'portal.results.view', 'children' => [],
+                    ];
+                }
+                if ($user->guardian && $user->can('portal.services.view')) {
+                    $portalLinks[] = [
+                        'key' => 'portal.parent.services', 'label' => 'Parent Service Center', 'icon' => 'users',
+                        'route' => 'portal.parent.services', 'route_name' => 'portal.parent.services',
+                        'permission' => 'portal.services.view', 'children' => [],
+                    ];
+                }
+                if ($portalLinks) {
+                    $menus[] = ['id' => 'personal-portal', 'label' => 'My Portal', 'items' => $portalLinks];
+                }
+
                 // Keep General Settings reachable for administrators even if
                 // an old/inactive database menu row or cached menu hides it.
                 if ($user->can('admin.general.index')) {
