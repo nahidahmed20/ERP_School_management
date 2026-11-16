@@ -64,13 +64,16 @@ class WebsiteSettingsService
 
         foreach (['logo', 'footer_logo', 'admin_logo', 'favicon'] as $key) {
             $path = $settings[$key];
+            $relativePath = $path ? ltrim(preg_replace('#^(?:/?storage/)+#', '', $path), '/') : null;
             // Local public images use the current origin, not a stale APP_URL
             // (which otherwise breaks HTTPS or a moved deployment).
             $settings[$key] = ! $path ? null : (
                 filter_var($path, FILTER_VALIDATE_URL) ? $path :
-                (config('filesystems.disks.public.driver') === 'local'
-                    ? request()->getBaseUrl().'/storage/'.ltrim(preg_replace('#^(?:/?storage/)+#', '', $path), '/')
-                    : Storage::disk('public')->url($path))
+                (str_starts_with($relativePath, 'branding/')
+                    ? route('branding.asset', ['filename' => basename($relativePath)], false)
+                    : (config('filesystems.disks.public.driver') === 'local'
+                        ? ($request?->getBaseUrl() ?? '').'/storage/'.$relativePath
+                        : Storage::disk('public')->url($path)))
             );
         }
 

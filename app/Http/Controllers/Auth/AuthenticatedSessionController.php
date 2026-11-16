@@ -8,6 +8,7 @@ use App\Models\SecurityLoginHistory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -50,13 +51,20 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        SecurityLoginHistory::create([
-            'user_id' => $request->user()->id,
-            'ip_address' => $request->ip(),
-            'user_agent' => Str::limit((string) $request->userAgent(), 65535, ''),
-            'device_type' => $this->deviceType((string) $request->userAgent()),
-            'login_at' => now(),
-        ]);
+        try {
+            SecurityLoginHistory::create([
+                'user_id' => $request->user()->id,
+                'ip_address' => $request->ip(),
+                'user_agent' => Str::limit((string) $request->userAgent(), 65535, ''),
+                'device_type' => $this->deviceType((string) $request->userAgent()),
+                'login_at' => now(),
+            ]);
+        } catch (\Throwable $exception) {
+            Log::warning('Could not record successful login history.', [
+                'user_id' => $request->user()->id,
+                'exception_class' => $exception::class,
+            ]);
+        }
 
         return redirect()->intended(route('dashboard', absolute: false));
     }

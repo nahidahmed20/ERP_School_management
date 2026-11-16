@@ -10,6 +10,7 @@ use App\Observers\MenuItemObserver;
 use App\Observers\MenuGroupObserver;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\SecurityAuditLog;
 
@@ -57,16 +58,25 @@ class AppServiceProvider extends ServiceProvider
                         : $model->getOriginal()
                 );
 
-                SecurityAuditLog::create([
-                    'user_id' => auth()->id(),
-                    'action' => $action,
-                    'model_type' => $model::class,
-                    'model_id' => $model->getKey(),
-                    'old_values' => $old,
-                    'new_values' => $action === 'deleted' ? null : $sanitize($changes),
-                    'ip_address' => request()?->ip(),
-                    'user_agent' => substr((string) request()?->userAgent(), 0, 1000),
-                ]);
+                try {
+                    SecurityAuditLog::create([
+                        'user_id' => auth()->id(),
+                        'action' => $action,
+                        'model_type' => $model::class,
+                        'model_id' => $model->getKey(),
+                        'old_values' => $old,
+                        'new_values' => $action === 'deleted' ? null : $sanitize($changes),
+                        'ip_address' => request()?->ip(),
+                        'user_agent' => substr((string) request()?->userAgent(), 0, 1000),
+                    ]);
+                } catch (\Throwable $exception) {
+                    // Audit logging is secondary and must not break the user's action.
+                    Log::warning('Could not write a security audit log entry.', [
+                        'model_type' => $model::class,
+                        'action' => $action,
+                        'exception_class' => $exception::class,
+                    ]);
+                }
             });
         }
     }

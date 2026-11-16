@@ -35,6 +35,7 @@ git pull --ff-only origin main
 rm -f public/hot
 composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
 php artisan migrate --force
+php artisan storage:link --force
 php artisan optimize:clear
 php artisan app:production-check
 php artisan db:seed --class=MenuSeeder --force

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AcademicSessionController;
 use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\BrandingAssetController;
 use App\Http\Controllers\Admin\AcademicOperationsController;
 use App\Http\Controllers\Admin\AttendanceOperationsController;
 use App\Http\Controllers\Admin\AccountingChartController;
@@ -169,6 +170,8 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', [PublicSiteController::class,'home'])->name('home');
+Route::get('/branding/{filename}', [BrandingAssetController::class, 'show'])
+    ->where('filename', '[A-Za-z0-9._-]+')->name('branding.asset');
 Route::post('/locale', LocaleController::class)->name('locale.update');
 Route::get('/campuses', [PublicSiteController::class,'campuses'])->name('site.campuses');
 Route::get('/academics', [PublicSiteController::class,'academics'])->name('site.academics');

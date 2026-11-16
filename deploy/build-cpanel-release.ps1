@@ -84,7 +84,8 @@ Production upload steps:
 3. Delete public/hot if it exists; it makes Laravel load a development server instead of these built assets.
 4. Ensure storage/ and bootstrap/cache/ are writable by PHP.
 5. In the project root run: php artisan migrate --force
-6. Then run: php artisan optimize:clear
+6. Then run: php artisan storage:link --force
+7. Then run: php artisan optimize:clear
 7. Check the site. Keep the existing production APP_KEY and database settings in .env.
 
 The archive includes vendor/ and public/build/. It intentionally excludes .env, storage data,

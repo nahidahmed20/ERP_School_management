@@ -31,6 +31,7 @@ function permittedRoutes(auth, navigation) {
 export default function Topbar({ onHamburgerClick, sidebarOpen = false }) {
     const { auth, all_campuses, navigation = EMPTY_NAVIGATION, site_settings: site = {} } = usePage().props;
     const user = auth?.user;
+    const adminLogo = site.admin_logo || site.logo;
     const [searchOpen, setSearchOpen] = useState(false);
     const [searchModule, setSearchModule] = useState('students');
     const [searchTerm, setSearchTerm] = useState('');
@@ -85,8 +86,8 @@ export default function Topbar({ onHamburgerClick, sidebarOpen = false }) {
                 </button>
                 <Link href={route('dashboard')} aria-label="Go to dashboard" title="Dashboard"
                     className="flex h-10 max-w-[150px] shrink-0 items-center rounded-lg px-1 transition-colors hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 sm:max-w-[190px]">
-                    {site.admin_logo ? (
-                        <img src={site.admin_logo} alt={site.school_short_name || site.school_name || 'School'}
+                    {adminLogo ? (
+                        <img src={adminLogo} alt={site.school_short_name || site.school_name || 'School'}
                             className="max-h-9 max-w-full object-contain" />
                     ) : (
                         <span className="truncate text-sm font-semibold text-slate-700">{site.school_short_name || site.school_name || 'Dashboard'}</span>

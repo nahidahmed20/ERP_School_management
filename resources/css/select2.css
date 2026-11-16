@@ -75,7 +75,7 @@ select:not([multiple]):not([data-no-select2]):not(.per-page-select):not(.ui-page
     display: inline-block;
     vertical-align: middle;
     width: 100%;
-    min-height: 42px;
+    min-height: 42px !important;
 
     /* Typography */
     font-family: inherit;

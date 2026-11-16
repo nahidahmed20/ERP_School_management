@@ -51,6 +51,7 @@ export default memo(function Sidebar({ mobileOpen = false, desktopCollapsed = fa
   const navigation = props.navigation ?? EMPTY_NAVIGATION;
   const site = props.site_settings ?? {};
   const shortName = site.school_short_name || site.school_name || 'School';
+  const adminLogo = site.admin_logo || site.logo;
   const groups = useMemo(() => buildSidebarNavigation(navigation, url, resolveRoute), [navigation, url]);
   const activeKey = useMemo(() => activeSidebarKey(groups), [groups]);
   const [openKey, setOpenKey] = useState(activeKey);
@@ -112,9 +113,9 @@ export default memo(function Sidebar({ mobileOpen = false, desktopCollapsed = fa
 
   return <aside ref={sidebarRef} id="school-sidebar" className={'sidebar' + (mobileOpen ? ' mobile-open' : '') + (desktopCollapsed ? ' desktop-collapsed' : '')} aria-label="School navigation">
     <Link href={route('dashboard')} className="brand" onClick={handleNavigate} aria-label="Go to dashboard">
-      {site.admin_logo ? (
+      {adminLogo ? (
           <div className="brand-logo" style={{ maxWidth: '100%', height: '42px', flexShrink: 0 }}>
-              <img src={site.admin_logo} alt={shortName + ' logo'} style={{ width: 'auto', height: '100%', objectFit: 'contain' }} />
+              <img src={adminLogo} alt={shortName + ' logo'} style={{ width: 'auto', height: '100%', objectFit: 'contain' }} />
           </div>
       ) : (
           <>
