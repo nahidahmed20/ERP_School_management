@@ -80,7 +80,7 @@ export default function Topbar({ onHamburgerClick, sidebarOpen = false }) {
                     aria-controls="school-sidebar"
                     className="-ml-2 rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
                     onClick={onHamburgerClick}
-                    title="Toggle menu"
+                    title={sidebarOpen ? 'Hide navigation' : 'Show navigation'}
                 >
                     <Icon name="menu" className="h-5 w-5" />
                 </button>

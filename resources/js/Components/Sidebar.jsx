@@ -129,6 +129,12 @@ export default memo(function Sidebar({ mobileOpen = false, desktopCollapsed = fa
           </>
       )}
     </Link>
+    {mobileOpen && (
+      <button type="button" className="sidebar-mobile-close" onClick={onNavigate}
+        aria-label="Close navigation" title="Close navigation">
+        <Icon name="close" className="h-5 w-5" />
+      </button>
+    )}
 
     {groups.length ? <nav className="nav" aria-label="Main menu">
       {groups.map((group) => <div className="nav-group" key={group.menuKey}>

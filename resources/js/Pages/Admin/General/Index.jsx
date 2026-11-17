@@ -15,20 +15,20 @@ export default function Index({ settings, groups, campuses, filters, websiteSett
   const [group, setGroup] = useState(filters.group ?? '');
   const [status, setStatus] = useState(filters.status ?? '');
   const [perPage, setPerPage] = useState(filters.per_page ?? '10');
-  const [advancedOpen, setAdvancedOpen] = useState(Boolean(filters.search || filters.group || filters.status));
+  const [advancedOpen, setAdvancedOpen] = useState(true);
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [deletingItem, setDeletingItem] = useState(null);
-  const [websiteFormOpen, setWebsiteFormOpen] = useState(false);
-
   useEffect(() => {
-    const openBranding = () => {
-      if (canManageBranding && window.location.hash === '#branding') setWebsiteFormOpen(true);
+    const scrollToSection = () => {
+      if (window.location.hash === '#branding') {
+        document.getElementById('website-section-branding')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     };
-    openBranding();
-    window.addEventListener('hashchange', openBranding);
-    return () => window.removeEventListener('hashchange', openBranding);
+    scrollToSection();
+    window.addEventListener('hashchange', scrollToSection);
+    return () => window.removeEventListener('hashchange', scrollToSection);
   }, [canManageBranding]);
 
   // --- SweetAlert2 Toast Message ---
@@ -132,9 +132,11 @@ export default function Index({ settings, groups, campuses, filters, websiteSett
               <p className="mt-1 max-w-3xl text-sm text-slate-600">School name, contact details, admissions, homepage text, logos and colors are grouped into a guided form. Changes there apply across all campuses.</p>
               {!canManageBranding && <p className="mt-2 text-sm font-medium text-amber-700">Only a Super Admin can change shared school and website information. Contact your Super Admin if you need an update.</p>}
             </div>
-            {canManageBranding && <button onClick={() => setWebsiteFormOpen(true)} className="shrink-0 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700">Open school settings</button>}
+            {canManageBranding && <a href="#school-website-settings" className="shrink-0 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700">Go to school settings</a>}
           </div>
         </section>
+
+        {canManageBranding && <WebsiteSettingsForm settings={websiteSettings} />}
 
         <details open={advancedOpen} onToggle={event => setAdvancedOpen(event.currentTarget.open)} className="space-y-4">
           <summary className="cursor-pointer rounded-xl border border-slate-200 bg-white px-5 py-4 text-sm font-semibold text-slate-800 shadow-sm">Advanced / technical settings <span className="ml-2 font-normal text-slate-500">Custom key-value controls — use only when you know what the setting does.</span></summary>
@@ -311,7 +313,7 @@ export default function Index({ settings, groups, campuses, filters, websiteSett
         </details>
       </div>
 
-      {/* Modals */}
+      {/* Advanced setting editor */}
       {formOpen && (
         <SettingFormModal 
           item={editingItem} 
@@ -330,7 +332,6 @@ export default function Index({ settings, groups, campuses, filters, websiteSett
           onConfirm={confirmDelete}
         />
       )}
-      {websiteFormOpen && <WebsiteSettingsForm settings={websiteSettings} onClose={() => setWebsiteFormOpen(false)} />}
     </AuthenticatedLayout>
   );
 }

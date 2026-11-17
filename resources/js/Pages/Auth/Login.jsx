@@ -56,15 +56,13 @@ function SpinnerIcon({ className }) {
 }
 
 export default function Login({ status, canResetPassword, captchaQuestion, isMainDomain }) {
-    const [role, setRole] = useState('admin');
     const [showPassword, setShowPassword] = useState(false);
-    const theme = ROLE_THEME[role];
+    const theme = ROLE_THEME.admin;
 
     const { data, setData, post, processing, errors, reset } = useForm({
         login: '',
         password: '',
         remember: false,
-        role: 'admin',
         captcha: '',
     });
 
@@ -83,11 +81,6 @@ export default function Login({ status, canResetPassword, captchaQuestion, isMai
             },
             onFinish: () => reset('password'),
         });
-    };
-
-    const handleRoleChange = (selectedRole) => {
-        setRole(selectedRole);
-        setData('role', selectedRole);
     };
 
     return (
@@ -139,7 +132,6 @@ export default function Login({ status, canResetPassword, captchaQuestion, isMai
                     {/* Middle: Digital ID Card Preview */}
                     <div className="relative z-10 my-8 sm:my-12 flex justify-center">
                         <div
-                            key={role}
                             className="w-full max-w-[280px] rounded-2xl p-5 text-white shadow-2xl border border-white/15 relative overflow-hidden animate-[card-in_0.4s_ease-out] motion-reduce:animate-none"
                             style={{ background: `linear-gradient(135deg, ${theme.hex}, #002546)` }}
                         >
@@ -150,13 +142,13 @@ export default function Login({ status, canResetPassword, captchaQuestion, isMai
 
                             <div className="flex items-center gap-3.5 mb-6">
                                 <div className="w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center shrink-0 border border-white/20">
-                                    <RoleIcon role={role} className="w-6 h-6 text-white" />
+                                    <RoleIcon role="admin" className="w-6 h-6 text-white" />
                                 </div>
                                 <div>
                                     <h3 className="font-semibold text-base leading-tight text-white" style={{ fontFamily: "'Fraunces', serif" }}>
-                                        {theme.label}
+                                        School Portal
                                     </h3>
-                                    <p className="text-xs text-white/70 font-mono mt-0.5">ID: {theme.prefix}-9842</p>
+                                    <p className="text-xs text-white/70 mt-0.5">Students · Parents · Staff</p>
                                 </div>
                             </div>
 
@@ -171,10 +163,10 @@ export default function Login({ status, canResetPassword, captchaQuestion, isMai
                     {/* Bottom Tagline */}
                     <div className="relative z-10">
                         <h2 className="text-xl sm:text-2xl font-semibold tracking-tight mb-2" style={{ fontFamily: "'Fraunces', serif" }}>
-                            Unified campus management
+                            One sign-in for your school
                         </h2>
                         <p className="text-[#B8CBBE] text-xs sm:text-sm leading-relaxed">
-                            Access academic records, grades, schedules and administrative tools from one place.
+                            Enter your school email or ID. We’ll open the right portal for your account.
                         </p>
                     </div>
                 </div>
@@ -186,7 +178,7 @@ export default function Login({ status, canResetPassword, captchaQuestion, isMai
                             <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 font-medium tracking-tight" style={{ fontFamily: "'Fraunces', serif" }}>
                                 Welcome back
                             </h1>
-                            <p className="text-gray-600 text-sm mt-1">Choose the portal for your account, then enter your login details.</p>
+                            <p className="text-gray-600 text-sm mt-1">Sign in with your email address or school ID.</p>
                         </div>
 
                         {status && (
@@ -195,48 +187,18 @@ export default function Login({ status, canResetPassword, captchaQuestion, isMai
                             </div>
                         )}
 
-                        {/* Role Selector */}
-                        <div role="radiogroup" aria-label="Select portal" className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-1.5 bg-[#F1EEE5] rounded-2xl mb-6">
-                            {Object.entries(ROLE_THEME).map(([r, t]) => {
-                                const active = role === r;
-                                return (
-                                    <button
-                                        key={r}
-                                        type="button"
-                                        role="radio"
-                                        aria-checked={active}
-                                        onClick={() => handleRoleChange(r)}
-                                        className={`flex flex-col sm:flex-row items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-xs sm:text-sm font-medium transition-colors duration-150 ${
-                                            active
-                                                ? 'bg-white text-gray-900 font-medium shadow-sm font-semibold'
-                                                : 'text-gray-600 hover:text-gray-900 font-medium hover:bg-white/60'
-                                        }`}
-                                    >
-                                        <RoleIcon role={r} className="w-4 h-4" />
-                                        <span className="capitalize">{r}</span>
-                                    </button>
-                                );
-                            })}
-                        </div>
-
-                        {role === 'admin' && (
-                            <p className="-mt-4 mb-5 text-xs leading-relaxed text-gray-500">
-                                For Super Admin, Branch Admin, HR, Accounts, Teacher and other management roles.
-                            </p>
-                        )}
-
                         <form onSubmit={submit} className="space-y-4 sm:space-y-5">
                             {/* Identifier Input */}
                             <div>
                                 <label htmlFor="login" className="block text-xs sm:text-sm font-medium text-gray-800 mb-1.5">
-                                    {role === 'student' ? 'Student ID / Email' : role === 'staff' ? 'Staff ID / Email' : 'Email address'}
+                                    Email address or school ID
                                 </label>
                                 <input
                                     id="login"
                                     name="login"
                                     type="text"
                                     className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 font-medium text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 focus:border-[var(--accent)] transition-all"
-                                    placeholder={role === 'student' ? 'e.g. STU-2023-001' : role === 'staff' ? 'e.g. STF-001' : 'name@school.com'}
+                                    placeholder="Email or school ID (student / staff)"
                                     value={data.login}
                                     onChange={(e) => setData('login', e.target.value)}
                                     autoComplete="username"
@@ -325,7 +287,7 @@ export default function Login({ status, canResetPassword, captchaQuestion, isMai
                                 style={{ backgroundColor: 'var(--accent)', boxShadow: `0 10px 25px -8px ${withAlpha(theme.hex, '80')}` }}
                             >
                                 {processing && <SpinnerIcon className="w-4 h-4" />}
-                                {processing ? 'Signing in…' : `Sign in to ${theme.short}`}
+                                {processing ? 'Signing in…' : 'Sign in'}
                             </button>
                         </form>
 

@@ -33,7 +33,9 @@ class LoginRequest extends FormRequest
         return [
             'login' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string'],
-            'role' => ['required', 'string', 'in:admin,student,staff,parent'],
+            // Kept optional for older clients. New sign-in screens identify the
+            // correct portal from the supplied account ID or email.
+            'role' => ['sometimes', 'nullable', 'string', 'in:admin,student,staff,parent'],
             'remember' => ['sometimes', 'boolean'],
             'captcha' => [$this->session()->get('captcha_required') ? 'required' : 'nullable', 'integer'],
         ];
@@ -52,12 +54,12 @@ class LoginRequest extends FormRequest
             throw ValidationException::withMessages(['captcha' => 'Incorrect security answer.']);
         }
 
-        $user = $this->resolveUser();
+        [$user, $portal] = $this->resolveUser();
 
         if (! $user || ! Auth::attempt([
             'email' => $user->email,
             'password' => $this->string('password')->toString(),
-        ], $this->boolean('remember')) || ! $this->canAccessPortal($user)) {
+        ], $this->boolean('remember')) || ! $this->canAccessPortal($user, $portal)) {
             Auth::guard('web')->logout();
             RateLimiter::hit($this->throttleKey());
             $this->recordFailedAttempt();
@@ -102,31 +104,39 @@ class LoginRequest extends FormRequest
         return Str::transliterate(Str::lower($this->string('login')).'|'.$this->ip());
     }
 
-    private function resolveUser(): ?User
+    private function resolveUser(): array
     {
         $login = trim($this->string('login')->toString());
         $normalizedLogin = Str::lower($login);
 
-        return User::query()
-            ->whereRaw('LOWER(email) = ?', [$normalizedLogin])
-            ->when($this->string('role')->toString() === 'student', function ($query) use ($normalizedLogin) {
-                $query->orWhereHas('student', fn ($student) => $student->whereRaw('LOWER(admission_no) = ?', [$normalizedLogin])
-                );
-            })
-            ->when($this->string('role')->toString() === 'staff', function ($query) use ($normalizedLogin) {
-                $query->orWhereHas('staff', fn ($staff) => $staff->whereRaw('LOWER(staff_id_no) = ?', [$normalizedLogin])
-                );
-            })
-            ->when($this->string('role')->toString() === 'parent', function ($query) use ($normalizedLogin) {
-                $query->orWhereHas('guardian', fn ($guardian) => $guardian->whereRaw('LOWER(guardian_email) = ?', [$normalizedLogin])
-                );
-            })
-            ->first();
+        // Exact IDs identify a portal without asking students or parents to
+        // understand portal categories. Email accounts are resolved by their
+        // linked account and relationships below.
+        foreach ([
+            'student' => fn () => User::whereHas('student', fn ($q) => $q->whereRaw('LOWER(admission_no) = ?', [$normalizedLogin]))->first(),
+            'staff' => fn () => User::whereHas('staff', fn ($q) => $q->whereRaw('LOWER(staff_id_no) = ?', [$normalizedLogin]))->first(),
+            'parent' => fn () => User::whereHas('guardian', fn ($q) => $q->whereRaw('LOWER(guardian_email) = ?', [$normalizedLogin]))->first(),
+        ] as $portal => $find) {
+            if ($user = $find()) return [$user, $portal];
+        }
+
+        $user = User::whereRaw('LOWER(email) = ?', [$normalizedLogin])->first();
+        if (! $user) {
+            $user = User::whereHas('guardian', fn ($q) => $q->whereRaw('LOWER(guardian_email) = ?', [$normalizedLogin]))->first();
+        }
+        if (! $user) return [null, null];
+
+        if ($user->roles()->whereNotIn('name', ['student', 'parent'])->exists()) return [$user, 'admin'];
+        if ($user->student()->exists()) return [$user, 'student'];
+        if ($user->guardian()->exists()) return [$user, 'parent'];
+        if ($user->staff()->exists()) return [$user, 'staff'];
+
+        return [$user, null];
     }
 
-    private function canAccessPortal(User $user): bool
+    private function canAccessPortal(User $user, ?string $portal): bool
     {
-        return match ($this->string('role')->toString()) {
+        return match ($portal) {
             'student' => $user->student()->where('status', true)->exists(),
             'staff' => $user->staff()->where('is_active', true)->exists(),
             'parent' => $user->guardian()->exists(),
