@@ -14,6 +14,7 @@ export default function Index({ vouchers, accounts, filters }) {
   const [typeFilter, setTypeFilter] = useState(filters.type ?? '');
   const [perPage, setPerPage] = useState(filters.per_page ?? '10');
   
+  // Opening the owner funding menu should show the ledger first; creation is explicit.
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [deletingItem, setDeletingItem] = useState(null);
 
@@ -25,7 +26,7 @@ export default function Index({ vouchers, accounts, filters }) {
 
   function applyFilters(overrides = {}) {
     router.get(route('admin.accounting.vouchers.index'), { 
-      search, type: typeFilter, per_page: perPage, ...overrides 
+      search, type: typeFilter, owner_funding: filters.owner_funding ? 1 : undefined, per_page: perPage, ...overrides 
     }, { preserveState: true, replace: true });
   }
 
@@ -73,7 +74,7 @@ export default function Index({ vouchers, accounts, filters }) {
 
   return (
     <AuthenticatedLayout>
-      <Head title="Accounting Vouchers" />
+      <Head title={filters.owner_funding ? 'Owner Investment & Funding' : 'Accounting Vouchers'} />
 
       {/* Print Specific CSS */}
       <style dangerouslySetInnerHTML={{__html: `
@@ -94,14 +95,14 @@ export default function Index({ vouchers, accounts, filters }) {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">Finance & Accounts</span>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Accounting Vouchers</h1>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">{filters.owner_funding ? 'Owner Investment & Funding' : 'Accounting Vouchers'}</h1>
             <p className="text-sm text-slate-500 mt-1">ক্যাশ, ব্যাংক এবং অন্যান্য জার্নাল এন্ট্রির রেকর্ড পরিচালনা করুন।</p>
           </div>
           <button
             onClick={() => setIsFormOpen(true)}
             className="w-full sm:w-auto inline-flex justify-center items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md shadow-indigo-500/20 active:scale-95"
           >
-            <Icon name="plus" className="w-4 h-4" /> Create Voucher
+            <Icon name="plus" className="w-4 h-4" /> {filters.owner_funding ? 'Record Investment' : 'Create Voucher'}
           </button>
         </div>
 
@@ -262,7 +263,8 @@ export default function Index({ vouchers, accounts, filters }) {
 
       {isFormOpen && (
         <VoucherFormModal 
-          accounts={accounts} 
+          accounts={accounts}
+          ownerFunding={Boolean(filters.owner_funding)}
           onClose={() => setIsFormOpen(false)} 
         />
       )}

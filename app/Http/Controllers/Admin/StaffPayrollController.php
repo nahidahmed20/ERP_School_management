@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Support\CampusRule;
 use App\Models\StaffLoan;
+use App\Models\Account;
+use Illuminate\Validation\Rule;
 use App\Services\AccountingService;
 use App\Jobs\SendPayrollPayslip;
 
@@ -20,10 +22,12 @@ class StaffPayrollController extends Controller
 {
     public function generate(Request $request, PayrollService $service)
     {
+        $month = $request->validate(['salary_month' => 'required|date_format:Y-m'])['salary_month'];
+        $daysInMonth = Carbon::createFromFormat('Y-m-d', $month.'-01')->daysInMonth;
         $data = $request->validate([
-            'salary_month' => 'required|date_format:Y-m',
+            'salary_month' => ['required', 'date_format:Y-m', 'in:'.$month],
             'staff_id' => ['nullable', CampusRule::exists('staff')],
-            'working_days' => 'nullable|integer|min:1|max:31',
+            'working_days' => ['required', 'integer', 'min:1', 'max:'.$daysInMonth],
             'overtime_enabled' => 'required|boolean',
             'overtime_mode' => 'required_if:overtime_enabled,true|in:hour,day',
             'overtime_rate' => 'nullable|numeric|min:0',
@@ -92,6 +96,7 @@ class StaffPayrollController extends Controller
             'staffs' => Staff::where('is_active', true)
                 ->select('id', 'first_name', 'last_name', 'staff_id_no', 'basic_salary')
                 ->get(),
+            'accounts' => Account::where('is_active', true)->where('type', 'Asset')->orderBy('code')->get(['id', 'name', 'code']),
             'filters' => $request->only(['search', 'month', 'status', 'per_page']),
             'attendanceAdjustments' => StaffAttendance::with('staff:id,first_name,last_name,staff_id_no')
                 ->whereBetween('date', [($month ?: now()->format('Y-m')) . '-01', Carbon::parse(($month ?: now()->format('Y-m')) . '-01')->endOfMonth()])
@@ -199,7 +204,14 @@ class StaffPayrollController extends Controller
 
     public function finalize(Request $request, StaffPayroll $payroll)
     {
-        $data = $request->validate(['payment_method' => 'required|string|max:100', 'bank_reference' => 'nullable|string|max:255', 'payment_date' => 'required|date']);
+        $campusId = (int) config('app.active_campus_id');
+        abort_if(! $campusId, 422, 'Select a campus before finalizing payroll.');
+        $data = $request->validate([
+            'payment_method' => ['required', Rule::in(['Cash', 'Bank Transfer', 'Mobile Banking', 'Cheque'])],
+            'payment_account_id' => ['required', Rule::exists('accounts', 'id')->where(fn ($q) => $q->where('campus_id', $campusId)->where('type', 'Asset')->where('is_active', true))],
+            'bank_reference' => 'nullable|string|max:255',
+            'payment_date' => 'required|date|before_or_equal:today',
+        ]);
 
         DB::transaction(function () use ($request, $payroll, $data) {
             $payroll = StaffPayroll::with('staff')->whereKey($payroll->id)->lockForUpdate()->firstOrFail();
@@ -237,14 +249,17 @@ class StaffPayrollController extends Controller
 
     private function postPayrollAccounting(StaffPayroll $payroll, AccountingService $accounting): void
     {
-        $recognized = (float) $payroll->net_salary + (float) $payroll->loan_deduction + (float) $payroll->provident_fund + (float) $payroll->tax_deduction;
+        $salaryExpense = round((float) ($payroll->calculation['salary_expense'] ?? ((float) $payroll->basic_salary + (float) $payroll->allowance + (float) $payroll->bonus + (float) $payroll->arrears - (float) $payroll->absence_deduction)), 2);
         $date = $payroll->payment_date?->toDateString() ?? (string) $payroll->payment_date;
         $description = 'Payroll ' . $payroll->salary_month . ' - staff #' . $payroll->staff_id;
-        $accounting->post("payroll:{$payroll->id}:gross", $payroll, '5100', '2100', $recognized, $description, $date, 'Payment');
-        $accounting->post("payroll:{$payroll->id}:net", $payroll, '2100', '1000', (float) $payroll->net_salary, $description . ' net payment', $date, 'Payment');
+        $paymentAccount = Account::withoutGlobalScopes()->whereKey($payroll->payment_account_id)->where('campus_id', $payroll->campus_id)->where('type', 'Asset')->where('is_active', true)->firstOrFail();
+        $accounting->post("payroll:{$payroll->id}:gross", $payroll, '5100', '2100', $salaryExpense, $description, $date, 'Journal');
+        $accounting->post("payroll:{$payroll->id}:net", $payroll, '2100', $paymentAccount, (float) $payroll->net_salary, $description . ' net payment', $date, 'Payment');
         $accounting->post("payroll:{$payroll->id}:loan", $payroll, '2100', '1300', (float) $payroll->loan_deduction, $description . ' loan recovery', $date, 'Journal');
         $accounting->post("payroll:{$payroll->id}:pf", $payroll, '2100', '2200', (float) $payroll->provident_fund, $description . ' provident fund', $date, 'Journal');
         $accounting->post("payroll:{$payroll->id}:tax", $payroll, '2100', '2300', (float) $payroll->tax_deduction, $description . ' payroll tax', $date, 'Journal');
+        $manualDeduction = round((float) ($payroll->calculation['manual_deduction'] ?? 0), 2);
+        $accounting->post("payroll:{$payroll->id}:other-deduction", $payroll, '2100', '2600', $manualDeduction, $description . ' other deduction payable', $date, 'Journal');
         $accounting->post("payroll:{$payroll->id}:gratuity", $payroll, '5100', '2400', (float) $payroll->gratuity_provision, $description . ' gratuity provision', $date, 'Journal');
     }
 

@@ -215,25 +215,25 @@ export default function SecurityOperationsIndex({
     <AuthenticatedLayout>
       <Head title="Security Operations" />
 
-      <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8">
-        <div>
-          <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">System Administration</span>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">Security Operations Center</h1>
+      <div className="w-full space-y-5 px-3 py-5 sm:space-y-6 sm:px-6 sm:py-8 lg:px-8">
+        <div className="min-w-0">
+          <span className="text-[10px] font-bold tracking-[.14em] text-indigo-600 uppercase sm:text-xs">System Administration</span>
+          <h1 className="mt-1 text-xl font-bold leading-tight tracking-tight text-slate-900 sm:text-2xl">Security Operations Center</h1>
         </div>
 
         {/* Custom Tabs */}
-        <div className="flex overflow-x-auto space-x-2 border-b border-slate-200 pb-1 mb-6 custom-scrollbar">
+        <div className="grid grid-cols-2 gap-2 border-b border-slate-200 pb-3 sm:mb-6 sm:flex sm:gap-2 sm:overflow-x-auto sm:pb-1 custom-scrollbar">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-t-xl transition-all border-b-2 whitespace-nowrap ${
+              className={`flex min-w-0 items-center justify-start gap-2 rounded-xl border px-3 py-2.5 text-left text-xs font-semibold leading-tight transition-all sm:flex-none sm:whitespace-nowrap sm:rounded-t-xl sm:border-b-2 sm:px-4 sm:text-sm ${
                 activeTab === tab.id
-                  ? 'border-indigo-600 text-indigo-600 bg-indigo-50/50'
-                  : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+                  ? 'border-indigo-200 text-indigo-700 bg-indigo-50/70 sm:border-indigo-600 sm:text-indigo-600'
+                  : 'border-slate-200 text-slate-600 bg-white hover:text-slate-800 hover:bg-slate-50 sm:border-transparent sm:bg-transparent'
               }`}
             >
-              <Icon name={tab.icon} className="w-4 h-4" />
+              <Icon name={tab.icon} className="h-4 w-4 shrink-0" />
               {tab.name}
             </button>
           ))}

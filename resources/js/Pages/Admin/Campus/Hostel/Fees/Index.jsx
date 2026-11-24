@@ -7,7 +7,7 @@ import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 import FeeFormModal from './Partials/FeeFormModal';
 import Swal from 'sweetalert2';
 
-export default function Index({ fees, students, rooms, filters }) {
+export default function Index({ fees, students, rooms, filters, accounts = [] }) {
   const { flash } = usePage().props;
   const [search, setSearch] = useState(filters.search ?? '');
   const [statusFilter, setStatusFilter] = useState(filters.status ?? '');
@@ -274,7 +274,7 @@ export default function Index({ fees, students, rooms, filters }) {
         </div>
       </div>
 
-      {isFormOpen && <FeeFormModal item={editingItem} students={students} rooms={rooms} onClose={() => setIsFormOpen(false)} />}
+      {isFormOpen && <FeeFormModal item={editingItem} students={students} rooms={rooms} accounts={accounts} onClose={() => setIsFormOpen(false)} />}
 
       {deletingItem && (
         <ConfirmDeleteModal

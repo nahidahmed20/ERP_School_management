@@ -35,12 +35,13 @@ class ReportController extends Controller
                 $debit = (float) ($account->period_debit ?? 0);
                 $credit = (float) ($account->period_credit ?? 0);
                 $normalDebit = in_array($account->type, ['Asset', 'Expense'], true);
-                $account->balance = round((float) $account->opening_balance + ($normalDebit ? $debit - $credit : $credit - $debit), 2);
+                $account->period_balance = round($normalDebit ? $debit - $credit : $credit - $debit, 2);
+                $account->balance = round((float) $account->opening_balance + $account->period_balance, 2);
                 return $account;
             });
 
-        $income = $accounts->where('type', 'Income')->sum('balance');
-        $expense = $accounts->where('type', 'Expense')->sum('balance');
+        $income = $accounts->where('type', 'Income')->sum('period_balance');
+        $expense = $accounts->where('type', 'Expense')->sum('period_balance');
         $entries = JournalEntry::whereNull('reversed_at')->whereBetween('date', [$startDate, $endDate]);
         $invalidEntries=(clone $entries)->where(fn($q)=>$q->whereColumn('debit_account_id','credit_account_id')->orWhere('amount','<=',0))->count();
         $feeCash=(float)PaymentTransaction::whereBetween('transaction_date',[$startDate,$endDate])->whereIn('source_type',[Payment::class,\App\Models\Invoice::class])->whereIn('status',['Completed','Refunded'])->sum(DB::raw('amount-refunded_amount'));

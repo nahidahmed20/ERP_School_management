@@ -10,7 +10,7 @@ class HostelFee extends Model {
     
     protected $fillable = [
         'student_id', 'hostel_room_id', 'amount', 'month', 
-        'year', 'payment_date', 'status', 'remarks'
+        'year', 'payment_date', 'status', 'remarks', 'payment_account_id'
     ];
 
     protected $casts = [

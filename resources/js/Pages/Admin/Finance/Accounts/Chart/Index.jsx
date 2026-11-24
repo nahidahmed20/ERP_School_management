@@ -46,12 +46,12 @@ export default function Index({ accounts, filters }) {
 
   const exportToCSV = () => {
     if (!accounts.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
-    const headers = ['Account Code', 'Account Name', 'Category', 'Opening Balance', 'Status'];
+    const headers = ['Account Code', 'Account Name', 'Category', 'Opening Balance', 'Current Balance', 'Status'];
     const rows = accounts.data.map(item => [
       item.code || 'N/A', 
       item.name || 'N/A', 
       item.type || 'N/A', 
-      item.opening_balance || '0.00', 
+      item.opening_balance || '0.00', item.current_balance || '0.00',
       item.is_active ? 'Active' : 'Disabled'
     ]);
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows.map(e => e.map(val => `"${val}"`).join(','))].join('\n');
@@ -65,9 +65,9 @@ export default function Index({ accounts, filters }) {
 
   const copyToClipboard = () => {
     if (!accounts.data.length) return;
-    let text = "Code\tAccount Name\tCategory\tOpening Balance\tStatus\n";
+    let text = "Code\tAccount Name\tCategory\tOpening Balance\tCurrent Balance\tStatus\n";
     accounts.data.forEach(item => {
-      text += `${item.code || '-'}\t${item.name}\t${item.type}\t${item.opening_balance}\t${item.is_active ? 'Active' : 'Disabled'}\n`;
+      text += `${item.code || '-'}\t${item.name}\t${item.type}\t${item.opening_balance}\t${item.current_balance}\t${item.is_active ? 'Active' : 'Disabled'}\n`;
     });
     navigator.clipboard.writeText(text);
     Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Data copied to clipboard!', showConfirmButton: false, timer: 2000 });
@@ -199,6 +199,7 @@ export default function Index({ accounts, filters }) {
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Account Name</th>
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Category (Type)</th>
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Opening Balance</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Current Balance</th>
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Status</th>
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right no-print">Actions</th>
                 </tr>
@@ -206,7 +207,7 @@ export default function Index({ accounts, filters }) {
               <tbody className="divide-y divide-slate-100">
                 {accounts.data.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center text-slate-500">
+                    <td colSpan={8} className="px-6 py-12 text-center text-slate-500">
                       <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-3 border border-slate-100">
                         <Icon name="folder" className="w-8 h-8 text-slate-300" />
                       </div>
@@ -243,6 +244,7 @@ export default function Index({ accounts, filters }) {
                           ৳ {item.opening_balance}
                         </span>
                       </td>
+                      <td className="px-6 py-4 text-right"><span className="text-sm font-black text-indigo-700 font-mono">৳ {Number(item.current_balance || 0).toLocaleString()}</span></td>
                       <td className="px-6 py-4 text-center">
                         <span className={`inline-flex px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide uppercase ${item.is_active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-500 border border-slate-200'}`}>
                           {item.is_active ? 'Active' : 'Disabled'}

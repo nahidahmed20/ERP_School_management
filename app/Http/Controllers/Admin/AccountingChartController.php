@@ -26,8 +26,17 @@ class AccountingChartController extends Controller
         $totalCount = $query->count();
         $perPageCount = $perPage === 'all' ? max(1, $totalCount) : max(1, min(100, (int) $perPage));
 
+        $accounts = $query->orderBy('type')->orderBy('code')->paginate($perPageCount)->withQueryString();
+        $accounts->getCollection()->transform(function ($account) {
+            $debits = (float) $account->debitEntries()->whereNull('reversed_at')->sum('amount');
+            $credits = (float) $account->creditEntries()->whereNull('reversed_at')->sum('amount');
+            $debitNormal = in_array($account->type, ['Asset', 'Expense'], true);
+            $account->current_balance = round((float) $account->opening_balance + ($debitNormal ? $debits - $credits : $credits - $debits), 2);
+            return $account;
+        });
+
         return Inertia::render('Admin/Finance/Accounts/Chart/Index', [
-            'accounts' => $query->orderBy('type')->orderBy('code')->paginate($perPageCount)->withQueryString(),
+            'accounts' => $accounts,
             'filters' => ['search' => $request->input('search', ''), 'type' => $request->input('type', ''), 'per_page' => $perPage],
         ]);
     }

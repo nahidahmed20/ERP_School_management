@@ -16,7 +16,7 @@ const Box = ({ title, children, icon }) => (
   </section>
 );
 
-export default function Index({ vehicles, routes, stops, personnel, allocations, fuelLogs, maintenance, documents, boarding, fees, expenses, summary }) {
+export default function Index({ vehicles, routes, stops, personnel, allocations, fuelLogs, maintenance, documents, boarding, fees, expenses, summary, accounts = [] }) {
   const { flash } = usePage().props;
 
   useEffect(() => {
@@ -238,6 +238,7 @@ export default function Index({ vehicles, routes, stops, personnel, allocations,
             <div className="mt-4 p-3 bg-emerald-50 border border-emerald-100 rounded-lg text-emerald-700 text-sm font-semibold flex items-center gap-2">
               <Icon name="check-circle" className="w-4 h-4" /> System has generated {fees.length} fee records recently.
             </div>
+            <div className="mt-4 space-y-2">{fees.filter(f=>f.status==='unpaid').map(f=><div key={f.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3 text-sm"><span>Transport fee · {f.billing_month} · ৳{f.amount}</span><button type="button" onClick={async()=>{const assets=accounts.filter(a=>a.type==='Asset');const r=await Swal.fire({title:'Receive transport fee',input:'select',inputOptions:Object.fromEntries(assets.map(a=>[a.id,`${a.code} · ${a.name}`])),inputPlaceholder:'Select cash/bank account',showCancelButton:true,confirmButtonText:'Record payment',inputValidator:v=>v?undefined:'Choose an account'});if(r.isConfirmed)router.post(route('admin.transport.fees.pay',f.id),{payment_account_id:r.value,payment_date:new Date().toISOString().slice(0,10)},{preserveScroll:true});}} className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white">Receive</button></div>)}</div>
           </Box>
 
         </div>

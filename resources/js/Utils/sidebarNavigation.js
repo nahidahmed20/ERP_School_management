@@ -14,6 +14,12 @@ export function buildSidebarNavigation(navigation, url, resolveRoute) {
     )));
     const hasExactMenu = Boolean(currentRoute && names.has(currentRoute));
     const pathname = url.split(/[?#]/)[0];
+    let ownerFundingView = false;
+    try {
+        ownerFundingView = new URL(url, 'https://sidebar.invalid').searchParams.get('owner_funding') === '1';
+    } catch {
+        // Fall back to normal route matching for malformed or relative URLs.
+    }
     const hrefs = new Map();
 
     function hrefFor(name) {
@@ -30,6 +36,8 @@ export function buildSidebarNavigation(navigation, url, resolveRoute) {
 
     function isActive(name) {
         if (!name) return false;
+        // The owner funding shortcut shares the vouchers page, distinguished by this filter.
+        if (ownerFundingView) return name === 'admin.owner-funding.index';
         if (currentRoute) {
             if (currentRoute === name) return true;
             // Detail/edit pages use their module's list unless they have their own menu.

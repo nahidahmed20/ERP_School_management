@@ -1,7 +1,7 @@
 import { useForm } from '@inertiajs/react';
 import Icon from '@/Components/Icons';
 
-export default function LoanFormModal({ item, staffList, onClose }) {
+export default function LoanFormModal({ item, staffList, accounts = [], onClose }) {
   const isEdit = !!item;
 
   const { data, setData, post, put, processing, reset, errors } = useForm({
@@ -11,6 +11,8 @@ export default function LoanFormModal({ item, staffList, onClose }) {
     monthly_deduction: item?.monthly_deduction ?? '',
     reason: item?.reason ?? '',
     status: item?.status ?? 'Pending',
+    payment_account_id: item?.payment_account_id ?? accounts[0]?.id ?? '',
+    disbursed_at: item?.disbursed_at ?? new Date().toISOString().slice(0, 10),
   });
 
   function submit(e) {
@@ -77,6 +79,11 @@ export default function LoanFormModal({ item, staffList, onClose }) {
                   <option value="Completed">Completed (Paid Off)</option>
                 </select>
               </div>
+
+              {['Approved', 'Completed'].includes(data.status) && <>
+                <div><label className={labelClass}>Disbursed from <span className="text-rose-500">*</span></label><select required value={data.payment_account_id} onChange={e=>setData('payment_account_id',e.target.value)} className={inputClass}><option value="">Choose cash/bank account</option>{accounts.map(a=><option key={a.id} value={a.id}>{a.code} · {a.name}</option>)}</select>{errors.payment_account_id&&<p className="mt-1 text-xs text-rose-600">{errors.payment_account_id}</p>}</div>
+                <div><label className={labelClass}>Disbursement date <span className="text-rose-500">*</span></label><input type="date" required max={new Date().toISOString().slice(0,10)} value={data.disbursed_at} onChange={e=>setData('disbursed_at',e.target.value)} className={inputClass}/>{errors.disbursed_at&&<p className="mt-1 text-xs text-rose-600">{errors.disbursed_at}</p>}</div>
+              </>}
 
               <div>
                 <label className={labelClass}>Total Amount (৳) <span className="text-rose-500">*</span></label>

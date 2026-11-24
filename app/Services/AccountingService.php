@@ -66,25 +66,34 @@ class AccountingService
             '1200' => ['Inventory', 'Asset'],
             '1300' => ['Staff Loan Receivable', 'Asset'],
             '2000' => ['Accounts Payable', 'Liability'],
+            '2050' => ['Owner Loan Payable', 'Liability'],
             '2100' => ['Salary Payable', 'Liability'],
             '2200' => ['Provident Fund Payable', 'Liability'],
             '2300' => ['Payroll Tax Payable', 'Liability'],
             '2400' => ['Gratuity Payable', 'Liability'],
             '2500' => ['Cafeteria Wallet Liability', 'Liability'],
+            '2600' => ['Other Payroll Deductions Payable', 'Liability'],
+            '3000' => ['Owner Capital', 'Equity'],
             '4000' => ['Fee Income', 'Income'],
             '4100' => ['Sales Income', 'Income'],
             '4200' => ['Cafeteria Income', 'Income'],
             '5000' => ['Cost of Goods Sold', 'Expense'],
             '5100' => ['Salary Expense', 'Expense'],
+            '5200' => ['General Operating Expenses', 'Expense'],
         ];
         abort_unless(isset($defaults[$code]), 422, 'Unknown system account code.');
         [$name, $type] = $defaults[$code];
 
-        return Account::withoutGlobalScopes()->firstOrCreate(['campus_id' => $campusId, 'code' => $code], [
+        $account = Account::withoutGlobalScopes()->firstOrCreate(['campus_id' => $campusId, 'code' => $code], [
             'name' => $name,
             'type' => $type,
             'is_active' => true,
         ]);
+
+        abort_if($account->type !== $type, 422, "System account {$code} exists with an incompatible account type.");
+        abort_if(! $account->is_active, 422, "System account {$code} is inactive.");
+
+        return $account;
     }
 
     private function resolveAccount(string|Account $account, int $campusId): Account

@@ -124,6 +124,10 @@ export default function Index({ items, groups, parents, permissions, filters }) 
     }, { preserveScroll: true });
   }
 
+  function toggleHierarchy(item) {
+    router.patch(route('admin.menu.visibility', item.id), { is_active: !item.is_active }, { preserveScroll: true });
+  }
+
   async function editGroup(group) {
     const result = await Swal.fire({
       title: 'Edit menu group',
@@ -356,7 +360,7 @@ export default function Index({ items, groups, parents, permissions, filters }) 
                           <button type="button" onClick={() => openEdit(item)} className="rounded-lg border border-amber-100 bg-amber-50 p-2 text-amber-700 transition-colors hover:bg-amber-100" title="Edit Menu" aria-label={`Edit ${item.label}`}>
                             <Icon name="edit" className="w-4 h-4" />
                           </button>
-                          <button type="button" onClick={() => toggleItem(item)} className={`rounded-lg border p-2 transition-colors ${item.is_active ? 'border-emerald-100 bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'border-slate-200 bg-slate-100 text-slate-600 hover:bg-slate-200'}`} title={item.is_active ? 'Hide Menu' : 'Show Menu'} aria-label={`${item.is_active ? 'Hide' : 'Show'} ${item.label}`}>
+                          <button type="button" onClick={() => toggleHierarchy(item)} className={`rounded-lg border p-2 transition-colors ${item.is_active ? 'border-emerald-100 bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'border-slate-200 bg-slate-100 text-slate-600 hover:bg-slate-200'}`} title={item.is_active ? 'Hide Menu' : 'Show Menu'} aria-label={`${item.is_active ? 'Hide' : 'Show'} ${item.label}`}>
                             <Icon name={item.is_active ? 'toggle-on' : 'toggle-off'} className="w-5 h-5" />
                           </button>
                           <button type="button" onClick={() => setDeletingItem(item)} className="rounded-lg border border-rose-100 bg-rose-50 p-2 text-rose-700 transition-colors hover:bg-rose-100" title="Delete Menu" aria-label={`Delete ${item.label}`}>

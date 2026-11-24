@@ -24,14 +24,14 @@ const StatIcon = {
   )
 };
 
-export default function Index({ totalIncome, totalExpense, netProfit, expenses }) {
+export default function Index({ totalIncome, totalExpense, netProfit, expenses, accounts = [], recurringExpenses = [] }) {
   const [editingId, setEditingId] = useState(null);
 
   const { data, setData, post, put, processing, reset } = useForm({
     expense_head: '',
     amount: '',
     expense_date: new Date().toISOString().split('T')[0],
-    description: ''
+    description: '', expense_account_id: accounts.find(a => a.type === 'Expense')?.id || '', status: 'unpaid', payment_account_id: ''
   });
 
   const submitExpense = (e) => {
@@ -61,8 +61,21 @@ export default function Index({ totalIncome, totalExpense, netProfit, expenses }
       expense_head: expense.expense_head,
       amount: expense.amount,
       expense_date: expense.expense_date,
-      description: expense.description || ''
+      description: expense.description || '', expense_account_id: expense.expense_account_id || '',
+      status: expense.status === 'paid' ? 'paid' : 'unpaid', payment_account_id: expense.payment_account_id || ''
     });
+  };
+
+  const payExpense = async (id) => {
+    const assetAccounts = accounts.filter(a => a.type === 'Asset');
+    const result = await Swal.fire({ title: 'Pay expense', input: 'select', inputOptions: Object.fromEntries(assetAccounts.map(a => [a.id, `${a.code} · ${a.name}`])), inputPlaceholder: 'Select cash or bank account', showCancelButton: true, confirmButtonText: 'Record payment', inputValidator: value => value ? undefined : 'Choose a payment account' });
+    if (result.isConfirmed) router.post(route('admin.fees.ledger.pay', id), { payment_account_id: result.value, paid_at: new Date().toISOString().slice(0, 10) }, { preserveScroll: true });
+  };
+
+  const addRecurring = async () => {
+    const expenseAccounts = accounts.filter(a => a.type === 'Expense');
+    const result = await Swal.fire({ title: 'New recurring expense', html: `<input id="re-head" class="swal2-input" placeholder="Expense name"><input id="re-amount" class="swal2-input" type="number" min="0.01" step="0.01" placeholder="Amount"><select id="re-account" class="swal2-select">${expenseAccounts.map(a => `<option value="${a.id}">${a.code} · ${a.name}</option>`).join('')}</select><select id="re-frequency" class="swal2-select"><option value="monthly">Monthly</option><option value="weekly">Weekly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><input id="re-start" class="swal2-input" type="date" value="${new Date().toISOString().slice(0,10)}">`, showCancelButton: true, confirmButtonText: 'Create schedule', preConfirm: () => { const expense_head=document.getElementById('re-head').value; const amount=document.getElementById('re-amount').value; if(!expense_head||!amount||!expenseAccounts.length){Swal.showValidationMessage('Enter a name and amount, and configure an expense account');return false;} return {expense_head,amount,expense_account_id:document.getElementById('re-account').value,frequency:document.getElementById('re-frequency').value,start_date:document.getElementById('re-start').value}; } });
+    if(result.isConfirmed) router.post(route('admin.fees.ledger.recurring.store'), result.value, { preserveScroll:true });
   };
 
   const cancelEdit = () => {
@@ -167,6 +180,10 @@ export default function Index({ totalIncome, totalExpense, netProfit, expenses }
                 />
               </div>
 
+              <div><label className={labelClass}>Expense account <span className="text-rose-500">*</span></label><select required value={data.expense_account_id} onChange={e=>setData('expense_account_id',e.target.value)} className={inputClass}><option value="">Select expense account</option>{accounts.filter(a=>a.type==='Expense').map(a=><option key={a.id} value={a.id}>{a.code} · {a.name}</option>)}</select></div>
+              <div><label className={labelClass}>Payment status</label><select value={data.status} onChange={e=>setData('status',e.target.value)} className={inputClass}><option value="unpaid">Unpaid (Accounts Payable)</option><option value="paid">Paid now</option></select></div>
+              {data.status==='paid'&&<div><label className={labelClass}>Paid from</label><select required value={data.payment_account_id} onChange={e=>setData('payment_account_id',e.target.value)} className={inputClass}><option value="">Select cash/bank account</option>{accounts.filter(a=>a.type==='Asset').map(a=><option key={a.id} value={a.id}>{a.code} · {a.name}</option>)}</select></div>}
+
               <div>
                 <label className={labelClass}>Amount (৳) <span className="text-rose-500">*</span></label>
                 <input 
@@ -228,8 +245,8 @@ export default function Index({ totalIncome, totalExpense, netProfit, expenses }
 
           {/* Expense List Table */}
           <div className="lg:col-span-8 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/50">
-              <h3 className="text-lg font-bold text-slate-900">Recent Expenses</h3>
+            <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-50/50">
+              <h3 className="text-lg font-bold text-slate-900">Recent Expenses</h3><button type="button" onClick={addRecurring} className="rounded-lg bg-indigo-600 px-3 py-2 text-xs font-bold text-white">Add recurring</button>
             </div>
             
             <div className="overflow-x-auto">
@@ -265,6 +282,7 @@ export default function Index({ totalIncome, totalExpense, netProfit, expenses }
                               {exp.description}
                             </span>
                           )}
+                          <span className="mt-1 block text-xs text-slate-500">{exp.expense_account?.name || 'Expense'} · <b className={exp.status==='paid'?'text-emerald-700':'text-amber-700'}>{exp.status}</b>{exp.payment_account?` · ${exp.payment_account.name}`:''}</span>
                         </td>
                         <td className="px-6 py-4 text-right">
                           <span className="text-[15px] font-black text-rose-600 font-mono bg-rose-50 px-2 py-1 rounded-lg">
@@ -273,6 +291,7 @@ export default function Index({ totalIncome, totalExpense, netProfit, expenses }
                         </td>
                         <td className="px-6 py-4 text-right">
                           <div className="flex items-center justify-end gap-1.5">
+                            {exp.status==='unpaid'&&<button onClick={()=>payExpense(exp.id)} className="rounded-lg bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-700">Pay</button>}
                             <button 
                               onClick={() => handleEdit(exp)} 
                               title="Edit Expense"
@@ -303,6 +322,7 @@ export default function Index({ totalIncome, totalExpense, netProfit, expenses }
 
           </div>
         </div>
+        {recurringExpenses.length>0&&<section className="rounded-2xl border border-slate-200 bg-white p-5"><h3 className="mb-3 font-bold text-slate-900">Recurring schedules</h3><div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{recurringExpenses.map(r=><div key={r.id} className="rounded-xl border p-3 text-sm"><b>{r.expense_head}</b><p className="text-slate-500">৳{r.amount} · {r.frequency} · next due {r.next_due_date}</p>{r.is_active&&<button onClick={()=>router.delete(route('admin.fees.ledger.recurring.stop',r.id), {preserveScroll:true})} className="mt-2 text-xs font-bold text-rose-600">Stop schedule</button>}</div>)}</div></section>}
       </div>
     </AuthenticatedLayout>
   );

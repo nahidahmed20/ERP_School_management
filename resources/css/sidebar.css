@@ -22,9 +22,11 @@
   color:#EAF1EB;
   display:flex;
   flex-direction:column;
-  position:sticky;
+  position:fixed;
   top:0;
+  left:0;
   height:100vh;
+  height:100dvh;
   overflow-y:auto;
   overflow-anchor:none;
   transition:transform .15s ease-out;
@@ -153,7 +155,8 @@
 
 
 /* ===== Main / Topbar (ported from original design) ===== */
-.shell{display:flex;min-height:100vh;background:var(--paper);}
+.shell{display:flex;min-height:100vh;padding-left:276px;background:var(--paper);}
+.shell.sidebar-collapsed{padding-left:0;}
 .main{flex:1;min-width:0;display:flex;flex-direction:column;}
 .topbar{
   position:sticky;top:0;z-index:30;
@@ -305,6 +308,7 @@ h1,h2,h3{
 @media (max-width:900px){
   .sidebar{position:fixed;left:0;top:0;transform:translateX(-105%);width:min(86vw,300px);box-shadow:24px 0 60px rgba(15,23,42,.35);}
   .sidebar.mobile-open{transform:translateX(0);}
+  .shell,.shell.sidebar-collapsed{padding-left:0;}
   .hamburger{display:flex;align-items:center;justify-content:center;}
   .topbar{padding:12px 16px;}
 }

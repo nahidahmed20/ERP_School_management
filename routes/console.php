@@ -15,6 +15,7 @@ Schedule::command('library:overdues')->dailyAt('08:00')->withoutOverlapping()->o
 Schedule::command('medical:vaccination-reminders')->dailyAt('08:30')->withoutOverlapping()->onOneServer();
 Schedule::command('reports:deliver')->everyFifteenMinutes()->withoutOverlapping()->onOneServer();
 Schedule::command('fees:generate')->dailyAt('00:15')->withoutOverlapping()->onOneServer();
+Schedule::command('expenses:generate-recurring')->dailyAt('00:30')->withoutOverlapping()->onOneServer();
 Schedule::command('backup:secure')->dailyAt('01:30')->withoutOverlapping()->onOneServer();
 Schedule::command('queue:prune-failed --hours=336')->dailyAt('03:00')->withoutOverlapping()->onOneServer();
 if (config('services.government_holidays.feed_url')) {

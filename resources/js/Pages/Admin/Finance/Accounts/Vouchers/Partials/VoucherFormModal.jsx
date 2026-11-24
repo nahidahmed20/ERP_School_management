@@ -1,12 +1,12 @@
 import { useForm } from '@inertiajs/react';
 import Icon from '@/Components/Icons';
 
-export default function VoucherFormModal({ accounts, onClose }) {
+export default function VoucherFormModal({ accounts, ownerFunding = false, onClose }) {
   const { data, setData, post, processing, reset, errors } = useForm({
     date: new Date().toISOString().split('T')[0],
-    voucher_type: 'Payment',
-    debit_account_id: '',
-    credit_account_id: '',
+    voucher_type: ownerFunding ? 'Receipt' : 'Payment',
+    debit_account_id: ownerFunding ? (accounts.find(a => a.code === '1000')?.id || '') : '',
+    credit_account_id: ownerFunding ? (accounts.find(a => a.code === '3000')?.id || '') : '',
     amount: '',
     description: '',
   });
@@ -24,8 +24,8 @@ export default function VoucherFormModal({ accounts, onClose }) {
   // Dynamic Notice Based on Voucher Type
   const getVoucherNotice = () => {
     switch (data.voucher_type) {
-      case 'Payment': return { color: 'bg-rose-50 border-rose-200 text-rose-800', text: 'Credit cash/bank account and Debit the expense/payable account.' };
-      case 'Receipt': return { color: 'bg-emerald-50 border-emerald-200 text-emerald-800', text: 'Debit cash/bank account and Credit the income/receivable account.' };
+      case 'Payment': return { color: 'bg-rose-50 border-rose-200 text-rose-800', text: 'Credit cash/bank. For owner-loan repayment, Debit Owner Loan Payable; for owner withdrawal, Debit Owner Capital.' };
+      case 'Receipt': return { color: 'bg-emerald-50 border-emerald-200 text-emerald-800', text: 'Debit cash/bank. For owner funding, Credit Owner Capital (equity) or Owner Loan Payable (repayable loan).' };
       case 'Contra': return { color: 'bg-sky-50 border-sky-200 text-sky-800', text: 'Used only for transactions between Cash and Bank accounts.' };
       case 'Journal': return { color: 'bg-slate-100 border-slate-300 text-slate-800', text: 'Used for adjustments, depreciation, or non-cash transactions.' };
       default: return { color: 'bg-indigo-50 border-indigo-200 text-indigo-800', text: 'Select a voucher type to see rules.' };
@@ -52,8 +52,8 @@ export default function VoucherFormModal({ accounts, onClose }) {
         {/* Header */}
         <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0 rounded-t-2xl">
           <div>
-            <h3 className="text-xl font-bold text-slate-900">Create Accounting Voucher</h3>
-            <p className="text-sm text-slate-500 mt-1">Post a new transaction into the ledger.</p>
+            <h3 className="text-xl font-bold text-slate-900">{ownerFunding ? 'Record Owner Investment' : 'Create Accounting Voucher'}</h3>
+            <p className="text-sm text-slate-500 mt-1">{ownerFunding ? 'Debit the cash/bank account, then credit Owner Capital for equity funding or Owner Loan Payable for a repayable loan.' : 'Post a new transaction into the ledger.'}</p>
           </div>
           <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors bg-white border border-slate-200 shadow-sm shrink-0">
             <Icon name="close" className="w-4 h-4" />

@@ -7,7 +7,7 @@ import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 import LoanFormModal from './Partials/LoanFormModal';
 import Swal from 'sweetalert2';
 
-export default function Index({ loans, staffList, filters }) {
+export default function Index({ loans, staffList, filters, accounts = [] }) {
   const { flash } = usePage().props;
   const [search, setSearch] = useState(filters.search ?? '');
   const [statusFilter, setStatusFilter] = useState(filters.status ?? '');
@@ -262,7 +262,7 @@ export default function Index({ loans, staffList, filters }) {
         </div>
       </div>
 
-      {isFormOpen && <LoanFormModal item={editingItem} staffList={staffList} onClose={() => setIsFormOpen(false)} />}
+      {isFormOpen && <LoanFormModal item={editingItem} staffList={staffList} accounts={accounts} onClose={() => setIsFormOpen(false)} />}
       
       {deletingItem && (
         <ConfirmDeleteModal 

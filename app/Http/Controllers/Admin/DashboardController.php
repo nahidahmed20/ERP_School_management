@@ -24,6 +24,7 @@ use App\Models\PurchaseItem;
 use App\Models\StockAdjustmentRequest;
 use App\Models\StaffPayroll;
 use App\Models\PaymentRefund;
+use App\Models\JournalEntry;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -132,10 +133,12 @@ class DashboardController extends Controller
         $attendancePercentage = $totalAttendanceToday > 0 ? round(($presentToday / $totalAttendanceToday) * 100) : 0;
 
         $todayCollection = Payment::whereDate('payment_date', $today)->sum('amount_paid');
-        $todayExpense = Expense::whereDate('expense_date', $today)->sum('amount');
+        $todayIncome = $this->postedIncomeTotal($today, $today);
+        $todayExpense = $this->postedExpenseTotal($today, $today);
         $monthStart = $today->copy()->startOfMonth();
         $monthCollection = Payment::whereBetween('payment_date', [$monthStart, $today])->sum('amount_paid');
-        $monthExpense = Expense::whereBetween('expense_date', [$monthStart, $today])->sum('amount');
+        $monthIncome = $this->postedIncomeTotal($monthStart, $today);
+        $monthExpense = $this->postedExpenseTotal($monthStart, $today);
         $pendingInvoices = Invoice::whereIn('status', ['Unpaid', 'Partial']);
         $pendingDues = (clone $pendingInvoices)->sum(DB::raw('amount + fine - discount - paid_amount'));
 
@@ -151,10 +154,8 @@ class DashboardController extends Controller
 
             return [
                 'label' => $month->format('M'),
-                'income' => (float) Payment::whereYear('payment_date', $month->year)
-                    ->whereMonth('payment_date', $month->month)->sum('amount_paid'),
-                'expense' => (float) Expense::whereYear('expense_date', $month->year)
-                    ->whereMonth('expense_date', $month->month)->sum('amount'),
+                'income' => $this->postedIncomeTotal($month->copy()->startOfMonth(), $month->copy()->endOfMonth()),
+                'expense' => $this->postedExpenseTotal($month->copy()->startOfMonth(), $month->copy()->endOfMonth()),
             ];
         });
 
@@ -186,7 +187,7 @@ class DashboardController extends Controller
                 'attendance_percentage' => $attendancePercentage,
                 'today_collection' => (float) $todayCollection,
                 'pending_dues' => (float) $pendingDues,
-                'month_profit' => (float) ($monthCollection - $monthExpense),
+                'month_profit' => round($monthIncome - $monthExpense, 2),
                 'inventory_value' => (float) PurchaseItem::selectRaw('COALESCE(SUM(quantity * purchase_price),0) value')->value('value'),
             ],
             'attendance' => [
@@ -217,10 +218,10 @@ class DashboardController extends Controller
             'financialStats' => [
                 ['title' => 'Unpaid Invoices', 'value' => (clone $pendingInvoices)->count(), 'routeName' => 'admin.studentfees.index'],
                 ['title' => 'Unpaid Amount', 'value' => (float) $pendingDues, 'currency' => true, 'routeName' => 'admin.studentfees.index'],
-                ['title' => 'Income Today', 'value' => (float) $todayCollection, 'currency' => true, 'routeName' => 'admin.fees.ledger'],
+                ['title' => 'Income Today', 'value' => $todayIncome, 'currency' => true, 'routeName' => 'admin.fees.ledger'],
                 ['title' => 'Expense Today', 'value' => (float) $todayExpense, 'currency' => true, 'routeName' => 'admin.fees.ledger'],
-                ['title' => 'Profit Today', 'value' => (float) ($todayCollection - $todayExpense), 'currency' => true, 'routeName' => 'admin.reports.saved'],
-                ['title' => 'This Month Profit', 'value' => (float) ($monthCollection - $monthExpense), 'currency' => true, 'routeName' => 'admin.fees.ledger'],
+                ['title' => 'Profit Today', 'value' => round($todayIncome - $todayExpense, 2), 'currency' => true, 'routeName' => 'admin.reports.saved'],
+                ['title' => 'This Month Profit', 'value' => round($monthIncome - $monthExpense, 2), 'currency' => true, 'routeName' => 'admin.fees.ledger'],
             ],
             'pendingLeaves' => StaffLeave::with('staff:id,first_name,last_name')->where('status', 'pending')->latest()->take(5)->get()
                 ->map(fn (StaffLeave $leave) => [
@@ -459,8 +460,8 @@ class DashboardController extends Controller
             $month = $today->copy()->subMonths($ago);
             return [
                 'label' => $month->format('M'),
-                'income' => (float) Payment::whereYear('payment_date',$month->year)->whereMonth('payment_date',$month->month)->sum('amount_paid'),
-                'expense' => (float) Expense::whereYear('expense_date',$month->year)->whereMonth('expense_date',$month->month)->sum('amount'),
+                'income' => $this->postedIncomeTotal($month->copy()->startOfMonth(), $month->copy()->endOfMonth()),
+                'expense' => $this->postedExpenseTotal($month->copy()->startOfMonth(), $month->copy()->endOfMonth()),
             ];
         })->values();
 
@@ -470,10 +471,10 @@ class DashboardController extends Controller
             'designation' => $staff->designation?->name ?? 'Finance Staff',
             'department' => $staff->department?->name ?? 'Finance',
             'metrics' => [
-                'today_collection' => (float) Payment::whereDate('payment_date',$today)->sum('amount_paid'),
-                'month_collection' => (float) Payment::whereBetween('payment_date',[$monthStart,$today])->sum('amount_paid'),
-                'today_expense' => (float) Expense::whereDate('expense_date',$today)->sum('amount'),
-                'month_expense' => (float) Expense::whereBetween('expense_date',[$monthStart,$today])->sum('amount'),
+                'today_collection' => $this->postedIncomeTotal($today, $today),
+                'month_collection' => $this->postedIncomeTotal($monthStart, $today),
+                'today_expense' => $this->postedExpenseTotal($today, $today),
+                'month_expense' => $this->postedExpenseTotal($monthStart, $today),
                 'total_due' => (float) Invoice::whereIn('status',['Unpaid','Partial'])->sum(DB::raw($dueExpression)),
                 'overdue_count' => Invoice::whereIn('status',['Unpaid','Partial'])->whereDate('due_date','<',$today)->count(),
                 'pending_online' => PaymentTransaction::where('status','Pending')->count(),
@@ -492,6 +493,20 @@ class DashboardController extends Controller
                 'id'=>$t->id,'transaction_id'=>$t->transaction_id,'gateway'=>$t->gateway?->name??$t->payment_method??'Manual','amount'=>(float)$t->amount,'status'=>$t->status,'date'=>$t->transaction_date?->format('d M Y'),
             ]),
         ];
+    }
+
+    private function postedExpenseTotal(Carbon $from, Carbon $to): float
+    {
+        $entries = JournalEntry::whereNull('reversed_at')->whereBetween('date', [$from->toDateString(), $to->toDateString()]);
+        return round((float) (clone $entries)->whereHas('debitAccount', fn ($q) => $q->where('type', 'Expense'))->sum('amount')
+            - (float) (clone $entries)->whereHas('creditAccount', fn ($q) => $q->where('type', 'Expense'))->sum('amount'), 2);
+    }
+
+    private function postedIncomeTotal(Carbon $from, Carbon $to): float
+    {
+        $entries = JournalEntry::whereNull('reversed_at')->whereBetween('date', [$from->toDateString(), $to->toDateString()]);
+        return round((float) (clone $entries)->whereHas('creditAccount', fn ($q) => $q->where('type', 'Income'))->sum('amount')
+            - (float) (clone $entries)->whereHas('debitAccount', fn ($q) => $q->where('type', 'Income'))->sum('amount'), 2);
     }
 
     private function portalNotices()

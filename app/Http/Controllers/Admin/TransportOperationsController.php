@@ -9,6 +9,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Log;
+use App\Models\Expense;
+use App\Services\ExpenseAccountingService;
+use App\Services\AccountingService;
+use App\Models\Account;
 
 class TransportOperationsController extends Controller
 {
@@ -33,6 +37,7 @@ class TransportOperationsController extends Controller
             'documents' => TransportPersonnelDocument::latest()->take(100)->get(),
             'boarding' => StudentBoardingAttendance::latest('event_at')->take(100)->get(),
             'fees' => TransportFeeCharge::latest()->take(100)->get(),
+            'accounts' => \App\Models\Account::where('is_active', true)->orderBy('code')->get(['id', 'name', 'code', 'type']),
             'expenses' => VehicleExpense::latest('date')->take(100)->get(),
 
             'summary' => [
@@ -93,7 +98,7 @@ class TransportOperationsController extends Controller
         return back()->with('success', 'Route stop and schedule saved.');
     }
 
-    public function fuel(Request $r)
+    public function fuel(Request $r, ExpenseAccountingService $accounting)
     {
         $d = $r->validate([
             'vehicle_id' => ['required', $this->campusExists('vehicles')],
@@ -105,13 +110,26 @@ class TransportOperationsController extends Controller
             'receipt_no' => 'nullable|string|max:100'
         ]);
 
-        $d['recorded_by'] = $r->user()->id;
-        VehicleFuelLog::create($d);
+        DB::transaction(function () use ($d, $r, $accounting) {
+            $d['recorded_by'] = $r->user()->id;
+            $fuel = VehicleFuelLog::create($d);
+            $amount = round((float) $fuel->litres * (float) $fuel->unit_price, 2);
+            if ($amount <= 0) return;
+            $expense = Expense::create([
+                'campus_id' => (int) $fuel->vehicle->campus_id,
+                'expense_head' => 'Transport - Fuel', 'amount' => $amount,
+                'expense_date' => $fuel->date, 'description' => trim('Vehicle #'.$fuel->vehicle_id.($fuel->vendor ? ' · '.$fuel->vendor : '').($fuel->receipt_no ? ' · Receipt '.$fuel->receipt_no : '')),
+                'expense_account_id' => app(\App\Services\AccountingService::class)->accountForCode('5200', (int) $fuel->vehicle->campus_id)->id,
+                'status' => 'unpaid', 'recorded_by' => (string) $r->user()->id, 'created_by' => $r->user()->id,
+            ]);
+            $accounting->sync($expense);
+            $fuel->update(['general_expense_id' => $expense->id]);
+        }, 3);
 
         return back()->with('success', 'Fuel log saved.');
     }
 
-    public function maintenance(Request $r)
+    public function maintenance(Request $r, ExpenseAccountingService $accounting)
     {
         $d = $r->validate([
             'vehicle_id' => ['required', $this->campusExists('vehicles')],
@@ -125,7 +143,20 @@ class TransportOperationsController extends Controller
             'notes' => 'nullable|string'
         ]);
 
-        VehicleMaintenanceLog::create($d);
+        DB::transaction(function () use ($d, $r, $accounting) {
+            $maintenance = VehicleMaintenanceLog::create($d);
+            if ($maintenance->status !== 'completed' || (float) $maintenance->cost <= 0) return;
+            $campusId = (int) $maintenance->vehicle->campus_id;
+            $expense = Expense::create([
+                'campus_id' => $campusId, 'expense_head' => 'Transport - Maintenance: '.$maintenance->type,
+                'amount' => $maintenance->cost, 'expense_date' => $maintenance->service_date ?? now()->toDateString(),
+                'description' => trim('Vehicle #'.$maintenance->vehicle_id.($maintenance->vendor ? ' · '.$maintenance->vendor : '').($maintenance->notes ? ' · '.$maintenance->notes : '')),
+                'expense_account_id' => app(\App\Services\AccountingService::class)->accountForCode('5200', $campusId)->id,
+                'status' => 'unpaid', 'recorded_by' => (string) $r->user()->id, 'created_by' => $r->user()->id,
+            ]);
+            $accounting->sync($expense);
+            $maintenance->update(['general_expense_id' => $expense->id]);
+        }, 3);
 
         return back()->with('success', 'Maintenance record saved.');
     }
@@ -183,7 +214,7 @@ class TransportOperationsController extends Controller
         return back()->with('success', 'GPS token (copy now): ' . $token);
     }
 
-    public function expense(Request $r)
+    public function expense(Request $r, ExpenseAccountingService $accounting)
     {
         $d = $r->validate([
             'vehicle_id' => ['required', $this->campusExists('vehicles')],
@@ -194,8 +225,21 @@ class TransportOperationsController extends Controller
             'notes' => 'nullable|string'
         ]);
 
-        $d['recorded_by'] = $r->user()->id;
-        VehicleExpense::create($d);
+        DB::transaction(function () use ($d, $r, $accounting) {
+            $d['recorded_by'] = $r->user()->id;
+            $vehicleExpense = VehicleExpense::create($d);
+            $campusId = (int) $vehicleExpense->vehicle->campus_id;
+            $expenseAccount = app(\App\Services\AccountingService::class)->accountForCode('5200', $campusId);
+            $ledgerExpense = Expense::create([
+                'campus_id' => $campusId, 'expense_head' => 'Transport - '.$d['category'],
+                'amount' => $d['amount'], 'expense_date' => $d['date'],
+                'description' => trim('Vehicle #'.$d['vehicle_id'].($d['reference'] ? ' · Ref '.$d['reference'] : '').($d['notes'] ? ' · '.$d['notes'] : '')),
+                'expense_account_id' => $expenseAccount->id, 'status' => 'unpaid',
+                'recorded_by' => (string) $r->user()->id, 'created_by' => $r->user()->id,
+            ]);
+            $accounting->sync($ledgerExpense);
+            $vehicleExpense->update(['general_expense_id' => $ledgerExpense->id]);
+        }, 3);
 
         return back()->with('success', 'Vehicle expense saved.');
     }
@@ -206,12 +250,32 @@ class TransportOperationsController extends Controller
 
         TransportAllocation::where('campus_id', config('app.active_campus_id'))
             ->where('is_active', true)
-            ->each(fn($a) => TransportFeeCharge::updateOrCreate(
+            ->each(fn($a) => TransportFeeCharge::firstOrCreate(
                 ['transport_allocation_id' => $a->id, 'billing_month' => $month],
                 ['amount' => $a->monthly_fare, 'status' => 'unpaid']
             ));
 
         return back()->with('success', 'Monthly transport fees generated.');
+    }
+
+    public function payTransportFee(Request $r, TransportFeeCharge $charge, AccountingService $accounting)
+    {
+        $campusId = (int) config('app.active_campus_id');
+        abort_unless($charge->transportAllocation && (int) $charge->transportAllocation->campus_id === $campusId, 404);
+        $data = $r->validate([
+            'payment_account_id' => ['required', Rule::exists('accounts', 'id')->where(fn ($q) => $q->where('campus_id', $campusId)->where('type', 'Asset')->where('is_active', true))],
+            'payment_date' => ['required', 'date', 'before_or_equal:today'],
+        ]);
+        DB::transaction(function () use ($charge, $data, $campusId, $r, $accounting) {
+            $charge = TransportFeeCharge::whereKey($charge->id)->lockForUpdate()->firstOrFail();
+            if ($charge->general_payment_id) return;
+            abort_unless($charge->status === 'unpaid', 422, 'Only unpaid transport fees can be collected.');
+            $allocation = $charge->transportAllocation()->with('user')->firstOrFail();
+            $account = Account::whereKey($data['payment_account_id'])->where('campus_id', $campusId)->where('type', 'Asset')->firstOrFail();
+            $accounting->post('transport-fee:'.$charge->id, $charge, $account, '4000', (float) $charge->amount, 'Transport fee '.$charge->billing_month, $data['payment_date'], 'Receipt');
+            $charge->update(['status' => 'paid', 'paid_at' => $data['payment_date']]);
+        }, 3);
+        return back()->with('success', 'Transport fee received and posted to the selected asset account.');
     }
 
     private function notify($a, $event, $trip)

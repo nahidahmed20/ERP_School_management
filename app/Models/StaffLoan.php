@@ -9,10 +9,10 @@ class StaffLoan extends Model {
     
     protected $fillable = [
         'staff_id', 'loan_type', 'amount', 'outstanding_balance', 'monthly_deduction',
-        'reason', 'status', 'approved_by', 'settled_at'
+        'reason', 'status', 'approved_by', 'settled_at', 'campus_id', 'payment_account_id', 'disbursed_at'
     ];
 
-    protected $casts = ['amount' => 'decimal:2', 'outstanding_balance' => 'decimal:2', 'monthly_deduction' => 'decimal:2', 'settled_at' => 'datetime'];
+    protected $casts = ['amount' => 'decimal:2', 'outstanding_balance' => 'decimal:2', 'monthly_deduction' => 'decimal:2', 'settled_at' => 'datetime', 'disbursed_at' => 'date'];
 
     public function staff() {
         return $this->belongsTo(Staff::class, 'staff_id');

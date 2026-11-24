@@ -4,8 +4,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Inertia\Inertia;
 use App\Models\Student;
-use App\Models\Payment;
-use App\Models\Expense;
+use App\Models\JournalEntry;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -29,17 +28,12 @@ class AnalyticsController extends Controller
             $date = Carbon::now()->subMonths($i);
             $labels[] = $date->format('M Y');
             
-            $monthlyRevenue = DB::table('payments')
-                ->where('campus_id', config('app.active_campus_id'))
-                ->whereMonth('payment_date', $date->month)
-                ->whereYear('payment_date', $date->year)
-                ->sum('amount_paid');
+            $entries = JournalEntry::whereNull('reversed_at')->whereYear('date', $date->year)->whereMonth('date', $date->month);
+            $monthlyRevenue = (float) (clone $entries)->whereHas('creditAccount', fn ($q) => $q->where('type', 'Income'))->sum('amount')
+                - (float) (clone $entries)->whereHas('debitAccount', fn ($q) => $q->where('type', 'Income'))->sum('amount');
             
-            $monthlyExpense = DB::table('expenses')
-                ->where('campus_id', config('app.active_campus_id'))
-                ->whereMonth('expense_date', $date->month)
-                ->whereYear('expense_date', $date->year)
-                ->sum('amount');
+            $monthlyExpense = (float) (clone $entries)->whereHas('debitAccount', fn ($q) => $q->where('type', 'Expense'))->sum('amount')
+                - (float) (clone $entries)->whereHas('creditAccount', fn ($q) => $q->where('type', 'Expense'))->sum('amount');
                 
             $revenueData[] = $monthlyRevenue;
             $expenseData[] = $monthlyExpense;

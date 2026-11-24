@@ -2,9 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\Expense;
 use App\Models\Invoice;
-use App\Models\Payment;
+use App\Models\JournalEntry;
 use App\Models\PaymentTransaction;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -18,8 +17,8 @@ class DashboardFinanceService
         // Start before subtracting months: March 31 must produce February, not March again.
         $monthStart = $today->copy()->startOfMonth();
         $months = collect(range(5, 0))->map(fn (int $ago) => $monthStart->copy()->subMonths($ago));
-        $income = $this->aggregate(Payment::query(), $campusId, 'payment_date', 'amount_paid', $today, $months);
-        $expense = $this->aggregate(Expense::query(), $campusId, 'expense_date', 'amount', $today, $months);
+        $income = $this->aggregatePosted($campusId, 'Income', $today, $months);
+        $expense = $this->aggregatePosted($campusId, 'Expense', $today, $months);
 
         $invoices = $this->forCampus(Invoice::query(), $campusId)
             ->whereIn('status', ['Unpaid', 'Partial'])
@@ -51,17 +50,25 @@ class DashboardFinanceService
         ];
     }
 
-    private function aggregate(Builder $query, ?int $campusId, string $date, string $amount, Carbon $today, $months): object
+    private function aggregatePosted(?int $campusId, string $type, Carbon $today, $months): object
     {
         $tomorrow = $today->copy()->addDay()->toDateString();
-        $query = $this->forCampus($query, $campusId)
-            ->where($date, '>=', $months->first()->toDateString())
-            ->where($date, '<', $today->copy()->startOfMonth()->addMonth()->toDateString())
-            ->selectRaw("COALESCE(SUM(CASE WHEN {$date} >= ? AND {$date} < ? THEN {$amount} ELSE 0 END), 0) as today_total", [$today->toDateString(), $tomorrow])
-            ->selectRaw("COALESCE(SUM(CASE WHEN {$date} >= ? AND {$date} < ? THEN {$amount} ELSE 0 END), 0) as month_total", [$today->copy()->startOfMonth()->toDateString(), $tomorrow]);
+        $normal = in_array($type, ['Asset', 'Expense'], true) ? 'debit' : 'credit';
+        $opposite = $normal === 'debit' ? 'credit' : 'debit';
+        $normalAlias = $normal === 'debit' ? 'debit_account' : 'credit_account';
+        $oppositeAlias = $opposite === 'debit' ? 'debit_account' : 'credit_account';
+        $query = JournalEntry::query()->whereNull('journal_entries.reversed_at')
+            ->leftJoin('accounts as debit_account', 'debit_account.id', '=', 'journal_entries.debit_account_id')
+            ->leftJoin('accounts as credit_account', 'credit_account.id', '=', 'journal_entries.credit_account_id')
+            ->where('journal_entries.date', '>=', $months->first()->toDateString())
+            ->where('journal_entries.date', '<', $today->copy()->startOfMonth()->addMonth()->toDateString());
+        if ($campusId) $query->where('journal_entries.campus_id', $campusId);
+        else $query->whereRaw('1 = 0');
+        $query->selectRaw("COALESCE(SUM(CASE WHEN journal_entries.date >= ? AND journal_entries.date < ? AND {$normalAlias}.type = ? THEN journal_entries.amount WHEN journal_entries.date >= ? AND journal_entries.date < ? AND {$oppositeAlias}.type = ? THEN -journal_entries.amount ELSE 0 END), 0) as today_total", [$today->toDateString(), $tomorrow, $type, $today->toDateString(), $tomorrow, $type]);
+        $query->selectRaw("COALESCE(SUM(CASE WHEN journal_entries.date >= ? AND journal_entries.date < ? AND {$normalAlias}.type = ? THEN journal_entries.amount WHEN journal_entries.date >= ? AND journal_entries.date < ? AND {$oppositeAlias}.type = ? THEN -journal_entries.amount ELSE 0 END), 0) as month_total", [$today->copy()->startOfMonth()->toDateString(), $tomorrow, $type, $today->copy()->startOfMonth()->toDateString(), $tomorrow, $type]);
 
         foreach ($months as $index => $month) {
-            $query->selectRaw("COALESCE(SUM(CASE WHEN {$date} >= ? AND {$date} < ? THEN {$amount} ELSE 0 END), 0) as month_{$index}", [$month->toDateString(), $month->copy()->addMonth()->toDateString()]);
+            $query->selectRaw("COALESCE(SUM(CASE WHEN journal_entries.date >= ? AND journal_entries.date < ? AND {$normalAlias}.type = ? THEN journal_entries.amount WHEN journal_entries.date >= ? AND journal_entries.date < ? AND {$oppositeAlias}.type = ? THEN -journal_entries.amount ELSE 0 END), 0) as month_{$index}", [$month->toDateString(), $month->copy()->addMonth()->toDateString(), $type, $month->toDateString(), $month->copy()->addMonth()->toDateString(), $type]);
         }
 
         return $query->toBase()->first();

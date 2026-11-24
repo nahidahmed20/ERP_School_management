@@ -274,6 +274,7 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
     Route::get('/menu-manager', [MenuItemController::class, 'index'])->name('menu.index');
     Route::post('/menu-manager', [MenuItemController::class, 'store'])->name('menu.store');
     Route::put('/menu-manager/{menuItem}', [MenuItemController::class, 'update'])->name('menu.update');
+    Route::patch('/menu-manager/{menuItem}/visibility', [MenuItemController::class, 'toggleVisibility'])->name('menu.visibility');
     Route::delete('/menu-manager/{menuItem}', [MenuItemController::class, 'destroy'])->name('menu.destroy');
     Route::get('/menu-manager/export/excel', [MenuItemController::class, 'exportExcel'])->name('menu.export.excel');
     Route::get('/menu-manager/export/pdf', [MenuItemController::class, 'exportPdf'])->name('menu.export.pdf');
@@ -414,6 +415,9 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
     Route::post('fees/ledger/expenses', [LedgerController::class, 'storeExpense'])->name('fees.ledger.store');
     Route::put('/fees/ledger/{id}', [LedgerController::class, 'updateExpense'])->name('fees.ledger.update');
     Route::delete('/fees/ledger/{id}', [LedgerController::class, 'destroyExpense'])->name('fees.ledger.destroy');
+    Route::post('fees/ledger/expenses/{id}/pay', [LedgerController::class, 'payExpense'])->name('fees.ledger.pay');
+    Route::post('fees/ledger/recurring-expenses', [LedgerController::class, 'storeRecurringExpense'])->name('fees.ledger.recurring.store');
+    Route::delete('fees/ledger/recurring-expenses/{id}', [LedgerController::class, 'stopRecurringExpense'])->name('fees.ledger.recurring.stop');
 
     Route::post('sms-logs/campaign', [SmsLogController::class, 'campaign'])->name('sms-logs.campaign');
     Route::resource('sms-logs', SmsLogController::class)->only(['index', 'store', 'destroy']);
@@ -489,6 +493,7 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
     Route::post('transport-operations/vehicles/{vehicle}/token',[TransportOperationsController::class,'token'])->name('transport.token');
     Route::post('transport-operations/expenses',[TransportOperationsController::class,'expense'])->name('transport.expenses');
     Route::post('transport-operations/fees/generate',[TransportOperationsController::class,'generateFees'])->name('transport.fees.generate');
+    Route::post('transport-operations/fees/{charge}/pay',[TransportOperationsController::class,'payTransportFee'])->name('transport.fees.pay');
     Route::resource('transports', TransportAllocationController::class);
     Route::resource('transport-personnel', TransportPersonnelController::class);
 
@@ -697,6 +702,7 @@ Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->gr
     Route::resource('staff-loans', StaffLoanController::class);
     Route::resource('staff-appraisals', StaffAppraisalController::class);
     Route::resource('accounting/chart', AccountingChartController::class)->names('accounting.chart')->only(['index', 'store', 'update', 'destroy']);
+    Route::get('accounting/owner-funding', [AccountingVoucherController::class, 'ownerFunding'])->name('owner-funding.index');
     Route::resource('accounting/vouchers', AccountingVoucherController::class)->names('accounting.vouchers')->only(['index', 'store', 'destroy']);
     Route::resource('hostel-fees', HostelFeeController::class);
 

@@ -41,7 +41,7 @@ export default function Index({ sources, reports, schedules, exports, imports, a
         <AuthenticatedLayout>
             <Head title="Reporting & Administration" />
 
-            <main className="w-full max-w-none space-y-6 px-3 py-4 sm:px-5 sm:py-6 lg:px-8">
+            <main className="reporting-admin-page w-full max-w-none space-y-5 py-3 sm:space-y-6 sm:py-6">
 
                 {/* Header Section */}
                 <div className="rounded-3xl border border-emerald-100 bg-gradient-to-r from-emerald-50 via-white to-slate-50 px-5 py-6 shadow-sm sm:px-7">
@@ -51,7 +51,7 @@ export default function Index({ sources, reports, schedules, exports, imports, a
                 </div>
 
                 {/* Top Metrics / Statistics - Responsive Grid */}
-                <div className="grid grid-cols-2 gap-3 md:grid-cols-3 2xl:grid-cols-5">
+                <div className="reporting-admin-metrics grid grid-cols-2 gap-3 md:grid-cols-3 2xl:grid-cols-5">
                     {[
                         ['Reports', reports.length, 'file-text'],
                         ['Scheduled', schedules.length, 'calendar'],
@@ -134,7 +134,7 @@ export default function Index({ sources, reports, schedules, exports, imports, a
                 <div className="grid items-start gap-5 xl:grid-cols-2">
                     {/* Campus Comparison Report */}
                     <Box title="Campus Comparison Report" icon="chart">
-                        <div className="overflow-x-auto">
+                        <div className="hidden">
                             <table className="w-full text-sm whitespace-nowrap">
                                 <thead>
                                     <tr className="border-b text-left">
@@ -157,6 +157,20 @@ export default function Index({ sources, reports, schedules, exports, imports, a
                                     ))}
                                 </tbody>
                             </table>
+                        </div>
+                        <div className="space-y-3">
+                            {campusComparison.map(x => (
+                                <article key={x.id} className="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
+                                    <h3 className="break-words text-sm font-bold text-slate-800">{x.name}</h3>
+                                    <dl className="reporting-campus-stats mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+                                        <div><dt className="text-slate-500">Students</dt><dd className="mt-0.5 font-semibold text-slate-800">{x.students}</dd></div>
+                                        <div><dt className="text-slate-500">Staff</dt><dd className="mt-0.5 font-semibold text-slate-800">{x.staff}</dd></div>
+                                        <div><dt className="text-slate-500">Collection</dt><dd className="mt-0.5 break-words font-semibold text-slate-800">à§³{Number(x.collections).toLocaleString()}</dd></div>
+                                        <div><dt className="text-slate-500">Outstanding</dt><dd className="mt-0.5 break-words font-semibold text-rose-600">à§³{Number(x.outstanding).toLocaleString()}</dd></div>
+                                    </dl>
+                                </article>
+                            ))}
+                            {!campusComparison.length && <p className="rounded-xl border border-dashed border-slate-300 p-4 text-center text-sm text-slate-500">No campus comparison data.</p>}
                         </div>
                     </Box>
 

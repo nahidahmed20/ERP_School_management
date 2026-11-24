@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Account;
 use App\Models\JournalEntry;
 use App\Support\CampusRule;
+use App\Services\AccountingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -16,19 +17,33 @@ class AccountingVoucherController extends Controller
 {
     public function index(Request $request)
     {
-        $this->campusId();
+        $campusId = $this->campusId();
+        $accounting = app(AccountingService::class);
+        $accounting->accountForCode('3000', $campusId);
+        $accounting->accountForCode('2050', $campusId);
         $query = JournalEntry::with(['debitAccount:id,name,code', 'creditAccount:id,name,code', 'creator:id,name'])->whereNull('reversed_at');
 
         if ($search = $request->get('search')) {
             $query->where(fn ($q) => $q->where('voucher_no', 'like', "%{$search}%")->orWhere('description', 'like', "%{$search}%"));
         }
-        if ($type = $request->get('type')) $query->where('voucher_type', $type);
+        $ownerFunding = $request->boolean('owner_funding');
+        if ($ownerFunding) {
+            $query->where('voucher_type', 'Receipt')->whereHas('creditAccount', fn ($q) => $q->whereIn('code', ['2050', '3000']));
+        } elseif ($type = $request->get('type')) {
+            $query->where('voucher_type', $type);
+        }
 
         return Inertia::render('Admin/Finance/Accounts/Vouchers/Index', [
             'vouchers' => $query->latest('date')->latest('id')->paginate(\App\Support\PerPage::resolve(15))->withQueryString(),
             'accounts' => Account::where('is_active', true)->select('id', 'name', 'code', 'type')->orderBy('code')->get(),
-            'filters' => ['search' => $request->get('search', ''), 'type' => $request->get('type', '')],
+            'filters' => ['search' => $request->get('search', ''), 'type' => $ownerFunding ? 'Receipt' : $request->get('type', ''), 'owner_funding' => $ownerFunding],
         ]);
+    }
+
+    public function ownerFunding()
+    {
+        $this->campusId();
+        return redirect()->route('admin.accounting.vouchers.index', ['owner_funding' => 1]);
     }
 
     public function store(Request $request)

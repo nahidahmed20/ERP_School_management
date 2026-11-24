@@ -113,8 +113,9 @@ class MenuSeeder extends Seeder
 
             // 6. Finance
             ['label' => 'Finance', 'items' => [
-                ['key' => 'fees', 'label' => 'Fees & Accounts', 'icon' => 'wallet', 'count' => 8, 'children' => [
+                ['key' => 'fees', 'label' => 'Fees & Accounts', 'icon' => 'wallet', 'count' => 10, 'children' => [
                     ['key' => 'admin.accounting.chart.index', 'label' => 'Chart of Accounts & Banks', 'route' => 'admin.accounting.chart.index'],
+                    ['key' => 'admin.owner-funding.index', 'label' => 'Owner Investment & Funding', 'route' => 'admin.owner-funding.index', 'permission' => 'admin.accounting.vouchers.index'],
                     ['key' => 'admin.fees-groups.index', 'label' => 'Fee Groups & Types', 'route' => 'admin.fees-groups.index'],
                     ['key' => 'admin.studentfees.index', 'label' => 'Student Fee Assignment', 'route' => 'admin.studentfees.index'],
                     ['key' => 'admin.fees.invoices', 'label' => 'Invoices', 'route' => 'admin.fees.invoices'],

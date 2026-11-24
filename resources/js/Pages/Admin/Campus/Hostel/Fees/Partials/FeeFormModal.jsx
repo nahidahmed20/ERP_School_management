@@ -2,7 +2,7 @@ import { useForm } from '@inertiajs/react';
 import Icon from '@/Components/Icons';
 import { useEffect } from 'react';
 
-export default function FeeFormModal({ item, students, rooms, onClose }) {
+export default function FeeFormModal({ item, students, rooms, accounts = [], onClose }) {
   const isEdit = !!item;
 
   const currentYear = new Date().getFullYear();
@@ -16,6 +16,7 @@ export default function FeeFormModal({ item, students, rooms, onClose }) {
     year: item?.year ?? currentYear,
     status: item?.status ?? 'Pending',
     payment_date: item?.payment_date ? item.payment_date.split('T')[0] : '',
+    payment_account_id: item?.payment_account_id ?? accounts[0]?.id ?? '',
     remarks: item?.remarks ?? '',
   });
 
@@ -111,10 +112,13 @@ export default function FeeFormModal({ item, students, rooms, onClose }) {
               </div>
 
               {data.status === 'Paid' && (
-                <div className="sm:col-span-2">
+                <>
+                <div>
                   <label className={labelClass}>Payment Date <span className="text-rose-500">*</span></label>
                   <input type="date" value={data.payment_date} onChange={e => setData('payment_date', e.target.value)} required className={`${inputClass} font-mono`} />
                 </div>
+                <div><label className={labelClass}>Received into <span className="text-rose-500">*</span></label><select value={data.payment_account_id} onChange={e=>setData('payment_account_id',e.target.value)} required className={`${inputClass} bg-white`}><option value="">Choose cash/bank</option>{accounts.map(a=><option key={a.id} value={a.id}>{a.code} · {a.name}</option>)}</select>{errors.payment_account_id&&<p className="mt-1 text-xs text-rose-600">{errors.payment_account_id}</p>}</div>
+                </>
               )}
 
               <div className="sm:col-span-2">

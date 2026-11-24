@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\{Book, BookCopy, BookIssue, LibraryFinePayment, LibraryMember, LibraryReservation, User, Student};
+use App\Services\AccountingService;
 use App\Support\CampusRule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -206,7 +207,7 @@ class LibraryOperationsController extends Controller
         return back()->with('success', 'Reservation updated.');
     }
 
-    public function finePayment(Request $r, BookIssue $issue)
+    public function finePayment(Request $r, BookIssue $issue, AccountingService $accounting)
     {
         $d = $r->validate([
             'amount' => 'required|numeric|min:0.01',
@@ -217,14 +218,16 @@ class LibraryOperationsController extends Controller
         $due = max(0, $issue->fine_amount + $issue->replacement_charge - $issue->fine_paid);
         abort_if($d['amount'] > $due, 422, 'Payment exceeds outstanding library charge.');
 
-        DB::transaction(function () use ($issue, $d, $r) {
-            LibraryFinePayment::create($d + [
+        DB::transaction(function () use ($issue, $d, $r, $accounting) {
+            $payment = LibraryFinePayment::create($d + [
                 'campus_id' => config('app.active_campus_id'),
                 'book_issue_id' => $issue->id,
                 'received_by' => $r->user()->id,
+                'payment_account_id' => $accounting->accountForCode('1000', (int) config('app.active_campus_id'))->id,
                 'paid_at' => now()
             ]);
             $issue->increment('fine_paid', $d['amount']);
+            $accounting->post('library-fine:'.$payment->id, $payment, '1000', '4000', (float) $d['amount'], 'Library fine or replacement charge #'.$issue->id, now()->toDateString(), 'Receipt');
         });
 
         return back()->with('success', 'Library fine/charge payment received.');

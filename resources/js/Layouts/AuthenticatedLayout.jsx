@@ -42,7 +42,7 @@ export default function AuthenticatedLayout({ header, children }) {
     }, [mobileOpen, closeMenu]);
 
     return (
-        <div className="shell">
+        <div className={`shell${desktopCollapsed ? ' sidebar-collapsed' : ''}`}>
             <PageSizeEnhancer />
             <Select2GlobalEnhancer />
             {mobileOpen && <button type="button" aria-label="Close navigation" className="mobile-nav-backdrop" onClick={closeMenu} />}

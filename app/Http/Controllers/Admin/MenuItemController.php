@@ -102,6 +102,19 @@ class MenuItemController extends Controller
         return back()->with('success', 'Menu item updated successfully.');
     }
 
+    public function toggleVisibility(Request $request, MenuItem $menuItem)
+    {
+        $data = $request->validate(['is_active' => ['required', 'boolean']]);
+        DB::transaction(function () use ($menuItem, $data) {
+            $menuItem->update(['is_active' => $data['is_active']]);
+            if (! $menuItem->parent_id) {
+                MenuItem::where('parent_id', $menuItem->id)->update(['is_active' => $data['is_active']]);
+            }
+        });
+        Cache::forget('sidebar.navigation');
+        return back()->with('success', 'Menu visibility updated.');
+    }
+
     public function destroy(MenuItem $menuItem)
     {
         DB::transaction(function () use ($menuItem) {

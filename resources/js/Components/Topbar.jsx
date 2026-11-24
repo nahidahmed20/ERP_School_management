@@ -72,7 +72,7 @@ export default function Topbar({ onHamburgerClick, sidebarOpen = false }) {
 
     return (
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-2 border-b border-slate-200 bg-white/95 px-3 shadow-sm backdrop-blur-sm sm:px-6">
-            <div className="flex min-w-0 items-center gap-1 sm:gap-4">
+            <div className="topbar-brand-row flex min-w-0 items-center gap-1 sm:gap-4">
                 <button
                     type="button"
                     aria-label={sidebarOpen ? 'Close navigation' : 'Open navigation'}
@@ -82,10 +82,12 @@ export default function Topbar({ onHamburgerClick, sidebarOpen = false }) {
                     onClick={onHamburgerClick}
                     title={sidebarOpen ? 'Hide navigation' : 'Show navigation'}
                 >
-                    <Icon name="menu" className="h-5 w-5" />
+                    <span className="hamburger-mark" aria-hidden="true">
+                        <span /><span /><span />
+                    </span>
                 </button>
                 <Link href={route('dashboard')} aria-label="Go to dashboard" title="Dashboard"
-                    className="flex h-10 max-w-[150px] shrink-0 items-center rounded-lg px-1 transition-colors hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 sm:max-w-[190px]">
+                    className="topbar-logo-link flex h-10 max-w-[150px] shrink-0 items-center rounded-lg px-1 transition-colors hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 sm:max-w-[190px]">
                     {adminLogo ? (
                         <img src={adminLogo} alt={site.school_short_name || site.school_name || 'School'}
                             className="max-h-9 max-w-full object-contain" />
@@ -95,7 +97,8 @@ export default function Topbar({ onHamburgerClick, sidebarOpen = false }) {
                 </Link>
                 {actions.search.length > 0 && (
                     <button type="button" onClick={() => setSearchOpen(true)} aria-label="Search records" aria-keyshortcuts="Control+k Meta+k"
-                        className="flex items-center gap-2 rounded-lg p-2 text-slate-500 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 md:bg-slate-100/70 md:px-3">
+                        title="Search records"
+                        className="topbar-search-button flex items-center gap-2 rounded-lg p-2 text-slate-500 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 md:bg-slate-100/70 md:px-3">
                         <Icon name="search" className="h-4 w-4 shrink-0" />
                         <span className="hidden text-sm md:block">Search records…</span>
                         <kbd className="ml-5 hidden rounded border border-slate-200 bg-white px-1.5 text-[10px] text-slate-400 xl:block">Ctrl / ⌘ K</kbd>
