@@ -10,6 +10,7 @@ import Swal from 'sweetalert2';
 export default function Index({ loans, staffList, filters, accounts = [] }) {
   const { flash } = usePage().props;
   const [search, setSearch] = useState(filters.search ?? '');
+  const [showStaffMatches, setShowStaffMatches] = useState(false);
   const [statusFilter, setStatusFilter] = useState(filters.status ?? '');
   const [perPage, setPerPage] = useState(filters.per_page ?? '10');
   
@@ -24,6 +25,19 @@ export default function Index({ loans, staffList, filters, accounts = [] }) {
 
   function applyFilters(overrides = {}) {
     router.get(route('admin.staff-loans.index'), { search, status: statusFilter, per_page: perPage, ...overrides }, { preserveState: true, replace: true });
+  }
+
+  const staffMatches = (staffList ?? []).filter((staff) => {
+    const query = search.trim().toLowerCase();
+    const name = `${staff.first_name ?? ''} ${staff.last_name ?? ''}`.trim();
+    return query && `${name} ${staff.staff_id_no ?? ''}`.toLowerCase().includes(query);
+  }).slice(0, 8);
+
+  function chooseStaff(staff) {
+    const query = staff.staff_id_no || `${staff.first_name ?? ''} ${staff.last_name ?? ''}`.trim();
+    setSearch(query);
+    setShowStaffMatches(false);
+    applyFilters({ search: query });
   }
 
   useEffect(() => {
@@ -45,9 +59,10 @@ export default function Index({ loans, staffList, filters, accounts = [] }) {
 
   const exportToCSV = () => {
     if (!loans.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
-    const headers = ['Staff Name', 'Type', 'Amount', 'Monthly Deduction', 'Status'];
+    const headers = ['Staff Name', 'Staff ID', 'Type', 'Amount', 'Monthly Deduction', 'Status'];
     const rows = loans.data.map(item => [
       `${item.staff?.first_name || ''} ${item.staff?.last_name || ''}`, 
+      item.staff?.staff_id_no || 'N/A',
       item.loan_type || 'N/A', 
       item.amount || '0', 
       item.monthly_deduction || '0', 
@@ -64,9 +79,9 @@ export default function Index({ loans, staffList, filters, accounts = [] }) {
 
   const copyToClipboard = () => {
     if (!loans.data.length) return;
-    let text = "Staff Name\tType\tAmount\tStatus\n";
+    let text = "Staff Name\tStaff ID\tType\tAmount\tStatus\n";
     loans.data.forEach(item => {
-      text += `${item.staff?.first_name || ''} ${item.staff?.last_name || ''}\t${item.loan_type}\t${item.amount}\t${item.status}\n`;
+      text += `${item.staff?.first_name || ''} ${item.staff?.last_name || ''}\t${item.staff?.staff_id_no || ''}\t${item.loan_type}\t${item.amount}\t${item.status}\n`;
     });
     navigator.clipboard.writeText(text);
     Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Data copied to clipboard!', showConfirmButton: false, timer: 2000 });
@@ -147,15 +162,29 @@ export default function Index({ loans, staffList, filters, accounts = [] }) {
                 type="text"
                 placeholder="Search Staff Name/ID..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
+                onFocus={() => setShowStaffMatches(true)}
+                onChange={(e) => { setSearch(e.target.value); setShowStaffMatches(true); }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') { e.preventDefault(); setShowStaffMatches(false); applyFilters(); }
+                  if (e.key === 'Escape') setShowStaffMatches(false);
+                }}
                 className="block w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
               />
+              {showStaffMatches && search.trim() && (
+                <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-64 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl">
+                  {staffMatches.length ? staffMatches.map(staff => (
+                    <button key={staff.id} type="button" onMouseDown={e => e.preventDefault()} onClick={() => chooseStaff(staff)} className="flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left hover:bg-emerald-50">
+                      <span className="min-w-0 truncate text-sm font-semibold text-slate-800">{staff.first_name} {staff.last_name || ''}</span>
+                      <span className="shrink-0 rounded-md bg-slate-100 px-2 py-1 text-xs font-mono text-slate-600">{staff.staff_id_no || 'No ID'}</span>
+                    </button>
+                  )) : <div className="px-3 py-2 text-sm text-slate-500">No staff found</div>}
+                </div>
+              )}
             </div>
 
             {/* Apply Button */}
             <button
-              onClick={() => applyFilters()}
+              onClick={() => { setShowStaffMatches(false); applyFilters(); }}
               className="w-full sm:w-auto px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
             >
               Search

@@ -20,7 +20,8 @@ class StaffLoanController extends Controller
             $query->whereHas('staff', function($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
                   ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('staff_id_no', 'like', "%{$search}%");
+                  ->orWhere('staff_id_no', 'like', "%{$search}%")
+                  ->orWhereRaw("CONCAT_WS(' ', first_name, last_name) LIKE ?", ["%{$search}%"]);
             });
         }
 

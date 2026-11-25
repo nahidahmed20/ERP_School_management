@@ -1215,6 +1215,37 @@ main.content:has(> .reporting-admin-page) { min-width: 0; overflow-x: hidden; }
     overscroll-behavior-x: contain;
     -webkit-overflow-scrolling: touch;
 }
+
+/* Keep primary action buttons on the school-wide forest palette. */
+.shell button[class*="bg-indigo-600"],
+.shell button[class*="bg-indigo-700"],
+.shell button[class*="bg-blue-600"],
+.shell button[class*="bg-blue-700"],
+.shell button[class*="bg-emerald-600"],
+.shell button[class*="bg-emerald-700"],
+.shell button[class*="bg-green-600"],
+.shell button[class*="bg-green-700"],
+.shell a[class*="bg-indigo-600"],
+.shell a[class*="bg-indigo-700"],
+.shell a[class*="bg-blue-600"],
+.shell a[class*="bg-blue-700"],
+.shell a[class*="bg-emerald-600"],
+.shell a[class*="bg-emerald-700"],
+.shell a[class*="bg-green-600"],
+.shell a[class*="bg-green-700"] {
+    background-color: var(--forest) !important;
+    color: #fff !important;
+}
+.shell button[class*="hover:bg-indigo-700"]:hover,
+.shell button[class*="hover:bg-blue-700"]:hover,
+.shell button[class*="hover:bg-emerald-700"]:hover,
+.shell button[class*="hover:bg-green-700"]:hover,
+.shell a[class*="hover:bg-indigo-700"]:hover,
+.shell a[class*="hover:bg-blue-700"]:hover,
+.shell a[class*="hover:bg-emerald-700"]:hover,
+.shell a[class*="hover:bg-green-700"]:hover {
+    background-color: var(--forest-light) !important;
+}
 .reporting-admin-page table { max-width: 100%; }
 
 @media (max-width: 520px) {

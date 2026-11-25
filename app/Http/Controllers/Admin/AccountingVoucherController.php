@@ -28,7 +28,15 @@ class AccountingVoucherController extends Controller
         }
         $ownerFunding = $request->boolean('owner_funding');
         if ($ownerFunding) {
-            $query->where('voucher_type', 'Receipt')->whereHas('creditAccount', fn ($q) => $q->whereIn('code', ['2050', '3000']));
+            $query->where(function ($funds) {
+                $funds->where(function ($received) {
+                    $received->where('voucher_type', 'Receipt')
+                        ->whereHas('creditAccount', fn ($q) => $q->whereIn('code', ['2050', '3000']));
+                })->orWhere(function ($withdrawn) {
+                    $withdrawn->where('voucher_type', 'Payment')
+                        ->whereHas('debitAccount', fn ($q) => $q->whereIn('code', ['2050', '3000']));
+                });
+            });
         } elseif ($type = $request->get('type')) {
             $query->where('voucher_type', $type);
         }
@@ -58,10 +66,18 @@ class AccountingVoucherController extends Controller
             'description' => ['nullable', 'string', 'max:2000'],
         ]);
 
-        DB::transaction(function () use ($validated, $campusId) {
+        DB::transaction(function () use ($validated, $campusId, $request) {
             $debit = Account::whereKey($validated['debit_account_id'])->where('is_active', true)->lockForUpdate()->first();
             $credit = Account::whereKey($validated['credit_account_id'])->where('is_active', true)->lockForUpdate()->first();
             abort_unless($debit && $credit, 422, 'Select active accounts from the current campus.');
+            if ($request->boolean('owner_funding')) {
+                $cashBank = $validated['voucher_type'] === 'Receipt' ? $debit : $credit;
+                $ownerAccount = $validated['voucher_type'] === 'Receipt' ? $credit : $debit;
+                $isCashBank = $cashBank->type === 'Asset'
+                    && ((string) $cashBank->code === '1000' || preg_match('/\b(cash|bank)\b/i', $cashBank->name));
+                abort_unless($isCashBank, 422, 'Choose a Cash or Bank account for an owner money transaction.');
+                abort_unless(in_array((string) $ownerAccount->code, ['2050', '3000'], true), 422, 'Choose Owner Capital or Owner Loan Payable for this transaction.');
+            }
             $this->validateVoucherAccounts($validated['voucher_type'], $debit, $credit);
 
             JournalEntry::create($validated + [

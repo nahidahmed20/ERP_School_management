@@ -17,12 +17,19 @@ export default function Index({ vouchers, accounts, filters }) {
   // Opening the owner funding menu should show the ledger first; creation is explicit.
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [deletingItem, setDeletingItem] = useState(null);
+  const [printEntryId, setPrintEntryId] = useState(null);
 
   useEffect(() => {
     if (flash?.success) {
       Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: flash.success, showConfirmButton: false, timer: 3000, timerProgressBar: true });
     }
   }, [flash]);
+
+  useEffect(() => {
+    const clearPrintTarget = () => setPrintEntryId(null);
+    window.addEventListener('afterprint', clearPrintTarget);
+    return () => window.removeEventListener('afterprint', clearPrintTarget);
+  }, []);
 
   function applyFilters(overrides = {}) {
     router.get(route('admin.accounting.vouchers.index'), { 
@@ -40,7 +47,10 @@ export default function Index({ vouchers, accounts, filters }) {
   };
 
   // --- Export Functions ---
-  const handlePrint = () => window.print();
+  const handlePrint = (entry = null) => {
+    setPrintEntryId(entry?.id ?? null);
+    window.requestAnimationFrame(() => window.print());
+  };
 
   const exportToCSV = () => {
     if (!vouchers.data.length) return Swal.fire({ icon: 'warning', title: 'No Data!', text: 'Export করার মতো কোনো ডেটা নেই।' });
@@ -74,40 +84,49 @@ export default function Index({ vouchers, accounts, filters }) {
 
   return (
     <AuthenticatedLayout>
-      <Head title={filters.owner_funding ? 'Owner Investment & Funding' : 'Accounting Vouchers'} />
+      <Head title={filters.owner_funding ? 'Owner Funding & Withdrawals' : 'Accounting Vouchers'} />
 
       {/* Print Specific CSS */}
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
-          nav, aside, header, .no-print, button, a, select, input { display: none !important; }
-          body, html { background: #f8fafc !important; }
-          .print-table-wrapper { width: 100% !important; border: none !important; box-shadow: none !important; }
-          .print-title { display: block !important; font-size: 24px !important; font-weight: bold !important; margin-bottom: 20px !important; }
+          @page { size: landscape; margin: 14mm; }
+          body, html { background: #fff !important; }
+          body * { visibility: hidden !important; }
+          .print-title, .print-table-wrapper, .print-table-wrapper * { visibility: visible !important; }
+          nav, aside, header, .topbar, .no-print, button, a, select, input { display: none !important; }
+          .shell { display: block !important; padding: 0 !important; min-height: 0 !important; background: #fff !important; }
+          .main, main.content, .content { display: block !important; width: 100% !important; max-width: none !important; margin: 0 !important; padding: 0 !important; overflow: visible !important; }
+          .print-title { position: absolute !important; left: 0 !important; top: 0 !important; display: block !important; font-size: 20px !important; font-weight: bold !important; margin: 0 0 16px !important; }
+          .print-table-wrapper { position: absolute !important; left: 0 !important; top: 44px !important; width: 100% !important; border: none !important; box-shadow: none !important; overflow: visible !important; }
+          .print-table-wrapper > .overflow-x-auto { overflow: visible !important; }
+          .print-table-wrapper table { width: 100% !important; font-size: 10pt !important; }
+          .print-single-entry tbody tr:not(.print-row) { display: none !important; }
+          .print-table-wrapper tr { break-inside: avoid; }
         }
         @media screen { .print-title { display: none; } }
       `}} />
 
-      <div className="print-title">Accounting Vouchers - {new Date().toLocaleDateString('en-GB')}</div>
+      <div className="print-title">{printEntryId ? `Voucher ${vouchers.data.find(item => item.id === printEntryId)?.voucher_no ?? ''}` : filters.owner_funding ? 'Owner Funding & Withdrawals' : 'Accounting Vouchers'} - {new Date().toLocaleDateString('en-GB')}</div>
 
-      <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8 no-print">
+      <div className="w-full space-y-6 sm:px-6 lg:px-8 py-8">
         
         {/* Page Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="no-print flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <span className="text-xs font-bold tracking-wider text-indigo-600 uppercase">Finance & Accounts</span>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">{filters.owner_funding ? 'Owner Investment & Funding' : 'Accounting Vouchers'}</h1>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">{filters.owner_funding ? 'Owner Funding & Withdrawals' : 'Accounting Vouchers'}</h1>
             <p className="text-sm text-slate-500 mt-1">ক্যাশ, ব্যাংক এবং অন্যান্য জার্নাল এন্ট্রির রেকর্ড পরিচালনা করুন।</p>
           </div>
           <button
             onClick={() => setIsFormOpen(true)}
             className="w-full sm:w-auto inline-flex justify-center items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md shadow-indigo-500/20 active:scale-95"
           >
-            <Icon name="plus" className="w-4 h-4" /> {filters.owner_funding ? 'Record Investment' : 'Create Voucher'}
+            <Icon name="plus" className="w-4 h-4" /> {filters.owner_funding ? 'Record Transaction' : 'Create Voucher'}
           </button>
         </div>
 
         {/* Unified Modern Toolbar */}
-        <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-center justify-between gap-4">
+        <div className="no-print bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
             
             {/* Per Page */}
@@ -187,7 +206,7 @@ export default function Index({ vouchers, accounts, filters }) {
         </div>
 
         {/* Main Table Card */}
-        <div className="bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 print-table-wrapper">
+        <div className={`bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 print-table-wrapper${printEntryId ? ' print-single-entry' : ''}`}>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -213,7 +232,7 @@ export default function Index({ vouchers, accounts, filters }) {
                   </tr>
                 ) : (
                   vouchers.data.map((item) => (
-                    <tr key={item.id} className="hover:bg-slate-50/60 transition-colors">
+                    <tr key={item.id} className={`hover:bg-slate-50/60 transition-colors${printEntryId === item.id ? ' print-row' : ''}`}>
                       <td className="px-6 py-4">
                         <strong className="text-sm text-slate-900 block">{new Date(item.date).toLocaleDateString()}</strong>
                         <span className="inline-block mt-1 px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded text-[11px] font-mono font-bold tracking-widest">
@@ -240,7 +259,7 @@ export default function Index({ vouchers, accounts, filters }) {
                       </td>
                       <td className="px-6 py-4 text-right no-print">
                         <div className="flex items-center justify-end gap-1.5">
-                          <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 hover:text-indigo-600 rounded-lg transition-colors shadow-sm" title="Print Voucher">
+                          <button onClick={() => handlePrint(item)} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 hover:text-indigo-600 rounded-lg transition-colors shadow-sm" title="Print Voucher">
                             <Icon name="printer" className="w-3.5 h-3.5" /> Print
                           </button>
                           <button onClick={() => setDeletingItem(item)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Delete/Reverse Voucher">

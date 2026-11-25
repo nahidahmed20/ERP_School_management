@@ -1,7 +1,10 @@
+import { useState } from 'react';
 import { useForm } from '@inertiajs/react';
 import Icon from '@/Components/Icons';
 
 export default function VoucherFormModal({ accounts, ownerFunding = false, onClose }) {
+  const [fundingKind, setFundingKind] = useState('investment');
+  const [fundingDirection, setFundingDirection] = useState('received');
   const { data, setData, post, processing, reset, errors } = useForm({
     date: new Date().toISOString().split('T')[0],
     voucher_type: ownerFunding ? 'Receipt' : 'Payment',
@@ -9,7 +12,10 @@ export default function VoucherFormModal({ accounts, ownerFunding = false, onClo
     credit_account_id: ownerFunding ? (accounts.find(a => a.code === '3000')?.id || '') : '',
     amount: '',
     description: '',
+    owner_funding: ownerFunding ? '1' : '',
   });
+  const cashBankAccounts = accounts.filter(a => a.type === 'Asset'
+    && (String(a.code) === '1000' || /\b(cash|bank)\b/i.test(a.name || '')));
 
   function submit(e) {
     e.preventDefault();
@@ -53,7 +59,7 @@ export default function VoucherFormModal({ accounts, ownerFunding = false, onClo
         <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0 rounded-t-2xl">
           <div>
             <h3 className="text-xl font-bold text-slate-900">{ownerFunding ? 'Record Owner Investment' : 'Create Accounting Voucher'}</h3>
-            <p className="text-sm text-slate-500 mt-1">{ownerFunding ? 'Debit the cash/bank account, then credit Owner Capital for equity funding or Owner Loan Payable for a repayable loan.' : 'Post a new transaction into the ledger.'}</p>
+            <p className="text-sm text-slate-500 mt-1">{ownerFunding ? 'Record money received from the owner or money returned to them.' : 'Post a new transaction into the ledger.'}</p>
           </div>
           <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors bg-white border border-slate-200 shadow-sm shrink-0">
             <Icon name="close" className="w-4 h-4" />
@@ -64,12 +70,72 @@ export default function VoucherFormModal({ accounts, ownerFunding = false, onClo
         <form onSubmit={submit} className="flex flex-col flex-1 overflow-hidden">
           <div className="p-6 overflow-y-auto space-y-6 flex-1 custom-scrollbar">
 
-            {/* Helper Notice */}
+            {ownerFunding ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <label className={labelClass}>Transaction <span className="text-rose-500">*</span></label>
+                  <select value={fundingDirection} onChange={e => {
+                    const direction = e.target.value;
+                    const kind = direction === 'received' ? 'investment' : 'capital';
+                    const ownerAccount = accounts.find(a => a.code === (kind === 'investment' || kind === 'capital' ? '3000' : '2050'))?.id || '';
+                    const cashAccount = accounts.find(a => a.code === '1000')?.id || '';
+                    setFundingDirection(direction);
+                    setFundingKind(kind);
+                    setData('voucher_type', direction === 'received' ? 'Receipt' : 'Payment');
+                    setData('debit_account_id', direction === 'received' ? cashAccount : ownerAccount);
+                    setData('credit_account_id', direction === 'received' ? ownerAccount : cashAccount);
+                  }} required className={inputClass}>
+                    <option value="received">Money received from owner</option>
+                    <option value="withdrawn">Money withdrawn / repaid to owner</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={labelClass}>{fundingDirection === 'received' ? 'Money Type' : 'Withdrawal Type'} <span className="text-rose-500">*</span></label>
+                  <select value={fundingKind} onChange={e => {
+                    const kind = e.target.value;
+                    const ownerAccount = accounts.find(a => a.code === (kind === 'investment' || kind === 'capital' ? '3000' : '2050'))?.id || '';
+                    const cashAccount = accounts.find(a => a.code === '1000')?.id || '';
+                    setFundingKind(kind);
+                    setData('debit_account_id', fundingDirection === 'received' ? cashAccount : ownerAccount);
+                    setData('credit_account_id', fundingDirection === 'received' ? ownerAccount : cashAccount);
+                  }} required className={inputClass}>
+                    {fundingDirection === 'received' ? <>
+                      <option value="investment">Owner investment (not repayable)</option>
+                      <option value="loan">Owner loan (repayable)</option>
+                    </> : <>
+                      <option value="capital">Capital withdrawal</option>
+                      <option value="loan">Repay owner loan</option>
+                    </>}
+                  </select>
+                  <p className="mt-1.5 text-xs text-slate-500">{fundingDirection === 'received' ? 'Choose whether the school must repay this money.' : 'Choose what the school is paying back or withdrawing.'}</p>
+                </div>
+                <div>
+                  <label className={labelClass}>{fundingDirection === 'received' ? 'Received Into' : 'Paid From'} <span className="text-rose-500">*</span></label>
+                  <select value={fundingDirection === 'received' ? data.debit_account_id : data.credit_account_id} onChange={e => setData(fundingDirection === 'received' ? 'debit_account_id' : 'credit_account_id', e.target.value)} required className={inputClass}>
+                    <option value="">Select cash or bank account</option>
+                    {cashBankAccounts.map(a => <option key={a.id} value={a.id}>{a.code} · {a.name}</option>)}
+                  </select>
+                  {errors.debit_account_id && <p className="text-rose-500 text-xs mt-1">{errors.debit_account_id}</p>}
+                  {errors.credit_account_id && <p className="text-rose-500 text-xs mt-1">{errors.credit_account_id}</p>}
+                </div>
+                <div>
+                  <label className={labelClass}>{fundingDirection === 'received' ? 'Date Received' : 'Date Paid'} <span className="text-rose-500">*</span></label>
+                  <input type="date" value={data.date} onChange={e => setData('date', e.target.value)} required className={`${inputClass} font-mono`} />
+                </div>
+                <div>
+                  <label className={labelClass}>Amount (৳) <span className="text-rose-500">*</span></label>
+                  <input type="number" min="0.01" step="0.01" value={data.amount} onChange={e => setData('amount', e.target.value)} required placeholder="e.g. 50000" className={`${inputClass} font-mono text-lg font-bold text-emerald-600`} />
+                  {errors.amount && <p className="text-rose-500 text-xs mt-1">{errors.amount}</p>}
+                </div>
+                <div className="sm:col-span-2">
+                  <label className={labelClass}>Note (Optional)</label>
+                  <textarea rows="2" value={data.description} onChange={e => setData('description', e.target.value)} placeholder={fundingDirection === 'received' ? 'Who provided the money or any useful details' : 'Who received the money or any useful details'} className={`${inputClass} resize-none`} />
+                </div>
+              </div>
+            ) : <>
             <div className={`p-4 rounded-xl border flex items-start gap-3 text-sm leading-relaxed ${notice.color}`}>
               <Icon name="info" className="w-5 h-5 shrink-0 mt-0.5" />
-              <div>
-                <strong className="block sm:inline">{data.voucher_type} Rule:</strong> {notice.text}
-              </div>
+              <div><strong className="block sm:inline">{data.voucher_type} Rule:</strong> {notice.text}</div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -162,6 +228,7 @@ export default function VoucherFormModal({ accounts, ownerFunding = false, onClo
               </div>
 
             </div>
+            </>}
           </div>
 
           {/* Footer - Stacked on Mobile, Row on Desktop */}
@@ -171,7 +238,7 @@ export default function VoucherFormModal({ accounts, ownerFunding = false, onClo
             </button>
             <button type="submit" disabled={processing} className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md shadow-indigo-500/20 disabled:opacity-70 active:scale-95">
               <Icon name="check" className="w-4 h-4" />
-              {processing ? 'Posting...' : 'Post Voucher'}
+              {processing ? 'Saving...' : ownerFunding ? 'Save Transaction' : 'Post Voucher'}
             </button>
           </div>
         </form>
